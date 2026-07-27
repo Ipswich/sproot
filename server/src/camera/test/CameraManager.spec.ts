@@ -8,7 +8,8 @@ import { CameraManager } from "../CameraManager";
 import ImageCapture from "../ImageCapture";
 import StreamProxy from "../StreamProxy";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
-import { TIMELAPSE_DIRECTORY } from "@sproot/sproot-common/dist/utility/Constants";
+import { TIMELAPSE_DIRECTORY } from "@sproot/common/utility/Constants";
+import { ICameraRepository } from "../../database/repositories/camera/ICameraRepository";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 
 describe("CameraManager", () => {
@@ -40,22 +41,26 @@ describe("CameraManager", () => {
 
   const createManager = async (
     settings: SDBCameraSettings[] = [],
-    overrides?: Partial<Record<string, sinon.SinonStub>>,
+    overrides?: { camera?: Record<string, sinon.SinonStub> } & Record<string, unknown>,
   ) => {
-    const sprootDB = {
-      getCameraSettingsAsync: sandbox.stub().resolves(settings),
-      ...overrides,
+    const cameraOverrides = overrides?.camera;
+    const rootOverrides = { ...overrides };
+    delete rootOverrides.camera;
+    const cameraRepository: ICameraRepository = {
+      getAllAsync: sandbox.stub().resolves(settings),
+      updateAsync: sandbox.stub().resolves(),
+      ...(cameraOverrides ?? {}),
     };
 
     const eventBus = new MemoryEventBus(logger);
     const manager = await CameraManager.createInstanceAsync(
       eventBus,
-      sprootDB as any,
+      cameraRepository,
       "test-key",
       logger,
     );
     createdManagers.push(manager);
-    return { manager, sprootDB };
+    return { manager, cameraRepository };
   };
 
   const disposeManager = async (manager: CameraManager) => {
@@ -88,6 +93,8 @@ describe("CameraManager", () => {
   });
 
   it("stores the loaded camera settings", async () => {
+    sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
+
     const manager = (await createManager([cameraSettings])).manager;
 
     assert.deepEqual(manager.cameraSettings, cameraSettings);
@@ -158,6 +165,8 @@ describe("CameraManager", () => {
   });
 
   it("returns the last timelapse generation duration when timelapse is enabled", async () => {
+    sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
+
     const getLastTimelapseGenerationDurationStub = sandbox
       .stub(ImageCapture.prototype, "getLastTimelapseGenerationDuration")
       .returns(3210);
@@ -170,6 +179,8 @@ describe("CameraManager", () => {
   });
 
   it("returns null for the last timelapse generation duration when timelapse is disabled", async () => {
+    sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
+
     const getLastTimelapseGenerationDurationStub = sandbox
       .stub(ImageCapture.prototype, "getLastTimelapseGenerationDuration")
       .returns(3210);
@@ -274,18 +285,19 @@ describe("CameraManager", () => {
   it("stops the existing stream proxy when the camera is disabled", async () => {
     const startAsyncStub = sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
     const stopAsyncStub = sandbox.stub(StreamProxy.prototype, "stopAsync").resolves();
-    const sprootDB = {
-      getCameraSettingsAsync: sandbox.stub(),
+    const getAllAsyncStub = sandbox.stub();
+    getAllAsyncStub.onFirstCall().resolves([cameraSettings]);
+    getAllAsyncStub.onSecondCall().resolves([{ ...cameraSettings, enabled: false }]);
+
+    const cameraRepository: ICameraRepository = {
+      getAllAsync: getAllAsyncStub,
+      updateAsync: sandbox.stub().resolves(),
     };
-    sprootDB.getCameraSettingsAsync.onFirstCall().resolves([cameraSettings]);
-    sprootDB.getCameraSettingsAsync
-      .onSecondCall()
-      .resolves([{ ...cameraSettings, enabled: false }]);
 
     const eventBus = new MemoryEventBus(logger);
     const manager = await CameraManager.createInstanceAsync(
       eventBus,
-      sprootDB as any,
+      cameraRepository,
       "test-key",
       logger,
     );
@@ -301,9 +313,9 @@ describe("CameraManager", () => {
   });
 
   it("returns the same instance and does nothing after disposal", async () => {
-    const getCameraSettingsAsync = sandbox.stub().resolves([cameraSettings]);
+    const getAllAsync = sandbox.stub().resolves([cameraSettings]);
     const startAsyncStub = sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
-    const manager = (await createManager([], { getCameraSettingsAsync })).manager;
+    const manager = (await createManager([], { camera: { getAllAsync } })).manager;
 
     await manager[Symbol.asyncDispose]();
     createdManagers = createdManagers.filter((currentManager) => currentManager !== manager);
@@ -311,22 +323,24 @@ describe("CameraManager", () => {
 
     assert.strictEqual(result, manager);
     assert.isTrue(startAsyncStub.calledOnce);
-    assert.isTrue(getCameraSettingsAsync.calledOnce);
+    assert.isTrue(getAllAsync.calledOnce);
   });
 
   it("skips overlapping regenerate calls while an update is already in progress", async () => {
+    sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
+
     const warnStub = sandbox.stub(logger, "warn");
     let resolveSettings!: (value: SDBCameraSettings[]) => void;
-    const getCameraSettingsAsync = sandbox.stub();
-    getCameraSettingsAsync.onFirstCall().resolves([]);
-    getCameraSettingsAsync.onSecondCall().callsFake(
+    const getAllAsync = sandbox.stub();
+    getAllAsync.onFirstCall().resolves([]);
+    getAllAsync.onSecondCall().callsFake(
       () =>
         new Promise<SDBCameraSettings[]>((resolve) => {
           resolveSettings = resolve;
         }),
     );
 
-    const manager = (await createManager([], { getCameraSettingsAsync })).manager;
+    const manager = (await createManager([], { camera: { getAllAsync } })).manager;
 
     const firstRegenerate = manager.regenerateAsync();
     const secondRegenerate = manager.regenerateAsync();
@@ -336,7 +350,7 @@ describe("CameraManager", () => {
     assert.isTrue(
       warnings.includes("CameraManager is already updating, skipping regenerateAsync call."),
     );
-    assert.equal(getCameraSettingsAsync.callCount, 2);
+    assert.equal(getAllAsync.callCount, 2);
 
     resolveSettings([cameraSettings]);
     assert.strictEqual(await firstRegenerate, manager);

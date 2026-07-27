@@ -1,11 +1,11 @@
 import winston from "winston";
 
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
+import { ISensorsRepository } from "../database/repositories/sensors/ISensorsRepository";
 import { MdnsService } from "../system/MdnsService";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { SensorBase } from "./base/SensorBase";
-import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
+import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
 
 class ESP32_DS18B20 extends SensorBase {
   static readonly MAX_SENSOR_READ_TIME = 3500;
@@ -15,7 +15,7 @@ class ESP32_DS18B20 extends SensorBase {
   static createInstanceAsync(
     sdbSensor: SDBSensor,
     subcontroller: SDBSubcontroller,
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -25,7 +25,7 @@ class ESP32_DS18B20 extends SensorBase {
     const sensor = new ESP32_DS18B20(
       sdbSensor,
       subcontroller,
-      sprootDB,
+      sensorsRepository,
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
@@ -38,7 +38,7 @@ class ESP32_DS18B20 extends SensorBase {
   private constructor(
     sdbSensor: SDBSensor,
     subcontroller: SDBSubcontroller,
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -47,7 +47,7 @@ class ESP32_DS18B20 extends SensorBase {
   ) {
     super(
       sdbSensor,
-      sprootDB,
+      sensorsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,

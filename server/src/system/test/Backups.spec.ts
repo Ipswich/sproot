@@ -58,7 +58,6 @@ describe("Backups.ts", () => {
     //   if (!fs.existsSync(tempDir)) {
     //     fs.mkdirSync(tempDir);
     //   }
-    //   const sprootDBMock = new MockSprootDB();
     //   function deferred<T>() {
     //     let resolve!: (value: T | PromiseLike<T>) => void;
     //     let reject!: (reason?: any) => void;

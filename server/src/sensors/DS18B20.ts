@@ -1,9 +1,9 @@
 import { readFile } from "node:fs/promises";
 import winston from "winston";
 
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
+import { ISensorsRepository } from "../database/repositories/sensors/ISensorsRepository";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { SensorBase } from "./base/SensorBase";
 
 class DS18B20 extends SensorBase {
@@ -11,7 +11,7 @@ class DS18B20 extends SensorBase {
 
   static createInstanceAsync(
     sdbSensor: SDBSensor,
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -19,7 +19,7 @@ class DS18B20 extends SensorBase {
   ): Promise<DS18B20 | null> {
     return new DS18B20(
       sdbSensor,
-      sprootDB,
+      sensorsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -29,7 +29,7 @@ class DS18B20 extends SensorBase {
 
   private constructor(
     sdbSensor: SDBSensor,
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -37,7 +37,7 @@ class DS18B20 extends SensorBase {
   ) {
     super(
       sdbSensor,
-      sprootDB,
+      sensorsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,

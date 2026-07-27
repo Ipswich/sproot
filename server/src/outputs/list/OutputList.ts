@@ -1,13 +1,15 @@
 import { PCA9685 } from "../PCA9685";
 import { ESP32_PCA9685, ESP32_PCA9685Output } from "../ESP32_PCA9685";
 import { TPLinkSmartPlugs } from "../TPLinkSmartPlugs";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import type { IOutputsRepository } from "../../database/repositories/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "../../database/repositories/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "../../database/repositories/subcontrollers/ISubcontrollersRepository";
+import { IOutputBase, ControlMode } from "@sproot/common/outputs/IOutputBase";
 import { OutputBase } from "../base/OutputBase";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
+import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
 import winston from "winston";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { Models } from "@sproot/common/outputs/Models";
 import { MdnsService } from "../../system/MdnsService";
 import { OutputGroup } from "../OutputGroup";
 import { IEventBus } from "../../eventbus/IEventBus";
@@ -16,7 +18,9 @@ import { OutputModifiedEvent } from "../../eventbus/events/outputs/OutputModifie
 
 class OutputList implements AsyncDisposable {
   #eventBus: IEventBus;
-  #sprootDB: ISprootDB;
+  #outputsRepository: IOutputsRepository;
+  #outputActionsRepository: IOutputActionsRepository;
+  #subcontrollersRepository: ISubcontrollersRepository;
   #PCA9685: PCA9685;
   #ESP32_PCA9685: ESP32_PCA9685;
   #TPLinkSmartPlugs: TPLinkSmartPlugs;
@@ -30,7 +34,9 @@ class OutputList implements AsyncDisposable {
 
   static createInstanceAsync(
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
+    subcontrollersRepository: ISubcontrollersRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -39,7 +45,9 @@ class OutputList implements AsyncDisposable {
   ): Promise<OutputList> {
     const outputList = new OutputList(
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
+      subcontrollersRepository,
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
@@ -51,7 +59,9 @@ class OutputList implements AsyncDisposable {
 
   private constructor(
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
+    subcontrollersRepository: ISubcontrollersRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -59,11 +69,15 @@ class OutputList implements AsyncDisposable {
     logger: winston.Logger,
   ) {
     this.#eventBus = eventBus;
-    this.#sprootDB = sprootDB;
+    this.#outputsRepository = outputsRepository;
+    this.#outputActionsRepository = outputActionsRepository;
+    this.#subcontrollersRepository = subcontrollersRepository;
     this.#logger = logger;
     this.#PCA9685 = new PCA9685(
       this.#eventBus,
-      this.#sprootDB,
+      this.#outputsRepository,
+      this.#outputActionsRepository,
+      this.#subcontrollersRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -72,7 +86,9 @@ class OutputList implements AsyncDisposable {
     );
     this.#ESP32_PCA9685 = new ESP32_PCA9685(
       this.#eventBus,
-      this.#sprootDB,
+      this.#outputsRepository,
+      this.#outputActionsRepository,
+      this.#subcontrollersRepository,
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
@@ -82,7 +98,9 @@ class OutputList implements AsyncDisposable {
     );
     this.#TPLinkSmartPlugs = new TPLinkSmartPlugs(
       this.#eventBus,
-      this.#sprootDB,
+      this.#outputsRepository,
+      this.#outputActionsRepository,
+      this.#subcontrollersRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -187,8 +205,8 @@ class OutputList implements AsyncDisposable {
     try {
       let outputListChanges = false;
       const profiler = this.#logger.startTimer();
-      const outputsFromDatabase = await this.#sprootDB.getOutputsAsync();
-      const subcontrollersFromDatabase = await this.#sprootDB.getSubcontrollersAsync();
+      const outputsFromDatabase = await this.#outputsRepository.getAllAsync();
+      const subcontrollersFromDatabase = await this.#subcontrollersRepository.getAllAsync();
 
       const promises = [];
       for (const output of outputsFromDatabase) {
@@ -354,18 +372,18 @@ class OutputList implements AsyncDisposable {
   }
 
   async addOutputAsync(output: SDBOutput): Promise<number> {
-    const newOutputId = await this.#sprootDB.addOutputAsync(output);
+    const newOutputId = await this.#outputsRepository.addAsync(output);
     await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
     return newOutputId;
   }
 
   async updateOutputAsync(output: SDBOutput): Promise<void> {
-    await this.#sprootDB.updateOutputAsync(output);
+    await this.#outputsRepository.updateAsync(output);
     await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
   }
 
   async deleteOutputAsync(outputId: number): Promise<void> {
-    await this.#sprootDB.deleteOutputAsync(outputId);
+    await this.#outputsRepository.deleteAsync(outputId);
     await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
   }
 
@@ -401,7 +419,8 @@ class OutputList implements AsyncDisposable {
         newOutput = await OutputGroup.createInstanceAsync(
           output,
           this.#eventBus,
-          this.#sprootDB,
+          this.#outputsRepository,
+          this.#outputActionsRepository,
           this.maxCacheSize,
           this.initialCacheLookback,
           this.cacheBucketMinutes,

@@ -5,7 +5,7 @@ import sinon from "sinon";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 
 import { OutputList } from "../../../../outputs/list/OutputList";
-import { ControlMode, IOutputBase } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { ControlMode, IOutputBase } from "@sproot/common/outputs/IOutputBase";
 import { setControlModeAsync, setManualStateAsync } from "../handlers/OutputStateHandlers";
 
 describe("OutputStateHandlers.ts tests", () => {
@@ -34,7 +34,7 @@ describe("OutputStateHandlers.ts tests", () => {
     });
 
     it("should return a 200 and update state", async () => {
-      let mockRequest = {
+      const mockRequest = {
         app: {
           get: () => outputList,
         },
@@ -214,7 +214,7 @@ describe("OutputStateHandlers.ts tests", () => {
     });
 
     it("should return a 200 and update the output's manual state", async () => {
-      let mockRequest = {
+      const mockRequest = {
         app: {
           get: () => outputList,
         },
@@ -262,7 +262,7 @@ describe("OutputStateHandlers.ts tests", () => {
     });
 
     it("should return a 400 and details for the invalid request", async () => {
-      let mockRequest = {
+      const mockRequest = {
         app: {
           get: () => outputList,
         },
@@ -311,7 +311,7 @@ describe("OutputStateHandlers.ts tests", () => {
     });
 
     it("should return a 404 and a 'Not Found' error", async () => {
-      let mockRequest = {
+      const mockRequest = {
         app: {
           get: () => outputList,
         },
@@ -333,7 +333,7 @@ describe("OutputStateHandlers.ts tests", () => {
         },
       } as unknown as Response;
 
-      let error = (await setManualStateAsync(mockRequest, mockResponse)) as ErrorResponse;
+      const error = (await setManualStateAsync(mockRequest, mockResponse)) as ErrorResponse;
 
       assert.equal(error.statusCode, 404);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -346,7 +346,7 @@ describe("OutputStateHandlers.ts tests", () => {
     });
 
     it("should return a 409 if output is not top-level", async () => {
-      let mockRequest = {
+      const mockRequest = {
         app: {
           get: () => outputList,
         },
@@ -368,7 +368,7 @@ describe("OutputStateHandlers.ts tests", () => {
         },
       } as unknown as Response;
 
-      let error = (await setManualStateAsync(mockRequest, mockResponse)) as ErrorResponse;
+      const error = (await setManualStateAsync(mockRequest, mockResponse)) as ErrorResponse;
 
       assert.equal(error.statusCode, 409);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);

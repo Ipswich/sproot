@@ -17,16 +17,13 @@ import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 import { ConditionOperator } from "@sproot/automation/ConditionTypes";
-import {
-  ReadingType,
-  Units,
-} from "@sproot/sproot-common/src/sensors/ReadingType";
+import { ReadingType, Units } from "@sproot/common/sensors/ReadingType";
 import { ReactNode, useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import DeletablesTable from "../../common/DeletablesTable";
 import NewConditionWidget from "./NewConditionWidget";
-import { convertCelsiusToFahrenheit } from "@sproot/sproot-common/src/utility/DisplayFormats";
-import { formatMilitaryTime } from "@sproot/sproot-common/src/utility/TimeMethods";
+import { convertCelsiusToFahrenheit } from "@sproot/common/utility/DisplayFormats";
+import { formatMilitaryTime } from "@sproot/common/utility/TimeMethods";
 
 export interface ConditionsTableProps {
   automationId: number;

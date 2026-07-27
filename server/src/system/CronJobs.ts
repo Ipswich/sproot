@@ -2,9 +2,9 @@ import { CronJob } from "cron";
 import winston from "winston";
 import { OutputList } from "../outputs/list/OutputList";
 import { SensorList } from "../sensors/list/SensorList";
-import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
+import * as Constants from "@sproot/common/utility/Constants";
 import { Backups } from "./Backups";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISystemRepository } from "../database/repositories/system/ISystemRepository";
 import { AutomationService } from "../automation/AutomationService";
 
 export function createAutomationsCronJob(
@@ -83,7 +83,7 @@ export function createDatabaseUpdateCronJob(
   );
 }
 
-export function createBackupCronJob(sprootDB: ISprootDB, logger: winston.Logger) {
+export function createBackupCronJob(systemRepository: ISystemRepository, logger: winston.Logger) {
   let running = false;
   return new CronJob(
     Constants.CRON.DAILY_AT_MIDNIGHT,
@@ -96,7 +96,7 @@ export function createBackupCronJob(sprootDB: ISprootDB, logger: winston.Logger)
       const profiler = logger.startTimer();
       try {
         logger.info("Starting scheduled backup...");
-        await Backups.createAsync(sprootDB, logger);
+        await Backups.createAsync(systemRepository, logger);
         await Backups.runRetentionPolicyAsync(
           logger,
           Constants.BACKUP_DIRECTORY,

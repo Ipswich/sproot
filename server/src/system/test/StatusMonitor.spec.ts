@@ -2,6 +2,7 @@ import { assert } from "chai";
 import sinon from "sinon";
 import { SystemStatusMonitor } from "../StatusMonitor";
 import { CameraManager } from "../../camera/CameraManager";
+import ImageCapture from "../../camera/ImageCapture";
 import winston from "winston";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 
@@ -10,12 +11,21 @@ describe("ServerStatsManager", () => {
     winston.createLogger({ transports: [new winston.transports.Console({ silent: true })] }),
   );
   let sprootDBMock: any;
+  let systemRepoMock: any;
   let knexConnectionMock: any;
 
   beforeEach(() => {
     sprootDBMock = {
+      system: {
+        getDatabaseSizeAsync: sinon.stub().resolves(12345),
+      },
+      camera: {
+        getAllAsync: sinon.stub().resolves([]),
+        updateAsync: sinon.stub().resolves(),
+      },
+    };
+    systemRepoMock = {
       getDatabaseSizeAsync: sinon.stub().resolves(12345),
-      getCameraSettingsAsync: sinon.stub().resolves([]),
     };
     knexConnectionMock = {
       client: {
@@ -30,16 +40,18 @@ describe("ServerStatsManager", () => {
   });
 
   it("should return stats with correct properties", async () => {
+    sinon.stub(ImageCapture.prototype, "getTimelapseArchiveSizeAsync").resolves(0);
+
     await using manager = await CameraManager.createInstanceAsync(
       eventBus,
-      sprootDBMock,
+      sprootDBMock.camera,
       "test_key",
       winston.createLogger({
         transports: [new winston.transports.Console({ silent: true })],
       }),
     );
     await manager.regenerateAsync();
-    using monitor = new SystemStatusMonitor(manager, sprootDBMock, knexConnectionMock);
+    using monitor = new SystemStatusMonitor(manager, systemRepoMock, knexConnectionMock);
     const stats = await monitor.getStatusAsync();
 
     assert.strictEqual(typeof stats.process.uptime, "number");
@@ -61,15 +73,15 @@ describe("ServerStatsManager", () => {
   it("should call getDatabaseSizeAsync", async () => {
     await using manager = await CameraManager.createInstanceAsync(
       eventBus,
-      sprootDBMock,
+      sprootDBMock.camera,
       "test_key",
       winston.createLogger({
         transports: [new winston.transports.Console({ silent: true })],
       }),
     );
     await manager.regenerateAsync();
-    using monitor = new SystemStatusMonitor(manager, sprootDBMock, knexConnectionMock);
+    using monitor = new SystemStatusMonitor(manager, systemRepoMock, knexConnectionMock);
     await monitor.getStatusAsync();
-    assert.strictEqual(sprootDBMock.getDatabaseSizeAsync.calledOnce, true);
+    assert.strictEqual(systemRepoMock.getDatabaseSizeAsync.calledOnce, true);
   });
 });

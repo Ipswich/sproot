@@ -25,7 +25,7 @@ import {
 import { IconArchive, IconInbox } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { DefaultColors } from "@sproot/sproot-common/src/utility/Constants";
+import { DefaultColors } from "@sproot/common/utility/Constants";
 import { computeTagPillDiffs } from "./utils/tags/tagPillHelpers";
 import ConfirmDeleteButton from "../../components/ConfirmDeleteButton";
 

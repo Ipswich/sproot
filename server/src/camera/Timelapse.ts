@@ -4,13 +4,13 @@ import {
   ARCHIVE_DIRECTORY,
   TIMELAPSE_DIRECTORY,
   TIMELAPSE_RESOURCES,
-} from "@sproot/sproot-common/dist/utility/Constants";
-import { SDBCameraSettings } from "@sproot/sproot-common/dist/database/SDBCameraSettings";
-import { isBetweenTimeStamp } from "@sproot/sproot-common/dist/utility/TimeMethods";
+} from "@sproot/common/utility/Constants";
+import { SDBCameraSettings } from "@sproot/common/database/SDBCameraSettings";
+import { isBetweenTimeStamp } from "@sproot/common/utility/TimeMethods";
 import path from "path";
 import { PassThrough, pipeline } from "stream";
 import { spawn } from "child_process";
-import { createTimeStampSuffix } from "@sproot/sproot-common/dist/utility/Files";
+import { createTimeStampSuffix } from "@sproot/common/utility/Files";
 
 type AddImageToTimelapseFunction = (file: string, directory: string) => Promise<void>;
 

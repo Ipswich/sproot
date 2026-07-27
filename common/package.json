@@ -1,8 +1,10 @@
 {
-  "name": "@sproot/sproot-common",
+  "name": "@sproot/common",
   "private": true,
   "description": "Sproot common libraries",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --build --verbose",
     "clean": "rimraf tsconfig.tsbuildinfo && rimraf ./dist",
@@ -38,5 +40,11 @@
   },
   "dependencies": {
     "winston": "^3.11.0"
+  },
+  "exports": {
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
   }
 }

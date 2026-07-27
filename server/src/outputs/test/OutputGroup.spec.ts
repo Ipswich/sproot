@@ -1,16 +1,53 @@
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
+import type { IOutputsRepository } from "../../database/repositories/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "../../database/repositories/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "../../database/repositories/subcontrollers/ISubcontrollersRepository";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
 import { OutputGroup } from "../OutputGroup";
-import { PCA9685 } from "@sproot/sproot-server/src/outputs/PCA9685";
+import { PCA9685 } from "../PCA9685";
 import { Pca9685Driver } from "pca9685";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { Models } from "@sproot/common/outputs/Models";
 import { SDBOutputState } from "@sproot/database/SDBOutputState";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { ControlMode } from "@sproot/common/outputs/IOutputBase";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
+
+const createMockOutputsRepo = (): IOutputsRepository => ({
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+  updateLastOutputStateAsync: async () => {},
+  getLastOutputStateAsync: async () => [],
+  addOutputStateAsync: async () => {},
+  getOutputStatesAsync: async () => [],
+  getBucketedOutputStatesAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: null as unknown as DeviceDataQueryRow,
+  }),
+});
+
+const createMockOutputActionsRepo = (): IOutputActionsRepository => ({
+  getAllAsync: async () => [],
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  getOutputActionAsync: async () => [],
+  getActionsByOutputIdAsync: async () => [],
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createMockSubcontrollersRepo = (): ISubcontrollersRepository => ({
+  getAllAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => 0,
+  deleteAsync: async () => 0,
+});
 
 function stubPca9685DutyCycle() {
   return sinon.stub(Pca9685Driver.prototype, "setDutyCycle").callsFake((...args) => {
@@ -53,15 +90,28 @@ describe("OutputGroup.ts tests", function () {
   } as SDBOutput;
 
   it("should set and remove outputs correctly", async function () {
-    const mockSprootDB = new MockSprootDB();
+    const mockOutputsRepo = createMockOutputsRepo();
+    const mockOutputActionsRepo = createMockOutputActionsRepo();
+    const mockSubcontrollersRepo = createMockSubcontrollersRepo();
     sinon.createStubInstance(Pca9685Driver);
     stubPca9685DutyCycle();
 
-    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(
+      eventBus,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
+      5,
+      5,
+      5,
+      undefined,
+      logger,
+    );
     await using outputGroup = await OutputGroup.createInstanceAsync(
       outputGroupSettings,
       eventBus,
-      mockSprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
       5,
       5,
       5,
@@ -151,15 +201,28 @@ describe("OutputGroup.ts tests", function () {
   });
 
   it("should set and execute state on all outputs", async function () {
-    const mockSprootDB = new MockSprootDB();
+    const mockOutputsRepo = createMockOutputsRepo();
+    const mockOutputActionsRepo = createMockOutputActionsRepo();
+    const mockSubcontrollersRepo = createMockSubcontrollersRepo();
     sinon.createStubInstance(Pca9685Driver);
     stubPca9685DutyCycle();
 
-    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(
+      eventBus,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
+      5,
+      5,
+      5,
+      undefined,
+      logger,
+    );
     await using outputGroup = await OutputGroup.createInstanceAsync(
       outputGroupSettings,
       eventBus,
-      mockSprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
       5,
       5,
       5,
@@ -280,15 +343,28 @@ describe("OutputGroup.ts tests", function () {
   });
 
   it("should update control mode on all outputs", async function () {
-    const mockSprootDB = new MockSprootDB();
+    const mockOutputsRepo = createMockOutputsRepo();
+    const mockOutputActionsRepo = createMockOutputActionsRepo();
+    const mockSubcontrollersRepo = createMockSubcontrollersRepo();
     sinon.createStubInstance(Pca9685Driver);
     stubPca9685DutyCycle();
 
-    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(
+      eventBus,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
+      5,
+      5,
+      5,
+      undefined,
+      logger,
+    );
     await using outputGroup = await OutputGroup.createInstanceAsync(
       outputGroupSettings,
       eventBus,
-      mockSprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
       5,
       5,
       5,

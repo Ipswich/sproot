@@ -1,13 +1,12 @@
-import { SDBJournal } from "@sproot/sproot-common/dist/database/SDBJournal";
-import { SDBJournalTag } from "@sproot/sproot-common/dist/database/SDBJournalTag";
-import { SDBJournalTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalTagLookup";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBJournal } from "@sproot/common/database/SDBJournal";
+import { SDBJournalTag } from "@sproot/common/database/SDBJournalTag";
+import { IJournalRepository } from "../../database/repositories/journals/IJournalRepository";
 import { toDbDate } from "../../utils/dateUtils";
 
 export default class JournalManager {
-  #sprootDB: ISprootDB;
-  constructor(sprootDB: ISprootDB) {
-    this.#sprootDB = sprootDB;
+  #journalsRepository: IJournalRepository;
+  constructor(journalsRepository: IJournalRepository) {
+    this.#journalsRepository = journalsRepository;
   }
 
   async createJournalAsync(
@@ -17,27 +16,23 @@ export default class JournalManager {
     color: string | null = null,
     startDate: Date | null = null,
   ): Promise<number> {
-    return this.#sprootDB.addJournalAsync(name, description, icon, color, toDbDate(startDate));
+    return this.#journalsRepository.addAsync(name, description, icon, color, toDbDate(startDate));
   }
 
   async updateJournalAsync(journal: SDBJournal): Promise<void> {
-    return this.#sprootDB.updateJournalAsync(journal);
+    return this.#journalsRepository.updateAsync(journal);
   }
 
   async deleteJournalAsync(id: number): Promise<void> {
-    return this.#sprootDB.deleteJournalAsync(id);
-  }
-
-  async createJournalTagAsync(name: string, color: string | null = null): Promise<number> {
-    return this.#sprootDB.addJournalTagAsync(name, color);
+    return this.#journalsRepository.deleteAsync(id);
   }
 
   async addTagAsync(journalId: number, tagId: number): Promise<number> {
-    return this.#sprootDB.addJournalTagLookupAsync(journalId, tagId);
+    return this.#journalsRepository.tags.addLookupAsync(journalId, tagId);
   }
 
   async removeTagAsync(journalId: number, tagId: number): Promise<void> {
-    return this.#sprootDB.deleteJournalTagLookupAsync(journalId, tagId);
+    return this.#journalsRepository.tags.deleteLookupAsync(journalId, tagId);
   }
 
   async getJournalsAsync(
@@ -45,22 +40,25 @@ export default class JournalManager {
   ): Promise<Array<{ journal: SDBJournal; tags: SDBJournalTag[] }>> {
     let journals: SDBJournal[] = [];
     if (journalId != null) {
-      journals = await this.#sprootDB.getJournalAsync(journalId);
+      journals = await this.#journalsRepository.getByIdAsync(journalId);
     } else {
-      journals = await this.#sprootDB.getJournalsAsync();
+      journals = await this.#journalsRepository.getAllAsync();
     }
-    if (!journals || journals.length === 0) return [];
 
-    const [allTags, tagLookups] = await Promise.all([
-      this.#sprootDB.getJournalTagsAsync(),
-      this.#sprootDB.getJournalTagLookupsAsync(),
+    if (!journals.length) {
+      return [];
+    }
+
+    const [allJournalTags, journalTagLookups] = await Promise.all([
+      this.#journalsRepository.tags.getTagsAsync(),
+      this.#journalsRepository.tags.getLookupsAsync(),
     ]);
 
     const tagById = new Map<number, SDBJournalTag>(
-      (allTags as SDBJournalTag[]).map((t) => [t.id, t]),
+      (allJournalTags as SDBJournalTag[]).map((t) => [t.id, t]),
     );
-    const lookupsByJournalId = new Map<number, SDBJournalTagLookup[]>();
-    for (const l of tagLookups as SDBJournalTagLookup[]) {
+    const lookupsByJournalId = new Map<number, { journalId: number; tagId: number }[]>();
+    for (const l of journalTagLookups as { journalId: number; tagId: number }[]) {
       const arr = lookupsByJournalId.get(l.journalId) ?? [];
       arr.push(l);
       lookupsByJournalId.set(l.journalId, arr);
@@ -71,7 +69,6 @@ export default class JournalManager {
       const tags: SDBJournalTag[] = (lookupsByJournalId.get(j.id) ?? [])
         .map((l) => tagById.get(l.tagId))
         .filter(Boolean) as SDBJournalTag[];
-
       results.push({ journal: j, tags });
     }
 

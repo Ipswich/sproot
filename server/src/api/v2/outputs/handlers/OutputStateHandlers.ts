@@ -1,9 +1,9 @@
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { ControlMode } from "@sproot/common/outputs/IOutputBase";
 import { Request, Response } from "express";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { OutputList } from "../../../../outputs/list/OutputList";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
 import { toDbDate } from "../../../../utils/dateUtils";
 
 /**

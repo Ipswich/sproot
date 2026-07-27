@@ -1,15 +1,32 @@
 import { CapacitiveMoistureSensor } from "../CapacitiveMoistureSensor";
 import { Ads1115Device } from "../ADS1115";
 
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
+import { ISensorsRepository } from "../../database/repositories/sensors/ISensorsRepository";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
+import { SDBReading } from "@sproot/common/database/SDBReading";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-const mockSprootDB = new MockSprootDB();
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
+
+const mockSensorsRepo: ISensorsRepository = {
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  getDS18B20AddressesAsync: async () => [],
+  addAsync: async () => {},
+  updateAsync: async () => {},
+  updateSensorCalibrationAsync: async () => {},
+  deleteAsync: async () => {},
+  addSensorReadingAsync: async () => {},
+  getSensorReadingsAsync: async () => [],
+  getBucketedSensorReadingsAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: {} as DeviceDataQueryRow,
+  }),
+};
 
 describe("CapacitiveMoistureSensor.ts tests", function () {
   afterEach(() => {
@@ -25,7 +42,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       pin: "0",
     } as SDBSensor;
 
-    sinon.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
+    sinon.stub(mockSensorsRepo, "getBucketedSensorReadingsAsync").resolves([
       {
         data: "1",
         metric: ReadingType.moisture,
@@ -56,7 +73,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
 
     await using sensor = await CapacitiveMoistureSensor.createInstanceAsync(
       mockSensorData,
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,
@@ -73,9 +90,13 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
   });
 
   it("should take a reading from a CapacitiveMoistureSensor", async () => {
-    const stubbedMockDB = sinon.createStubInstance(MockSprootDB);
+    const stubbedMockSensorsRepo: ISensorsRepository = {
+      ...mockSensorsRepo,
+      getSensorReadingsAsync: sinon.stub().resolves([]),
+      getBucketedSensorReadingsAsync: sinon.stub().resolves(undefined),
+      updateSensorCalibrationAsync: sinon.stub().resolves(undefined),
+    };
     const mockReading = 15000;
-    stubbedMockDB.getSensorReadingsAsync.resolves([]);
 
     const mockADS1115Data = {
       id: 1,
@@ -101,7 +122,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     } as Ads1115Device);
     await using capacitiveMoistureSensor = await CapacitiveMoistureSensor.createInstanceAsync(
       mockADS1115Data,
-      stubbedMockDB,
+      stubbedMockSensorsRepo,
       5,
       5,
       5,
@@ -139,10 +160,10 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       } as SDBReading);
     }
 
-    stubbedMockDB.getSensorReadingsAsync.resolves(mockedReadings);
+    (stubbedMockSensorsRepo.getSensorReadingsAsync as any).resolves(mockedReadings);
     await using capacitiveMoistureSensor2 = await CapacitiveMoistureSensor.createInstanceAsync(
       mockADS1115Data,
-      stubbedMockDB,
+      stubbedMockSensorsRepo,
       500,
       500,
       5,
@@ -160,7 +181,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     // GetReading throws an errror
     await using capacitiveMoistureSensor3 = await CapacitiveMoistureSensor.createInstanceAsync(
       mockADS1115Data,
-      stubbedMockDB,
+      stubbedMockSensorsRepo,
       5,
       5,
       5,

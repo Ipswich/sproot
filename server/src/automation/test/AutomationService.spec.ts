@@ -3,11 +3,60 @@ import { assert } from "chai";
 import sinon from "sinon";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../../outputs/list/OutputList";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
+import type { IAutomationsRepository } from "../../database/repositories/automations/IAutomationsRepository";
+
+type ConditionStub = {
+  getAsync: sinon.SinonStub<any[], any>;
+  addAsync: sinon.SinonStub<any[], any>;
+  updateAsync: sinon.SinonStub<any[], any>;
+  deleteAsync: sinon.SinonStub<any[], any>;
+};
+
+const makeConditionStub = (): ConditionStub => ({
+  getAsync: sinon.stub().resolves([]),
+  addAsync: sinon.stub(),
+  updateAsync: sinon.stub(),
+  deleteAsync: sinon.stub(),
+});
+
+const createStubAutomationsRepository = (): IAutomationsRepository => ({
+  getAllAsync: sinon.stub(),
+  getByIdAsync: sinon.stub(),
+  addAsync: sinon.stub(),
+  updateAsync: sinon.stub(),
+  deleteAsync: sinon.stub(),
+  conditions: {
+    sensor: makeConditionStub(),
+    output: makeConditionStub(),
+    time: makeConditionStub(),
+    weekday: makeConditionStub(),
+    month: makeConditionStub(),
+    dateRange: makeConditionStub(),
+  },
+  actions: {
+    output: {
+      getAllAsync: sinon.stub(),
+      getAsync: sinon.stub(),
+      getOutputActionAsync: sinon.stub(),
+      getActionsByOutputIdAsync: sinon.stub(),
+      addAsync: sinon.stub(),
+      updateAsync: sinon.stub(),
+      deleteAsync: sinon.stub(),
+    },
+    notification: {
+      getAllAsync: sinon.stub(),
+      getAsync: sinon.stub(),
+      getNotificationActionByIdAsync: sinon.stub(),
+      addAsync: sinon.stub(),
+      updateAsync: sinon.stub(),
+      deleteAsync: sinon.stub(),
+    },
+  },
+});
 
 describe("AutomationService", () => {
   let mockLogger: winston.Logger;
@@ -52,10 +101,10 @@ describe("AutomationService", () => {
 
   describe("evaluateAllAutomationsAsync", () => {
     it("should emit event with enabled automation when conditions are met", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      const automations = createStubAutomationsRepository() as any;
+      automations.conditions.sensor.getAsync.resolves([]);
+      automations.conditions.output.getAsync.resolves([]);
+      automations.conditions.time.getAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -64,10 +113,11 @@ describe("AutomationService", () => {
           groupType: "anyOf",
         },
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
-      sprootDB.getAutomationsAsync.resolves([
+      automations.conditions.weekday.getAsync.resolves([]);
+      automations.conditions.weekday.getAsync.resolves([]);
+      automations.conditions.month.getAsync.resolves([]);
+      automations.conditions.dateRange.getAsync.resolves([]);
+      automations.getAllAsync.resolves([
         {
           id: 1,
           name: "Time Alert",
@@ -76,7 +126,11 @@ describe("AutomationService", () => {
         },
       ]);
 
-      const service = await AutomationService.createInstanceAsync(sprootDB, eventBus, mockLogger);
+      const service = await AutomationService.createInstanceAsync(
+        automations,
+        eventBus,
+        mockLogger,
+      );
 
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
@@ -95,10 +149,10 @@ describe("AutomationService", () => {
     });
 
     it("should emit event with timestamp matching the input 'now' parameter", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      const automations = createStubAutomationsRepository() as any;
+      automations.conditions.sensor.getAsync.resolves([]);
+      automations.conditions.output.getAsync.resolves([]);
+      automations.conditions.time.getAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -107,11 +161,12 @@ describe("AutomationService", () => {
           groupType: "anyOf",
         },
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
+      automations.conditions.weekday.getAsync.resolves([]);
+      automations.conditions.weekday.getAsync.resolves([]);
+      automations.conditions.month.getAsync.resolves([]);
+      automations.conditions.dateRange.getAsync.resolves([]);
 
-      sprootDB.getAutomationsAsync.resolves([
+      automations.getAllAsync.resolves([
         {
           id: 1,
           name: "Test Automation",
@@ -120,7 +175,11 @@ describe("AutomationService", () => {
         },
       ]);
 
-      const service = await AutomationService.createInstanceAsync(sprootDB, eventBus, mockLogger);
+      const service = await AutomationService.createInstanceAsync(
+        automations,
+        eventBus,
+        mockLogger,
+      );
 
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
@@ -134,10 +193,10 @@ describe("AutomationService", () => {
     });
 
     it("should emit single event with multiple automations with conditions met", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      const automations = createStubAutomationsRepository() as any;
+      automations.conditions.sensor.getAsync.resolves([]);
+      automations.conditions.output.getAsync.resolves([]);
+      automations.conditions.time.getAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -153,10 +212,11 @@ describe("AutomationService", () => {
           groupType: "anyOf",
         },
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
-      sprootDB.getAutomationsAsync.resolves([
+      automations.conditions.weekday.getAsync.resolves([]);
+      automations.conditions.weekday.getAsync.resolves([]);
+      automations.conditions.month.getAsync.resolves([]);
+      automations.conditions.dateRange.getAsync.resolves([]);
+      automations.getAllAsync.resolves([
         {
           id: 1,
           name: "Automation 1",
@@ -177,7 +237,11 @@ describe("AutomationService", () => {
         },
       ]);
 
-      const service = await AutomationService.createInstanceAsync(sprootDB, eventBus, mockLogger);
+      const service = await AutomationService.createInstanceAsync(
+        automations,
+        eventBus,
+        mockLogger,
+      );
 
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
@@ -194,10 +258,10 @@ describe("AutomationService", () => {
     });
 
     it("should emit (empty) event with disabled automation (conditions met)", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      const automations = createStubAutomationsRepository() as any;
+      automations.conditions.sensor.getAsync.resolves([]);
+      automations.conditions.output.getAsync.resolves([]);
+      automations.conditions.time.getAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -206,10 +270,11 @@ describe("AutomationService", () => {
           groupType: "anyOf",
         },
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
-      sprootDB.getAutomationsAsync.resolves([
+      automations.conditions.weekday.getAsync.resolves([]);
+      automations.conditions.weekday.getAsync.resolves([]);
+      automations.conditions.month.getAsync.resolves([]);
+      automations.conditions.dateRange.getAsync.resolves([]);
+      automations.getAllAsync.resolves([
         {
           id: 1,
           name: "Time Alert",
@@ -218,7 +283,11 @@ describe("AutomationService", () => {
         },
       ]);
 
-      const service = await AutomationService.createInstanceAsync(sprootDB, eventBus, mockLogger);
+      const service = await AutomationService.createInstanceAsync(
+        automations,
+        eventBus,
+        mockLogger,
+      );
 
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
@@ -231,15 +300,16 @@ describe("AutomationService", () => {
     });
 
     it("should emit (empty) event with enabled automation when no conditions are met", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
+      const automations = createStubAutomationsRepository() as any;
+      automations.conditions.sensor.getAsync.resolves([]);
+      automations.conditions.output.getAsync.resolves([]);
+      automations.conditions.time.getAsync.resolves([]);
+      automations.conditions.weekday.getAsync.resolves([]);
+      automations.conditions.weekday.getAsync.resolves([]);
+      automations.conditions.month.getAsync.resolves([]);
+      automations.conditions.dateRange.getAsync.resolves([]);
 
-      sprootDB.getAutomationsAsync.resolves([
+      automations.getAllAsync.resolves([
         {
           id: 1,
           name: "Test Automation",
@@ -248,7 +318,11 @@ describe("AutomationService", () => {
         },
       ]);
 
-      const service = await AutomationService.createInstanceAsync(sprootDB, eventBus, mockLogger);
+      const service = await AutomationService.createInstanceAsync(
+        automations,
+        eventBus,
+        mockLogger,
+      );
 
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
@@ -263,10 +337,14 @@ describe("AutomationService", () => {
     });
 
     it("should emit (empty)event when handling empty automation list", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const automations = createStubAutomationsRepository() as any;
+      automations.getAllAsync.resolves([]);
 
-      const service = await AutomationService.createInstanceAsync(sprootDB, eventBus, mockLogger);
+      const service = await AutomationService.createInstanceAsync(
+        automations,
+        eventBus,
+        mockLogger,
+      );
 
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);

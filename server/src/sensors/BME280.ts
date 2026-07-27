@@ -1,7 +1,7 @@
 import bme280 from "bme280";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
+import { ISensorsRepository } from "../database/repositories/sensors/ISensorsRepository";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
 
@@ -10,7 +10,7 @@ class BME280 extends SensorBase {
 
   static createInstanceAsync(
     sdbsensor: SDBSensor,
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -18,7 +18,7 @@ class BME280 extends SensorBase {
   ): Promise<BME280 | null> {
     const sensor = new BME280(
       sdbsensor,
-      sprootDB,
+      sensorsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -29,7 +29,7 @@ class BME280 extends SensorBase {
 
   private constructor(
     sdbsensor: SDBSensor,
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -37,7 +37,7 @@ class BME280 extends SensorBase {
   ) {
     super(
       sdbsensor,
-      sprootDB,
+      sensorsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,

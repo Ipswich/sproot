@@ -1,14 +1,31 @@
-import { ADS1115, Ads1115Device } from "@sproot/sproot-server/src/sensors/ADS1115";
+import { ADS1115, Ads1115Device } from "../ADS1115";
 
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
+import { ISensorsRepository } from "../../database/repositories/sensors/ISensorsRepository";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
+import { SDBReading } from "@sproot/common/database/SDBReading";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-const mockSprootDB = new MockSprootDB();
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
+
+const mockSensorsRepo: ISensorsRepository = {
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  getDS18B20AddressesAsync: async () => [],
+  addAsync: async () => {},
+  updateAsync: async () => {},
+  updateSensorCalibrationAsync: async () => {},
+  deleteAsync: async () => {},
+  addSensorReadingAsync: async () => {},
+  getSensorReadingsAsync: async () => [],
+  getBucketedSensorReadingsAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: {} as DeviceDataQueryRow,
+  }),
+};
 
 describe("ADS1115.ts tests", function () {
   afterEach(() => {
@@ -22,7 +39,7 @@ describe("ADS1115.ts tests", function () {
       address: "0x48",
       pin: "0",
     } as SDBSensor;
-    sinon.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
+    sinon.stub(mockSensorsRepo, "getBucketedSensorReadingsAsync").resolves([
       {
         data: "1.23",
         metric: ReadingType.voltage,
@@ -55,7 +72,7 @@ describe("ADS1115.ts tests", function () {
       mockADS1115Data,
       ReadingType.voltage,
       "2/3",
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,
@@ -100,7 +117,7 @@ describe("ADS1115.ts tests", function () {
       mockADS1115Data,
       ReadingType.voltage,
       "2/3",
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,
@@ -120,7 +137,7 @@ describe("ADS1115.ts tests", function () {
       mockADS1115Data,
       ReadingType.voltage,
       "2/3",
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,
@@ -173,7 +190,7 @@ describe("ADS1115.ts tests", function () {
       mockADS1115Data1,
       ReadingType.voltage,
       "2/3",
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,
@@ -184,7 +201,7 @@ describe("ADS1115.ts tests", function () {
       mockADS1115Data2,
       ReadingType.voltage,
       "2/3",
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,
@@ -195,7 +212,7 @@ describe("ADS1115.ts tests", function () {
       mockADS1115Data3,
       ReadingType.voltage,
       "2/3",
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,

@@ -1,9 +1,11 @@
 import { Pca9685Driver } from "pca9685";
 import { openSync } from "i2c-bus";
 import { OutputBase } from "./base/OutputBase";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
+import type { IOutputsRepository } from "../database/repositories/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "../database/repositories/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "../database/repositories/subcontrollers/ISubcontrollersRepository";
+import { AvailableDevice } from "@sproot/common/outputs/AvailableDevice";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 import { IEventBus } from "../eventbus/IEventBus";
@@ -11,7 +13,9 @@ import { IEventBus } from "../eventbus/IEventBus";
 class PCA9685 extends MultiOutputBase {
   constructor(
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
+    subcontrollersRepository: ISubcontrollersRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -20,7 +24,9 @@ class PCA9685 extends MultiOutputBase {
   ) {
     super(
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
+      subcontrollersRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -49,7 +55,8 @@ class PCA9685 extends MultiOutputBase {
       pca9685Driver as Pca9685Driver, // Type assertion to ensure pca9685Driver is not undefined
       output,
       this.eventBus,
-      this.sprootDB,
+      this.outputsRepository,
+      this.outputActionsRepository,
       this.maxCacheSize,
       this.initialCacheLookback,
       this.cacheBucketMinutes,
@@ -82,7 +89,8 @@ class PCA9685Output extends OutputBase {
     pca9685: Pca9685Driver,
     output: SDBOutput,
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -92,7 +100,8 @@ class PCA9685Output extends OutputBase {
       pca9685,
       output,
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -105,7 +114,8 @@ class PCA9685Output extends OutputBase {
     pca9685: Pca9685Driver,
     output: SDBOutput,
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -114,7 +124,8 @@ class PCA9685Output extends OutputBase {
     super(
       output,
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,

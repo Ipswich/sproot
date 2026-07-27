@@ -1,5 +1,5 @@
+import type { IOutputActionsRepository } from "../../database/repositories/automations/actions/IOutputActionsRepository";
 import { IAutomationEventPayload } from "@sproot/automation/IAutomationEventPayload";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { OutputAction } from "./OutputAction";
 import winston from "winston";
 import { IEventBus } from "../../eventbus/IEventBus";
@@ -8,7 +8,7 @@ import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/Aut
 
 export class OutputActionManager implements Disposable {
   #outputId: number;
-  #sprootDB: ISprootDB;
+  #outputActionsRepository: IOutputActionsRepository;
   #eventBus: IEventBus;
   #logger: winston.Logger;
   #lastRunAt: number | null = null;
@@ -23,7 +23,7 @@ export class OutputActionManager implements Disposable {
     outputId: number,
     actionFunction: (result: number | undefined) => Promise<void>,
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputActionsRepository: IOutputActionsRepository,
     logger: winston.Logger,
     automationTimeout: number,
   ): Promise<OutputActionManager> {
@@ -31,7 +31,7 @@ export class OutputActionManager implements Disposable {
       outputId,
       actionFunction,
       eventBus,
-      sprootDB,
+      outputActionsRepository,
       logger,
       automationTimeout,
     );
@@ -43,14 +43,14 @@ export class OutputActionManager implements Disposable {
     outputId: number,
     actionFunction: (result: number | undefined) => Promise<void>,
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputActionsRepository: IOutputActionsRepository,
     logger: winston.Logger,
     automationTimeout: number,
   ) {
     this.#outputId = outputId;
     this.#triggeredActionFunction = actionFunction;
     this.#eventBus = eventBus;
-    this.#sprootDB = sprootDB;
+    this.#outputActionsRepository = outputActionsRepository;
     this.#logger = logger;
     this.#automationTimeout = automationTimeout;
 
@@ -106,7 +106,9 @@ export class OutputActionManager implements Disposable {
    */
   async #reloadActionsAsync(): Promise<void> {
     try {
-      const outputActions = await this.#sprootDB.getOutputActionsByOutputIdAsync(this.#outputId);
+      const outputActions = await this.#outputActionsRepository.getActionsByOutputIdAsync(
+        this.#outputId,
+      );
       this.#actionMap = new Map(outputActions.map((a) => [a.automationId, new OutputAction(a)]));
     } catch (error) {
       this.#logger.error(`Error reloading actions for output ${this.#outputId} - ${error}`);

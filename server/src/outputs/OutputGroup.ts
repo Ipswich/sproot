@@ -1,8 +1,9 @@
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
+import type { IOutputsRepository } from "../database/repositories/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "../database/repositories/automations/actions/IOutputActionsRepository";
 import { OutputBase } from "./base/OutputBase";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
+import { ControlMode } from "@sproot/common/outputs/IOutputBase";
 import winston from "winston";
 import { IEventBus } from "../eventbus/IEventBus";
 
@@ -12,7 +13,8 @@ export class OutputGroup extends OutputBase {
   static async createInstanceAsync(
     output: SDBOutput,
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -21,7 +23,8 @@ export class OutputGroup extends OutputBase {
     const outputGroup = new OutputGroup(
       output,
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -36,7 +39,8 @@ export class OutputGroup extends OutputBase {
   private constructor(
     output: SDBOutput,
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -45,7 +49,8 @@ export class OutputGroup extends OutputBase {
     super(
       output,
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,

@@ -9,7 +9,7 @@ import { Request, Response } from "express";
 import { assert } from "chai";
 import sinon, { SinonSpy } from "sinon";
 import winston from "winston";
-import { SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
+import { SuccessResponse } from "@sproot/common/api/v2/Responses";
 import fs from "fs";
 import path from "path";
 import { tmpdir } from "os";
@@ -185,7 +185,9 @@ describe("BackupHandlers.ts", () => {
   describe("systemBackupRestoreHandlerAsync", () => {
     it("should return a 202 when restore is initiated", async () => {
       const sprootDBMock = {
-        validateBackupArchiveAsync: sinon.stub().resolves(),
+        system: {
+          validateBackupArchiveAsync: sinon.stub().resolves(),
+        },
       };
       const response = {
         locals: {
@@ -221,12 +223,14 @@ describe("BackupHandlers.ts", () => {
       assert.equal(result.statusCode, 202);
       assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
-      assert.isTrue(sprootDBMock.validateBackupArchiveAsync.calledOnce);
+      assert.isTrue(sprootDBMock.system.validateBackupArchiveAsync.calledOnce);
     });
 
     it("should return a 400 for invalid backup content", async () => {
       const sprootDBMock = {
-        validateBackupArchiveAsync: sinon.stub().rejects(new Error("pg_restore exited with 1")),
+        system: {
+          validateBackupArchiveAsync: sinon.stub().rejects(new Error("pg_restore exited with 1")),
+        },
       };
       const gracefulHaltSpy = sinon.spy();
       const response = {
@@ -264,14 +268,16 @@ describe("BackupHandlers.ts", () => {
       assert.equal(result.statusCode, 400);
       assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
-      assert.isTrue(sprootDBMock.validateBackupArchiveAsync.calledOnce);
+      assert.isTrue(sprootDBMock.system.validateBackupArchiveAsync.calledOnce);
       assert.isTrue(gracefulHaltSpy.notCalled);
     });
 
     it("should invoke the restore after shutdown with a validated backup", async () => {
       const sprootDBMock = {
-        validateBackupArchiveAsync: sinon.stub().resolves(),
-        swapRestoreDatabaseAsync: sinon.stub().resolves(),
+        system: {
+          validateBackupArchiveAsync: sinon.stub().resolves(),
+          swapRestoreDatabaseAsync: sinon.stub().resolves(),
+        },
       };
       const response = {
         locals: {
@@ -304,8 +310,8 @@ describe("BackupHandlers.ts", () => {
       assert.equal(result.statusCode, 202);
       assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
-      assert.isTrue(sprootDBMock.validateBackupArchiveAsync.calledOnce);
-      assert.isTrue(sprootDBMock.swapRestoreDatabaseAsync.calledOnce);
+      assert.isTrue(sprootDBMock.system.validateBackupArchiveAsync.calledOnce);
+      assert.isTrue(sprootDBMock.system.swapRestoreDatabaseAsync.calledOnce);
     });
 
     it("should return a 500 if an exception occurs during restore", async () => {
@@ -344,7 +350,9 @@ describe("BackupHandlers.ts", () => {
   describe("systemBackupCreateHandlerAsync", () => {
     it("should return 202 when backup creation is initiated", async () => {
       const sprootDBMock = {
-        backupDatabaseAsync: sinon.stub().resolves(),
+        system: {
+          backupDatabaseAsync: sinon.stub().resolves(),
+        },
       };
       const response = {
         locals: {

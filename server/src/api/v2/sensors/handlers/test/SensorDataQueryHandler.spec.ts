@@ -38,8 +38,8 @@ describe("SensorDataQueryHandler", () => {
   });
 
   it("should return 200 with data when DB query succeeds", async () => {
-    const mockDb = {
-      querySensorDataAsync: sinon.stub().resolves({
+    const mockSensors = {
+      getDataAsync: sinon.stub().resolves({
         data: {
           id: 1,
           name: "temperature",
@@ -48,6 +48,9 @@ describe("SensorDataQueryHandler", () => {
         },
         xAxis: { field: "time", values: ["2024-01-01T00:00:00.000Z"] },
       }),
+    };
+    const mockDb = {
+      sensors: mockSensors,
     } as unknown as SprootDB;
 
     const req = {
@@ -67,8 +70,11 @@ describe("SensorDataQueryHandler", () => {
   });
 
   it("should return 500 when DB query throws", async () => {
+    const mockSensors = {
+      getDataAsync: sinon.stub().rejects(new Error("connection refused")),
+    };
     const mockDb = {
-      querySensorDataAsync: sinon.stub().rejects(new Error("connection refused")),
+      sensors: mockSensors,
     } as unknown as SprootDB;
 
     const req = {
@@ -87,12 +93,15 @@ describe("SensorDataQueryHandler", () => {
   });
 
   it("should include nextCursor in response when present", async () => {
-    const mockDb = {
-      querySensorDataAsync: sinon.stub().resolves({
+    const mockSensors = {
+      getDataAsync: sinon.stub().resolves({
         data: null,
         nextCursor: Buffer.from("2024-01-01T01:00:00.000Z").toString("base64"),
         xAxis: { field: "time", values: [] },
       }),
+    };
+    const mockDb = {
+      sensors: mockSensors,
     } as unknown as SprootDB;
 
     const req = {

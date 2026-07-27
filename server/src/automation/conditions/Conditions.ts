@@ -1,6 +1,6 @@
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { AutomationOperator } from "@sproot/automation/IAutomation";
 import { IConditionProperties } from "@sproot/automation/IConditionProperties";
+import { IConditionsRepository } from "../../database/repositories/automations/conditions/IConditionsRepository";
 import { OutputList } from "../../outputs/list/OutputList";
 import { SensorList } from "../../sensors/list/SensorList";
 
@@ -27,9 +27,9 @@ export class Conditions {
   #weekdayConditions: Record<string, WeekdayCondition>;
   #monthConditions: Record<string, MonthCondition>;
   #dateRangeConditions: Record<string, DateRangeCondition>;
-  #sprootDB: ISprootDB;
+  #conditionsRepository: IConditionsRepository;
 
-  constructor(automationId: number, sprootDB: ISprootDB) {
+  constructor(automationId: number, conditionsRepository: IConditionsRepository) {
     this.#automationId = automationId;
     this.#sensorConditions = {};
     this.#outputConditions = {};
@@ -37,7 +37,7 @@ export class Conditions {
     this.#weekdayConditions = {};
     this.#monthConditions = {};
     this.#dateRangeConditions = {};
-    this.#sprootDB = sprootDB;
+    this.#conditionsRepository = conditionsRepository;
   }
 
   get groupedConditions(): {
@@ -286,7 +286,7 @@ export class Conditions {
 
     const promises = [];
     promises.push(
-      this.#sprootDB.getSensorConditionsAsync(this.#automationId).then((sensorConditions) => {
+      this.#conditionsRepository.sensor.getAsync(this.#automationId).then((sensorConditions) => {
         sensorConditions.map((sensorCondition) => {
           this.#sensorConditions[sensorCondition.id] = new SensorCondition(
             sensorCondition.id,
@@ -301,7 +301,7 @@ export class Conditions {
       }),
     );
     promises.push(
-      this.#sprootDB.getOutputConditionsAsync(this.#automationId).then((outputConditions) => {
+      this.#conditionsRepository.output.getAsync(this.#automationId).then((outputConditions) => {
         outputConditions.map((outputCondition) => {
           this.#outputConditions[outputCondition.id] = new OutputCondition(
             outputCondition.id,
@@ -315,7 +315,7 @@ export class Conditions {
       }),
     );
     promises.push(
-      this.#sprootDB.getTimeConditionsAsync(this.#automationId).then((timeConditions) => {
+      this.#conditionsRepository.time.getAsync(this.#automationId).then((timeConditions) => {
         timeConditions.map((timeCondition) => {
           this.#timeConditions[timeCondition.id] = new TimeCondition(
             timeCondition.id,
@@ -327,7 +327,7 @@ export class Conditions {
       }),
     );
     promises.push(
-      this.#sprootDB.getWeekdayConditionsAsync(this.#automationId).then((weekdayConditions) => {
+      this.#conditionsRepository.weekday.getAsync(this.#automationId).then((weekdayConditions) => {
         weekdayConditions.map((weekdayCondition) => {
           this.#weekdayConditions[weekdayCondition.id] = new WeekdayCondition(
             weekdayCondition.id,
@@ -338,7 +338,7 @@ export class Conditions {
       }),
     );
     promises.push(
-      this.#sprootDB.getMonthConditionsAsync(this.#automationId).then((monthConditions) => {
+      this.#conditionsRepository.month.getAsync(this.#automationId).then((monthConditions) => {
         monthConditions.map((monthCondition) => {
           this.#monthConditions[monthCondition.id] = new MonthCondition(
             monthCondition.id,
@@ -349,18 +349,20 @@ export class Conditions {
       }),
     );
     promises.push(
-      this.#sprootDB.getDateRangeConditionsAsync(this.#automationId).then((dateRangeConditions) => {
-        dateRangeConditions.map((dateRangeCondition) => {
-          this.#dateRangeConditions[dateRangeCondition.id] = new DateRangeCondition(
-            dateRangeCondition.id,
-            dateRangeCondition.groupType,
-            dateRangeCondition.startMonth,
-            dateRangeCondition.startDate,
-            dateRangeCondition.endMonth,
-            dateRangeCondition.endDate,
-          );
-        });
-      }),
+      this.#conditionsRepository.dateRange
+        .getAsync(this.#automationId)
+        .then((dateRangeConditions) => {
+          dateRangeConditions.map((dateRangeCondition) => {
+            this.#dateRangeConditions[dateRangeCondition.id] = new DateRangeCondition(
+              dateRangeCondition.id,
+              dateRangeCondition.groupType,
+              dateRangeCondition.startMonth,
+              dateRangeCondition.startDate,
+              dateRangeCondition.endMonth,
+              dateRangeCondition.endDate,
+            );
+          });
+        }),
     );
 
     await Promise.all(promises);

@@ -1,10 +1,13 @@
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ESP32_PCA9685 } from "@sproot/sproot-server/src/outputs/ESP32_PCA9685";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
+import type { IOutputsRepository } from "../../database/repositories/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "../../database/repositories/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "../../database/repositories/subcontrollers/ISubcontrollersRepository";
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
+import { ESP32_PCA9685 } from "../ESP32_PCA9685";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
 import { OutputBase } from "../base/OutputBase";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
-import { ControlMode } from "@sproot/sproot-common/src/outputs/IOutputBase";
-import { SDBOutputState } from "@sproot/sproot-common/src/database/SDBOutputState";
+import { Models } from "@sproot/common/outputs/Models";
+import { ControlMode } from "@sproot/common/outputs/IOutputBase";
+import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
 
 import { assert } from "chai";
 import nock from "nock";
@@ -12,11 +15,48 @@ import * as sinon from "sinon";
 import winston from "winston";
 import { MdnsService } from "../../system/MdnsService";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
-const mockSprootDB = new MockSprootDB();
+
+const createMockOutputsRepo = (): IOutputsRepository => ({
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+  updateLastOutputStateAsync: async () => {},
+  getLastOutputStateAsync: async () => [],
+  addOutputStateAsync: async () => {},
+  getOutputStatesAsync: async () => [],
+  getBucketedOutputStatesAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: null as unknown as DeviceDataQueryRow,
+  }),
+});
+
+const createMockOutputActionsRepo = (): IOutputActionsRepository => ({
+  getAllAsync: async () => [],
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  getOutputActionAsync: async () => [],
+  getActionsByOutputIdAsync: async () => [],
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createMockSubcontrollersRepo = (): ISubcontrollersRepository => ({
+  getAllAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => 0,
+  deleteAsync: async () => 0,
+});
+
+const mockOutputsRepo = createMockOutputsRepo();
+const mockOutputActionsRepo = createMockOutputActionsRepo();
+const mockSubcontrollersRepo = createMockSubcontrollersRepo();
 
 describe("ESP32_PCA9685.ts tests", function () {
   this.beforeEach(() => {
-    sinon.stub(mockSprootDB, "getSubcontrollersAsync").resolves([
+    sinon.stub(mockSubcontrollersRepo, "getAllAsync").resolves([
       {
         id: 1,
         type: "ESP32",
@@ -46,7 +86,9 @@ describe("ESP32_PCA9685.ts tests", function () {
 
     const pca9685 = new ESP32_PCA9685(
       eventBus,
-      mockSprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
       mockMdnsService,
       5,
       5,
@@ -130,7 +172,9 @@ describe("ESP32_PCA9685.ts tests", function () {
 
     const pca9685 = new ESP32_PCA9685(
       eventBus,
-      mockSprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
       mockMdnsService,
       5,
       5,
@@ -155,7 +199,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     assert.equal(outputData["1"]!["pin"], "0");
     assert.equal(outputData["1"]!["isPwm"], true);
     assert.equal(outputData["1"]!["isInvertedPwm"], false);
-    assert.exists(pca9685.outputs["1"]!["sprootDB"]);
+    assert.exists(pca9685.outputs["1"]!["outputsRepository"]);
   });
 
   it("should update and apply states with respect to control mode", async function () {
@@ -191,7 +235,9 @@ describe("ESP32_PCA9685.ts tests", function () {
 
     const pca9685 = new ESP32_PCA9685(
       eventBus,
-      mockSprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
       mockMdnsService,
       5,
       5,

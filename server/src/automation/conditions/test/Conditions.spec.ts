@@ -1,7 +1,7 @@
-import { SDBTimeCondition } from "@sproot/sproot-common/dist/database/SDBTimeCondition";
-import { SDBOutputCondition } from "@sproot/sproot-common/dist/database/SDBOutputCondition";
-import { SDBSensorCondition } from "@sproot/sproot-common/dist/database/SDBSensorCondition";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { SDBTimeCondition } from "@sproot/common/database/SDBTimeCondition";
+import { SDBOutputCondition } from "@sproot/common/database/SDBOutputCondition";
+import { SDBSensorCondition } from "@sproot/common/database/SDBSensorCondition";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { OutputList } from "../../../outputs/list/OutputList";
 import { OutputBase } from "../../../outputs/base/OutputBase";
 import { SensorList } from "../../../sensors/list/SensorList";
@@ -11,16 +11,57 @@ import { Conditions } from "../Conditions";
 
 import { assert } from "chai";
 import sinon from "sinon";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 
+const stub = () => sinon.stub().resolves();
+const createStubConditionsRepository = () => {
+  return {
+    sensor: {
+      getAsync: sinon.stub().resolves([]),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    output: {
+      getAsync: sinon.stub().resolves([]),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    time: {
+      getAsync: sinon.stub().resolves([]),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    weekday: {
+      getAsync: sinon.stub().resolves([]),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    month: {
+      getAsync: sinon.stub().resolves([]),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    dateRange: {
+      getAsync: sinon.stub().resolves([]),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+  };
+};
+
 describe("Conditions.ts tests", () => {
   describe("evaluate", () => {
     it("should return true or false, depending on the condition and comparator", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const conditions = new Conditions(1, sprootDB);
+      const conditionsRepo = createStubConditionsRepository();
+      const conditions = new Conditions(1, conditionsRepo);
       // Sensor stubs
       const sensor = sinon.createStubInstance(SensorBase);
       sensor.lastReading = {
@@ -52,12 +93,13 @@ describe("Conditions.ts tests", () => {
       const monthConditions = [] as SDBMonthCondition[];
       const dateRangeConditions = [] as SDBDateRangeCondition[];
 
-      sprootDB.getSensorConditionsAsync.resolves(sensorConditions);
-      sprootDB.getOutputConditionsAsync.resolves(outputConditions);
-      sprootDB.getTimeConditionsAsync.resolves(timeConditions);
-      sprootDB.getWeekdayConditionsAsync.resolves(weekdayConditions);
-      sprootDB.getMonthConditionsAsync.resolves(monthConditions);
-      sprootDB.getDateRangeConditionsAsync.resolves(dateRangeConditions);
+      conditionsRepo.sensor.getAsync.resolves(sensorConditions);
+      conditionsRepo.output.getAsync.resolves(outputConditions);
+      conditionsRepo.time.getAsync.resolves(timeConditions);
+      conditionsRepo.weekday.getAsync.resolves(weekdayConditions);
+      conditionsRepo.weekday.getAsync.resolves(weekdayConditions);
+      conditionsRepo.month.getAsync.resolves(monthConditions);
+      conditionsRepo.dateRange.getAsync.resolves(dateRangeConditions);
 
       // Add some sensor Conditions
       sensorConditions.push({
@@ -191,7 +233,6 @@ describe("Conditions.ts tests", () => {
 
       // Clean up that last one
       sensorConditions.pop();
-      sprootDB.deleteSensorConditionAsync.resolves();
 
       // Add some output Conditions
       outputConditions.push({
@@ -346,8 +387,8 @@ describe("Conditions.ts tests", () => {
 
   // describe("addSensorConditionAsync", () => {
   //   it("should add a sensor condition to the conditions list", async () => {
-  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
-  //     sprootDB.addSensorConditionAsync.resolves(1);
+  //     const sprootDB = createStubSprootDB();
+  //     sprootDB.automations.conditions.addSensorConditionAsync.resolves(1);
 
   //     const conditions = new Conditions(1, sprootDB);
   //     await conditions.addSensorConditionAsync("allOf", "equal", 50, 1, ReadingType.temperature);
@@ -365,8 +406,8 @@ describe("Conditions.ts tests", () => {
 
   // describe("addOutputConditionAsync", () => {
   //   it("should add an output condition to the conditions list", async () => {
-  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
-  //     sprootDB.addOutputConditionAsync.resolves(1);
+  //     const sprootDB = createStubSprootDB();
+  //     sprootDB.automations.conditions.addOutputConditionAsync.resolves(1);
 
   //     const conditions = new Conditions(1, sprootDB);
   //     await conditions.addOutputConditionAsync("anyOf", "equal", 50, 1);
@@ -383,8 +424,8 @@ describe("Conditions.ts tests", () => {
 
   // describe("addTimeConditionAsync", () => {
   //   it("should add a time condition to the conditions list", async () => {
-  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
-  //     sprootDB.addTimeConditionAsync.resolves(1);
+  //     const sprootDB = createStubSprootDB();
+  //     sprootDB.automations.conditions.addTimeConditionAsync.resolves(1);
 
   //     const conditions = new Conditions(1, sprootDB);
   //     await conditions.addTimeConditionAsync("oneOf", "00:00", "01:00");
@@ -400,8 +441,8 @@ describe("Conditions.ts tests", () => {
 
   // describe("updateConditionAsync", () => {
   //   it("should update a sensorCondition", async () => {
-  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
-  //     sprootDB.updateSensorConditionAsync.resolves();
+  //     const sprootDB = createStubSprootDB();
+  //     sprootDB.automations.conditions.updateSensorConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     const sensorCondition = await conditions.addSensorConditionAsync("allOf", "equal", 50, 1, ReadingType.temperature);
@@ -421,8 +462,8 @@ describe("Conditions.ts tests", () => {
   //   });
 
   //   it("should update an outputCondition", async () => {
-  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
-  //     sprootDB.updateOutputConditionAsync.resolves();
+  //     const sprootDB = createStubSprootDB();
+  //     sprootDB.automations.conditions.updateOutputConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     const outputCondition = await conditions.addOutputConditionAsync("allOf", "equal", 50, 1);
@@ -440,8 +481,8 @@ describe("Conditions.ts tests", () => {
   //   });
 
   //   it("should update a timeCondition", async () => {
-  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
-  //     sprootDB.updateTimeConditionAsync.resolves();
+  //     const sprootDB = createStubSprootDB();
+  //     sprootDB.automations.conditions.updateTimeConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     const timeCondition = await conditions.addTimeConditionAsync("allOf", "00:00", "01:00");
@@ -459,9 +500,9 @@ describe("Conditions.ts tests", () => {
 
   // describe("deleteSensorConditionAsync", () => {
   //   it("should delete a sensorCondition", async () => {
-  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
-  //     sprootDB.addSensorConditionAsync.resolves(1);
-  //     sprootDB.deleteSensorConditionAsync.resolves();
+  //     const sprootDB = createStubSprootDB();
+  //     sprootDB.automations.conditions.addSensorConditionAsync.resolves(1);
+  //     sprootDB.automations.conditions.deleteSensorConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     const sensorCondition = await conditions.addSensorConditionAsync("allOf", "equal", 50, 1, ReadingType.temperature);
@@ -473,8 +514,8 @@ describe("Conditions.ts tests", () => {
   //   });
 
   //   it("should not delete a sensorCondition that doesn't exist", async () => {
-  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
-  //     sprootDB.deleteSensorConditionAsync.resolves();
+  //     const sprootDB = createStubSprootDB();
+  //     sprootDB.automations.conditions.deleteSensorConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     await conditions.deleteSensorConditionAsync(1);
@@ -486,9 +527,9 @@ describe("Conditions.ts tests", () => {
 
   // describe("deleteOutputConditionAsync", () => {
   //   it("should delete an outputCondition", async () => {
-  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
-  //     sprootDB.addOutputConditionAsync.resolves(1);
-  //     sprootDB.deleteOutputConditionAsync.resolves();
+  //     const sprootDB = createStubSprootDB();
+  //     sprootDB.automations.conditions.addOutputConditionAsync.resolves(1);
+  //     sprootDB.automations.conditions.deleteOutputConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     const outputCondition = await conditions.addOutputConditionAsync("allOf", "equal", 50, 1);
@@ -500,8 +541,8 @@ describe("Conditions.ts tests", () => {
   //   });
 
   //   it("should not delete an outputCondition that doesn't exist", async () => {
-  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
-  //     sprootDB.deleteOutputConditionAsync.resolves();
+  //     const sprootDB = createStubSprootDB();
+  //     sprootDB.automations.conditions.deleteOutputConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     await conditions.deleteOutputConditionAsync(1);
@@ -513,9 +554,9 @@ describe("Conditions.ts tests", () => {
 
   // describe("deleteTimeConditionAsync", () => {
   //   it("should delete a timeCondition", async () => {
-  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
-  //     sprootDB.addTimeConditionAsync.resolves(1);
-  //     sprootDB.deleteTimeConditionAsync.resolves();
+  //     const sprootDB = createStubSprootDB();
+  //     sprootDB.automations.conditions.addTimeConditionAsync.resolves(1);
+  //     sprootDB.automations.conditions.deleteTimeConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     const timeCondition = await conditions.addTimeConditionAsync("allOf", "00:00", "01:00");
@@ -527,8 +568,8 @@ describe("Conditions.ts tests", () => {
   //   });
 
   //   it("should not delete a timeCondition that doesn't exist", async () => {
-  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
-  //     sprootDB.deleteTimeConditionAsync.resolves();
+  //     const sprootDB = createStubSprootDB();
+  //     sprootDB.automations.conditions.deleteTimeConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     await conditions.deleteTimeConditionAsync(1);
@@ -540,8 +581,8 @@ describe("Conditions.ts tests", () => {
 
   describe("loadAsync", () => {
     it("should load all conditions from the database", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getSensorConditionsAsync.resolves([
+      const conditionsRepo = createStubConditionsRepository();
+      conditionsRepo.sensor.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -551,7 +592,7 @@ describe("Conditions.ts tests", () => {
           comparisonValue: 50,
         } as SDBSensorCondition,
       ]);
-      sprootDB.getOutputConditionsAsync.resolves([
+      conditionsRepo.output.getAsync.resolves([
         {
           id: 1,
           groupType: "anyOf",
@@ -560,19 +601,23 @@ describe("Conditions.ts tests", () => {
           comparisonValue: 50,
         } as SDBOutputCondition,
       ]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      conditionsRepo.time.getAsync.resolves([
         { id: 1, groupType: "oneOf", startTime: "00:00", endTime: "01:00" } as SDBTimeCondition,
         { id: 2, groupType: "anyOf", startTime: "00:00", endTime: "01:00" } as SDBTimeCondition,
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([
+      conditionsRepo.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 5 } as SDBWeekdayCondition,
         { id: 2, groupType: "anyOf", weekdays: 2 } as SDBWeekdayCondition,
       ]);
-      sprootDB.getMonthConditionsAsync.resolves([
+      conditionsRepo.weekday.getAsync.resolves([
+        { id: 1, groupType: "allOf", weekdays: 5 } as SDBWeekdayCondition,
+        { id: 2, groupType: "anyOf", weekdays: 2 } as SDBWeekdayCondition,
+      ]);
+      conditionsRepo.month.getAsync.resolves([
         { id: 1, groupType: "allOf", months: 3 } as SDBMonthCondition,
         { id: 2, groupType: "anyOf", months: 6 } as SDBMonthCondition,
       ]);
-      sprootDB.getDateRangeConditionsAsync.resolves([
+      conditionsRepo.dateRange.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -591,7 +636,7 @@ describe("Conditions.ts tests", () => {
         } as SDBDateRangeCondition,
       ]);
 
-      const conditions = new Conditions(1, sprootDB);
+      const conditions = new Conditions(1, conditionsRepo);
       await conditions.loadAsync();
 
       assert.equal(conditions.groupedConditions.sensor.allOf.length, 1);

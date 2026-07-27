@@ -1,15 +1,32 @@
 import { promises } from "fs";
 
-import { DS18B20 } from "@sproot/sproot-server/src/sensors/DS18B20";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
+import { DS18B20 } from "../DS18B20";
+import { ISensorsRepository } from "../../database/repositories/sensors/ISensorsRepository";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
+import { SDBReading } from "@sproot/common/database/SDBReading";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-const mockSprootDB = new MockSprootDB();
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
+
+const mockSensorsRepo: ISensorsRepository = {
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  getDS18B20AddressesAsync: async () => [],
+  addAsync: async () => {},
+  updateAsync: async () => {},
+  updateSensorCalibrationAsync: async () => {},
+  deleteAsync: async () => {},
+  addSensorReadingAsync: async () => {},
+  getSensorReadingsAsync: async () => [],
+  getBucketedSensorReadingsAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: {} as DeviceDataQueryRow,
+  }),
+};
 
 describe("DS18B20.ts tests", function () {
   afterEach(() => {
@@ -35,7 +52,7 @@ describe("DS18B20.ts tests", function () {
 
     await using ds18b20Sensor = await DS18B20.createInstanceAsync(
       mockDS18B20Data,
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,
@@ -72,7 +89,7 @@ describe("DS18B20.ts tests", function () {
 
     await using ds18b20Sensor = await DS18B20.createInstanceAsync(
       mockDS18B20Data,
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,
@@ -87,7 +104,7 @@ describe("DS18B20.ts tests", function () {
     readFileStub.resolves(mockReading);
     await using ds18b20Sensor2 = await DS18B20.createInstanceAsync(
       mockDS18B20Data,
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,
@@ -104,7 +121,7 @@ describe("DS18B20.ts tests", function () {
     readFileStub.resolves(mockReading);
     await using ds18b20Sensor3 = await DS18B20.createInstanceAsync(
       mockDS18B20Data,
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,
@@ -121,7 +138,7 @@ describe("DS18B20.ts tests", function () {
     readFileStub.resolves(mockReading);
     await using ds18b20Sensor4 = await DS18B20.createInstanceAsync(
       mockDS18B20Data,
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,
@@ -153,7 +170,7 @@ describe("DS18B20.ts tests", function () {
       address: "28-00000",
     } as SDBSensor;
     const recordsToLoad = 2;
-    sinon.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
+    sinon.stub(mockSensorsRepo, "getBucketedSensorReadingsAsync").resolves([
       {
         data: "1",
         metric: ReadingType.temperature,
@@ -180,7 +197,7 @@ describe("DS18B20.ts tests", function () {
 
     await using ds18b20Sensor = await DS18B20.createInstanceAsync(
       mockDS18B20Data,
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,

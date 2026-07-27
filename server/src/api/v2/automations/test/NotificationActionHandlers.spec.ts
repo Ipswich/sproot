@@ -7,21 +7,91 @@ import {
   getByIdAsync,
   getActiveNotificationsAsync,
 } from "../handlers/NotificationActionHandlers";
-import { SDBNotificationAction } from "@sproot/sproot-common/dist/database/SDBNotificationAction";
+import { SDBNotificationAction } from "@sproot/common/database/SDBNotificationAction";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
 
 import { assert } from "chai";
 import sinon from "sinon";
 import { AutomationService } from "../../../../automation/AutomationService";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 import { MemoryEventBus } from "../../../../eventbus/MemoryEventBus";
+
+const createStubSprootDB = () => {
+  const sprootDB = createMockSprootDB() as any;
+  sprootDB.automations = {
+    getAllAsync: sinon.stub(),
+    getByIdAsync: sinon.stub(),
+  } as any;
+  sprootDB.automations = {
+    getAllAsync: sinon.stub(),
+    getByIdAsync: sinon.stub(),
+    conditions: {
+      sensor: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      output: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      time: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      weekday: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      month: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      dateRange: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+    },
+    actions: {
+      output: {
+        getAllAsync: sinon.stub(),
+        getAsync: sinon.stub(),
+        getOutputActionAsync: sinon.stub(),
+        addAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      notification: {
+        getAllAsync: sinon.stub(),
+        getAsync: sinon.stub(),
+        getNotificationActionByIdAsync: sinon.stub(),
+        addAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+    },
+  };
+  return sprootDB;
+};
 
 describe("NotificationActionHandlers.ts tests", () => {
   let mockLogger: winston.Logger;
 
-  const createAutomationServiceAsync = (sprootDB: MockSprootDB) =>
-    AutomationService.createInstanceAsync(sprootDB, new MemoryEventBus(mockLogger), mockLogger);
+  const createAutomationServiceAsync = (sprootDB: any) =>
+    AutomationService.createInstanceAsync(
+      sprootDB.automations,
+      new MemoryEventBus(mockLogger),
+      mockLogger,
+    );
 
   before(() => {
     sinon.stub(winston, "createLogger").callsFake(
@@ -52,8 +122,8 @@ describe("NotificationActionHandlers.ts tests", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getNotificationActionsAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.actions.notification.getAllAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -74,8 +144,8 @@ describe("NotificationActionHandlers.ts tests", () => {
       } as unknown as Request;
 
       const success = (await getAsync(mockRequest, mockResponse)) as SuccessResponse;
-      assert.isTrue(sprootDB.getNotificationActionsByAutomationIdAsync.notCalled);
-      assert.isTrue(sprootDB.getNotificationActionsAsync.calledOnce);
+      assert.isTrue(sprootDB.automations.actions.notification.getAsync.notCalled);
+      assert.isTrue(sprootDB.automations.actions.notification.getAllAsync.calledOnce);
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -98,8 +168,8 @@ describe("NotificationActionHandlers.ts tests", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getNotificationActionsByAutomationIdAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.actions.notification.getAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -122,8 +192,8 @@ describe("NotificationActionHandlers.ts tests", () => {
       } as unknown as Request;
 
       const success = (await getAsync(mockRequest, mockResponse)) as SuccessResponse;
-      assert.isTrue(sprootDB.getNotificationActionsByAutomationIdAsync.calledOnce);
-      assert.isTrue(sprootDB.getNotificationActionsAsync.notCalled);
+      assert.isTrue(sprootDB.automations.actions.notification.getAsync.calledOnce);
+      assert.isTrue(sprootDB.automations.actions.notification.getAllAsync.notCalled);
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -146,8 +216,10 @@ describe("NotificationActionHandlers.ts tests", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getNotificationActionsAsync.rejects(new Error("Database unreachable"));
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.actions.notification.getAllAsync.rejects(
+        new Error("Database unreachable"),
+      );
 
       const mockRequest = {
         app: {
@@ -181,8 +253,8 @@ describe("NotificationActionHandlers.ts tests", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getNotificationActionByIdAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.actions.notification.getNotificationActionByIdAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -225,7 +297,7 @@ describe("NotificationActionHandlers.ts tests", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
 
       const mockRequest = {
         app: {
@@ -259,8 +331,8 @@ describe("NotificationActionHandlers.ts tests", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getNotificationActionByIdAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.actions.notification.getNotificationActionByIdAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -294,8 +366,10 @@ describe("NotificationActionHandlers.ts tests", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getNotificationActionByIdAsync.rejects(new Error("Database unreachable"));
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.actions.notification.getNotificationActionByIdAsync.rejects(
+        new Error("Database unreachable"),
+      );
 
       const mockRequest = {
         app: {
@@ -331,13 +405,13 @@ describe("NotificationActionHandlers.ts tests", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "test", operator: "or" } as SDBAutomation,
       ]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
-      sprootDB.addNotificationActionAsync.resolves(1);
+      sprootDB.automations.getAllAsync.resolves([]);
+      sprootDB.automations.actions.notification.addAsync.resolves(1);
 
       const mockRequest = {
         app: {
@@ -420,8 +494,8 @@ describe("NotificationActionHandlers.ts tests", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
@@ -461,9 +535,9 @@ describe("NotificationActionHandlers.ts tests", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.rejects(new Error("Database unreachable"));
+      sprootDB.automations.getByIdAsync.rejects(new Error("Database unreachable"));
 
       const mockRequest = {
         app: {
@@ -505,8 +579,8 @@ describe("NotificationActionHandlers.ts tests", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getNotificationActionByIdAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.actions.notification.getNotificationActionByIdAsync.resolves([
         { id: 1, automationId: 1, subject: "Test", content: "Test" } as SDBNotificationAction,
       ]);
       const automationService = await createAutomationServiceAsync(sprootDB);
@@ -580,8 +654,8 @@ describe("NotificationActionHandlers.ts tests", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getNotificationActionByIdAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.actions.notification.getNotificationActionByIdAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -616,8 +690,10 @@ describe("NotificationActionHandlers.ts tests", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getNotificationActionByIdAsync.rejects(new Error("Database unreachable"));
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.actions.notification.getNotificationActionByIdAsync.rejects(
+        new Error("Database unreachable"),
+      );
 
       const mockRequest = {
         app: {
@@ -792,3 +868,152 @@ describe("NotificationActionHandlers.ts tests", () => {
     });
   });
 });
+
+const createMockSprootDB = (): any => {
+  const stub = () => sinon.stub();
+  return {
+    sensors: {
+      getAllAsync: stub(),
+      getByIdAsync: stub(),
+      getDS18B20AddressesAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      updateSensorCalibrationAsync: stub(),
+      deleteAsync: stub(),
+      addSensorReadingAsync: stub(),
+      getSensorReadingsAsync: stub(),
+      getBucketedSensorReadingsAsync: stub(),
+      getDataAsync: stub(),
+    },
+    outputs: {
+      getAllAsync: stub(),
+      getByIdAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+      updateLastOutputStateAsync: stub(),
+      getLastOutputStateAsync: stub(),
+      addOutputStateAsync: stub(),
+      getOutputStatesAsync: stub(),
+      getBucketedOutputStatesAsync: stub(),
+      getDataAsync: stub(),
+    },
+    subcontrollers: {
+      getAllAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    automations: {
+      getAllAsync: stub(),
+      getByIdAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    actions: {
+      output: {
+        getAllAsync: stub(),
+        getAsync: stub(),
+        addAsync: stub(),
+        getOutputActionAsync: stub(),
+        getActionsByOutputIdAsync: stub(),
+        updateAsync: stub(),
+      },
+      notification: {
+        getAllAsync: stub(),
+        getAsync: stub(),
+        addAsync: stub(),
+        getNotificationActionByIdAsync: stub(),
+        updateAsync: stub(),
+      },
+    },
+    conditions: {
+      sensor: {
+        getAsync: stub(),
+        addAsync: stub(),
+        updateAsync: stub(),
+        deleteAsync: stub(),
+      },
+      output: {
+        getAsync: stub(),
+        addAsync: stub(),
+        updateAsync: stub(),
+        deleteAsync: stub(),
+      },
+      time: {
+        getAsync: stub(),
+        addAsync: stub(),
+        updateAsync: stub(),
+        deleteAsync: stub(),
+      },
+      weekday: {
+        getAsync: stub(),
+        addAsync: stub(),
+        updateAsync: stub(),
+        deleteAsync: stub(),
+      },
+      month: {
+        getAsync: stub(),
+        addAsync: stub(),
+        updateAsync: stub(),
+        deleteAsync: stub(),
+      },
+      dateRange: {
+        getAsync: stub(),
+        addAsync: stub(),
+        updateAsync: stub(),
+        deleteAsync: stub(),
+      },
+    },
+    camera: {
+      getAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    users: {
+      getByIdAsync: stub(),
+      addAsync: stub(),
+    },
+    deviceZones: {
+      getAllAsync: stub(),
+      getByIdAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    system: {
+      getAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    journals: {
+      getAllAsync: stub(),
+      getByIdAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+      getJournalTagsAsync: stub(),
+      addJournalTagAsync: stub(),
+      updateJournalTagAsync: stub(),
+      deleteJournalTagAsync: stub(),
+      getJournalTagLookupsAsync: stub(),
+      addJournalTagLookupAsync: stub(),
+      deleteJournalTagLookupAsync: stub(),
+      getJournalEntriesAsync: stub(),
+      getJournalEntryAsync: stub(),
+      addJournalEntryAsync: stub(),
+      updateJournalEntryAsync: stub(),
+      deleteJournalEntryAsync: stub(),
+      getJournalEntryTagsAsync: stub(),
+      addJournalEntryTagAsync: stub(),
+      updateJournalEntryTagAsync: stub(),
+      deleteJournalEntryTagAsync: stub(),
+      getJournalEntryTagLookupsAsync: stub(),
+      addJournalEntryTagLookupAsync: stub(),
+      deleteJournalEntryTagLookupAsync: stub(),
+    },
+  } as any;
+};

@@ -5,7 +5,7 @@ import winston from "winston";
 import sinon from "sinon";
 import { assert } from "chai";
 import Timelapse from "../Timelapse";
-import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
+import * as Constants from "@sproot/common/utility/Constants";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 
 describe("Timelapse.ts tests", function () {

@@ -1,11 +1,11 @@
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
-import { ReadingType, Units } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { ISensorsRepository } from "../../database/repositories/sensors/ISensorsRepository";
+import { SDBReading } from "@sproot/common/database/SDBReading";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
+import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
+import { ReadingType, Units } from "@sproot/common/sensors/ReadingType";
 import winston from "winston";
 import { SensorCache } from "./SensorCache";
-import { Models } from "@sproot/sproot-common/dist/sensors/Models";
+import { Models } from "@sproot/common/sensors/Models";
 
 export abstract class SensorBase implements ISensorBase, AsyncDisposable {
   readonly id: number;
@@ -21,7 +21,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
   lowCalibrationPoint: number | null = null;
   highCalibrationPoint: number | null = null;
   readonly units: Record<ReadingType, string>;
-  readonly sprootDB: ISprootDB;
+  readonly sensorsRepository: ISensorsRepository;
   readonly logger: winston.Logger;
   #updateInterval: NodeJS.Timeout | null = null;
   #cache: SensorCache;
@@ -31,7 +31,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
 
   constructor(
     sdbSensor: SDBSensor,
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -48,7 +48,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
     this.deviceZoneId = sdbSensor.deviceZoneId;
     this.lastReading = {} as Record<ReadingType, string>;
     this.lastReadingTime = null;
-    this.sprootDB = sprootDB;
+    this.sensorsRepository = sensorsRepository;
     this.logger = logger;
     this.units = {} as Record<ReadingType, string>;
     this.#initialCacheLookback = initialCacheLookback;
@@ -57,7 +57,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
       this.units[readingType as ReadingType] = Units[readingType as ReadingType];
     }
 
-    this.#cache = new SensorCache(maxCacheSize, sprootDB, logger);
+    this.#cache = new SensorCache(maxCacheSize, sensorsRepository, logger);
   }
 
   abstract takeReadingAsync(): Promise<void>;
@@ -169,7 +169,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
 
   #addLastReadingToDatabaseAsync = async (): Promise<void> => {
     try {
-      await this.sprootDB.addSensorReadingAsync(this);
+      await this.sensorsRepository.addSensorReadingAsync(this);
     } catch (error) {
       this.logger.error(`Error adding reading to database for sensor ${this.id}: ${error}`);
     }

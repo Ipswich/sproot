@@ -9,7 +9,7 @@ import {
   NumberInput,
   Select,
 } from "@mantine/core";
-import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
+import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
 import { Fragment, useState } from "react";
 import {
   deleteSensorAsync,
@@ -21,10 +21,10 @@ import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import EditablesTable from "@sproot/sproot-client/src/routes/common/EditablesTable";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { DefaultColors } from "@sproot/sproot-common/src/utility/Constants";
+import { DefaultColors } from "@sproot/common/utility/Constants";
 import { useRevalidator } from "react-router-dom";
-import { Models } from "@sproot/sproot-common/src/sensors/Models";
-import { SDBSubcontroller } from "@sproot/sproot-common/src/database/SDBSubcontroller";
+import { Models } from "@sproot/common/sensors/Models";
+import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
 import ConfirmDeleteButton from "../../../components/ConfirmDeleteButton";
 
 interface EditTableProps {

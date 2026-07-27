@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import winston from "winston";
 
 import { Backups } from "../../../system/Backups";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISystemRepository } from "../../../database/repositories/system/ISystemRepository";
 import path from "path";
 import fs from "fs";
 import { tmpdir } from "os";
@@ -69,7 +69,7 @@ export async function systemBackupRestoreHandlerAsync(
   const tempDirectory = await fs.promises.mkdtemp(path.join(tmpdir(), "sproot-backup-"));
   const tempFile = `${tempDirectory}/uploaded-backup.sproot`;
   const writeStream = fs.createWriteStream(tempFile, { flags: "w" });
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const systemRepository = request.app.get(DI_KEYS.SprootDB).system as ISystemRepository;
   const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
 
   try {
@@ -89,7 +89,7 @@ export async function systemBackupRestoreHandlerAsync(
   }
 
   try {
-    await sprootDB.validateBackupArchiveAsync(tempFile, logger);
+    await systemRepository.validateBackupArchiveAsync(tempFile, logger);
   } catch (err) {
     await fs.promises.rm(tempDirectory, { recursive: true, force: true }).catch(() => undefined);
     return {
@@ -106,7 +106,7 @@ export async function systemBackupRestoreHandlerAsync(
   try {
     request.app.get("gracefulHaltAsync")(async (): Promise<void> => {
       logger.info(`Restoring from backup file ${tempFile}`);
-      await Backups.restoreAsync(tempFile, sprootDB, logger);
+      await Backups.restoreAsync(tempFile, systemRepository, logger);
       logger.info(`Restore complete! System exiting now!`);
     });
 
@@ -134,7 +134,7 @@ export async function systemBackupCreateHandlerAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
   try {
-    Backups.createAsync(request.app.get(DI_KEYS.SprootDB) as ISprootDB, logger);
+    Backups.createAsync(request.app.get(DI_KEYS.SprootDB).system as ISystemRepository, logger);
     return {
       statusCode: 202,
       content: {

@@ -1,16 +1,33 @@
-import { ESP32_BME280 } from "@sproot/sproot-server/src/sensors/ESP32_BME280";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
+import { ESP32_BME280 } from "../ESP32_BME280";
+import { ISensorsRepository } from "../../database/repositories/sensors/ISensorsRepository";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
+import { SDBReading } from "@sproot/common/database/SDBReading";
 
 import { assert } from "chai";
 import nock from "nock";
 import * as sinon from "sinon";
 import winston from "winston";
 import { MdnsService } from "../../system/MdnsService";
-import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
-const mockSprootDB = new MockSprootDB();
+import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
+
+const mockSensorsRepo: ISensorsRepository = {
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  getDS18B20AddressesAsync: async () => [],
+  addAsync: async () => {},
+  updateAsync: async () => {},
+  updateSensorCalibrationAsync: async () => {},
+  deleteAsync: async () => {},
+  addSensorReadingAsync: async () => {},
+  getSensorReadingsAsync: async () => [],
+  getBucketedSensorReadingsAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: {} as DeviceDataQueryRow,
+  }),
+};
 
 describe("ESP32_BME280.ts tests", function () {
   afterEach(() => {
@@ -29,7 +46,7 @@ describe("ESP32_BME280.ts tests", function () {
       model: "ESP32_BME280",
       address: "0x76",
     } as SDBSensor;
-    sinon.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
+    sinon.stub(mockSensorsRepo, "getBucketedSensorReadingsAsync").resolves([
       {
         data: "1",
         metric: ReadingType.temperature,
@@ -81,7 +98,7 @@ describe("ESP32_BME280.ts tests", function () {
     await using bme280Sensor = await ESP32_BME280.createInstanceAsync(
       mockBME280Data,
       mockSubcontroller,
-      mockSprootDB,
+      mockSensorsRepo,
       mockMdnsService,
       5,
       5,
@@ -143,7 +160,7 @@ describe("ESP32_BME280.ts tests", function () {
     await using bme280Sensor = await ESP32_BME280.createInstanceAsync(
       mockBME280Data,
       mockSubcontroller,
-      mockSprootDB,
+      mockSensorsRepo,
       mockMdnsService,
       5,
       5,
@@ -171,7 +188,7 @@ describe("ESP32_BME280.ts tests", function () {
     await using bme280Sensor2 = await ESP32_BME280.createInstanceAsync(
       mockBME280Data,
       mockSubcontroller,
-      mockSprootDB,
+      mockSensorsRepo,
       mockMdnsService,
       5,
       5,

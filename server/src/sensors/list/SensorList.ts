@@ -6,23 +6,25 @@ import { ADS1115 } from "../ADS1115";
 import { ESP32_ADS1115 } from "../ESP32_ADS1115";
 import { CapacitiveMoistureSensor } from "../CapacitiveMoistureSensor";
 import { ESP32_CapacitiveMoistureSensor } from "../ESP32_CapacitiveMoistureSensor";
-import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { DefaultColors } from "@sproot/sproot-common/dist/utility/Constants";
+import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
+import { ISensorsRepository } from "../../database/repositories/sensors/ISensorsRepository";
+import { ISubcontrollersRepository } from "../../database/repositories/subcontrollers/ISubcontrollersRepository";
+import { DefaultColors } from "@sproot/common/utility/Constants";
 import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { Models } from "@sproot/sproot-common/dist/sensors/Models";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
+import { Models } from "@sproot/common/sensors/Models";
 import { MdnsService } from "../../system/MdnsService";
-import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
+import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
 import { IEventBus } from "../../eventbus/IEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { SensorModifiedEvent } from "../../eventbus/events/sensors/SensorModifiedEvent";
 
 class SensorList {
   #eventBus: IEventBus;
-  #sprootDB: ISprootDB;
+  #sensorsRepository: ISensorsRepository;
+  #subcontrollersRepository: ISubcontrollersRepository;
   #mdnsService: MdnsService;
   #sensors: Record<string, SensorBase> = {};
   #logger: winston.Logger;
@@ -35,7 +37,8 @@ class SensorList {
 
   static createInstanceAsync(
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
+    subcontrollersRepository: ISubcontrollersRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -44,7 +47,8 @@ class SensorList {
   ): Promise<SensorList> {
     const sensorList = new SensorList(
       eventBus,
-      sprootDB,
+      sensorsRepository,
+      subcontrollersRepository,
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
@@ -56,7 +60,8 @@ class SensorList {
 
   private constructor(
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
+    subcontrollersRepository: ISubcontrollersRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -64,7 +69,8 @@ class SensorList {
     logger: winston.Logger,
   ) {
     this.#eventBus = eventBus;
-    this.#sprootDB = sprootDB;
+    this.#sensorsRepository = sensorsRepository;
+    this.#subcontrollersRepository = subcontrollersRepository;
     this.#mdnsService = mdnsService;
     this.#maxCacheSize = maxCacheSize;
     this.#initialCacheLookback = initialCacheLookback;
@@ -152,8 +158,8 @@ class SensorList {
 
     try {
       const profiler = this.#logger.startTimer();
-      const sensorsFromDatabase = await this.#sprootDB.getSensorsAsync();
-      const subcontrollersFromDatabase = await this.#sprootDB.getSubcontrollersAsync();
+      const sensorsFromDatabase = await this.#sensorsRepository.getAllAsync();
+      const subcontrollersFromDatabase = await this.#subcontrollersRepository.getAllAsync();
 
       const promises = [];
       for (const sensor of sensorsFromDatabase) {
@@ -271,17 +277,17 @@ class SensorList {
   }
 
   async addSensorAsync(sensor: SDBSensor): Promise<void> {
-    await this.#sprootDB.addSensorAsync(sensor);
+    await this.#sensorsRepository.addAsync(sensor);
     await this.#eventBus.publishAsync(new SensorModifiedEvent({}));
   }
 
   async updateSensorAsync(sensor: SDBSensor): Promise<void> {
-    await this.#sprootDB.updateSensorAsync(sensor);
+    await this.#sensorsRepository.updateAsync(sensor);
     await this.#eventBus.publishAsync(new SensorModifiedEvent({}));
   }
 
   async deleteSensorAsync(sensorId: number): Promise<void> {
-    await this.#sprootDB.deleteSensorAsync(sensorId);
+    await this.#sensorsRepository.deleteAsync(sensorId);
     await this.#eventBus.publishAsync(new SensorModifiedEvent({}));
   }
 
@@ -309,7 +315,7 @@ class SensorList {
         }
         newSensor = await BME280.createInstanceAsync(
           sensor,
-          this.#sprootDB,
+          this.#sensorsRepository,
           this.#maxCacheSize,
           this.#initialCacheLookback,
           this.#cacheBucketMinutes,
@@ -324,7 +330,7 @@ class SensorList {
         if (!sensor.address) {
           throw new SensorListError("ESP32 BME280 sensor address cannot be null");
         }
-        subcontroller = (await this.#sprootDB.getSubcontrollersAsync()).find(
+        subcontroller = (await this.#subcontrollersRepository.getAllAsync()).find(
           (device) => device.id == sensor.subcontrollerId,
         );
         if (!subcontroller) {
@@ -335,7 +341,7 @@ class SensorList {
         newSensor = await ESP32_BME280.createInstanceAsync(
           sensor,
           subcontroller,
-          this.#sprootDB,
+          this.#sensorsRepository,
           this.#mdnsService,
           this.#maxCacheSize,
           this.#initialCacheLookback,
@@ -350,7 +356,7 @@ class SensorList {
         }
         newSensor = await DS18B20.createInstanceAsync(
           sensor,
-          this.#sprootDB,
+          this.#sensorsRepository,
           this.#maxCacheSize,
           this.#initialCacheLookback,
           this.#cacheBucketMinutes,
@@ -365,7 +371,7 @@ class SensorList {
         if (!sensor.address) {
           throw new SensorListError("ESP32 DS18B20 sensor address cannot be null");
         }
-        subcontroller = (await this.#sprootDB.getSubcontrollersAsync()).find(
+        subcontroller = (await this.#subcontrollersRepository.getAllAsync()).find(
           (device) => device.id == sensor.subcontrollerId,
         );
         if (!subcontroller) {
@@ -376,7 +382,7 @@ class SensorList {
         newSensor = await ESP32_DS18B20.createInstanceAsync(
           sensor,
           subcontroller,
-          this.#sprootDB,
+          this.#sensorsRepository,
           this.#mdnsService,
           this.#maxCacheSize,
           this.#initialCacheLookback,
@@ -396,7 +402,7 @@ class SensorList {
           sensor,
           ReadingType.voltage,
           "1",
-          this.#sprootDB,
+          this.#sensorsRepository,
           this.#maxCacheSize,
           this.#initialCacheLookback,
           this.#cacheBucketMinutes,
@@ -414,7 +420,7 @@ class SensorList {
         if (!sensor.pin) {
           throw new SensorListError("ESP32 ADS1115 sensor pin cannot be null");
         }
-        subcontroller = (await this.#sprootDB.getSubcontrollersAsync()).find(
+        subcontroller = (await this.#subcontrollersRepository.getAllAsync()).find(
           (device) => device.id == sensor.subcontrollerId,
         );
         if (!subcontroller) {
@@ -427,7 +433,7 @@ class SensorList {
           subcontroller,
           ReadingType.voltage,
           "1",
-          this.#sprootDB,
+          this.#sensorsRepository,
           this.#mdnsService,
           this.#maxCacheSize,
           this.#initialCacheLookback,
@@ -445,7 +451,7 @@ class SensorList {
         }
         newSensor = await CapacitiveMoistureSensor.createInstanceAsync(
           sensor,
-          this.#sprootDB,
+          this.#sensorsRepository,
           this.#maxCacheSize,
           this.#initialCacheLookback,
           this.#cacheBucketMinutes,
@@ -465,7 +471,7 @@ class SensorList {
         if (!sensor.pin) {
           throw new SensorListError("ESP32 Capacitive Moisture Sensor pin cannot be null");
         }
-        subcontroller = (await this.#sprootDB.getSubcontrollersAsync()).find(
+        subcontroller = (await this.#subcontrollersRepository.getAllAsync()).find(
           (device) => device.id == sensor.subcontrollerId,
         );
         if (!subcontroller) {
@@ -476,7 +482,7 @@ class SensorList {
         newSensor = await ESP32_CapacitiveMoistureSensor.createInstanceAsync(
           sensor,
           subcontroller,
-          this.#sprootDB,
+          this.#sensorsRepository,
           this.#mdnsService,
           this.#maxCacheSize,
           this.#initialCacheLookback,
@@ -494,8 +500,8 @@ class SensorList {
 
   async addUnreconizedDS18B20sToSDBAsync() {
     // Get all DS18B20 sensors from database
-    const subcontrollers = await this.#sprootDB.getSubcontrollersAsync();
-    const sensorsFromDatabase = await this.#sprootDB.getDS18B20AddressesAsync();
+    const subcontrollers = await this.#subcontrollersRepository.getAllAsync();
+    const sensorsFromDatabase = await this.#sensorsRepository.getDS18B20AddressesAsync();
     const addToDatabasePromises: Promise<void>[] = [];
 
     // Get all DS18B20s from known ESP32 devices
@@ -537,7 +543,7 @@ class SensorList {
           `Adding unrecognized ESP32_DS18B20 sensor {subcontrollerId: ${addresses.subcontrollerId}, deviceId: ${addresses.deviceId} to database}`,
         );
         addToDatabasePromises.push(
-          this.#sprootDB.addSensorAsync({
+          this.#sensorsRepository.addAsync({
             name: `New ESP32_DS18B20 ..${addresses.deviceId.slice(-4)}`,
             model: Models.ESP32_DS18B20,
             address: addresses.deviceId,
@@ -558,7 +564,7 @@ class SensorList {
       } else {
         this.#logger.info(`Adding unrecognized DS18B20 sensor ${address} to database`);
         addToDatabasePromises.push(
-          this.#sprootDB.addSensorAsync({
+          this.#sensorsRepository.addAsync({
             name: `New DS18B20 ..${address.slice(-4)}`,
             model: Models.DS18B20,
             address: address,

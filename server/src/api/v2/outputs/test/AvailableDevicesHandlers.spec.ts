@@ -1,14 +1,12 @@
 // // import { Response } from "express";
 // // import { getAvailableDevices } from "../handlers/AvailableDevicesHandlers";
 // import { OutputList } from "../../../../outputs/list/OutputList";
-// import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 // import { UdpServer, Device as SimulatedDevice } from "tplink-smarthome-simulator";
 // // import { Plug } from "tplink-smarthome-api";
 
 // // import { assert } from "chai";
 // import sinon from "sinon";
 // import winston from "winston";
-// const mockSprootDB = new MockSprootDB();
 
 // describe("AvailableDevicesHandlers.ts tests", function() {
 //   sinon

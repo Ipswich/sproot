@@ -7,18 +7,22 @@ import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { getTokenAsync } from "../handlers/TokenHandlers";
 import { SDBUser } from "@sproot/database/SDBUser";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { IUsersRepository } from "../../../../database/repositories/users/IUsersRepository";
 
 describe("TokenHandlers.ts tests", () => {
   describe("getTokenAsync", async () => {
-    const sprootDB = sinon.createStubInstance(MockSprootDB);
-    sprootDB.getUserAsync.resolves([
+    const userGetByIdStub = sinon.stub().resolves([
       {
         username: "dev-test",
         hash: "$2b$10$LyJ6YjLoT/FKyG8n1Puu7Oo8kEnh9mMSR0beiETYd5qLw7qIZYqIW",
         email: "dev-test@example.com",
       } as SDBUser,
     ]);
+    const userRepo: IUsersRepository = {
+      getByIdAsync: userGetByIdStub,
+      addAsync: async () => {},
+    };
+    const sprootDB = { users: userRepo } as any;
     const jwtExpiration = 259200000;
     const jwtSecret = "secret";
 
@@ -194,7 +198,7 @@ describe("TokenHandlers.ts tests", () => {
           },
         },
       } as unknown as Response;
-      sprootDB.getUserAsync.rejects(new Error("Database error"));
+      userGetByIdStub.rejects(new Error("Database error"));
 
       const result = (await getTokenAsync(
         request,

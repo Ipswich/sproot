@@ -1,6 +1,6 @@
 import { Select } from "@mantine/core";
 import { UseFormReturnType } from "@mantine/form";
-import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
+import { IOutputBase } from "@sproot/common/outputs/IOutputBase";
 import { Fragment } from "react";
 import { OutputFormValues } from "../OutputSettings";
 import { useQuery } from "@tanstack/react-query";

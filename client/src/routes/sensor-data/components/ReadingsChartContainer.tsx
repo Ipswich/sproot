@@ -24,8 +24,8 @@ import { fetchFanOutPaginatedChartData } from "../../../requests/chartDataPagina
 import { ReadingsChartTransformer } from "./ReadingsChartTransformer";
 import ReadingsChart from "./ReadingsChart";
 import { isUnitlessAggregate } from "../../../requests/queryTypes";
-import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
-import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
+import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
 
 interface ReadingsChartContainerProps {
   readingType: string;

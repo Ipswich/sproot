@@ -1,7 +1,7 @@
-import { SDBDeviceZone } from "@sproot/sproot-common/dist/database/SDBDeviceZone";
+import { SDBDeviceZone } from "@sproot/common/database/SDBDeviceZone";
 import { Request, Response } from "express";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
+import { ISprootDB } from "../../../../database/ISprootDB";
+import { ErrorResponse, SuccessResponse } from "@sproot/common/api/v2/Responses";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 export async function getAsync(
@@ -11,7 +11,7 @@ export async function getAsync(
   const sprootDB: ISprootDB = req.app.get(DI_KEYS.SprootDB);
   let response: SuccessResponse | ErrorResponse;
   try {
-    const results = await sprootDB.getDeviceZonesAsync();
+    const results = await sprootDB.deviceZones.getAllAsync();
     response = {
       statusCode: 200,
       content: {
@@ -53,7 +53,7 @@ export async function addAsync(
       };
       return response;
     }
-    const newDeviceZone = await sprootDB.addDeviceZoneAsync(deviceZoneData.name);
+    const newDeviceZone = await sprootDB.deviceZones.addAsync(deviceZoneData.name);
     response = {
       statusCode: 201,
       content: {
@@ -98,7 +98,7 @@ export async function updateAsync(
     if (deviceZoneId == null || isNaN(deviceZoneIdAsInt)) {
       errorMessages.push("Valid device zone ID is required.");
     } else {
-      existingDeviceZone = (await sprootDB.getDeviceZonesAsync()).find(
+      existingDeviceZone = (await sprootDB.deviceZones.getAllAsync()).find(
         (dg) => dg.id === deviceZoneIdAsInt,
       );
     }
@@ -130,7 +130,7 @@ export async function updateAsync(
 
     // Null checked above
     existingDeviceZone!.name = deviceZoneData.name ?? existingDeviceZone!.name;
-    await sprootDB.updateDeviceZoneAsync(existingDeviceZone!);
+    await sprootDB.deviceZones.updateAsync(existingDeviceZone!);
     response = {
       statusCode: 200,
       content: {
@@ -173,7 +173,7 @@ export async function deleteAsync(
       return response;
     }
     const id = parseInt(deviceZoneId, 10);
-    await sprootDB.deleteDeviceZoneAsync(id);
+    await sprootDB.deviceZones.deleteAsync(id);
     response = {
       statusCode: 200,
       content: {

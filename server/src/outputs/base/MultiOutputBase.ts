@@ -1,9 +1,11 @@
-import { ISprootDB } from "@sproot/database/ISprootDB";
-import { ControlMode, IOutputBase } from "@sproot/outputs/IOutputBase";
+import type { IOutputsRepository } from "../../database/repositories/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "../../database/repositories/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "../../database/repositories/subcontrollers/ISubcontrollersRepository";
+import { ControlMode, IOutputBase } from "@sproot/common/outputs/IOutputBase";
 
 import winston from "winston";
 import { SDBOutputState } from "@sproot/database/SDBOutputState";
-import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
+import { AvailableDevice } from "@sproot/common/outputs/AvailableDevice";
 import { OutputBase } from "./OutputBase";
 import { SDBOutput } from "@sproot/database/SDBOutput";
 import { IEventBus } from "../../eventbus/IEventBus";
@@ -13,7 +15,9 @@ export abstract class MultiOutputBase implements AsyncDisposable {
   readonly outputs: Record<string, OutputBase> = {};
   readonly usedPins: Record<string, string[] | Record<string, string[]>> = {};
   protected eventBus: IEventBus;
-  protected sprootDB: ISprootDB;
+  protected outputsRepository: IOutputsRepository;
+  protected outputActionsRepository: IOutputActionsRepository;
+  protected subcontrollersRepository: ISubcontrollersRepository;
   protected frequency: number;
   protected maxCacheSize: number;
   protected initialCacheLookback: number;
@@ -22,7 +26,9 @@ export abstract class MultiOutputBase implements AsyncDisposable {
 
   constructor(
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
+    subcontrollersRepository: ISubcontrollersRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -30,7 +36,9 @@ export abstract class MultiOutputBase implements AsyncDisposable {
     logger: winston.Logger,
   ) {
     this.eventBus = eventBus;
-    this.sprootDB = sprootDB;
+    this.outputsRepository = outputsRepository;
+    this.outputActionsRepository = outputActionsRepository;
+    this.subcontrollersRepository = subcontrollersRepository;
     this.maxCacheSize = maxCacheSize;
     this.initialCacheLookback = initialCacheLookback;
     this.cacheBucketMinutes = cacheBucketMinutes;

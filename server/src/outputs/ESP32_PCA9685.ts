@@ -1,8 +1,10 @@
 import { OutputBase } from "./base/OutputBase";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
+import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
+import type { IOutputsRepository } from "../database/repositories/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "../database/repositories/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "../database/repositories/subcontrollers/ISubcontrollersRepository";
+import { AvailableDevice } from "@sproot/common/outputs/AvailableDevice";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 import { MdnsService } from "../system/MdnsService";
@@ -13,7 +15,9 @@ class ESP32_PCA9685 extends MultiOutputBase {
 
   constructor(
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
+    subcontrollersRepository: ISubcontrollersRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -23,7 +27,9 @@ class ESP32_PCA9685 extends MultiOutputBase {
   ) {
     super(
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
+      subcontrollersRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -38,7 +44,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
       this.logger.error(`ESP32_PCA9685 Output ${output.id} is missing subcontrollerId.`);
       return undefined;
     }
-    const subcontroller = (await this.sprootDB.getSubcontrollersAsync()).find(
+    const subcontroller = (await this.subcontrollersRepository.getAllAsync()).find(
       (device) => device.id == output.subcontrollerId,
     );
     if (subcontroller == null) {
@@ -60,7 +66,8 @@ class ESP32_PCA9685 extends MultiOutputBase {
       output,
       subcontroller,
       this.eventBus,
-      this.sprootDB,
+      this.outputsRepository,
+      this.outputActionsRepository,
       this.#mdnsService,
       this.maxCacheSize,
       this.initialCacheLookback,
@@ -95,7 +102,8 @@ class ESP32_PCA9685Output extends OutputBase {
     output: SDBOutput,
     subcontroller: SDBSubcontroller,
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -106,7 +114,8 @@ class ESP32_PCA9685Output extends OutputBase {
       output,
       subcontroller,
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
@@ -120,7 +129,8 @@ class ESP32_PCA9685Output extends OutputBase {
     output: SDBOutput,
     subcontroller: SDBSubcontroller,
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -130,7 +140,8 @@ class ESP32_PCA9685Output extends OutputBase {
     super(
       output,
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,

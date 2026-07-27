@@ -1,7 +1,7 @@
 import "dotenv/config";
 import mainAsync, { gracefulHaltAsync } from "./program";
 import { DI_KEYS } from "./utils/DependencyInjectionConstants";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB } from "./database/ISprootDB";
 
 mainAsync().then((app) => {
   const server = app.listen(3000, async () => {
@@ -21,7 +21,7 @@ mainAsync().then((app) => {
       await gracefulHaltAsync(server, app);
     });
 
-    await sprootDB.deleteOldDatabaseAsync(logger);
-    await sprootDB.refreshAllAggregateTablesAsync(logger);
+    await sprootDB.system.deleteOldDatabaseAsync(logger);
+    await sprootDB.system.refreshAllAggregateTablesAsync(logger);
   });
 });

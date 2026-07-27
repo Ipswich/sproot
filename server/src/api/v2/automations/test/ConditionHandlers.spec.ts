@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
+import { ErrorResponse, SuccessResponse } from "@sproot/common/api/v2/Responses";
 
 import { assert } from "chai";
 import sinon from "sinon";
@@ -18,18 +18,85 @@ import { AutomationService } from "../../../../automation/AutomationService";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { SensorList } from "../../../../sensors/list/SensorList";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 import winston from "winston";
 import { MemoryEventBus } from "../../../../eventbus/MemoryEventBus";
 
+const createStubSprootDB = () => {
+  const sprootDB = createMockSprootDB() as any;
+  sprootDB.automations = {
+    getAllAsync: sinon.stub(),
+    getByIdAsync: sinon.stub(),
+  } as any;
+  sprootDB.automations.conditions = {
+    sensor: {
+      getAsync: sinon.stub(),
+      addAsync: sinon.stub(),
+      updateAsync: sinon.stub(),
+      deleteAsync: sinon.stub(),
+    },
+    output: {
+      getAsync: sinon.stub(),
+      addAsync: sinon.stub(),
+      updateAsync: sinon.stub(),
+      deleteAsync: sinon.stub(),
+    },
+    time: {
+      getAsync: sinon.stub(),
+      addAsync: sinon.stub(),
+      updateAsync: sinon.stub(),
+      deleteAsync: sinon.stub(),
+    },
+    weekday: {
+      getAsync: sinon.stub(),
+      addAsync: sinon.stub(),
+      updateAsync: sinon.stub(),
+      deleteAsync: sinon.stub(),
+    },
+    month: {
+      getAsync: sinon.stub(),
+      addAsync: sinon.stub(),
+      updateAsync: sinon.stub(),
+      deleteAsync: sinon.stub(),
+    },
+    dateRange: {
+      getAsync: sinon.stub(),
+      addAsync: sinon.stub(),
+      updateAsync: sinon.stub(),
+      deleteAsync: sinon.stub(),
+    },
+  };
+  sprootDB.automations.actions = {
+    output: {
+      getAsync: sinon.stub(),
+      getAllAsync: sinon.stub(),
+      getOutputActionAsync: sinon.stub(),
+      addAsync: sinon.stub(),
+      deleteAsync: sinon.stub(),
+    },
+    notification: {
+      getAsync: sinon.stub(),
+      getAllAsync: sinon.stub(),
+      getNotificationActionByIdAsync: sinon.stub(),
+      addAsync: sinon.stub(),
+      deleteAsync: sinon.stub(),
+    },
+  };
+  return sprootDB;
+};
+
 describe("ConditionHandlers.ts", () => {
   let mockLogger: winston.Logger;
 
-  const createAutomationServiceAsync = (sprootDB: MockSprootDB) =>
-    AutomationService.createInstanceAsync(sprootDB, new MemoryEventBus(mockLogger), mockLogger);
+  const createAutomationServiceAsync = (sprootDB: any) =>
+    AutomationService.createInstanceAsync(
+      sprootDB.automations,
+      new MemoryEventBus(mockLogger),
+      mockLogger,
+    );
 
   before(() => {
     sinon.stub(winston, "createLogger").callsFake(
@@ -64,11 +131,11 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -78,7 +145,7 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBSensorCondition,
       ]);
-      sprootDB.getOutputConditionsAsync.resolves([
+      sprootDB.automations.conditions.output.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -87,16 +154,19 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBOutputCondition,
       ]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      sprootDB.automations.conditions.time.getAsync.resolves([
         { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
       ]);
-      sprootDB.getMonthConditionsAsync.resolves([
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
+        { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
+      ]);
+      sprootDB.automations.conditions.month.getAsync.resolves([
         { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
       ]);
-      sprootDB.getDateRangeConditionsAsync.resolves([
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -187,7 +257,7 @@ describe("ConditionHandlers.ts", () => {
           get: (_dependency: string) => {
             switch (_dependency) {
               case "sprootDB":
-                return sinon.createStubInstance(MockSprootDB);
+                return createStubSprootDB();
             }
           },
         },
@@ -214,8 +284,8 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -249,8 +319,8 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.rejects(new Error("Database unreachable"));
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.rejects(new Error("Database unreachable"));
 
       const mockRequest = {
         app: {
@@ -286,11 +356,11 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -300,7 +370,7 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBSensorCondition,
       ]);
-      sprootDB.getOutputConditionsAsync.resolves([
+      sprootDB.automations.conditions.output.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -309,10 +379,11 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBOutputCondition,
       ]);
-      sprootDB.getTimeConditionsAsync.resolves([]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.month.getAsync.resolves([]);
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -359,12 +430,12 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -373,10 +444,11 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBOutputCondition,
       ]);
-      sprootDB.getTimeConditionsAsync.resolves([]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.month.getAsync.resolves([]);
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -414,18 +486,19 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([
         { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.month.getAsync.resolves([]);
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -463,18 +536,21 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([]);
-      sprootDB.getWeekdayConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
       ]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
+        { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
+      ]);
+      sprootDB.automations.conditions.month.getAsync.resolves([]);
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -512,18 +588,19 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.month.getAsync.resolves([
         { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
       ]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -561,16 +638,17 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.month.getAsync.resolves([]);
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -631,7 +709,7 @@ describe("ConditionHandlers.ts", () => {
           get: (_dependency: string) => {
             switch (_dependency) {
               case "sprootDB":
-                return sinon.createStubInstance(MockSprootDB);
+                return createStubSprootDB();
             }
           },
         },
@@ -662,8 +740,8 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -698,8 +776,8 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.rejects(new Error("Database unreachable"));
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.rejects(new Error("Database unreachable"));
 
       const mockRequest = {
         app: {
@@ -736,11 +814,11 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -758,8 +836,8 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBSensorCondition,
       ]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -801,12 +879,12 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -822,7 +900,7 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBOutputCondition,
       ]);
-      sprootDB.getTimeConditionsAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -863,13 +941,13 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([
         { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
         { id: 2, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
       ]);
@@ -912,14 +990,18 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([]);
-      sprootDB.getWeekdayConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
+        { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
+        { id: 2, groupType: "allOf", weekdays: 63 } as SDBWeekdayCondition,
+      ]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
         { id: 2, groupType: "allOf", weekdays: 63 } as SDBWeekdayCondition,
       ]);
@@ -961,15 +1043,16 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.month.getAsync.resolves([
         { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
         { id: 2, groupType: "allOf", months: 2047 } as SDBMonthCondition,
       ]);
@@ -1011,16 +1094,17 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.month.getAsync.resolves([]);
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -1084,7 +1168,7 @@ describe("ConditionHandlers.ts", () => {
           get: (_dependency: string) => {
             switch (_dependency) {
               case "sprootDB":
-                return sinon.createStubInstance(MockSprootDB);
+                return createStubSprootDB();
             }
           },
         },
@@ -1117,8 +1201,8 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -1154,11 +1238,11 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([]);
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -1194,8 +1278,8 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.rejects(new Error("Database unreachable"));
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.rejects(new Error("Database unreachable"));
 
       const mockRequest = {
         app: {
@@ -1223,10 +1307,10 @@ describe("ConditionHandlers.ts", () => {
   });
 
   describe("addAsync", () => {
-    let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
+    let sprootDB: any;
     beforeEach(() => {
-      sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
     });
     it("should return a 201 and the sensor condition added to the automation", async () => {
       const mockResponse = {
@@ -1243,10 +1327,10 @@ describe("ConditionHandlers.ts", () => {
         .stub(sensorList, "sensors")
         .value({ "1": { id: 1, name: "Sensor 1", type: "temperature" } });
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.addSensorConditionAsync.resolves(1);
+      sprootDB.automations.conditions.sensor.addAsync.resolves(1);
 
       const mockRequest = {
         app: {
@@ -1299,15 +1383,16 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const outputList = sinon.createStubInstance(OutputList);
+      const automationService = {
+        addOutputConditionAsync: sinon.stub().resolves(1),
+      };
+
       sinon.stub(outputList, "outputs").value({ "1": { id: 1, name: "Output 1" } });
-      sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.addOutputConditionAsync.resolves(1);
 
       const mockRequest = {
         app: {
@@ -1346,6 +1431,16 @@ describe("ConditionHandlers.ts", () => {
         comparisonValue: 50,
         comparisonLookback: null,
       });
+      assert.isTrue(
+        automationService.addOutputConditionAsync.calledOnceWithExactly(
+          1,
+          "allOf",
+          "equal",
+          50,
+          null,
+          1,
+        ),
+      );
     });
 
     it("should return a 201 and the time condition added to the automation", async () => {
@@ -1358,13 +1453,13 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.addTimeConditionAsync.resolves(1);
+      sprootDB.automations.conditions.time.addAsync.resolves(1);
 
       const mockRequest = {
         app: {
@@ -1410,13 +1505,13 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.addWeekdayConditionAsync.resolves(1);
+      sprootDB.automations.conditions.weekday.addAsync.resolves(1);
 
       const mockRequest = {
         app: {
@@ -1460,13 +1555,13 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.addMonthConditionAsync.resolves(1);
+      sprootDB.automations.conditions.month.addAsync.resolves(1);
 
       const mockRequest = {
         app: {
@@ -1510,13 +1605,13 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.addDateRangeConditionAsync.resolves(1);
+      sprootDB.automations.conditions.dateRange.addAsync.resolves(1);
 
       const mockRequest = {
         app: {
@@ -1571,7 +1666,7 @@ describe("ConditionHandlers.ts", () => {
           get: (_dependency: string) => {
             switch (_dependency) {
               case "sprootDB":
-                return sinon.createStubInstance(MockSprootDB);
+                return createStubSprootDB();
               case "automationService":
                 return sinon.createStubInstance(AutomationService);
             }
@@ -1602,8 +1697,8 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 400 and details for the invalid request (sensor)", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
       const mockResponse = {
@@ -1654,11 +1749,11 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 400 and details for the invalid request (output)", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
       const mockResponse = {
         locals: {
@@ -1706,10 +1801,10 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 400 and details for the invalid request (time)", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
       const mockResponse = {
@@ -1756,10 +1851,10 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 400 and details for the invalid request (weekday)", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
       const mockResponse = {
@@ -1804,10 +1899,10 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 400 and details for the invalid request (month)", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
       const mockResponse = {
@@ -1852,10 +1947,10 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 400 and details for the invalid request (date range)", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
       const mockResponse = {
@@ -1903,10 +1998,10 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 404 if the automation does not exist", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([]);
+      sprootDB.automations.getByIdAsync.resolves([]);
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -1949,10 +2044,10 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 503 if the database is unreachable", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.rejects(new Error("Database unreachable"));
+      sprootDB.automations.getByIdAsync.rejects(new Error("Database unreachable"));
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -1996,10 +2091,10 @@ describe("ConditionHandlers.ts", () => {
   });
 
   describe("updateAsync", () => {
-    let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
+    let sprootDB: any;
     beforeEach(() => {
-      sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
     });
     it("should return a 200 and the sensor condition updated for the automation", async () => {
       const mockResponse = {
@@ -2011,11 +2106,11 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -2025,12 +2120,12 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBSensorCondition,
       ]);
-      sprootDB.updateSensorConditionAsync.resolves();
+      sprootDB.automations.conditions.sensor.updateAsync.resolves();
       const sensorList = sinon.createStubInstance(SensorList);
       sinon
         .stub(sensorList, "sensors")
         .value({ "2": { id: 2, name: "Sensor 1", type: "temperature" } });
-      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
@@ -2085,11 +2180,11 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getOutputConditionsAsync.resolves([
+      sprootDB.automations.conditions.output.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -2098,10 +2193,10 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBOutputCondition,
       ]);
-      sprootDB.updateOutputConditionAsync.resolves();
+      sprootDB.automations.conditions.output.updateAsync.resolves();
       const outputList = sinon.createStubInstance(OutputList);
       sinon.stub(outputList, "outputs").value({ "2": { id: 2, name: "Output 1" } });
-      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
@@ -2154,15 +2249,15 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      sprootDB.automations.conditions.time.getAsync.resolves([
         { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
       ]);
-      sprootDB.updateTimeConditionAsync.resolves();
-      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.automations.conditions.time.updateAsync.resolves();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
@@ -2210,15 +2305,18 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
       ]);
-      sprootDB.updateTimeConditionAsync.resolves();
-      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
+        { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
+      ]);
+      sprootDB.automations.conditions.time.updateAsync.resolves();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
@@ -2264,15 +2362,15 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getMonthConditionsAsync.resolves([
+      sprootDB.automations.conditions.month.getAsync.resolves([
         { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
       ]);
-      sprootDB.updateTimeConditionAsync.resolves();
-      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.automations.conditions.time.updateAsync.resolves();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
@@ -2318,11 +2416,11 @@ describe("ConditionHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getDateRangeConditionsAsync.resolves([
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -2332,8 +2430,8 @@ describe("ConditionHandlers.ts", () => {
           endDate: 31,
         } as SDBDateRangeCondition,
       ]);
-      sprootDB.updateTimeConditionAsync.resolves();
-      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.automations.conditions.time.updateAsync.resolves();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
@@ -2389,7 +2487,7 @@ describe("ConditionHandlers.ts", () => {
           get: (_dependency: string) => {
             switch (_dependency) {
               case "sprootDB":
-                return sinon.createStubInstance(MockSprootDB);
+                return createStubSprootDB();
               case "automationService":
                 return sinon.createStubInstance(AutomationService);
             }
@@ -2422,13 +2520,13 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 400 and details for the invalid request (sensor)", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -2485,13 +2583,13 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 400 and details for the invalid request (output)", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getOutputConditionsAsync.resolves([
+      sprootDB.automations.conditions.output.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -2544,13 +2642,13 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 400 and details for the invalid request (time)", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      sprootDB.automations.conditions.time.getAsync.resolves([
         { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
       ]);
       const mockResponse = {
@@ -2592,13 +2690,16 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 400 and details for the invalid request (weekday)", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
+        { id: 1, groupType: "allOf", weekdays: 13 } as SDBWeekdayCondition,
+      ]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 13 } as SDBWeekdayCondition,
       ]);
       const mockResponse = {
@@ -2639,13 +2740,13 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 400 and details for the invalid request (month)", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getMonthConditionsAsync.resolves([
+      sprootDB.automations.conditions.month.getAsync.resolves([
         { id: 1, groupType: "allOf", months: 13 } as SDBMonthCondition,
       ]);
       const mockResponse = {
@@ -2686,13 +2787,13 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 400 and details for the invalid request (date range)", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getDateRangeConditionsAsync.resolves([
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -2748,10 +2849,10 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 404 if the automation does not exist", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([]);
+      sprootDB.automations.getByIdAsync.resolves([]);
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -2793,13 +2894,13 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 404 if the condition does not exist", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([]);
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -2841,10 +2942,10 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 503 if the database is unreachable", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.getAutomationAsync.rejects(new Error("Database unreachable"));
+      sprootDB.automations.getByIdAsync.rejects(new Error("Database unreachable"));
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -2896,11 +2997,11 @@ describe("ConditionHandlers.ts", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -2910,8 +3011,8 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBSensorCondition,
       ]);
-      sprootDB.deleteSensorConditionAsync.resolves();
-      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.automations.conditions.sensor.deleteAsync.resolves();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
@@ -2948,11 +3049,11 @@ describe("ConditionHandlers.ts", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getOutputConditionsAsync.resolves([
+      sprootDB.automations.conditions.output.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -2961,8 +3062,8 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBOutputCondition,
       ]);
-      sprootDB.deleteOutputConditionAsync.resolves();
-      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.automations.conditions.output.deleteAsync.resolves();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
@@ -2999,15 +3100,15 @@ describe("ConditionHandlers.ts", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      sprootDB.automations.conditions.time.getAsync.resolves([
         { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
       ]);
-      sprootDB.deleteTimeConditionAsync.resolves();
-      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.automations.conditions.time.deleteAsync.resolves();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
@@ -3044,15 +3145,18 @@ describe("ConditionHandlers.ts", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
       ]);
-      sprootDB.deleteWeekdayConditionAsync.resolves();
-      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
+        { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
+      ]);
+      sprootDB.automations.conditions.weekday.deleteAsync.resolves();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
@@ -3089,15 +3193,15 @@ describe("ConditionHandlers.ts", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getMonthConditionsAsync.resolves([
+      sprootDB.automations.conditions.month.getAsync.resolves([
         { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
       ]);
-      sprootDB.deleteMonthConditionAsync.resolves();
-      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.automations.conditions.month.deleteAsync.resolves();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
@@ -3134,11 +3238,11 @@ describe("ConditionHandlers.ts", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getDateRangeConditionsAsync.resolves([
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -3148,8 +3252,8 @@ describe("ConditionHandlers.ts", () => {
           endDate: 31,
         } as SDBDateRangeCondition,
       ]);
-      sprootDB.deleteMonthConditionAsync.resolves();
-      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.automations.conditions.month.deleteAsync.resolves();
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
@@ -3191,7 +3295,7 @@ describe("ConditionHandlers.ts", () => {
           get: (_dependency: string) => {
             switch (_dependency) {
               case "sprootDB":
-                return sinon.createStubInstance(MockSprootDB);
+                return createStubSprootDB();
               case "automationService":
                 return sinon.createStubInstance(AutomationService);
             }
@@ -3217,8 +3321,8 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 404 if the automation does not exist", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([]);
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -3253,11 +3357,11 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 404 if the condition does not exist", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.getSensorConditionsAsync.resolves([]);
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -3292,8 +3396,8 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it("should return a 503 if the database is unreachable", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.rejects(new Error("Database unreachable"));
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getByIdAsync.rejects(new Error("Database unreachable"));
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -3328,3 +3432,152 @@ describe("ConditionHandlers.ts", () => {
     });
   });
 });
+
+const createMockSprootDB = (): any => {
+  const stub = () => sinon.stub();
+  return {
+    sensors: {
+      getAllAsync: stub(),
+      getByIdAsync: stub(),
+      getDS18B20AddressesAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      updateSensorCalibrationAsync: stub(),
+      deleteAsync: stub(),
+      addSensorReadingAsync: stub(),
+      getSensorReadingsAsync: stub(),
+      getBucketedSensorReadingsAsync: stub(),
+      getDataAsync: stub(),
+    },
+    outputs: {
+      getAllAsync: stub(),
+      getByIdAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+      updateLastOutputStateAsync: stub(),
+      getLastOutputStateAsync: stub(),
+      addOutputStateAsync: stub(),
+      getOutputStatesAsync: stub(),
+      getBucketedOutputStatesAsync: stub(),
+      getDataAsync: stub(),
+    },
+    subcontrollers: {
+      getAllAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    automations: {
+      getAllAsync: stub(),
+      getByIdAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    actions: {
+      output: {
+        getAllAsync: stub(),
+        getAsync: stub(),
+        addAsync: stub(),
+        getOutputActionAsync: stub(),
+        getActionsByOutputIdAsync: stub(),
+        updateAsync: stub(),
+      },
+      notification: {
+        getAllAsync: stub(),
+        getAsync: stub(),
+        addAsync: stub(),
+        getNotificationActionByIdAsync: stub(),
+        updateAsync: stub(),
+      },
+    },
+    conditions: {
+      sensor: {
+        getAsync: stub(),
+        addAsync: stub(),
+        updateAsync: stub(),
+        deleteAsync: stub(),
+      },
+      output: {
+        getAsync: stub(),
+        addAsync: stub(),
+        updateAsync: stub(),
+        deleteAsync: stub(),
+      },
+      time: {
+        getAsync: stub(),
+        addAsync: stub(),
+        updateAsync: stub(),
+        deleteAsync: stub(),
+      },
+      weekday: {
+        getAsync: stub(),
+        addAsync: stub(),
+        updateAsync: stub(),
+        deleteAsync: stub(),
+      },
+      month: {
+        getAsync: stub(),
+        addAsync: stub(),
+        updateAsync: stub(),
+        deleteAsync: stub(),
+      },
+      dateRange: {
+        getAsync: stub(),
+        addAsync: stub(),
+        updateAsync: stub(),
+        deleteAsync: stub(),
+      },
+    },
+    camera: {
+      getAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    users: {
+      getByIdAsync: stub(),
+      addAsync: stub(),
+    },
+    deviceZones: {
+      getAllAsync: stub(),
+      getByIdAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    system: {
+      getAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    journals: {
+      getAllAsync: stub(),
+      getByIdAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+      getJournalTagsAsync: stub(),
+      addJournalTagAsync: stub(),
+      updateJournalTagAsync: stub(),
+      deleteJournalTagAsync: stub(),
+      getJournalTagLookupsAsync: stub(),
+      addJournalTagLookupAsync: stub(),
+      deleteJournalTagLookupAsync: stub(),
+      getJournalEntriesAsync: stub(),
+      getJournalEntryAsync: stub(),
+      addJournalEntryAsync: stub(),
+      updateJournalEntryAsync: stub(),
+      deleteJournalEntryAsync: stub(),
+      getJournalEntryTagsAsync: stub(),
+      addJournalEntryTagAsync: stub(),
+      updateJournalEntryTagAsync: stub(),
+      deleteJournalEntryTagAsync: stub(),
+      getJournalEntryTagLookupsAsync: stub(),
+      addJournalEntryTagLookupAsync: stub(),
+      deleteJournalEntryTagLookupAsync: stub(),
+    },
+  } as any;
+};

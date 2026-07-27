@@ -1,8 +1,12 @@
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ControlMode } from "@sproot/common/outputs/IOutputBase";
+import type { IOutputsRepository } from "../../database/repositories/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "../../database/repositories/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "../../database/repositories/subcontrollers/ISubcontrollersRepository";
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
 import { TPLinkSmartPlugs, TPLinkPlug } from "../TPLinkSmartPlugs";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
+import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
+import { SDBOutputAction } from "@sproot/common/database/SDBOutputAction";
 import { Device as SimulatedDevice, UdpServer } from "tplink-smarthome-simulator";
 import { Plug } from "tplink-smarthome-api";
 
@@ -15,7 +19,44 @@ import { OutputBase } from "../base/OutputBase";
 import { toDbDate } from "../../utils/dateUtils";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
-const mockSprootDB = new MockSprootDB();
+
+const createMockOutputsRepo = (): IOutputsRepository => ({
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+  updateLastOutputStateAsync: async () => {},
+  getLastOutputStateAsync: async () => [],
+  addOutputStateAsync: async () => {},
+  getOutputStatesAsync: async () => [],
+  getBucketedOutputStatesAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: null as unknown as DeviceDataQueryRow,
+  }),
+});
+
+const createMockOutputActionsRepo = (): IOutputActionsRepository => ({
+  getAllAsync: async () => [],
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  getOutputActionAsync: async () => [],
+  getActionsByOutputIdAsync: async () => [],
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createMockSubcontrollersRepo = (): ISubcontrollersRepository => ({
+  getAllAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => 0,
+  deleteAsync: async () => 0,
+});
+
+const mockOutputsRepo = createMockOutputsRepo();
+const mockOutputActionsRepo = createMockOutputActionsRepo();
+const mockSubcontrollersRepo = createMockSubcontrollersRepo();
 
 describe("tplinkPlug.ts tests", async function () {
   const simulatedHS300 = new SimulatedDevice({
@@ -43,7 +84,9 @@ describe("tplinkPlug.ts tests", async function () {
 
     await using tplinkSmartPlugs = new TPLinkSmartPlugs(
       eventBus,
-      mockSprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
       5,
       5,
       5,
@@ -127,7 +170,9 @@ describe("tplinkPlug.ts tests", async function () {
     const eventBus = new MemoryEventBus(logger);
     await using tplinkSmartPlugs = new TPLinkSmartPlugs(
       eventBus,
-      mockSprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
       5,
       5,
       5,
@@ -172,7 +217,9 @@ describe("tplinkPlug.ts tests", async function () {
 
     await using tplinkSmartPlugs = new TPLinkSmartPlugs(
       eventBus,
-      mockSprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
       5,
       5,
       5,
@@ -240,7 +287,9 @@ describe("tplinkPlug.ts tests", async function () {
 
     await using tplinkSmartPlugs = new TPLinkSmartPlugs(
       eventBus,
-      mockSprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
       5,
       5,
       5,
@@ -265,7 +314,7 @@ describe("tplinkPlug.ts tests", async function () {
     assert.equal(outputData["1"]!["isPwm"], false);
     assert.equal(outputData["1"]!["isInvertedPwm"], false);
     assert.notExists((tplinkSmartPlugs.outputs["1"]! as TPLinkPlug).tplinkPlug);
-    assert.exists(tplinkSmartPlugs.outputs["1"]!["sprootDB"]);
+    assert.exists(tplinkSmartPlugs.outputs["1"]!["outputsRepository"]);
 
     // This here verifies that we're handling events properly (since we've got a fancy registry to make these grab plugs
     // and update their state on the fly). It takes a hot minute for the client to start lookin', so give it a few seconds
@@ -281,7 +330,9 @@ describe("tplinkPlug.ts tests", async function () {
     const eventBus = new MemoryEventBus(logger);
     await using tplinkSmartPlugs = new TPLinkSmartPlugs(
       eventBus,
-      mockSprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
       5,
       5,
       5,
@@ -292,6 +343,7 @@ describe("tplinkPlug.ts tests", async function () {
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
       model: "TPLINK_SMART_PLUG",
+      address: simulatedHS300.address,
       name: "test output 1",
       pin: simulatedHS300.children[0]?.sysinfo.id,
       isPwm: false,
@@ -420,7 +472,9 @@ describe("tplinkPlug.ts tests", async function () {
     const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves(true);
     await using tplinkSmartPlugs = new TPLinkSmartPlugs(
       eventBus,
-      mockSprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
       5,
       5,
       5,
@@ -505,28 +559,24 @@ describe("tplinkPlug.ts tests", async function () {
   it("should preserve automatic actions across offline and online events", async function () {
     const logger = winston.createLogger({ silent: true });
     const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves(true);
-    const sprootDB = new MockSprootDB();
-    sinon.stub(sprootDB, "getAutomationsAsync").resolves([
-      {
-        id: 1,
-        name: "testAutomation",
-        operator: "or",
-        enabled: true,
-      },
-    ]);
-    sinon.stub(sprootDB, "getOutputActionsByOutputIdAsync").resolves([
+    const mockOutputsRepo = createMockOutputsRepo();
+    const mockOutputActionsRepo = createMockOutputActionsRepo();
+    const mockSubcontrollersRepo = createMockSubcontrollersRepo();
+    sinon.stub(mockOutputActionsRepo, "getActionsByOutputIdAsync").resolves([
       {
         id: 1,
         automationId: 1,
         outputId: 1,
         value: 100,
       },
-    ]);
+    ] as SDBOutputAction[]);
     const eventBus = new MemoryEventBus(logger);
 
     await using tplinkSmartPlugs = new TPLinkSmartPlugs(
       eventBus,
-      sprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
       5,
       5,
       5,

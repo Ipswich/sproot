@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB } from "../../../../database/ISprootDB";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { SDBUser } from "@sproot/database/SDBUser";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
@@ -30,7 +30,7 @@ export async function getTokenAsync(
     return authenticationResponse;
   }
 
-  let details: string[] = [];
+  const details: string[] = [];
   if (!request.body?.username) {
     details.push("Missing username");
   }
@@ -52,7 +52,7 @@ export async function getTokenAsync(
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let user: SDBUser[];
   try {
-    user = await sprootDB.getUserAsync(request.body.username);
+    user = await sprootDB.users.getByIdAsync(request.body.username);
   } catch (error) {
     authenticationResponse = {
       statusCode: 503,

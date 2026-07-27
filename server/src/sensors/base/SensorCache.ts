@@ -1,18 +1,18 @@
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { QueueCache } from "@sproot/sproot-common/dist/utility/QueueCache";
+import { ISensorsRepository } from "../../database/repositories/sensors/ISensorsRepository";
+import { SDBReading } from "@sproot/common/database/SDBReading";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
+import { QueueCache } from "@sproot/common/utility/QueueCache";
 import winston from "winston";
 
 export class SensorCache {
   queueCache: Record<ReadingType, QueueCache<SDBReading>>;
-  sprootDB: ISprootDB;
+  sensorsRepository: ISensorsRepository;
   logger: winston.Logger;
   readonly maxSize: number;
-  constructor(maxSize: number, sprootDB: ISprootDB, logger: winston.Logger) {
+  constructor(maxSize: number, sensorsRepository: ISensorsRepository, logger: winston.Logger) {
     this.maxSize = maxSize;
     this.queueCache = {} as Record<ReadingType, QueueCache<SDBReading>>;
-    this.sprootDB = sprootDB;
+    this.sensorsRepository = sensorsRepository;
     this.logger = logger;
   }
 
@@ -29,7 +29,7 @@ export class SensorCache {
     bucketMinutes: number = 5,
   ): Promise<void> {
     this.clear();
-    const readings = await this.sprootDB.getBucketedSensorReadingsAsync(
+    const readings = await this.sensorsRepository.getBucketedSensorReadingsAsync(
       { id: sensorId },
       new Date(),
       minutes,
@@ -38,7 +38,12 @@ export class SensorCache {
     );
     const sdbReadings =
       readings ??
-      (await this.sprootDB.getSensorReadingsAsync({ id: sensorId }, new Date(), minutes, true));
+      (await this.sensorsRepository.getSensorReadingsAsync(
+        { id: sensorId },
+        new Date(),
+        minutes,
+        true,
+      ));
     for (const reading of sdbReadings) {
       const newReading = {
         data: reading.data,

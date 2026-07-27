@@ -1,17 +1,57 @@
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { PCA9685, PCA9685Output } from "@sproot/sproot-server/src/outputs/PCA9685";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { ControlMode } from "@sproot/common/outputs/IOutputBase";
+import type { IOutputsRepository } from "../../database/repositories/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "../../database/repositories/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "../../database/repositories/subcontrollers/ISubcontrollersRepository";
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
+import { PCA9685, PCA9685Output } from "../PCA9685";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
+import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
 import { Pca9685Driver } from "pca9685";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { Models } from "@sproot/common/outputs/Models";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
-const mockSprootDB = new MockSprootDB();
+
+const createMockOutputsRepo = (): IOutputsRepository => ({
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+  updateLastOutputStateAsync: async () => {},
+  getLastOutputStateAsync: async () => [],
+  addOutputStateAsync: async () => {},
+  getOutputStatesAsync: async () => [],
+  getBucketedOutputStatesAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: null as unknown as DeviceDataQueryRow,
+  }),
+});
+
+const createMockOutputActionsRepo = (): IOutputActionsRepository => ({
+  getAllAsync: async () => [],
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  getOutputActionAsync: async () => [],
+  getActionsByOutputIdAsync: async () => [],
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createMockSubcontrollersRepo = (): ISubcontrollersRepository => ({
+  getAllAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => 0,
+  deleteAsync: async () => 0,
+});
+
+const mockOutputsRepo = createMockOutputsRepo();
+const mockOutputActionsRepo = createMockOutputActionsRepo();
+const mockSubcontrollersRepo = createMockSubcontrollersRepo();
 
 function stubPca9685DutyCycle() {
   return sinon.stub(Pca9685Driver.prototype, "setDutyCycle").callsFake((...args) => {
@@ -35,7 +75,17 @@ describe("PCA9685.ts tests", function () {
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
 
-    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(
+      eventBus,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
+      5,
+      5,
+      5,
+      undefined,
+      logger,
+    );
     // disposing with nothing shouldn't cause issues
     await pca9685.disposeOutputAsync({} as OutputBase);
 
@@ -106,7 +156,17 @@ describe("PCA9685.ts tests", function () {
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
 
-    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(
+      eventBus,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
+      5,
+      5,
+      5,
+      undefined,
+      logger,
+    );
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,
@@ -123,7 +183,7 @@ describe("PCA9685.ts tests", function () {
     assert.equal(outputData["1"]!["isPwm"], true);
     assert.equal(outputData["1"]!["isInvertedPwm"], false);
     assert.exists((pca9685.outputs["1"]! as PCA9685Output)["pca9685"]);
-    assert.exists(pca9685.outputs["1"]!["sprootDB"]);
+    assert.exists(pca9685.outputs["1"]!["outputsRepository"]);
   });
 
   it("should update and apply states with respect to control mode", async function () {
@@ -140,7 +200,17 @@ describe("PCA9685.ts tests", function () {
     sinon.createStubInstance(Pca9685Driver);
     const setDutyCycleStub = stubPca9685DutyCycle();
     const eventBus = new MemoryEventBus(logger);
-    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(
+      eventBus,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
+      5,
+      5,
+      5,
+      undefined,
+      logger,
+    );
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,

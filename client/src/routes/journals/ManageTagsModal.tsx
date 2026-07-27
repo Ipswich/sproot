@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 import { ActionIcon } from "@mantine/core";
 import { IconDeviceFloppy, IconPlus } from "@tabler/icons-react";
-import { DefaultColors } from "@sproot/sproot-common/src/utility/Constants";
+import { DefaultColors } from "@sproot/common/utility/Constants";
 import ConfirmDeleteButton from "../../components/ConfirmDeleteButton";
 
 type TagLike = { id: number; name?: string | null; color?: string | null };

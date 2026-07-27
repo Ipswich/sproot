@@ -1,10 +1,13 @@
 import { assert } from "chai";
 import sinon from "sinon";
 import { Request, Response } from "express";
-import { SuccessResponse, ErrorResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
-import { MockSprootDB, ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalEntry";
-import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
+import { SuccessResponse, ErrorResponse } from "@sproot/common/api/v2/Responses";
+import { IJournalRepository } from "../../../../database/repositories/journals/IJournalRepository";
+import { IJournalTagsRepository } from "../../../../database/repositories/journals/tags/IJournalTagsRepository";
+import { IEntriesRepository } from "../../../../database/repositories/journals/entries/IEntriesRepository";
+import { IEntryTagsRepository } from "../../../../database/repositories/journals/tags/IEntryTagsRepository";
+import { SDBJournalEntry } from "@sproot/common/database/SDBJournalEntry";
+import { SDBJournalEntryTag } from "@sproot/common/database/SDBJournalEntryTag";
 import JournalService from "../../../../journals/JournalService";
 
 import {
@@ -19,6 +22,82 @@ import {
 
 describe("JournalEntriesHandlers", () => {
   let sandbox: sinon.SinonSandbox;
+
+  function createMockRepositories() {
+    const stub = () => sinon.stub();
+    const entryTagsRepoInner: IEntryTagsRepository = {
+      getTagsAsync: stub(),
+      addTagAsync: stub(),
+      updateTagAsync: stub(),
+      deleteTagAsync: stub(),
+      getLookupsAsync: stub(),
+      addLookupAsync: stub(),
+      deleteLookupAsync: stub(),
+    };
+
+    const entriesRepoInner: IEntriesRepository = {
+      getEntriesAsync: stub(),
+      getEntryAsync: stub(),
+      addEntryAsync: stub(),
+      updateEntryAsync: stub(),
+      deleteEntryAsync: stub(),
+      tags: entryTagsRepoInner,
+    };
+
+    const journalsRepo: IJournalRepository = {
+      getAllAsync: stub(),
+      getByIdAsync: stub(),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+      entries: entriesRepoInner,
+      tags: {
+        getTagsAsync: stub(),
+        addTagAsync: stub(),
+        updateTagAsync: stub(),
+        deleteTagAsync: stub(),
+        getLookupsAsync: stub(),
+        addLookupAsync: stub(),
+        deleteLookupAsync: stub(),
+      },
+    } as IJournalRepository;
+
+    const journalTagsRepo: IJournalTagsRepository = {
+      getTagsAsync: stub(),
+      addTagAsync: stub(),
+      updateTagAsync: stub(),
+      deleteTagAsync: stub(),
+      getLookupsAsync: stub(),
+      addLookupAsync: stub(),
+      deleteLookupAsync: stub(),
+    } as unknown as IJournalTagsRepository;
+
+    return { journalsRepo, journalTagsRepo, entriesRepoInner, entryTagsRepoInner };
+  }
+
+  function stubRepositories(repos: ReturnType<typeof createMockRepositories>) {
+    const stub = (repos: ReturnType<typeof createMockRepositories>) => {
+      (repos.journalsRepo.getByIdAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.getAllAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.addAsync as sinon.SinonStub).resolves(2);
+      (repos.journalsRepo.updateAsync as sinon.SinonStub).resolves();
+      (repos.journalsRepo.deleteAsync as sinon.SinonStub).resolves();
+      (repos.entriesRepoInner.getEntriesAsync as sinon.SinonStub).resolves([]);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([]);
+      (repos.entriesRepoInner.addEntryAsync as sinon.SinonStub).resolves(5);
+      (repos.entriesRepoInner.updateEntryAsync as sinon.SinonStub).resolves();
+      (repos.entriesRepoInner.deleteEntryAsync as sinon.SinonStub).resolves();
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.addTagAsync as sinon.SinonStub).resolves(11);
+      (repos.entryTagsRepoInner.updateTagAsync as sinon.SinonStub).resolves();
+      (repos.entryTagsRepoInner.deleteTagAsync as sinon.SinonStub).resolves();
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.addLookupAsync as sinon.SinonStub).resolves(100);
+      (repos.entryTagsRepoInner.deleteLookupAsync as sinon.SinonStub).resolves();
+    };
+
+    stub(repos);
+  }
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
@@ -52,11 +131,12 @@ describe("JournalEntriesHandlers", () => {
 
   describe("getByJournalIdAsync", () => {
     it("should return 400 when journalId is not a number", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalAsync.resolves([]);
-      sprootDB.getJournalTagsAsync.resolves([]);
-      sprootDB.getJournalTagLookupsAsync.resolves([]);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.journalsRepo.getByIdAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.tags.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.tags.getLookupsAsync as sinon.SinonStub).resolves([]);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { journalId: "not-a-number" },
@@ -74,11 +154,12 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 404 when journal not found", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalAsync.resolves([]);
-      sprootDB.getJournalTagsAsync.resolves([]);
-      sprootDB.getJournalTagLookupsAsync.resolves([]);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.journalsRepo.getByIdAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.tags.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.tags.getLookupsAsync as sinon.SinonStub).resolves([]);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { journalId: "2" },
@@ -97,8 +178,9 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 200 and entries when journal exists", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalAsync.resolves([
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.journalsRepo.getByIdAsync as sinon.SinonStub).resolves([
         {
           id: 2,
           title: "j",
@@ -111,13 +193,15 @@ describe("JournalEntriesHandlers", () => {
           archivedAt: null,
         },
       ]);
-      sprootDB.getJournalTagsAsync.resolves([]);
-      sprootDB.getJournalTagLookupsAsync.resolves([]);
-      sprootDB.getJournalEntriesAsync.resolves([sampleEntry]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([{ id: 100, journalEntryId: 5, tagId: 11 }]);
-      sprootDB.getJournalEntryTagsAsync.resolves([sampleTag]);
+      (repos.journalsRepo.tags.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.tags.getLookupsAsync as sinon.SinonStub).resolves([]);
+      (repos.entriesRepoInner.getEntriesAsync as sinon.SinonStub).resolves([sampleEntry]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([
+        { id: 100, journalEntryId: 5, tagId: 11 },
+      ]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([sampleTag]);
 
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { journalId: "2" },
@@ -135,9 +219,10 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 503 when underlying DB throws", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalAsync.rejects(new Error("boom"));
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.journalsRepo.getByIdAsync as sinon.SinonStub).rejects(new Error("boom"));
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { journalId: "2" },
@@ -156,8 +241,9 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should omit content when withContent=false", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalAsync.resolves([
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.journalsRepo.getByIdAsync as sinon.SinonStub).resolves([
         {
           id: 2,
           title: "j",
@@ -170,13 +256,17 @@ describe("JournalEntriesHandlers", () => {
           archivedAt: null,
         },
       ]);
-      sprootDB.getJournalTagsAsync.resolves([]);
-      sprootDB.getJournalTagLookupsAsync.resolves([]);
-      sprootDB.getJournalEntriesAsync.resolves([{ ...sampleEntry, content: undefined }]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([{ id: 100, journalEntryId: 5, tagId: 11 }]);
-      sprootDB.getJournalEntryTagsAsync.resolves([sampleTag]);
+      (repos.journalsRepo.tags.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.tags.getLookupsAsync as sinon.SinonStub).resolves([]);
+      (repos.entriesRepoInner.getEntriesAsync as sinon.SinonStub).resolves([
+        { ...sampleEntry, content: undefined },
+      ]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([
+        { id: 100, journalEntryId: 5, tagId: 11 },
+      ]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([sampleTag]);
 
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { journalId: "2" },
@@ -196,8 +286,9 @@ describe("JournalEntriesHandlers", () => {
 
   describe("getByEntryIdAsync", () => {
     it("should return 400 when entryId param invalid", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "bad" },
@@ -215,11 +306,12 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 404 when entry not found", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryAsync.resolves([]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([]);
-      sprootDB.getJournalEntryTagsAsync.resolves([]);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([]);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -238,11 +330,14 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 200 and entry when found", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryAsync.resolves([sampleEntry]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([{ id: 101, journalEntryId: 5, tagId: 11 }]);
-      sprootDB.getJournalEntryTagsAsync.resolves([sampleTag]);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([sampleEntry]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([
+        { id: 101, journalEntryId: 5, tagId: 11 },
+      ]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([sampleTag]);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -260,13 +355,16 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 200 and entry with undefined content when withContent=false", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
       const sampleNoContent = { ...sampleEntry } as SDBJournalEntry;
       (sampleNoContent as any).content = undefined;
-      sprootDB.getJournalEntryAsync.resolves([sampleNoContent]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([{ id: 101, journalEntryId: 5, tagId: 11 }]);
-      sprootDB.getJournalEntryTagsAsync.resolves([sampleTag]);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([sampleNoContent]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([
+        { id: 101, journalEntryId: 5, tagId: 11 },
+      ]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([sampleTag]);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -284,9 +382,10 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 503 when DB throws", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryAsync.rejects(new Error("boom"));
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).rejects(new Error("boom"));
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -307,11 +406,12 @@ describe("JournalEntriesHandlers", () => {
 
   describe("addAsync", () => {
     it("should return 404 when journal does not exist", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalAsync.resolves([]);
-      sprootDB.getJournalTagsAsync.resolves([]);
-      sprootDB.getJournalTagLookupsAsync.resolves([]);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.journalsRepo.getByIdAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.tags.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.tags.getLookupsAsync as sinon.SinonStub).resolves([]);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { journalId: "2" },
@@ -330,11 +430,12 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 400 when journalId invalid", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalAsync.resolves([]);
-      sprootDB.getJournalTagsAsync.resolves([]);
-      sprootDB.getJournalTagLookupsAsync.resolves([]);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.journalsRepo.getByIdAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.tags.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.tags.getLookupsAsync as sinon.SinonStub).resolves([]);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { journalId: "x" },
@@ -353,8 +454,9 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 400 when content missing", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalAsync.resolves([
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.journalsRepo.getByIdAsync as sinon.SinonStub).resolves([
         {
           id: 2,
           title: "j",
@@ -367,11 +469,9 @@ describe("JournalEntriesHandlers", () => {
           archivedAt: null,
         },
       ]);
-      sprootDB.getJournalTagsAsync.resolves([]);
-      sprootDB.getJournalTagLookupsAsync.resolves([]);
-      sprootDB.getJournalTagsAsync.resolves([]);
-      sprootDB.getJournalTagLookupsAsync.resolves([]);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      (repos.journalsRepo.tags.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.tags.getLookupsAsync as sinon.SinonStub).resolves([]);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { journalId: "2" },
@@ -389,8 +489,9 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 201 when created", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalAsync.resolves([
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.journalsRepo.getByIdAsync as sinon.SinonStub).resolves([
         {
           id: 2,
           title: "j",
@@ -403,10 +504,10 @@ describe("JournalEntriesHandlers", () => {
           archivedAt: null,
         },
       ]);
-      sprootDB.getJournalTagsAsync.resolves([]);
-      sprootDB.getJournalTagLookupsAsync.resolves([]);
-      sprootDB.addJournalEntryAsync.resolves(7);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      (repos.journalsRepo.tags.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.tags.getLookupsAsync as sinon.SinonStub).resolves([]);
+      (repos.entriesRepoInner.addEntryAsync as sinon.SinonStub).resolves(7);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { journalId: "2" },
@@ -424,8 +525,9 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 503 when create throws", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalAsync.resolves([
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.journalsRepo.getByIdAsync as sinon.SinonStub).resolves([
         {
           id: 2,
           title: "j",
@@ -438,10 +540,10 @@ describe("JournalEntriesHandlers", () => {
           archivedAt: null,
         },
       ]);
-      sprootDB.getJournalTagsAsync.resolves([]);
-      sprootDB.getJournalTagLookupsAsync.resolves([]);
-      sprootDB.addJournalEntryAsync.rejects(new Error("boom"));
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      (repos.journalsRepo.tags.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.tags.getLookupsAsync as sinon.SinonStub).resolves([]);
+      (repos.entriesRepoInner.addEntryAsync as sinon.SinonStub).rejects(new Error("boom"));
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { journalId: "2" },
@@ -462,8 +564,9 @@ describe("JournalEntriesHandlers", () => {
 
   describe("updateAsync", () => {
     it("should return 400 when entryId invalid", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "x" },
@@ -481,8 +584,9 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 400 when content is explicitly null", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -500,9 +604,10 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 404 when entry not found", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryAsync.resolves([]);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([]);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -521,13 +626,14 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 200 when update succeeds", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
       const existing = { ...sampleEntry };
-      sprootDB.getJournalEntryAsync.resolves([existing]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([]);
-      sprootDB.getJournalEntryTagsAsync.resolves([]);
-      sprootDB.updateJournalEntryAsync.resolves();
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([existing]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.entriesRepoInner.updateEntryAsync as sinon.SinonStub).resolves();
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -542,12 +648,13 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 503 when update throws", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryAsync.resolves([sampleEntry]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([]);
-      sprootDB.getJournalEntryTagsAsync.resolves([]);
-      sprootDB.updateJournalEntryAsync.rejects(new Error("boom"));
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([sampleEntry]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.entriesRepoInner.updateEntryAsync as sinon.SinonStub).rejects(new Error("boom"));
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -568,8 +675,9 @@ describe("JournalEntriesHandlers", () => {
 
   describe("deleteAsync", () => {
     it("should return 400 when entryId invalid", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "x" },
@@ -586,9 +694,10 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 404 when entry not found", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryAsync.resolves([]);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([]);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -606,12 +715,13 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 200 when delete succeeds", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryAsync.resolves([sampleEntry]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([]);
-      sprootDB.getJournalEntryTagsAsync.resolves([]);
-      sprootDB.deleteJournalEntryAsync.resolves();
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([sampleEntry]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.entriesRepoInner.deleteEntryAsync as sinon.SinonStub).resolves();
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -625,12 +735,13 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 503 when delete throws", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryAsync.resolves([sampleEntry]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([]);
-      sprootDB.getJournalEntryTagsAsync.resolves([]);
-      sprootDB.deleteJournalEntryAsync.rejects(new Error("boom"));
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([sampleEntry]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.entriesRepoInner.deleteEntryAsync as sinon.SinonStub).rejects(new Error("boom"));
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -650,8 +761,9 @@ describe("JournalEntriesHandlers", () => {
 
   describe("addTagAsync", () => {
     it("should return 400 when ids invalid", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "x" },
@@ -672,9 +784,10 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 404 when entry not found", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryAsync.resolves([]);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([]);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -693,14 +806,17 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 200 when tag already exists on entry", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
       const entryWithTag = { ...sampleEntry, tags: [sampleTag] } as SDBJournalEntry & {
         tags: SDBJournalEntryTag[];
       };
-      sprootDB.getJournalEntryAsync.resolves([entryWithTag]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([{ id: 200, journalEntryId: 5, tagId: 11 }]);
-      sprootDB.getJournalEntryTagsAsync.resolves([sampleTag]);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([entryWithTag]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([
+        { id: 200, journalEntryId: 5, tagId: 11 },
+      ]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([sampleTag]);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -715,17 +831,18 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 404 when tag id does not exist", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
       const entryNoTags = { ...sampleEntry, tags: [] } as SDBJournalEntry & {
         tags: SDBJournalEntryTag[];
       };
-      sprootDB.getJournalEntryAsync.resolves([entryNoTags]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([]);
-      sprootDB.getJournalEntryTagsAsync.resolves([]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([]);
-      sprootDB.getJournalEntryTagsAsync.resolves([]);
-      sprootDB.getJournalTagsAsync.resolves([]);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([entryNoTags]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.journalsRepo.tags.getTagsAsync as sinon.SinonStub).resolves([]);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -744,16 +861,19 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 200 when tag added successfully", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
       const entryNoTags = { ...sampleEntry, tags: [] } as SDBJournalEntry & {
         tags: SDBJournalEntryTag[];
       };
-      sprootDB.getJournalEntryAsync.resolves([entryNoTags]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([]);
-      sprootDB.getJournalEntryTagsAsync.resolves([]);
-      sprootDB.getJournalEntryTagsAsync.resolves([{ id: 11, name: "t", color: null }]);
-      sprootDB.addJournalEntryTagLookupAsync.resolves(77);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([entryNoTags]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([
+        { id: 11, name: "t", color: null },
+      ]);
+      (repos.entryTagsRepoInner.addLookupAsync as sinon.SinonStub).resolves(77);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -768,16 +888,19 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 503 when addTag throws", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
       const entryNoTags = { ...sampleEntry, tags: [] } as SDBJournalEntry & {
         tags: SDBJournalEntryTag[];
       };
-      sprootDB.getJournalEntryAsync.resolves([entryNoTags]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([]);
-      sprootDB.getJournalEntryTagsAsync.resolves([]);
-      sprootDB.getJournalEntryTagsAsync.resolves([{ id: 11, name: "t", color: null }]);
-      sprootDB.addJournalEntryTagLookupAsync.rejects(new Error("boom"));
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([entryNoTags]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([
+        { id: 11, name: "t", color: null },
+      ]);
+      (repos.entryTagsRepoInner.addLookupAsync as sinon.SinonStub).rejects(new Error("boom"));
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5" },
@@ -800,8 +923,9 @@ describe("JournalEntriesHandlers", () => {
 
   describe("removeTagAsync", () => {
     it("should return 400 when ids invalid", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "x", tagId: "y" },
@@ -821,9 +945,10 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 404 when entry not found", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryAsync.resolves([]);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([]);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5", tagId: "11" },
@@ -841,14 +966,15 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 404 when entry does not have tag", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
       const entryNoTags = { ...sampleEntry, tags: [] } as SDBJournalEntry & {
         tags: SDBJournalEntryTag[];
       };
-      sprootDB.getJournalEntryAsync.resolves([entryNoTags]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([]);
-      sprootDB.getJournalEntryTagsAsync.resolves([]);
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([entryNoTags]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([]);
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5", tagId: "11" },
@@ -868,15 +994,18 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 200 when tag removed", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
       const entryWithTag = { ...sampleEntry, tags: [sampleTag] } as SDBJournalEntry & {
         tags: SDBJournalEntryTag[];
       };
-      sprootDB.getJournalEntryAsync.resolves([entryWithTag]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([{ id: 300, journalEntryId: 5, tagId: 11 }]);
-      sprootDB.getJournalEntryTagsAsync.resolves([sampleTag]);
-      sprootDB.deleteJournalEntryTagLookupAsync.resolves();
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([entryWithTag]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([
+        { id: 300, journalEntryId: 5, tagId: 11 },
+      ]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([sampleTag]);
+      (repos.entryTagsRepoInner.deleteLookupAsync as sinon.SinonStub).resolves();
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5", tagId: "11" },
@@ -890,15 +1019,18 @@ describe("JournalEntriesHandlers", () => {
     });
 
     it("should return 503 when removeTag throws", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const repos = createMockRepositories();
+      stubRepositories(repos);
       const entryWithTag = { ...sampleEntry, tags: [sampleTag] } as SDBJournalEntry & {
         tags: SDBJournalEntryTag[];
       };
-      sprootDB.getJournalEntryAsync.resolves([entryWithTag]);
-      sprootDB.getJournalEntryTagLookupsAsync.resolves([{ id: 300, journalEntryId: 5, tagId: 11 }]);
-      sprootDB.getJournalEntryTagsAsync.resolves([sampleTag]);
-      sprootDB.deleteJournalEntryTagLookupAsync.rejects(new Error("boom"));
-      const journalService = new JournalService(sprootDB as ISprootDB);
+      (repos.entriesRepoInner.getEntryAsync as sinon.SinonStub).resolves([entryWithTag]);
+      (repos.entryTagsRepoInner.getLookupsAsync as sinon.SinonStub).resolves([
+        { id: 300, journalEntryId: 5, tagId: 11 },
+      ]);
+      (repos.entryTagsRepoInner.getTagsAsync as sinon.SinonStub).resolves([sampleTag]);
+      (repos.entryTagsRepoInner.deleteLookupAsync as sinon.SinonStub).rejects(new Error("boom"));
+      const journalService = new JournalService(repos.journalsRepo);
 
       const req = {
         params: { entryId: "5", tagId: "11" },

@@ -1,7 +1,7 @@
 import { Table, ActionIcon, Group } from "@mantine/core";
 import { IAutomation } from "@sproot/automation/IAutomation";
-import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
-import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
+import { IOutputBase } from "@sproot/common/outputs/IOutputBase";
+import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
 import { ISubcontroller } from "@sproot/system/ISubcontroller";
 import { IconEdit } from "@tabler/icons-react";
 import { JSX } from "react";

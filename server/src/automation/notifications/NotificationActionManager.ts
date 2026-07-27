@@ -1,4 +1,3 @@
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { NotificationAction } from "./NotificationAction";
 import winston from "winston";
 import { IActiveNotificationsResponse } from "@sproot/automation/IActiveNotificationResponse";
@@ -6,9 +5,10 @@ import { IActiveNotification } from "@sproot/automation/IActiveNotification";
 import { IEventBus } from "../../eventbus/IEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
+import type { INotificationActionsRepository } from "../../database/repositories/automations/actions/INotificationActionsRepository";
 
 export class NotificationActionManager implements Disposable {
-  #sprootDB: ISprootDB;
+  #notificationActionsRepository: INotificationActionsRepository;
   #eventBus: IEventBus;
   #logger: winston.Logger;
   #lastRunAt: number | null = null;
@@ -17,17 +17,21 @@ export class NotificationActionManager implements Disposable {
   #listenerCleanupFunction: () => void;
 
   static async createInstanceAsync(
-    sprootDB: ISprootDB,
+    notificationActionsRepository: INotificationActionsRepository,
     eventBus: IEventBus,
     logger: winston.Logger,
   ): Promise<NotificationActionManager> {
-    const manager = new NotificationActionManager(sprootDB, eventBus, logger);
+    const manager = new NotificationActionManager(notificationActionsRepository, eventBus, logger);
     await manager.#reloadActionsAsync();
     return manager;
   }
 
-  private constructor(sprootDB: ISprootDB, eventBus: IEventBus, logger: winston.Logger) {
-    this.#sprootDB = sprootDB;
+  private constructor(
+    notificationActionsRepository: INotificationActionsRepository,
+    eventBus: IEventBus,
+    logger: winston.Logger,
+  ) {
+    this.#notificationActionsRepository = notificationActionsRepository;
     this.#eventBus = eventBus;
     this.#logger = logger;
 
@@ -70,7 +74,7 @@ export class NotificationActionManager implements Disposable {
    */
   async #reloadActionsAsync(): Promise<void> {
     try {
-      const notificationActions = await this.#sprootDB.getNotificationActionsAsync();
+      const notificationActions = await this.#notificationActionsRepository.getAllAsync();
       this.#actions = notificationActions.map((action) => new NotificationAction(action));
     } catch (error) {
       this.#logger.error(`Error reloading actions for notifications - ${error}`);

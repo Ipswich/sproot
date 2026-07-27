@@ -5,16 +5,18 @@ import cors from "cors";
 import express, { Express } from "express";
 import * as winston from "winston";
 
-import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import * as Constants from "@sproot/common/utility/Constants";
+import { ISprootDB } from "./database/ISprootDB";
+import type { IJournalRepository } from "./database/repositories/journals/IJournalRepository";
 import { SprootDB } from "./database/SprootDB";
-import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
+import { SDBUser } from "@sproot/common/database/SDBUser";
 import { SensorList } from "./sensors/list/SensorList";
 import { OutputList } from "./outputs/list/OutputList";
 import { DI_KEYS } from "./utils/DependencyInjectionConstants";
 import setupLogger from "./logger";
 import ApiRootV2 from "./api/v2/ApiRootV2";
 import { AutomationService } from "./automation/AutomationService";
+
 import { CameraManager } from "./camera/CameraManager";
 import { JournalService } from "./journals/JournalService";
 import { SystemStatusMonitor } from "./system/StatusMonitor";
@@ -48,14 +50,18 @@ export default async function setupAsync(): Promise<Express> {
   const mdnsService = new MdnsService(logger);
   app.set(DI_KEYS.MdnsService, mdnsService);
 
-  const journalService = new JournalService(sprootDB);
+  const journalService = new JournalService(sprootDB.journals as IJournalRepository);
   app.set(DI_KEYS.JournalService, journalService);
 
-  const automationService = await AutomationService.createInstanceAsync(sprootDB, eventBus, logger);
+  const automationService = await AutomationService.createInstanceAsync(
+    sprootDB.automations,
+    eventBus,
+    logger,
+  );
   app.set(DI_KEYS.AutomationService, automationService);
 
   const notificationActionManager = await NotificationActionManager.createInstanceAsync(
-    sprootDB,
+    sprootDB.automations.actions.notification,
     eventBus,
     logger,
   );
@@ -64,7 +70,7 @@ export default async function setupAsync(): Promise<Express> {
   logger.info("Creating camera manager. . .");
   const cameraManager = await CameraManager.createInstanceAsync(
     eventBus,
-    sprootDB,
+    sprootDB.camera,
     process.env["INTERSERVICE_AUTHENTICATION_KEY"]!,
     logger,
   );
@@ -73,7 +79,8 @@ export default async function setupAsync(): Promise<Express> {
   logger.info("Creating sensor and output lists. . .");
   const sensorList = await SensorList.createInstanceAsync(
     eventBus,
-    sprootDB,
+    sprootDB.sensors,
+    sprootDB.subcontrollers,
     mdnsService,
     Constants.MAX_CACHE_SIZE,
     Constants.INITIAL_CACHE_LOOKBACK,
@@ -83,7 +90,9 @@ export default async function setupAsync(): Promise<Express> {
   app.set(DI_KEYS.SensorList, sensorList);
   const outputList = await OutputList.createInstanceAsync(
     eventBus,
-    sprootDB,
+    sprootDB.outputs,
+    sprootDB.automations.actions.output,
+    sprootDB.subcontrollers,
     mdnsService,
     Constants.MAX_CACHE_SIZE,
     Constants.INITIAL_CACHE_LOOKBACK,
@@ -92,7 +101,11 @@ export default async function setupAsync(): Promise<Express> {
   );
   app.set(DI_KEYS.OutputList, outputList);
 
-  const systemStatusMonitor = new SystemStatusMonitor(cameraManager, sprootDB, knexConnection);
+  const systemStatusMonitor = new SystemStatusMonitor(
+    cameraManager,
+    sprootDB.system,
+    knexConnection,
+  );
   app.set(DI_KEYS.SystemStatusMonitor, systemStatusMonitor);
 
   const automationsCronJob = createAutomationsCronJob(
@@ -106,7 +119,7 @@ export default async function setupAsync(): Promise<Express> {
   const updateDatabaseCronJob = createDatabaseUpdateCronJob(sensorList, outputList, logger);
   app.set(DI_KEYS.DatabaseUpdateCronJob, updateDatabaseCronJob);
 
-  const backupCronJob = createBackupCronJob(sprootDB, logger);
+  const backupCronJob = createBackupCronJob(sprootDB.system, logger);
   app.set(DI_KEYS.BackupCronJob, backupCronJob);
 
   app.use(cors());
@@ -177,12 +190,12 @@ async function defaultUserCheck(sprootDB: ISprootDB, logger: winston.Logger) {
     email: process.env["DEFAULT_USER_EMAIL"]!,
   } as SDBUser;
 
-  const user = await sprootDB.getUserAsync(defaultUser.username);
+  const user = await sprootDB.users.getByIdAsync(defaultUser.username);
   if (user?.length == 0) {
     logger.info("Default user not found, creating from environment variables.");
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(defaultUser.hash, salt);
     defaultUser.hash = hash;
-    await sprootDB.addUserAsync(defaultUser);
+    await sprootDB.users.addAsync(defaultUser);
   }
 }

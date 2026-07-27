@@ -1,6 +1,6 @@
 import { assert } from "chai";
 import request from "supertest";
-import { MAX_LIMIT } from "@sproot/sproot-common/dist/api/v2/QueryTypes";
+import { MAX_LIMIT } from "@sproot/common/api/v2/QueryTypes";
 import { server } from "./setup";
 
 const SENSOR_TIME_RANGE = {

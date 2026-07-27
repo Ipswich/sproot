@@ -1,9 +1,9 @@
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { MdnsService } from "../../../../system/MdnsService";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB } from "../../../../database/ISprootDB";
 import { randomBytes } from "crypto";
-import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
+import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
 import { SensorList } from "../../../../sensors/list/SensorList";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
@@ -16,7 +16,7 @@ export async function getSubcontrollerHandlerAsync(
   const mdnsService = request.app.get(DI_KEYS.MdnsService) as MdnsService;
 
   try {
-    const recognizedDevices = await sprootDB.getSubcontrollersAsync();
+    const recognizedDevices = await sprootDB.subcontrollers.getAllAsync();
 
     const returnData = {
       recognized: recognizedDevices.map((device) => {
@@ -57,7 +57,7 @@ export async function getSubcontrollerOnlineAsync(
 
   let hostName: string | undefined;
   try {
-    hostName = (await sprootDB.getSubcontrollersAsync()).find(
+    hostName = (await sprootDB.subcontrollers.getAllAsync()).find(
       (device) => device.id.toString() === deviceId,
     )?.hostName;
   } catch {
@@ -143,7 +143,7 @@ export async function postSubcontrollerHandlerAsync(
       type: "ESP32",
       secureToken: randomBytes(32).toString("hex"),
     } as SDBSubcontroller;
-    const id = await sprootDB.addSubcontrollerAsync(newDevice);
+    const id = await sprootDB.subcontrollers.addAsync(newDevice);
 
     return {
       statusCode: 201,
@@ -203,7 +203,7 @@ export async function patchSubcontrollerHandlerAsync(
       };
     }
 
-    const deviceFromDBs = (await sprootDB.getSubcontrollersAsync()).filter(
+    const deviceFromDBs = (await sprootDB.subcontrollers.getAllAsync()).filter(
       (device) => device.id === id,
     );
     if (deviceFromDBs.length === 0) {
@@ -220,7 +220,7 @@ export async function patchSubcontrollerHandlerAsync(
     const updatedDevice = deviceFromDBs[0]!;
     updatedDevice.name = name ?? updatedDevice.name;
 
-    await sprootDB.updateSubcontrollerAsync(updatedDevice);
+    await sprootDB.subcontrollers.updateAsync(updatedDevice);
 
     return {
       statusCode: 200,
@@ -262,7 +262,7 @@ export async function deleteSubcontrollerAsync(
   }
 
   try {
-    const rowsDeleted = await sprootDB.deleteSubcontrollersAsync(id);
+    const rowsDeleted = await sprootDB.subcontrollers.deleteAsync(id);
     if (rowsDeleted === 0) {
       return {
         statusCode: 404,

@@ -1,13 +1,30 @@
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
+import { ControlMode } from "@sproot/common/outputs/IOutputBase";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import { OutputCache } from "../OutputCache";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { IOutputsRepository } from "../../../database/repositories/outputs/IOutputsRepository";
 import winston from "winston";
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
+
+const mockOutputsRepo: IOutputsRepository = {
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+  updateLastOutputStateAsync: async () => {},
+  getLastOutputStateAsync: async () => [],
+  addOutputStateAsync: async () => {},
+  getOutputStatesAsync: async () => [],
+  getBucketedOutputStatesAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: {} as DeviceDataQueryRow,
+  }),
+};
 
 describe("OutputCache.ts", function () {
-  const mockSprootDB = new MockSprootDB();
   let logger: winston.Logger;
 
   beforeEach(() => {
@@ -28,7 +45,7 @@ describe("OutputCache.ts", function () {
 
   describe("loadCacheFromDatabaseAsync", function () {
     it("should load the cache from the database", async function () {
-      sinon.stub(mockSprootDB, "getBucketedOutputStatesAsync").resolves([
+      sinon.stub(mockOutputsRepo, "getBucketedOutputStatesAsync").resolves([
         {
           controlMode: ControlMode.automatic,
           value: 100,
@@ -40,7 +57,7 @@ describe("OutputCache.ts", function () {
           logTime: "2024-03-03T03:30:01Z",
         } as SDBOutputState,
       ]);
-      const outputCache = new OutputCache(2, mockSprootDB, logger);
+      const outputCache = new OutputCache(2, mockOutputsRepo, logger);
       await outputCache.loadFromDatabaseAsync(1, 9000);
 
       assert.equal(outputCache.get().length, 2);
@@ -59,7 +76,7 @@ describe("OutputCache.ts", function () {
 
   describe("addData", function () {
     it("should add data to the cache", function () {
-      const outputCache = new OutputCache(2, mockSprootDB, logger);
+      const outputCache = new OutputCache(2, mockOutputsRepo, logger);
       //This one should get skipped
       const badData = { controlMode: ControlMode.automatic } as SDBOutputState;
       outputCache.addData(badData);
@@ -78,7 +95,7 @@ describe("OutputCache.ts", function () {
     });
 
     it("should remove the oldest data if the cache is full", function () {
-      const outputCache = new OutputCache(2, mockSprootDB, logger);
+      const outputCache = new OutputCache(2, mockOutputsRepo, logger);
       const data = { value: 100 } as SDBOutputState;
       outputCache.addData(data);
       outputCache.addData(data);
@@ -90,7 +107,7 @@ describe("OutputCache.ts", function () {
 
   describe("clear", function () {
     it("should clear the cache", function () {
-      const outputCache = new OutputCache(2, mockSprootDB, logger);
+      const outputCache = new OutputCache(2, mockOutputsRepo, logger);
       const data = { value: 100 } as SDBOutputState;
 
       outputCache.addData(data);
