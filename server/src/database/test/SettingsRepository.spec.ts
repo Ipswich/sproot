@@ -87,4 +87,37 @@ describe("SettingsRepository", () => {
       assert.isUndefined(result);
     });
   });
+
+  describe("getMany", () => {
+    it("should return values for existing keys", async () => {
+      const rows = [
+        { key: SETTINGS.sensors.raw_retention, value: "30 days" },
+        { key: SETTINGS.outputs.raw_retention, value: "60 days" },
+      ];
+      const knex = createKnexStub(rows);
+      const repo = new SettingsRepository(knex as any);
+
+      const result = await repo.getMany([
+        SETTINGS.sensors.raw_retention,
+        SETTINGS.outputs.raw_retention,
+      ]);
+
+      assert.equal(result[SETTINGS.sensors.raw_retention], "30 days");
+      assert.equal(result[SETTINGS.outputs.raw_retention], "60 days");
+    });
+
+    it("should return undefined for missing keys", async () => {
+      const rows = [{ key: SETTINGS.sensors.raw_retention, value: "30 days" }];
+      const knex = createKnexStub(rows);
+      const repo = new SettingsRepository(knex as any);
+
+      const result = await repo.getMany([
+        SETTINGS.sensors.raw_retention,
+        SETTINGS.outputs.raw_retention,
+      ]);
+
+      assert.equal(result[SETTINGS.sensors.raw_retention], "30 days");
+      assert.isUndefined(result[SETTINGS.outputs.raw_retention]);
+    });
+  });
 });

@@ -28,9 +28,21 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
   }
 
   async getMany(
-    _keys: SettingsKey[],
+    keys: SettingsKey[],
   ): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>> {
-    throw new Error("Not implemented");
+    const result = await this.connection<SettingsRow[]>("settings")
+      .select("key", "value")
+      .whereIn("key", keys);
+
+    const map = this.emptySettingsMap();
+    for (const row of result) {
+      const key = row.key as SettingsKey;
+      if (key in map) {
+        map[key] = row.value as SettingsSchema[SettingsKey];
+      }
+    }
+
+    return map;
   }
 
   async getAll(): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>> {
@@ -49,7 +61,6 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
     throw new Error("Not implemented");
   }
 
-  // @ts-expect-error - Used by getMany/getMany in later tasks
   private emptySettingsMap(): Record<SettingsKey, SettingsSchema[SettingsKey] | undefined> {
     const map = {} as Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>;
     const keys: SettingsKey[] = [];
