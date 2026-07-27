@@ -7,6 +7,7 @@ import type { ISensorsRepository } from "./repositories/sensors/ISensorsReposito
 import type { ISubcontrollersRepository } from "./repositories/subcontrollers/ISubcontrollersRepository";
 import type { ISystemRepository } from "./repositories/system/ISystemRepository";
 import type { IUsersRepository } from "./repositories/users/IUsersRepository";
+import type { ISettingsRepository } from "./settings/ISettingsRepository";
 
 export interface ISprootDB {
   sensors: ISensorsRepository;
@@ -17,6 +18,7 @@ export interface ISprootDB {
   users: IUsersRepository;
   deviceZones: IDeviceZonesRepository;
   system: ISystemRepository;
+  settings: ISettingsRepository;
   journals: IJournalRepository;
   [Symbol.asyncDispose](): Promise<void>;
 }
