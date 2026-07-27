@@ -1,4 +1,4 @@
-import { ISprootDB } from "@sproot/database/ISprootDB";
+import { ISprootDB } from "../../../../database/ISprootDB";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { AutomationService } from "../../../../automation/AutomationService";
