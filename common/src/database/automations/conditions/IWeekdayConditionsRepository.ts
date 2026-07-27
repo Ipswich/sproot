@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBWeekdayCondition } from "@sproot/common/src/database/SDBWeekdayCondition";
-import { ConditionGroupType } from "@sproot/common/src/automation/ConditionTypes";
+import { SDBWeekdayCondition } from "../../SDBWeekdayCondition";
+import { ConditionGroupType } from "../../../automation/ConditionTypes";
 import { IWeekdayCondition } from "../../../automation/IWeekdayCondition";
 import { IBaseConditionsRepository } from "./IBaseConditionsRepository";
 

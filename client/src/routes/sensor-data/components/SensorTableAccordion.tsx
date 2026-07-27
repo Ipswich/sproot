@@ -14,9 +14,9 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Accordion, Center } from "@mantine/core";
-import { ISensorBase } from "@sproot/common/src/sensors/ISensorBase";
+import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
 import { Fragment, memo, startTransition, useEffect, useState } from "react";
-import { ReadingType } from "@sproot/common/src/sensors/ReadingType";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { useQuery } from "@tanstack/react-query";
 import {
   getSensorsAsync,

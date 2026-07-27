@@ -19,7 +19,7 @@ import { SystemStatus } from "@sproot/system/SystemStatus";
 import {
   SuccessResponse,
   ErrorResponse,
-} from "@sproot/common/src/api/v2/Responses";
+} from "@sproot/common/api/v2/Responses";
 import {
   ConditionGroupType,
   ConditionOperator,
@@ -649,7 +649,8 @@ export async function addNotificationActionAsync(
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data as
-    SDBNotificationAction | undefined;
+    | SDBNotificationAction
+    | undefined;
 }
 
 export async function deleteNotificationActionAsync(id: number): Promise<void> {

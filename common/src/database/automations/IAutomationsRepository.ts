@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBAutomation } from "@sproot/common/src/database/SDBAutomation";
-import { AutomationOperator } from "@sproot/common/src/automation/IAutomation";
+import { SDBAutomation } from "../SDBAutomation";
+import { AutomationOperator } from "../../automation/IAutomation";
 import { IOutputActionsRepository } from "./actions/IOutputActionsRepository";
 import { INotificationActionsRepository } from "./actions/INotificationActionsRepository";
 import type { IConditionsRepository } from "./conditions/IConditionsRepository";

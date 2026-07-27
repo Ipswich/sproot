@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBNotificationAction } from "@sproot/common/src/database/SDBNotificationAction";
+import { SDBNotificationAction } from "../../SDBNotificationAction";
 import { IActionBaseRepository } from "../conditions/IBaseConditionsRepository";
 
 export interface INotificationActionsRepository extends IActionBaseRepository<SDBNotificationAction> {

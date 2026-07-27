@@ -3,7 +3,7 @@ import { Accordion } from "@mantine/core";
 import { CSS } from "@dnd-kit/utilities";
 import { IconGripVertical } from "@tabler/icons-react";
 import StatesAccordion from "./StatesAccordion";
-import { IOutputBase } from "@sproot/common/src/outputs/IOutputBase";
+import { IOutputBase } from "@sproot/common/outputs/IOutputBase";
 
 interface SortableAccordionItemProps {
   deviceZoneId: number;

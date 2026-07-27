@@ -1,4 +1,4 @@
-import { Models } from "@sproot/common/src/outputs/Models";
+import { Models } from "../outputs/Models";
 
 type SDBOutput = {
   id: number;

@@ -15,9 +15,9 @@ import {
 } from "@dnd-kit/sortable";
 import { Table } from "@mantine/core";
 import { IconEyeOff } from "@tabler/icons-react";
-import { ISensorBase } from "@sproot/common/src/sensors/ISensorBase";
+import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
 import { useEffect, useState } from "react";
-import { ReadingType } from "@sproot/common/src/sensors/ReadingType";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import SortableTableRow from "./SortableTableRow";
 import { sensorDataOrderKey } from "../../utility/LocalStorageKeys";
 

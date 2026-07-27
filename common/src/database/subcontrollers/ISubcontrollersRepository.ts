@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBSubcontroller } from "@sproot/common/src/database/SDBSubcontroller";
+import { SDBSubcontroller } from "../SDBSubcontroller";
 
 export interface ISubcontrollersRepository {
   getAllAsync(): Promise<SDBSubcontroller[]>;

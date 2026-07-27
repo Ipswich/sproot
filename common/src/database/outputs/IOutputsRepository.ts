@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBOutput } from "@sproot/common/src/database/SDBOutput";
-import { SDBOutputState } from "@sproot/common/src/database/SDBOutputState";
-import { IOutputBase, ControlMode } from "@sproot/common/src/outputs/IOutputBase";
+import { SDBOutput } from "../SDBOutput";
+import { SDBOutputState } from "../SDBOutputState";
+import { IOutputBase, ControlMode } from "../../outputs/IOutputBase";
 import { OutputDataQueryRequest, OutputDataQueryResponse } from "@sproot/api/v2/QueryTypes";
 
 export interface IOutputsRepository {

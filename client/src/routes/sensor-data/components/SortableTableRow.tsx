@@ -1,8 +1,8 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { Table, Flex, Switch } from "@mantine/core";
-import { ISensorBase } from "@sproot/common/src/sensors/ISensorBase";
-import { ReadingType } from "@sproot/common/src/sensors/ReadingType";
-import { convertCelsiusToFahrenheit } from "@sproot/common/src/utility/DisplayFormats";
+import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
+import { convertCelsiusToFahrenheit } from "@sproot/common/utility/DisplayFormats";
 import { CSS } from "@dnd-kit/utilities";
 import { IconGripVertical } from "@tabler/icons-react";
 import { useTransition } from "react";

@@ -1,5 +1,5 @@
 import { Navigate, useLoaderData } from "react-router-dom";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 

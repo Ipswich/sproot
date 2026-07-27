@@ -1,9 +1,9 @@
 import { NumberInput, Select, Stack, Switch, TextInput } from "@mantine/core";
 import { UseFormReturnType } from "@mantine/form";
-import { IOutputBase } from "@sproot/common/src/outputs/IOutputBase";
+import { IOutputBase } from "@sproot/common/outputs/IOutputBase";
 import { Fragment, useState } from "react";
 import { OutputFormValues } from "../OutputSettings";
-import { SDBSubcontroller } from "@sproot/common/src/database/SDBSubcontroller";
+import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
 
 interface ESP32_PCA9685FormProps {
   selectedOutput?: IOutputBase;

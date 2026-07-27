@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBJournalEntryTag } from "@sproot/common/src/database/SDBJournalEntryTag";
-import { SDBJournalEntryTagLookup } from "@sproot/common/src/database/SDBJournalEntryTagLookup";
+import { SDBJournalEntryTag } from "../../SDBJournalEntryTag";
+import { SDBJournalEntryTagLookup } from "../../SDBJournalEntryTagLookup";
 
 export interface IEntryTagsRepository {
   getTagsAsync(): Promise<SDBJournalEntryTag[]>;

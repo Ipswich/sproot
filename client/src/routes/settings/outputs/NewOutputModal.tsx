@@ -10,7 +10,7 @@ import {
   NumberInput,
   Input,
 } from "@mantine/core";
-import { IOutputBase } from "@sproot/common/src/outputs/IOutputBase";
+import { IOutputBase } from "@sproot/common/outputs/IOutputBase";
 import {
   addOutputAsync,
   updateOutputAsync,
@@ -21,12 +21,12 @@ import { useForm } from "@mantine/form";
 import PCA9685Form from "@sproot/sproot-client/src/routes/settings/outputs/forms/PCA9685Form";
 import { OutputFormValues } from "@sproot/sproot-client/src/routes/settings/outputs/OutputSettings";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { DefaultColors } from "@sproot/common/src/utility/Constants";
+import { DefaultColors } from "@sproot/common/utility/Constants";
 import { Fragment, useEffect } from "react";
 
 import { useRevalidator } from "react-router-dom";
 import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
-import { Models } from "@sproot/common/src/outputs/Models";
+import { Models } from "@sproot/common/outputs/Models";
 import ESP32_PCA9685Form from "./forms/ESP32_PCA9685Form";
 import GroupedOutputForm from "./forms/OutputGroupForm";
 

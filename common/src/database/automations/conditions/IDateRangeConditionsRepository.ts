@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBDateRangeCondition } from "@sproot/common/src/database/SDBDateRangeCondition";
-import { ConditionGroupType } from "@sproot/common/src/automation/ConditionTypes";
+import { SDBDateRangeCondition } from "../../SDBDateRangeCondition";
+import { ConditionGroupType } from "../../../automation/ConditionTypes";
 import { IDateRangeCondition } from "../../../automation/IDateRangeCondition";
 import { IBaseConditionsRepository } from "./IBaseConditionsRepository";
 

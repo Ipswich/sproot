@@ -13,7 +13,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { IOutputBase } from "@sproot/common/src/outputs/IOutputBase";
+import { IOutputBase } from "@sproot/common/outputs/IOutputBase";
 import { Accordion } from "@mantine/core";
 import { useEffect, useState } from "react";
 import StateAccordionItem from "./StateAccordionItem";

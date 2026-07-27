@@ -9,7 +9,7 @@ import { getNavbarItems } from "../shell/Pages";
 import HeaderContents from "../shell/header/HeaderContents";
 import NavbarContents from "../shell/navbar/NavbarContents";
 
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 

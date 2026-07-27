@@ -5,7 +5,7 @@ import {
   formatNumberForDisplay,
   formatDateForDisplay,
   formatTickValue,
-} from "@sproot/common/src/utility/DisplayFormats";
+} from "@sproot/common/utility/DisplayFormats";
 import { useMemo } from "react";
 import { ChartSeries, DataSeries } from "../../../requests/chartDataTypes";
 import {

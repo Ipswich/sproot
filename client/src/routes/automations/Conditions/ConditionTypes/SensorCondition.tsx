@@ -16,9 +16,9 @@ import {
 import {
   ConditionGroupType,
   ConditionOperator,
-} from "@sproot/common/src/automation/ConditionTypes";
-import { ReadingType, Units } from "@sproot/common/src/sensors/ReadingType";
-import { convertFahrenheitToCelsius } from "@sproot/common/src/utility/DisplayFormats";
+} from "@sproot/common/automation/ConditionTypes";
+import { ReadingType, Units } from "@sproot/common/sensors/ReadingType";
+import { convertFahrenheitToCelsius } from "@sproot/common/utility/DisplayFormats";
 
 export interface SensorConditionProps {
   toggleAddNewCondition: () => void;

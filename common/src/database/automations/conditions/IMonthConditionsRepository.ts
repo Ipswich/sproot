@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBMonthCondition } from "@sproot/common/src/database/SDBMonthCondition";
-import { ConditionGroupType } from "@sproot/common/src/automation/ConditionTypes";
+import { SDBMonthCondition } from "../../SDBMonthCondition";
+import { ConditionGroupType } from "../../../automation/ConditionTypes";
 import { IMonthCondition } from "../../../automation/IMonthCondition";
 import { IBaseConditionsRepository } from "./IBaseConditionsRepository";
 
