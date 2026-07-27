@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { ErrorResponse, SuccessResponse } from "@sproot/common/api/v2/Responses";
 import { assert } from "chai";
 import sinon from "sinon";
-import { IJournalTagsRepository } from "@sproot/common/database/journals/tags/IJournalTagsRepository";
+import { IJournalTagsRepository } from "../../../../database/repositories/journals/tags/IJournalTagsRepository";
 import JournalTagManager from "../../../../journals/managers/JournalTagManager";
 import { getAsync, addAsync, updateAsync, deleteAsync } from "../handlers/JournalTagHandlers";
 

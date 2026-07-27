@@ -1,4 +1,4 @@
-import type { IEntryTagsRepository } from "@sproot/common/database/journals/tags/IEntryTagsRepository";
+import type { IEntryTagsRepository } from "./IEntryTagsRepository";
 import { SDBJournalEntryTag } from "@sproot/common/database/SDBJournalEntryTag";
 import { SDBJournalEntryTagLookup } from "@sproot/common/database/SDBJournalEntryTagLookup";
 import { BaseKnexRepository } from "../../utils/BaseKnexRepository";

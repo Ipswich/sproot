@@ -1,4 +1,4 @@
-import type { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
+import type { ISensorsRepository } from "./ISensorsRepository";
 import { SDBReading } from "@sproot/common/database/SDBReading";
 import { SDBSensor } from "@sproot/common/database/SDBSensor";
 import { ISensorBase } from "@sproot/common/sensors/ISensorBase";

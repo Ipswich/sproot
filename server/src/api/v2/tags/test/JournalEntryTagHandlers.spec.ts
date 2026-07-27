@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { assert } from "chai";
 import sinon from "sinon";
-import { IEntryTagsRepository } from "@sproot/common/database/journals/tags/IEntryTagsRepository";
+import { IEntryTagsRepository } from "../../../../database/repositories/journals/tags/IEntryTagsRepository";
 import EntryTagManager from "../../../../journals/managers/EntryTagManager";
 import { getAsync, addAsync, updateAsync, deleteAsync } from "../handlers/JournalEntryTagHandlers";
 import { ErrorResponse, SuccessResponse } from "@sproot/common/api/v2/Responses";

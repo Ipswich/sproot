@@ -42,6 +42,9 @@
     "winston": "^3.11.0"
   },
   "exports": {
-    "./*": "./dist/*"
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
   }
 }

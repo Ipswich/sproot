@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // No external imports needed
 
 export interface IActionBaseRepository<T> {

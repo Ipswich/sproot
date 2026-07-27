@@ -7,7 +7,7 @@ import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { getTokenAsync } from "../handlers/TokenHandlers";
 import { SDBUser } from "@sproot/database/SDBUser";
-import { IUsersRepository } from "@sproot/common/database/users/IUsersRepository";
+import { IUsersRepository } from "../../../../database/repositories/users/IUsersRepository";
 
 describe("TokenHandlers.ts tests", () => {
   describe("getTokenAsync", async () => {

@@ -1,6 +1,6 @@
 import { DS18B20 } from "../../DS18B20";
-import type { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
-import type { ISubcontrollersRepository } from "@sproot/common/database/subcontrollers/ISubcontrollersRepository";
+import type { ISensorsRepository } from "../../../database/repositories/sensors/ISensorsRepository";
+import type { ISubcontrollersRepository } from "../../../database/repositories/subcontrollers/ISubcontrollersRepository";
 import { SDBSensor } from "@sproot/common/database/SDBSensor";
 import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
 import { SensorList } from "../SensorList";

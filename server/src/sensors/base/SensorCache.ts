@@ -1,4 +1,4 @@
-import { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
+import { ISensorsRepository } from "../../database/repositories/sensors/ISensorsRepository";
 import { SDBReading } from "@sproot/common/database/SDBReading";
 import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { QueueCache } from "@sproot/common/utility/QueueCache";

@@ -7,7 +7,7 @@ import winston from "winston";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
-import type { IAutomationsRepository } from "@sproot/common/database/automations/IAutomationsRepository";
+import type { IAutomationsRepository } from "../../database/repositories/automations/IAutomationsRepository";
 
 type ConditionStub = {
   getAsync: sinon.SinonStub<any[], any>;

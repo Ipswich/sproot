@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ISensorConditionsRepository } from "./ISensorConditionsRepository";
 import { IOutputConditionsRepository } from "./IOutputConditionsRepository";
 import { ITimeConditionsRepository } from "./ITimeConditionsRepository";

@@ -1,5 +1,5 @@
 import { ESP32_BME280 } from "../ESP32_BME280";
-import { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
+import { ISensorsRepository } from "../../database/repositories/sensors/ISensorsRepository";
 import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { SDBSensor } from "@sproot/common/database/SDBSensor";
 import { SDBReading } from "@sproot/common/database/SDBReading";

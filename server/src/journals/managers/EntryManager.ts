@@ -1,6 +1,6 @@
 import { SDBJournalEntry } from "@sproot/common/database/SDBJournalEntry";
 import { SDBJournalEntryTag } from "@sproot/common/database/SDBJournalEntryTag";
-import { IEntriesRepository } from "@sproot/common/database/journals/entries/IEntriesRepository";
+import { IEntriesRepository } from "../../database/repositories/journals/entries/IEntriesRepository";
 import { toDbDate } from "../../utils/dateUtils";
 
 export default class EntryManager {

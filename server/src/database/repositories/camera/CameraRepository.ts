@@ -1,4 +1,4 @@
-import type { ICameraRepository } from "@sproot/common/database/camera/ICameraRepository";
+import type { ICameraRepository } from "./ICameraRepository";
 import { SDBCameraSettings } from "@sproot/common/database/SDBCameraSettings";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../utils/BaseKnexRepository";

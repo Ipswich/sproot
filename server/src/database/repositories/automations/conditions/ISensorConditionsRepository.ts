@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBSensorCondition } from "../../SDBSensorCondition";
-import { ConditionGroupType, ConditionOperator } from "../../../automation/ConditionTypes";
-import { ISensorCondition } from "../../../automation/ISensorCondition";
+import { SDBSensorCondition } from "@sproot/common/database/SDBSensorCondition";
+import { ConditionGroupType, ConditionOperator } from "@sproot/common/automation/ConditionTypes";
+import { ISensorCondition } from "@sproot/common/automation/ISensorCondition";
 import { IBaseConditionsRepository } from "./IBaseConditionsRepository";
 
 export interface ISensorConditionsRepository extends IBaseConditionsRepository<SDBSensorCondition> {

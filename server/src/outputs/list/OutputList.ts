@@ -1,9 +1,9 @@
 import { PCA9685 } from "../PCA9685";
 import { ESP32_PCA9685, ESP32_PCA9685Output } from "../ESP32_PCA9685";
 import { TPLinkSmartPlugs } from "../TPLinkSmartPlugs";
-import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
-import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
-import type { ISubcontrollersRepository } from "@sproot/common/database/subcontrollers/ISubcontrollersRepository";
+import type { IOutputsRepository } from "../../database/repositories/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "../../database/repositories/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "../../database/repositories/subcontrollers/ISubcontrollersRepository";
 import { IOutputBase, ControlMode } from "@sproot/common/outputs/IOutputBase";
 import { OutputBase } from "../base/OutputBase";
 import { SDBOutput } from "@sproot/common/database/SDBOutput";

@@ -1,6 +1,6 @@
 import { ConditionGroupType, ConditionOperator } from "@sproot/common/automation/ConditionTypes";
 import { ISensorCondition } from "@sproot/common/automation/ISensorCondition";
-import type { ISensorConditionsRepository } from "@sproot/common/database/automations/conditions/ISensorConditionsRepository";
+import type { ISensorConditionsRepository } from "./ISensorConditionsRepository";
 import { SDBSensorCondition } from "@sproot/common/database/SDBSensorCondition";
 import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { Knex } from "knex";

@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBUser } from "../SDBUser";
+import { SDBUser } from "@sproot/common/database/SDBUser";
 
 export interface IUsersRepository {
   getByIdAsync(username: string): Promise<SDBUser[]>;

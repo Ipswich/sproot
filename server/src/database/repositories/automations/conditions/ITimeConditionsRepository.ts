@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBTimeCondition } from "../../SDBTimeCondition";
-import { ConditionGroupType } from "../../../automation/ConditionTypes";
-import { ITimeCondition } from "../../../automation/ITimeCondition";
+import { SDBTimeCondition } from "@sproot/common/database/SDBTimeCondition";
+import { ConditionGroupType } from "@sproot/common/automation/ConditionTypes";
+import { ITimeCondition } from "@sproot/common/automation/ITimeCondition";
 import { IBaseConditionsRepository } from "./IBaseConditionsRepository";
 
 export interface ITimeConditionsRepository extends IBaseConditionsRepository<SDBTimeCondition> {

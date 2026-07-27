@@ -1,4 +1,4 @@
-import { ISystemRepository } from "@sproot/common/database/system/ISystemRepository";
+import { ISystemRepository } from "../database/repositories/system/ISystemRepository";
 import { BACKUP_DIRECTORY } from "@sproot/common/utility/Constants";
 import { createTimeStampSuffix, sortDirectoryByStatsAsync } from "@sproot/common/utility/Files";
 import { createReadStream, promises as fsPromises } from "fs";

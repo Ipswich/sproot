@@ -1,6 +1,6 @@
 import { assert } from "chai";
 import sinon from "sinon";
-import { IEntriesRepository } from "@sproot/common/database/journals/entries/IEntriesRepository";
+import { IEntriesRepository } from "../../../database/repositories/journals/entries/IEntriesRepository";
 import EntryManager from "../EntryManager";
 
 describe("EntryManager.ts tests", () => {

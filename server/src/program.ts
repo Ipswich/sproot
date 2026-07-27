@@ -6,8 +6,8 @@ import express, { Express } from "express";
 import * as winston from "winston";
 
 import * as Constants from "@sproot/common/utility/Constants";
-import { ISprootDB } from "@sproot/common/database/ISprootDB";
-import type { IJournalRepository } from "@sproot/common/database/journals/IJournalRepository";
+import { ISprootDB } from "./database/ISprootDB";
+import type { IJournalRepository } from "./database/repositories/journals/IJournalRepository";
 import { SprootDB } from "./database/SprootDB";
 import { SDBUser } from "@sproot/common/database/SDBUser";
 import { SensorList } from "./sensors/list/SensorList";

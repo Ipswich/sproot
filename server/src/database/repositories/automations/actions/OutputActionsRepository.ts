@@ -1,4 +1,4 @@
-import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
+import type { IOutputActionsRepository } from "./IOutputActionsRepository";
 import { SDBOutputAction } from "@sproot/common/database/SDBOutputAction";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../../utils/BaseKnexRepository";

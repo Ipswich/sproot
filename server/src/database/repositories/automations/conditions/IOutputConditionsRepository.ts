@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBOutputCondition } from "../../SDBOutputCondition";
-import { ConditionGroupType, ConditionOperator } from "../../../automation/ConditionTypes";
-import { IOutputCondition } from "../../../automation/IOutputCondition";
+import { SDBOutputCondition } from "@sproot/common/database/SDBOutputCondition";
+import { ConditionGroupType, ConditionOperator } from "@sproot/common/automation/ConditionTypes";
+import { IOutputCondition } from "@sproot/common/automation/IOutputCondition";
 import { IBaseConditionsRepository } from "./IBaseConditionsRepository";
 
 export interface IOutputConditionsRepository extends IBaseConditionsRepository<SDBOutputCondition> {

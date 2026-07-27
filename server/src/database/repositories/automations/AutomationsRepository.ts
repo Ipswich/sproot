@@ -1,4 +1,4 @@
-import type { IAutomationsRepository } from "@sproot/common/database/automations/IAutomationsRepository";
+import type { IAutomationsRepository } from "./IAutomationsRepository";
 import { AutomationOperator } from "@sproot/common/automation/IAutomation";
 import { SDBAutomation } from "@sproot/common/database/SDBAutomation";
 import { SDBOutputActionView } from "@sproot/common/database/SDBOutputAction";

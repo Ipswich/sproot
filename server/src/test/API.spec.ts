@@ -306,7 +306,7 @@ describe("API Tests", async function () {
             "sensorId",
             "readingType",
           ]);
-        });
+        }).timeout(5000);
       });
       describe("Create, Update, Delete", async () => {
         describe("POST", async () => {

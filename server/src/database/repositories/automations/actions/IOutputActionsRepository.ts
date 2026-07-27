@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBOutputAction } from "../../SDBOutputAction";
+import { SDBOutputAction } from "@sproot/common/database/SDBOutputAction";
 import { IActionBaseRepository } from "../conditions/IBaseConditionsRepository";
 
 export interface IOutputActionsRepository extends IActionBaseRepository<SDBOutputAction> {

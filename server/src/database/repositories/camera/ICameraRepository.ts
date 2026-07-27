@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBCameraSettings } from "../SDBCameraSettings";
+import { SDBCameraSettings } from "@sproot/common/database/SDBCameraSettings";
 
 export interface ICameraRepository {
   getAllAsync(): Promise<SDBCameraSettings[]>;

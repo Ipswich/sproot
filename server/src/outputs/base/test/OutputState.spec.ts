@@ -1,5 +1,5 @@
 import { OutputState } from "../OutputState";
-import { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import { IOutputsRepository } from "../../../database/repositories/outputs/IOutputsRepository";
 import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
 import { ControlMode } from "@sproot/common/outputs/IOutputBase";
 

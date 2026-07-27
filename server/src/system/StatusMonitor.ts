@@ -1,6 +1,6 @@
 import os from "os";
 import { statfs } from "fs";
-import { ISystemRepository } from "@sproot/common/database/system/ISystemRepository";
+import { ISystemRepository } from "../database/repositories/system/ISystemRepository";
 import { promisify } from "util";
 import { SystemStatus } from "@sproot/common/system/SystemStatus";
 import { CameraManager } from "../camera/CameraManager";

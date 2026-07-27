@@ -1,4 +1,4 @@
-import type { IUsersRepository } from "@sproot/common/database/users/IUsersRepository";
+import type { IUsersRepository } from "./IUsersRepository";
 import { SDBUser } from "@sproot/common/database/SDBUser";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../utils/BaseKnexRepository";

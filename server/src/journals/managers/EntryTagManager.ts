@@ -1,5 +1,5 @@
 import { SDBJournalEntryTag } from "@sproot/common/database/SDBJournalEntryTag";
-import { IEntryTagsRepository } from "@sproot/common/database/journals/tags/IEntryTagsRepository";
+import { IEntryTagsRepository } from "../../database/repositories/journals/tags/IEntryTagsRepository";
 
 export default class EntryTagManager {
   #entriesRepository: IEntryTagsRepository;

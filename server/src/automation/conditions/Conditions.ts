@@ -1,6 +1,6 @@
 import { AutomationOperator } from "@sproot/automation/IAutomation";
 import { IConditionProperties } from "@sproot/automation/IConditionProperties";
-import { IConditionsRepository } from "@sproot/common/database/automations/conditions/IConditionsRepository";
+import { IConditionsRepository } from "../../database/repositories/automations/conditions/IConditionsRepository";
 import { OutputList } from "../../outputs/list/OutputList";
 import { SensorList } from "../../sensors/list/SensorList";
 

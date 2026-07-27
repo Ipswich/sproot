@@ -1,6 +1,6 @@
 import { ConditionGroupType } from "@sproot/common/automation/ConditionTypes";
 import { IWeekdayCondition } from "@sproot/common/automation/IWeekdayCondition";
-import type { IWeekdayConditionsRepository } from "@sproot/common/database/automations/conditions/IWeekdayConditionsRepository";
+import type { IWeekdayConditionsRepository } from "./IWeekdayConditionsRepository";
 import { SDBWeekdayCondition } from "@sproot/common/database/SDBWeekdayCondition";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../../utils/BaseKnexRepository";

@@ -14,15 +14,15 @@ import sinon from "sinon";
 import { AutomationService } from "../../../../automation/AutomationService";
 import winston from "winston";
 import { MemoryEventBus } from "../../../../eventbus/MemoryEventBus";
-import type { IAutomationsRepository } from "@sproot/common/database/automations/IAutomationsRepository";
-import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
-import type { INotificationActionsRepository } from "@sproot/common/database/automations/actions/INotificationActionsRepository";
-import type { ISensorConditionsRepository } from "@sproot/common/database/automations/conditions/ISensorConditionsRepository";
-import type { IOutputConditionsRepository } from "@sproot/common/database/automations/conditions/IOutputConditionsRepository";
-import type { ITimeConditionsRepository } from "@sproot/common/database/automations/conditions/ITimeConditionsRepository";
-import type { IWeekdayConditionsRepository } from "@sproot/common/database/automations/conditions/IWeekdayConditionsRepository";
-import type { IMonthConditionsRepository } from "@sproot/common/database/automations/conditions/IMonthConditionsRepository";
-import type { IDateRangeConditionsRepository } from "@sproot/common/database/automations/conditions/IDateRangeConditionsRepository";
+import type { IAutomationsRepository } from "../../../../database/repositories/automations/IAutomationsRepository";
+import type { IOutputActionsRepository } from "../../../../database/repositories/automations/actions/IOutputActionsRepository";
+import type { INotificationActionsRepository } from "../../../../database/repositories/automations/actions/INotificationActionsRepository";
+import type { ISensorConditionsRepository } from "../../../../database/repositories/automations/conditions/ISensorConditionsRepository";
+import type { IOutputConditionsRepository } from "../../../../database/repositories/automations/conditions/IOutputConditionsRepository";
+import type { ITimeConditionsRepository } from "../../../../database/repositories/automations/conditions/ITimeConditionsRepository";
+import type { IWeekdayConditionsRepository } from "../../../../database/repositories/automations/conditions/IWeekdayConditionsRepository";
+import type { IMonthConditionsRepository } from "../../../../database/repositories/automations/conditions/IMonthConditionsRepository";
+import type { IDateRangeConditionsRepository } from "../../../../database/repositories/automations/conditions/IDateRangeConditionsRepository";
 
 const createMockAutomationsRepo = (): IAutomationsRepository => ({
   getAllAsync: async () => [],

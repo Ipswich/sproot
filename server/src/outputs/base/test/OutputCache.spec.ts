@@ -3,7 +3,7 @@ import { ControlMode } from "@sproot/common/outputs/IOutputBase";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import { OutputCache } from "../OutputCache";
-import { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import { IOutputsRepository } from "../../../database/repositories/outputs/IOutputsRepository";
 import winston from "winston";
 import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
 

@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBJournal } from "../SDBJournal";
+import { SDBJournal } from "@sproot/common/database/SDBJournal";
 import { IEntriesRepository } from "./entries/IEntriesRepository";
 import { IJournalTagsRepository } from "./tags/IJournalTagsRepository";
 

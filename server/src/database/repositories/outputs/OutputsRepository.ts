@@ -4,7 +4,7 @@ import {
   OutputDataQueryRequest,
   OutputDataQueryResponse,
 } from "@sproot/common/api/v2/QueryTypes";
-import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import type { IOutputsRepository } from "./IOutputsRepository";
 import { SDBOutput } from "@sproot/common/database/SDBOutput";
 import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
 import { ControlMode, IOutputBase } from "@sproot/common/outputs/IOutputBase";

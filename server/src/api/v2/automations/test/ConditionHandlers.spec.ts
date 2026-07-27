@@ -1385,13 +1385,14 @@ describe("ConditionHandlers.ts", () => {
 
       const sprootDB = createStubSprootDB();
       const outputList = sinon.createStubInstance(OutputList);
+      const automationService = {
+        addOutputConditionAsync: sinon.stub().resolves(1),
+      };
+
       sinon.stub(outputList, "outputs").value({ "1": { id: 1, name: "Output 1" } });
-      sprootDB.automations.getAllAsync.resolves([]);
-      const automationService = await createAutomationServiceAsync(sprootDB);
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.automations.conditions.output.addAsync.resolves(1);
 
       const mockRequest = {
         app: {
@@ -1430,6 +1431,16 @@ describe("ConditionHandlers.ts", () => {
         comparisonValue: 50,
         comparisonLookback: null,
       });
+      assert.isTrue(
+        automationService.addOutputConditionAsync.calledOnceWithExactly(
+          1,
+          "allOf",
+          "equal",
+          50,
+          null,
+          1,
+        ),
+      );
     });
 
     it("should return a 201 and the time condition added to the automation", async () => {

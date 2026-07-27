@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import { assert } from "chai";
 import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
-import type { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
-import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import type { ISensorsRepository } from "../../../../database/repositories/sensors/ISensorsRepository";
+import type { IOutputsRepository } from "../../../../database/repositories/outputs/IOutputsRepository";
 import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
 
 interface DataQueryHandlerTestConfig<RequestType, ResponseType> {

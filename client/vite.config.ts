@@ -7,7 +7,9 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@sproot/common": fileURLToPath(new URL("../common/src", import.meta.url)),
+      "@sproot/common": fileURLToPath(
+        new URL("../common/src", import.meta.url),
+      ),
     },
   },
   define: {},

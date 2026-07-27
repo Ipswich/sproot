@@ -1,9 +1,9 @@
-import type { IEntriesRepository } from "@sproot/common/database/journals/entries/IEntriesRepository";
+import type { IEntriesRepository } from "./IEntriesRepository";
 import { SDBJournalEntry } from "@sproot/common/database/SDBJournalEntry";
 import { Knex } from "knex";
 import { dbToIso, toDbDate } from "../../../../utils/dateUtils";
 import { BaseKnexRepository } from "../../utils/BaseKnexRepository";
-import type { IEntryTagsRepository } from "@sproot/common/database/journals/tags/IEntryTagsRepository";
+import type { IEntryTagsRepository } from "../tags/IEntryTagsRepository";
 import { EntryTagsRepository } from "../tags/EntryTagsRepository";
 
 export class EntriesRepository extends BaseKnexRepository implements IEntriesRepository {

@@ -1,6 +1,6 @@
 import { ConditionGroupType } from "@sproot/common/automation/ConditionTypes";
 import { IDateRangeCondition } from "@sproot/common/automation/IDateRangeCondition";
-import type { IDateRangeConditionsRepository } from "@sproot/common/database/automations/conditions/IDateRangeConditionsRepository";
+import type { IDateRangeConditionsRepository } from "./IDateRangeConditionsRepository";
 import { SDBDateRangeCondition } from "@sproot/common/database/SDBDateRangeCondition";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../../utils/BaseKnexRepository";

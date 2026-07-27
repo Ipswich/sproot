@@ -9,7 +9,7 @@ import ImageCapture from "../ImageCapture";
 import StreamProxy from "../StreamProxy";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { TIMELAPSE_DIRECTORY } from "@sproot/common/utility/Constants";
-import { ICameraRepository } from "@sproot/common/database/camera/ICameraRepository";
+import { ICameraRepository } from "../../database/repositories/camera/ICameraRepository";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 
 describe("CameraManager", () => {
@@ -93,6 +93,8 @@ describe("CameraManager", () => {
   });
 
   it("stores the loaded camera settings", async () => {
+    sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
+
     const manager = (await createManager([cameraSettings])).manager;
 
     assert.deepEqual(manager.cameraSettings, cameraSettings);
@@ -163,6 +165,8 @@ describe("CameraManager", () => {
   });
 
   it("returns the last timelapse generation duration when timelapse is enabled", async () => {
+    sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
+
     const getLastTimelapseGenerationDurationStub = sandbox
       .stub(ImageCapture.prototype, "getLastTimelapseGenerationDuration")
       .returns(3210);
@@ -175,6 +179,8 @@ describe("CameraManager", () => {
   });
 
   it("returns null for the last timelapse generation duration when timelapse is disabled", async () => {
+    sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
+
     const getLastTimelapseGenerationDurationStub = sandbox
       .stub(ImageCapture.prototype, "getLastTimelapseGenerationDuration")
       .returns(3210);
@@ -321,6 +327,8 @@ describe("CameraManager", () => {
   });
 
   it("skips overlapping regenerate calls while an update is already in progress", async () => {
+    sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
+
     const warnStub = sandbox.stub(logger, "warn");
     let resolveSettings!: (value: SDBCameraSettings[]) => void;
     const getAllAsync = sandbox.stub();

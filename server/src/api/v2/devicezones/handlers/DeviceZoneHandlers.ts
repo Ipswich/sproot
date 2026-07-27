@@ -1,6 +1,6 @@
 import { SDBDeviceZone } from "@sproot/common/database/SDBDeviceZone";
 import { Request, Response } from "express";
-import { ISprootDB } from "@sproot/common/database/ISprootDB";
+import { ISprootDB } from "../../../../database/ISprootDB";
 import { ErrorResponse, SuccessResponse } from "@sproot/common/api/v2/Responses";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 

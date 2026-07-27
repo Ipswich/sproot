@@ -1,4 +1,4 @@
-import type { INotificationActionsRepository } from "@sproot/common/database/automations/actions/INotificationActionsRepository";
+import type { INotificationActionsRepository } from "./INotificationActionsRepository";
 import { SDBNotificationAction } from "@sproot/common/database/SDBNotificationAction";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../../utils/BaseKnexRepository";

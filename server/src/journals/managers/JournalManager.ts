@@ -1,6 +1,6 @@
 import { SDBJournal } from "@sproot/common/database/SDBJournal";
 import { SDBJournalTag } from "@sproot/common/database/SDBJournalTag";
-import { IJournalRepository } from "@sproot/common/database/journals/IJournalRepository";
+import { IJournalRepository } from "../../database/repositories/journals/IJournalRepository";
 import { toDbDate } from "../../utils/dateUtils";
 
 export default class JournalManager {

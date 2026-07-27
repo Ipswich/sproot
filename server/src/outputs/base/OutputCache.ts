@@ -1,4 +1,4 @@
-import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import type { IOutputsRepository } from "../../database/repositories/outputs/IOutputsRepository";
 import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
 import { QueueCache } from "@sproot/common/utility/QueueCache";
 import winston from "winston";

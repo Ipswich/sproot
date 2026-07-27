@@ -1,6 +1,6 @@
-import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
-import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
-import type { ISubcontrollersRepository } from "@sproot/common/database/subcontrollers/ISubcontrollersRepository";
+import type { IOutputsRepository } from "../../database/repositories/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "../../database/repositories/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "../../database/repositories/subcontrollers/ISubcontrollersRepository";
 import { ControlMode, IOutputBase } from "@sproot/common/outputs/IOutputBase";
 
 import winston from "winston";

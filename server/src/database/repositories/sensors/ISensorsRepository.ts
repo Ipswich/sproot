@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBSensor } from "../SDBSensor";
-import { SDBReading } from "../SDBReading";
-import { ISensorBase } from "../../sensors/ISensorBase";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
+import { SDBReading } from "@sproot/common/database/SDBReading";
+import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
 import { SensorDataQueryRequest, SensorDataQueryResponse } from "@sproot/api/v2/QueryTypes";
 
 export interface ISensorsRepository {

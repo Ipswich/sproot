@@ -2,6 +2,7 @@ import { assert } from "chai";
 import sinon from "sinon";
 import { SystemStatusMonitor } from "../StatusMonitor";
 import { CameraManager } from "../../camera/CameraManager";
+import ImageCapture from "../../camera/ImageCapture";
 import winston from "winston";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 
@@ -39,6 +40,8 @@ describe("ServerStatsManager", () => {
   });
 
   it("should return stats with correct properties", async () => {
+    sinon.stub(ImageCapture.prototype, "getTimelapseArchiveSizeAsync").resolves(0);
+
     await using manager = await CameraManager.createInstanceAsync(
       eventBus,
       sprootDBMock.camera,

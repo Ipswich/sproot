@@ -1,5 +1,5 @@
-import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
-import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
+import type { IOutputsRepository } from "../../database/repositories/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "../../database/repositories/automations/actions/IOutputActionsRepository";
 import { SDBOutput } from "@sproot/common/database/SDBOutput";
 import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
 import { IOutputBase, ControlMode } from "@sproot/common/outputs/IOutputBase";

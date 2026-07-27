@@ -1,6 +1,6 @@
 import { ConditionGroupType, ConditionOperator } from "@sproot/common/automation/ConditionTypes";
 import { IOutputCondition } from "@sproot/common/automation/IOutputCondition";
-import type { IOutputConditionsRepository } from "@sproot/common/database/automations/conditions/IOutputConditionsRepository";
+import type { IOutputConditionsRepository } from "./IOutputConditionsRepository";
 import { SDBOutputCondition } from "@sproot/common/database/SDBOutputCondition";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../../utils/BaseKnexRepository";

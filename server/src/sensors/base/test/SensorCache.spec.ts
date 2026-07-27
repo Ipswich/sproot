@@ -1,4 +1,4 @@
-import { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
+import { ISensorsRepository } from "../../../database/repositories/sensors/ISensorsRepository";
 import winston from "winston";
 
 import { assert } from "chai";

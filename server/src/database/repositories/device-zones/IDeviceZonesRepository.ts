@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { SDBDeviceZone } from "../SDBDeviceZone";
+import { SDBDeviceZone } from "@sproot/common/database/SDBDeviceZone";
 
 export interface IDeviceZonesRepository {
   getAllAsync(): Promise<SDBDeviceZone[]>;

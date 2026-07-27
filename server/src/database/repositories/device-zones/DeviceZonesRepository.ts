@@ -1,5 +1,5 @@
 import { SDBDeviceZone } from "@sproot/common/database/SDBDeviceZone";
-import type { IDeviceZonesRepository } from "@sproot/common/database/device-zones/IDeviceZonesRepository";
+import type { IDeviceZonesRepository } from "./IDeviceZonesRepository";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../utils/BaseKnexRepository";
 

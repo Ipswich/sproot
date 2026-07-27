@@ -1,7 +1,7 @@
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { MdnsService } from "../../../../system/MdnsService";
-import { ISprootDB } from "@sproot/common/database/ISprootDB";
+import { ISprootDB } from "../../../../database/ISprootDB";
 import { randomBytes } from "crypto";
 import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
 import { SensorList } from "../../../../sensors/list/SensorList";

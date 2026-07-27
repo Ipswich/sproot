@@ -1,6 +1,6 @@
 import { ConditionGroupType } from "@sproot/common/automation/ConditionTypes";
 import { IMonthCondition } from "@sproot/common/automation/IMonthCondition";
-import type { IMonthConditionsRepository } from "@sproot/common/database/automations/conditions/IMonthConditionsRepository";
+import type { IMonthConditionsRepository } from "./IMonthConditionsRepository";
 import { SDBMonthCondition } from "@sproot/common/database/SDBMonthCondition";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../../utils/BaseKnexRepository";

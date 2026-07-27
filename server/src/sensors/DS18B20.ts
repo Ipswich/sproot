@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import winston from "winston";
 
 import { SDBSensor } from "@sproot/common/database/SDBSensor";
-import { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
+import { ISensorsRepository } from "../database/repositories/sensors/ISensorsRepository";
 import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { SensorBase } from "./base/SensorBase";
 

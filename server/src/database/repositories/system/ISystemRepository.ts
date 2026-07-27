@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as winston from "winston";
 
 export interface ISystemRepository {

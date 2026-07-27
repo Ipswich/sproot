@@ -4,7 +4,7 @@ import { OutputList } from "../outputs/list/OutputList";
 import { SensorList } from "../sensors/list/SensorList";
 import * as Constants from "@sproot/common/utility/Constants";
 import { Backups } from "./Backups";
-import { ISystemRepository } from "@sproot/common/database/system/ISystemRepository";
+import { ISystemRepository } from "../database/repositories/system/ISystemRepository";
 import { AutomationService } from "../automation/AutomationService";
 
 export function createAutomationsCronJob(

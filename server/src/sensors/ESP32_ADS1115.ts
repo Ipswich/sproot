@@ -1,5 +1,5 @@
 import { SDBSensor } from "@sproot/common/database/SDBSensor";
-import { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
+import { ISensorsRepository } from "../database/repositories/sensors/ISensorsRepository";
 import { MdnsService } from "../system/MdnsService";
 import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
