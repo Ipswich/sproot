@@ -6,6 +6,7 @@ import type { IOutputsRepository } from "./repositories/outputs/IOutputsReposito
 import type { ISensorsRepository } from "./repositories/sensors/ISensorsRepository";
 import type { ISubcontrollersRepository } from "./repositories/subcontrollers/ISubcontrollersRepository";
 import type { ISystemRepository } from "./repositories/system/ISystemRepository";
+import type { ISettingsRepository } from "./settings/ISettingsRepository";
 import type { ISprootDB } from "./ISprootDB";
 import type { IUsersRepository } from "./repositories/users/IUsersRepository";
 import { Knex } from "knex";
@@ -18,6 +19,7 @@ import { OutputsRepository } from "./repositories/outputs/OutputsRepository";
 import { SensorsRepository } from "./repositories/sensors/SensorsRepository";
 import { SubcontrollersRepository } from "./repositories/subcontrollers/SubcontrollersRepository";
 import { SystemRepository } from "./repositories/system/SystemRepository";
+import { SettingsRepository } from "./settings/SettingsRepository";
 import { UsersRepository } from "./repositories/users/UsersRepository";
 
 export class SprootDB {
@@ -30,6 +32,7 @@ export class SprootDB {
   readonly deviceZones: IDeviceZonesRepository;
   readonly journals: IJournalRepository;
   readonly system: ISystemRepository;
+  readonly settings: ISettingsRepository;
 
   #connection: Knex;
 
@@ -44,6 +47,7 @@ export class SprootDB {
     this.deviceZones = new DeviceZonesRepository(connection);
     this.journals = new JournalsRepository(connection);
     this.system = new SystemRepository(connection);
+    this.settings = new SettingsRepository(connection);
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
