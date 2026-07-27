@@ -46,7 +46,18 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
   }
 
   async getAll(): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>> {
-    throw new Error("Not implemented");
+    const result = await this.connection<SettingsRow[]>("settings")
+      .select("key", "value");
+
+    const map = this.emptySettingsMap();
+    for (const row of result) {
+      const key = row.key as SettingsKey;
+      if (key in map) {
+        map[key] = row.value as SettingsSchema[SettingsKey];
+      }
+    }
+
+    return map;
   }
 
   async set<K extends SettingsKey>(_key: K, _value: SettingsSchema[K]): Promise<void> {
