@@ -22,53 +22,64 @@ const createStubSprootDB = () => {
     getAllAsync: sinon.stub(),
     getByIdAsync: sinon.stub(),
   } as any;
-  sprootDB.actions = {
-    notification: {
-      getAllAsync: sinon.stub(),
-      getAsync: sinon.stub(),
-      getNotificationActionByIdAsync: sinon.stub(),
-      addAsync: sinon.stub(),
-      deleteAsync: sinon.stub(),
+  sprootDB.automations = {
+    getAllAsync: sinon.stub(),
+    getByIdAsync: sinon.stub(),
+    conditions: {
+      sensor: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      output: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      time: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      weekday: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      month: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      dateRange: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
     },
-  } as any;
-  sprootDB.conditions = {
-    sensor: {
-      getAsync: sinon.stub().resolves([]),
-      addAsync: sinon.stub(),
-      updateAsync: sinon.stub(),
-      deleteAsync: sinon.stub(),
+    actions: {
+      output: {
+        getAllAsync: sinon.stub(),
+        getAsync: sinon.stub(),
+        getOutputActionAsync: sinon.stub(),
+        addAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      notification: {
+        getAllAsync: sinon.stub(),
+        getAsync: sinon.stub(),
+        getNotificationActionByIdAsync: sinon.stub(),
+        addAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
     },
-    output: {
-      getAsync: sinon.stub().resolves([]),
-      addAsync: sinon.stub(),
-      updateAsync: sinon.stub(),
-      deleteAsync: sinon.stub(),
-    },
-    time: {
-      getAsync: sinon.stub().resolves([]),
-      addAsync: sinon.stub(),
-      updateAsync: sinon.stub(),
-      deleteAsync: sinon.stub(),
-    },
-    weekday: {
-      getAsync: sinon.stub().resolves([]),
-      addAsync: sinon.stub(),
-      updateAsync: sinon.stub(),
-      deleteAsync: sinon.stub(),
-    },
-    month: {
-      getAsync: sinon.stub().resolves([]),
-      addAsync: sinon.stub(),
-      updateAsync: sinon.stub(),
-      deleteAsync: sinon.stub(),
-    },
-    dateRange: {
-      getAsync: sinon.stub().resolves([]),
-      addAsync: sinon.stub(),
-      updateAsync: sinon.stub(),
-      deleteAsync: sinon.stub(),
-    },
-  } as any;
+  };
   return sprootDB;
 };
 
@@ -78,8 +89,6 @@ describe("NotificationActionHandlers.ts tests", () => {
   const createAutomationServiceAsync = (sprootDB: any) =>
     AutomationService.createInstanceAsync(
       sprootDB.automations,
-      sprootDB.conditions,
-      sprootDB.actions,
       new MemoryEventBus(mockLogger),
       mockLogger,
     );
@@ -114,7 +123,7 @@ describe("NotificationActionHandlers.ts tests", () => {
         },
       } as unknown as Response;
       const sprootDB = createStubSprootDB();
-      sprootDB.actions.notification.getAllAsync.resolves([
+      sprootDB.automations.actions.notification.getAllAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -135,8 +144,8 @@ describe("NotificationActionHandlers.ts tests", () => {
       } as unknown as Request;
 
       const success = (await getAsync(mockRequest, mockResponse)) as SuccessResponse;
-      assert.isTrue(sprootDB.actions.notification.getAsync.notCalled);
-      assert.isTrue(sprootDB.actions.notification.getAllAsync.calledOnce);
+      assert.isTrue(sprootDB.automations.actions.notification.getAsync.notCalled);
+      assert.isTrue(sprootDB.automations.actions.notification.getAllAsync.calledOnce);
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -160,7 +169,7 @@ describe("NotificationActionHandlers.ts tests", () => {
         },
       } as unknown as Response;
       const sprootDB = createStubSprootDB();
-      sprootDB.actions.notification.getAsync.resolves([
+      sprootDB.automations.actions.notification.getAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -183,8 +192,8 @@ describe("NotificationActionHandlers.ts tests", () => {
       } as unknown as Request;
 
       const success = (await getAsync(mockRequest, mockResponse)) as SuccessResponse;
-      assert.isTrue(sprootDB.actions.notification.getAsync.calledOnce);
-      assert.isTrue(sprootDB.actions.notification.getAllAsync.notCalled);
+      assert.isTrue(sprootDB.automations.actions.notification.getAsync.calledOnce);
+      assert.isTrue(sprootDB.automations.actions.notification.getAllAsync.notCalled);
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -208,7 +217,9 @@ describe("NotificationActionHandlers.ts tests", () => {
         },
       } as unknown as Response;
       const sprootDB = createStubSprootDB();
-      sprootDB.actions.notification.getAllAsync.rejects(new Error("Database unreachable"));
+      sprootDB.automations.actions.notification.getAllAsync.rejects(
+        new Error("Database unreachable"),
+      );
 
       const mockRequest = {
         app: {
@@ -243,7 +254,7 @@ describe("NotificationActionHandlers.ts tests", () => {
         },
       } as unknown as Response;
       const sprootDB = createStubSprootDB();
-      sprootDB.actions.notification.getNotificationActionByIdAsync.resolves([
+      sprootDB.automations.actions.notification.getNotificationActionByIdAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -321,7 +332,7 @@ describe("NotificationActionHandlers.ts tests", () => {
         },
       } as unknown as Response;
       const sprootDB = createStubSprootDB();
-      sprootDB.actions.notification.getNotificationActionByIdAsync.resolves([]);
+      sprootDB.automations.actions.notification.getNotificationActionByIdAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -356,7 +367,7 @@ describe("NotificationActionHandlers.ts tests", () => {
         },
       } as unknown as Response;
       const sprootDB = createStubSprootDB();
-      sprootDB.actions.notification.getNotificationActionByIdAsync.rejects(
+      sprootDB.automations.actions.notification.getNotificationActionByIdAsync.rejects(
         new Error("Database unreachable"),
       );
 
@@ -400,7 +411,7 @@ describe("NotificationActionHandlers.ts tests", () => {
       ]);
       const automationService = await createAutomationServiceAsync(sprootDB);
       sprootDB.automations.getAllAsync.resolves([]);
-      sprootDB.actions.notification.addAsync.resolves(1);
+      sprootDB.automations.actions.notification.addAsync.resolves(1);
 
       const mockRequest = {
         app: {
@@ -569,7 +580,7 @@ describe("NotificationActionHandlers.ts tests", () => {
       } as unknown as Response;
 
       const sprootDB = createStubSprootDB();
-      sprootDB.actions.notification.getNotificationActionByIdAsync.resolves([
+      sprootDB.automations.actions.notification.getNotificationActionByIdAsync.resolves([
         { id: 1, automationId: 1, subject: "Test", content: "Test" } as SDBNotificationAction,
       ]);
       const automationService = await createAutomationServiceAsync(sprootDB);
@@ -644,7 +655,7 @@ describe("NotificationActionHandlers.ts tests", () => {
       } as unknown as Response;
 
       const sprootDB = createStubSprootDB();
-      sprootDB.actions.notification.getNotificationActionByIdAsync.resolves([]);
+      sprootDB.automations.actions.notification.getNotificationActionByIdAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -680,7 +691,7 @@ describe("NotificationActionHandlers.ts tests", () => {
       } as unknown as Response;
 
       const sprootDB = createStubSprootDB();
-      sprootDB.actions.notification.getNotificationActionByIdAsync.rejects(
+      sprootDB.automations.actions.notification.getNotificationActionByIdAsync.rejects(
         new Error("Database unreachable"),
       );
 

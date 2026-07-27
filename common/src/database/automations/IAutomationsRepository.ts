@@ -3,6 +3,7 @@ import { SDBAutomation } from "@sproot/common/src/database/SDBAutomation";
 import { AutomationOperator } from "@sproot/common/src/automation/IAutomation";
 import { IOutputActionsRepository } from "./actions/IOutputActionsRepository";
 import { INotificationActionsRepository } from "./actions/INotificationActionsRepository";
+import type { IConditionsRepository } from "./conditions/IConditionsRepository";
 
 export interface IAutomationsRepository {
   getAllAsync(): Promise<SDBAutomation[]>;
@@ -15,9 +16,9 @@ export interface IAutomationsRepository {
     enabled: boolean,
   ): Promise<void>;
   deleteAsync(automationId: number): Promise<void>;
+  actions: {
+    output: IOutputActionsRepository;
+    notification: INotificationActionsRepository;
+  };
+  conditions: IConditionsRepository;
 }
-
-export type IActionsRepository = {
-  output: IOutputActionsRepository;
-  notification: INotificationActionsRepository;
-};

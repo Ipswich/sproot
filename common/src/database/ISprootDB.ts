@@ -9,16 +9,12 @@ import { IUsersRepository } from "./users/IUsersRepository";
 import { IDeviceZonesRepository } from "./device-zones/IDeviceZonesRepository";
 import { ISystemRepository } from "./system/ISystemRepository";
 import { IJournalRepository } from "./journals/IJournalRepository";
-import { IActionsRepository } from "./automations/IAutomationsRepository";
-import { IConditionsRepository } from "./automations/conditions/IConditionsRepository";
 
 export interface ISprootDB {
   sensors: ISensorsRepository;
   outputs: IOutputsRepository;
   subcontrollers: ISubcontrollersRepository;
   automations: IAutomationsRepository;
-  actions: IActionsRepository;
-  conditions: IConditionsRepository;
   camera: ICameraRepository;
   users: IUsersRepository;
   deviceZones: IDeviceZonesRepository;

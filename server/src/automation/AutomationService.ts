@@ -17,8 +17,6 @@ import { AutomationsTriggeredEvent } from "../eventbus/events/automations/Automa
 import { OutputActionsModifiedEvent } from "../eventbus/events/actions/OutputActionsModifiedEvent";
 import { NotificationActionsModifiedEvent } from "../eventbus/events/actions/NotificationActionsModifiedEvent";
 import type { IAutomationsRepository } from "@sproot/common/database/automations/IAutomationsRepository";
-import type { IConditionsRepository } from "@sproot/common/database/automations/conditions/IConditionsRepository";
-import type { IActionsRepository } from "@sproot/common/database/automations/IAutomationsRepository";
 
 /**
  * Central automation evaluator and event emitter.
@@ -27,39 +25,25 @@ import type { IActionsRepository } from "@sproot/common/database/automations/IAu
 class AutomationService {
   #automations: Map<number, Automation>; // Key: automationId
   #automationsRepository: IAutomationsRepository;
-  #conditionsRepository: IConditionsRepository;
-  #actionsRepository: IActionsRepository;
   #eventBus: IEventBus;
   #logger: winston.Logger;
 
   static async createInstanceAsync(
     automationsRepository: IAutomationsRepository,
-    conditionsRepository: IConditionsRepository,
-    actionsRepository: IActionsRepository,
     eventBus: IEventBus,
     logger: winston.Logger,
   ): Promise<AutomationService> {
-    const service = new AutomationService(
-      automationsRepository,
-      conditionsRepository,
-      actionsRepository,
-      eventBus,
-      logger,
-    );
+    const service = new AutomationService(automationsRepository, eventBus, logger);
     await service.loadAllAutomationsAsync();
     return service;
   }
 
   private constructor(
     automationsRepository: IAutomationsRepository,
-    conditionsRepository: IConditionsRepository,
-    actionsRepository: IActionsRepository,
     eventBus: IEventBus,
     logger: winston.Logger,
   ) {
     this.#automationsRepository = automationsRepository;
-    this.#conditionsRepository = conditionsRepository;
-    this.#actionsRepository = actionsRepository;
     this.#eventBus = eventBus;
     this.#automations = new Map();
     this.#logger = logger;
@@ -79,7 +63,7 @@ class AutomationService {
           automation.name,
           automation.operator,
           automation.enabled,
-          this.#conditionsRepository,
+          this.#automationsRepository.conditions,
         );
         return [automation.id, automationInstance] as [number, Automation];
       });
@@ -161,7 +145,7 @@ class AutomationService {
     sensorId: number,
     readingType: ReadingType,
   ): Promise<number> {
-    const resultId = await this.#conditionsRepository.sensor.addAsync(
+    const resultId = await this.#automationsRepository.conditions.sensor.addAsync(
       automationId,
       type,
       operator,
@@ -182,7 +166,7 @@ class AutomationService {
     comparisonLookback: number | null,
     outputId: number,
   ): Promise<number> {
-    const resultId = await this.#conditionsRepository.output.addAsync(
+    const resultId = await this.#automationsRepository.conditions.output.addAsync(
       automationId,
       type,
       operator,
@@ -200,7 +184,7 @@ class AutomationService {
     startTime: string | null | undefined,
     endTime: string | null | undefined,
   ): Promise<number> {
-    const resultId = await this.#conditionsRepository.time.addAsync(
+    const resultId = await this.#automationsRepository.conditions.time.addAsync(
       automationId,
       type,
       startTime,
@@ -215,7 +199,7 @@ class AutomationService {
     type: ConditionGroupType,
     weekdays: number,
   ): Promise<number> {
-    const resultId = await this.#conditionsRepository.weekday.addAsync(
+    const resultId = await this.#automationsRepository.conditions.weekday.addAsync(
       automationId,
       type,
       weekdays,
@@ -229,7 +213,11 @@ class AutomationService {
     type: ConditionGroupType,
     months: number,
   ): Promise<number> {
-    const resultId = await this.#conditionsRepository.month.addAsync(automationId, type, months);
+    const resultId = await this.#automationsRepository.conditions.month.addAsync(
+      automationId,
+      type,
+      months,
+    );
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
   }
@@ -242,7 +230,7 @@ class AutomationService {
     endMonth: number,
     endDate: number,
   ): Promise<number> {
-    const resultId = await this.#conditionsRepository.dateRange.addAsync(
+    const resultId = await this.#automationsRepository.conditions.dateRange.addAsync(
       automationId,
       type,
       startMonth,
@@ -265,17 +253,17 @@ class AutomationService {
       | DateRangeCondition,
   ) {
     if (condition instanceof SensorCondition) {
-      await this.#conditionsRepository.sensor.updateAsync(automationId, condition);
+      await this.#automationsRepository.conditions.sensor.updateAsync(automationId, condition);
     } else if (condition instanceof OutputCondition) {
-      await this.#conditionsRepository.output.updateAsync(automationId, condition);
+      await this.#automationsRepository.conditions.output.updateAsync(automationId, condition);
     } else if (condition instanceof TimeCondition) {
-      await this.#conditionsRepository.time.updateAsync(automationId, condition);
+      await this.#automationsRepository.conditions.time.updateAsync(automationId, condition);
     } else if (condition instanceof WeekdayCondition) {
-      await this.#conditionsRepository.weekday.updateAsync(automationId, condition);
+      await this.#automationsRepository.conditions.weekday.updateAsync(automationId, condition);
     } else if (condition instanceof MonthCondition) {
-      await this.#conditionsRepository.month.updateAsync(automationId, condition);
+      await this.#automationsRepository.conditions.month.updateAsync(automationId, condition);
     } else if (condition instanceof DateRangeCondition) {
-      await this.#conditionsRepository.dateRange.updateAsync(automationId, condition);
+      await this.#automationsRepository.conditions.dateRange.updateAsync(automationId, condition);
     } else {
       return;
     }
@@ -283,32 +271,32 @@ class AutomationService {
   }
 
   async deleteSensorConditionAsync(id: number) {
-    await this.#conditionsRepository.sensor.deleteAsync(id);
+    await this.#automationsRepository.conditions.sensor.deleteAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteOutputConditionAsync(id: number) {
-    await this.#conditionsRepository.output.deleteAsync(id);
+    await this.#automationsRepository.conditions.output.deleteAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteTimeConditionAsync(id: number) {
-    await this.#conditionsRepository.time.deleteAsync(id);
+    await this.#automationsRepository.conditions.time.deleteAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteWeekdayConditionAsync(id: number) {
-    await this.#conditionsRepository.weekday.deleteAsync(id);
+    await this.#automationsRepository.conditions.weekday.deleteAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteMonthConditionAsync(id: number) {
-    await this.#conditionsRepository.month.deleteAsync(id);
+    await this.#automationsRepository.conditions.month.deleteAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteDateRangeConditionAsync(id: number) {
-    await this.#conditionsRepository.dateRange.deleteAsync(id);
+    await this.#automationsRepository.conditions.dateRange.deleteAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
@@ -318,7 +306,7 @@ class AutomationService {
     subject: string,
     content: string,
   ): Promise<number> {
-    const result = await this.#actionsRepository.notification.addAsync(
+    const result = await this.#automationsRepository.actions.notification.addAsync(
       automationId,
       subject,
       content,
@@ -328,7 +316,7 @@ class AutomationService {
   }
 
   async deleteNotificationActionAsync(notificationActionId: number) {
-    await this.#actionsRepository.notification.deleteAsync(notificationActionId);
+    await this.#automationsRepository.actions.notification.deleteAsync(notificationActionId);
     await this.#eventBus.publishAsync(new NotificationActionsModifiedEvent({}));
   }
 
@@ -338,13 +326,17 @@ class AutomationService {
     outputId: number,
     value: number,
   ): Promise<number> {
-    const result = await this.#actionsRepository.output.addAsync(automationId, outputId, value);
+    const result = await this.#automationsRepository.actions.output.addAsync(
+      automationId,
+      outputId,
+      value,
+    );
     await this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));
     return result;
   }
 
   async deleteOutputActionAsync(outputActionId: number) {
-    await this.#actionsRepository.output.deleteAsync(outputActionId);
+    await this.#automationsRepository.actions.output.deleteAsync(outputActionId);
     await this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));
   }
 

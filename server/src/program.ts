@@ -55,15 +55,13 @@ export default async function setupAsync(): Promise<Express> {
 
   const automationService = await AutomationService.createInstanceAsync(
     sprootDB.automations,
-    sprootDB.conditions,
-    sprootDB.actions,
     eventBus,
     logger,
   );
   app.set(DI_KEYS.AutomationService, automationService);
 
   const notificationActionManager = await NotificationActionManager.createInstanceAsync(
-    sprootDB.actions.notification,
+    sprootDB.automations.actions.notification,
     eventBus,
     logger,
   );
@@ -93,7 +91,7 @@ export default async function setupAsync(): Promise<Express> {
   const outputList = await OutputList.createInstanceAsync(
     eventBus,
     sprootDB.outputs,
-    sprootDB.actions.output,
+    sprootDB.automations.actions.output,
     sprootDB.subcontrollers,
     mdnsService,
     Constants.MAX_CACHE_SIZE,

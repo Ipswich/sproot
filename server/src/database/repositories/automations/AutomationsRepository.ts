@@ -4,10 +4,43 @@ import { SDBAutomation } from "@sproot/common/database/SDBAutomation";
 import { SDBOutputActionView } from "@sproot/common/database/SDBOutputAction";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../utils/BaseKnexRepository";
+import { OutputActionsRepository } from "./actions/OutputActionsRepository";
+import { NotificationActionsRepository } from "./actions/NotificationActionsRepository";
+import { SensorConditionsRepository } from "./conditions/SensorConditionsRepository";
+import { OutputConditionsRepository } from "./conditions/OutputConditionsRepository";
+import { TimeConditionsRepository } from "./conditions/TimeConditionsRepository";
+import { WeekdayConditionsRepository } from "./conditions/WeekdayConditionsRepository";
+import { MonthConditionsRepository } from "./conditions/MonthConditionsRepository";
+import { DateRangeConditionsRepository } from "./conditions/DateRangeConditionsRepository";
 
 export class AutomationsRepository extends BaseKnexRepository implements IAutomationsRepository {
+  actions: {
+    output: OutputActionsRepository;
+    notification: NotificationActionsRepository;
+  };
+  conditions: {
+    sensor: SensorConditionsRepository;
+    output: OutputConditionsRepository;
+    time: TimeConditionsRepository;
+    weekday: WeekdayConditionsRepository;
+    month: MonthConditionsRepository;
+    dateRange: DateRangeConditionsRepository;
+  };
+
   constructor(connection: Knex) {
     super(connection);
+    this.actions = {
+      output: new OutputActionsRepository(connection),
+      notification: new NotificationActionsRepository(connection),
+    };
+    this.conditions = {
+      sensor: new SensorConditionsRepository(connection),
+      output: new OutputConditionsRepository(connection),
+      time: new TimeConditionsRepository(connection),
+      weekday: new WeekdayConditionsRepository(connection),
+      month: new MonthConditionsRepository(connection),
+      dateRange: new DateRangeConditionsRepository(connection),
+    };
   }
 
   async getAllAsync(): Promise<SDBAutomation[]> {

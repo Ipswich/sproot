@@ -30,6 +30,18 @@ const createMockAutomationsRepo = (): IAutomationsRepository => ({
   addAsync: async () => 0,
   updateAsync: async () => {},
   deleteAsync: async () => {},
+  conditions: {
+    sensor: createMockSensorConditionsRepo(),
+    output: createMockOutputConditionsRepo(),
+    time: createMockTimeConditionsRepo(),
+    weekday: createMockWeekdayConditionsRepo(),
+    month: createMockMonthConditionsRepo(),
+    dateRange: createMockDateRangeConditionsRepo(),
+  },
+  actions: {
+    output: createMockOutputActionsRepo(),
+    notification: createMockNotificationActionsRepo(),
+  },
 });
 
 const createMockSensorConditionsRepo = (): ISensorConditionsRepository => ({
@@ -154,18 +166,6 @@ const createStubSprootDB = (): any => {
 
   const sprootDB = {
     automations,
-    conditions: {
-      sensor: sensorConditions,
-      output: outputConditions,
-      time: timeConditions,
-      weekday: weekdayConditions,
-      month: monthConditions,
-      dateRange: dateRangeConditions,
-    },
-    actions: {
-      output: outputActions,
-      notification: notificationActions,
-    },
   };
   return sprootDB;
 };
@@ -176,8 +176,6 @@ describe("AutomationHandlers", () => {
   const createAutomationServiceAsync = (sprootDB: any) =>
     AutomationService.createInstanceAsync(
       sprootDB.automations,
-      sprootDB.conditions,
-      sprootDB.actions,
       new MemoryEventBus(mockLogger),
       mockLogger,
     );

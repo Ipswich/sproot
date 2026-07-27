@@ -388,7 +388,7 @@ describe("Conditions.ts tests", () => {
   // describe("addSensorConditionAsync", () => {
   //   it("should add a sensor condition to the conditions list", async () => {
   //     const sprootDB = createStubSprootDB();
-  //     sprootDB.conditions.addSensorConditionAsync.resolves(1);
+  //     sprootDB.automations.conditions.addSensorConditionAsync.resolves(1);
 
   //     const conditions = new Conditions(1, sprootDB);
   //     await conditions.addSensorConditionAsync("allOf", "equal", 50, 1, ReadingType.temperature);
@@ -407,7 +407,7 @@ describe("Conditions.ts tests", () => {
   // describe("addOutputConditionAsync", () => {
   //   it("should add an output condition to the conditions list", async () => {
   //     const sprootDB = createStubSprootDB();
-  //     sprootDB.conditions.addOutputConditionAsync.resolves(1);
+  //     sprootDB.automations.conditions.addOutputConditionAsync.resolves(1);
 
   //     const conditions = new Conditions(1, sprootDB);
   //     await conditions.addOutputConditionAsync("anyOf", "equal", 50, 1);
@@ -425,7 +425,7 @@ describe("Conditions.ts tests", () => {
   // describe("addTimeConditionAsync", () => {
   //   it("should add a time condition to the conditions list", async () => {
   //     const sprootDB = createStubSprootDB();
-  //     sprootDB.conditions.addTimeConditionAsync.resolves(1);
+  //     sprootDB.automations.conditions.addTimeConditionAsync.resolves(1);
 
   //     const conditions = new Conditions(1, sprootDB);
   //     await conditions.addTimeConditionAsync("oneOf", "00:00", "01:00");
@@ -442,7 +442,7 @@ describe("Conditions.ts tests", () => {
   // describe("updateConditionAsync", () => {
   //   it("should update a sensorCondition", async () => {
   //     const sprootDB = createStubSprootDB();
-  //     sprootDB.conditions.updateSensorConditionAsync.resolves();
+  //     sprootDB.automations.conditions.updateSensorConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     const sensorCondition = await conditions.addSensorConditionAsync("allOf", "equal", 50, 1, ReadingType.temperature);
@@ -463,7 +463,7 @@ describe("Conditions.ts tests", () => {
 
   //   it("should update an outputCondition", async () => {
   //     const sprootDB = createStubSprootDB();
-  //     sprootDB.conditions.updateOutputConditionAsync.resolves();
+  //     sprootDB.automations.conditions.updateOutputConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     const outputCondition = await conditions.addOutputConditionAsync("allOf", "equal", 50, 1);
@@ -482,7 +482,7 @@ describe("Conditions.ts tests", () => {
 
   //   it("should update a timeCondition", async () => {
   //     const sprootDB = createStubSprootDB();
-  //     sprootDB.conditions.updateTimeConditionAsync.resolves();
+  //     sprootDB.automations.conditions.updateTimeConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     const timeCondition = await conditions.addTimeConditionAsync("allOf", "00:00", "01:00");
@@ -501,8 +501,8 @@ describe("Conditions.ts tests", () => {
   // describe("deleteSensorConditionAsync", () => {
   //   it("should delete a sensorCondition", async () => {
   //     const sprootDB = createStubSprootDB();
-  //     sprootDB.conditions.addSensorConditionAsync.resolves(1);
-  //     sprootDB.conditions.deleteSensorConditionAsync.resolves();
+  //     sprootDB.automations.conditions.addSensorConditionAsync.resolves(1);
+  //     sprootDB.automations.conditions.deleteSensorConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     const sensorCondition = await conditions.addSensorConditionAsync("allOf", "equal", 50, 1, ReadingType.temperature);
@@ -515,7 +515,7 @@ describe("Conditions.ts tests", () => {
 
   //   it("should not delete a sensorCondition that doesn't exist", async () => {
   //     const sprootDB = createStubSprootDB();
-  //     sprootDB.conditions.deleteSensorConditionAsync.resolves();
+  //     sprootDB.automations.conditions.deleteSensorConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     await conditions.deleteSensorConditionAsync(1);
@@ -528,8 +528,8 @@ describe("Conditions.ts tests", () => {
   // describe("deleteOutputConditionAsync", () => {
   //   it("should delete an outputCondition", async () => {
   //     const sprootDB = createStubSprootDB();
-  //     sprootDB.conditions.addOutputConditionAsync.resolves(1);
-  //     sprootDB.conditions.deleteOutputConditionAsync.resolves();
+  //     sprootDB.automations.conditions.addOutputConditionAsync.resolves(1);
+  //     sprootDB.automations.conditions.deleteOutputConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     const outputCondition = await conditions.addOutputConditionAsync("allOf", "equal", 50, 1);
@@ -542,7 +542,7 @@ describe("Conditions.ts tests", () => {
 
   //   it("should not delete an outputCondition that doesn't exist", async () => {
   //     const sprootDB = createStubSprootDB();
-  //     sprootDB.conditions.deleteOutputConditionAsync.resolves();
+  //     sprootDB.automations.conditions.deleteOutputConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     await conditions.deleteOutputConditionAsync(1);
@@ -555,8 +555,8 @@ describe("Conditions.ts tests", () => {
   // describe("deleteTimeConditionAsync", () => {
   //   it("should delete a timeCondition", async () => {
   //     const sprootDB = createStubSprootDB();
-  //     sprootDB.conditions.addTimeConditionAsync.resolves(1);
-  //     sprootDB.conditions.deleteTimeConditionAsync.resolves();
+  //     sprootDB.automations.conditions.addTimeConditionAsync.resolves(1);
+  //     sprootDB.automations.conditions.deleteTimeConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     const timeCondition = await conditions.addTimeConditionAsync("allOf", "00:00", "01:00");
@@ -569,7 +569,7 @@ describe("Conditions.ts tests", () => {
 
   //   it("should not delete a timeCondition that doesn't exist", async () => {
   //     const sprootDB = createStubSprootDB();
-  //     sprootDB.conditions.deleteTimeConditionAsync.resolves();
+  //     sprootDB.automations.conditions.deleteTimeConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
   //     await conditions.deleteTimeConditionAsync(1);
