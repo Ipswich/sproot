@@ -6,10 +6,19 @@ import { Accordion, Group, Table, Title } from "@mantine/core";
 import {
   IconCpu,
   IconDatabase,
+  IconGauge,
   IconLibraryPhoto,
   IconStack,
-  IconGauge,
 } from "@tabler/icons-react";
+import LogStreamWithBadges from "./LogStreamWithBadges";
+import LogStreamWithTerminal from "./LogStreamWithTerminal";
+
+const ACTIVE_LOG_STREAM_VARIANT = "terminal" as const;
+
+const LOG_STREAM_COMPONENTS = {
+  badges: LogStreamWithBadges,
+  terminal: LogStreamWithTerminal,
+} as const;
 
 export default function SystemStatus() {
   const systemStatusQuery = useQuery({
@@ -18,6 +27,7 @@ export default function SystemStatus() {
       return getSystemStatusAsync();
     },
   });
+  const ActiveLogStream = LOG_STREAM_COMPONENTS[ACTIVE_LOG_STREAM_VARIANT];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -31,7 +41,7 @@ export default function SystemStatus() {
   return (
     <Fragment>
       <Accordion w={"100%"}>
-        <Accordion.Item value="backups">
+        <Accordion.Item value="status">
           <Accordion.Control>
             <Group pl={"xl"}>
               <IconGauge />
@@ -223,6 +233,7 @@ export default function SystemStatus() {
                       </Table>
                     </Accordion.Panel>
                   </Accordion.Item>
+                  <ActiveLogStream />
                 </Accordion>
               )}
             </Group>
