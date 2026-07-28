@@ -639,6 +639,39 @@ paths:
                           details:
                             items:
                               example: "Failed to retrieve backup status."
+  /api/v2/system/logs/stream:
+    get:
+      summary: Stream Winston logs via Server-Sent Events
+      description: |
+        Opens a persistent SSE connection. On connect, replays the last 200 log
+        entries (oldest → newest), then streams new entries as they arrive.
+        Sends a heartbeat comment (`: heartbeat`) every 30 seconds.
+      tags:
+        - System
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: SSE stream of log events
+          content:
+            text/event-stream:
+              schema:
+                type: "string"
+                description: |
+                  SSE format. Each log event is sent as `data: <JSON>\n\n`
+                  where JSON is a `LogEventPayload` object:
+                  ```json
+                  {
+                    "timestamp": "2024-01-15T10:30:00.000Z",
+                    "level": "info",
+                    "message": "log message",
+                    "metadata": { "key": "value" }
+                  }
+                  ```
+                  A heartbeat is sent as a comment: `: heartbeat\n\n`
+                  every 30 seconds.
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
   /api/v2/subcontrollers:
     get:
       tags:

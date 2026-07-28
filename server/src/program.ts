@@ -29,6 +29,8 @@ import {
 import { MdnsService } from "./system/MdnsService";
 import { NotificationActionManager } from "./automation/notifications/NotificationActionManager";
 import { MemoryEventBus } from "./eventbus/MemoryEventBus";
+import { LogStreamService } from "./system/LogStreamService";
+import { addLogStreamingTransport } from "./logger";
 
 export default async function setupAsync(): Promise<Express> {
   const app = express();
@@ -46,6 +48,14 @@ export default async function setupAsync(): Promise<Express> {
 
   const eventBus = new MemoryEventBus(logger);
   app.set(DI_KEYS.EventBus, eventBus);
+
+  const logStreamService = new LogStreamService(
+    undefined,
+    eventBus,
+    logger,
+  );
+  app.set(DI_KEYS.LogStreamService, logStreamService);
+  addLogStreamingTransport(logger, logStreamService);
 
   const mdnsService = new MdnsService(logger);
   app.set(DI_KEYS.MdnsService, mdnsService);
