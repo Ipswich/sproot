@@ -13,11 +13,7 @@ export class LogStreamService {
   #eventBus: IEventBus;
   #logger: winston.Logger;
 
-  constructor(
-    historySize: number | undefined,
-    eventBus: IEventBus,
-    logger: winston.Logger,
-  ) {
+  constructor(historySize: number | undefined, eventBus: IEventBus, logger: winston.Logger) {
     this.#capacity = historySize ?? DEFAULT_HISTORY_SIZE;
     this.#eventBus = eventBus;
     this.#logger = logger;

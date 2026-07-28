@@ -6,7 +6,8 @@ import {
 
 const MAX_LOG_ENTRIES = 200;
 
-export type LogConnectionState = "connecting" | "connected" | "reconnecting";
+export type LogConnectionState =
+  "disconnected" | "connecting" | "connected" | "reconnecting";
 
 export function stripAnsiEscapeCodes(value: string) {
   let sanitizedValue = "";
@@ -48,6 +49,8 @@ export function getConnectionBadgeColor(connectionState: LogConnectionState) {
       return "teal";
     case "reconnecting":
       return "yellow";
+    case "disconnected":
+      return "gray";
     default:
       return "blue";
   }
@@ -69,20 +72,25 @@ export function getLatestLogLabel(latestLogTimestamp: string | null) {
     : "Waiting for log activity";
 }
 
-export function useSystemLogStream() {
+export function useSystemLogStream(enabled: boolean = true) {
   const [logEntries, setLogEntries] = useState<SystemLogEvent[]>([]);
   const [logConnectionState, setLogConnectionState] =
-    useState<LogConnectionState>("connecting");
+    useState<LogConnectionState>("disconnected");
   const [logStreamError, setLogStreamError] = useState<string | null>(null);
   const [latestLogTimestamp, setLatestLogTimestamp] = useState<string | null>(
     null,
   );
 
   useEffect(() => {
-    const eventSource = new EventSource(getSystemLogStreamUrl());
+    if (!enabled) {
+      setLogConnectionState("disconnected");
+      return;
+    }
 
     setLogConnectionState("connecting");
     setLogStreamError(null);
+
+    const eventSource = new EventSource(getSystemLogStreamUrl());
 
     eventSource.onopen = () => {
       setLogConnectionState("connected");
@@ -118,7 +126,7 @@ export function useSystemLogStream() {
     return () => {
       eventSource.close();
     };
-  }, []);
+  }, [enabled]);
 
   return {
     logEntries,

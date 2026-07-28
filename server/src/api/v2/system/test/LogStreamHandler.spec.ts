@@ -69,9 +69,7 @@ describe("logStreamHandler", () => {
     );
     assert.isTrue((mockRes.setHeader as sinon.SinonStub).calledWith("Cache-Control", "no-cache"));
     assert.isTrue((mockRes.setHeader as sinon.SinonStub).calledWith("Connection", "keep-alive"));
-    assert.isTrue(
-      (mockRes.setHeader as sinon.SinonStub).calledWith("X-Accel-Buffering", "no"),
-    );
+    assert.isTrue((mockRes.setHeader as sinon.SinonStub).calledWith("X-Accel-Buffering", "no"));
     assert.isTrue(mockRes.flushHeaders.calledOnce);
   });
 
@@ -134,10 +132,7 @@ describe("logStreamHandler", () => {
     const writeCalls = (mockRes.write as sinon.SinonStub).args.map((a: any) => a[0]);
     const streamingData = writeCalls.find((w: string) => w.includes("streaming test"));
     assert.isDefined(streamingData);
-    assert.strictEqual(
-      JSON.parse(streamingData!.replace(/^data: /, "")).level,
-      "error",
-    );
+    assert.strictEqual(JSON.parse(streamingData!.replace(/^data: /, "")).level, "error");
   });
 
   it("deduplicates events that appear in both history and live stream", async () => {
@@ -202,10 +197,7 @@ describe("logStreamHandler", () => {
 
     logStreamHandler(req as any, mockRes);
 
-    assert.isTrue(
-      setIntervalStub.calledOnce,
-      "setInterval should be called once for heartbeat",
-    );
+    assert.isTrue(setIntervalStub.calledOnce, "setInterval should be called once for heartbeat");
 
     mockRes.emit("close");
 

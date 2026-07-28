@@ -49,11 +49,7 @@ export default async function setupAsync(): Promise<Express> {
   const eventBus = new MemoryEventBus(logger);
   app.set(DI_KEYS.EventBus, eventBus);
 
-  const logStreamService = new LogStreamService(
-    undefined,
-    eventBus,
-    logger,
-  );
+  const logStreamService = new LogStreamService(undefined, eventBus, logger);
   app.set(DI_KEYS.LogStreamService, logStreamService);
   addLogStreamingTransport(logger, logStreamService);
 

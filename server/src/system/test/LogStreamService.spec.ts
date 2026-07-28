@@ -119,11 +119,13 @@ describe("LogStreamService", () => {
     const defaultService = new LogStreamService(undefined, defaultBus, (defaultBus as any).logger);
 
     for (let i = 0; i < 150; i++) {
-      defaultService.publish(new LogEvent({
-        timestamp: `t${i}`,
-        level: "info",
-        message: `message ${i}`,
-      }) as any);
+      defaultService.publish(
+        new LogEvent({
+          timestamp: `t${i}`,
+          level: "info",
+          message: `message ${i}`,
+        }) as any,
+      );
     }
 
     const history = defaultService.getHistory();
@@ -131,11 +133,13 @@ describe("LogStreamService", () => {
 
     // Push 60 more to reach 210 (exceeds 200 default)
     for (let i = 150; i < 210; i++) {
-      defaultService.publish(new LogEvent({
-        timestamp: `t${i}`,
-        level: "info",
-        message: `message ${i}`,
-      }) as any);
+      defaultService.publish(
+        new LogEvent({
+          timestamp: `t${i}`,
+          level: "info",
+          message: `message ${i}`,
+        }) as any,
+      );
     }
 
     const history2 = defaultService.getHistory();
