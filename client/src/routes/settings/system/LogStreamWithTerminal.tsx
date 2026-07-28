@@ -39,9 +39,23 @@ export default function LogStreamWithTerminal() {
   const { latestLogLabel, logConnectionState, logEntries, logStreamError } =
     useSystemLogStream(isLogsExpanded);
   const viewportRef = useRef<HTMLDivElement | null>(null);
+  const isAtBottom = useRef(true);
 
   useEffect(() => {
-    if (viewportRef.current) {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = viewport;
+      isAtBottom.current = scrollHeight - scrollTop - clientHeight < 50;
+    };
+
+    viewport.addEventListener("scroll", handleScroll, { passive: true });
+    return () => viewport.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (isAtBottom.current && viewportRef.current) {
       viewportRef.current.scrollTop = viewportRef.current.scrollHeight;
     }
   }, [logEntries]);

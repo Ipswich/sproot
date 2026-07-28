@@ -10,15 +10,7 @@ import {
   IconLibraryPhoto,
   IconStack,
 } from "@tabler/icons-react";
-import LogStreamWithBadges from "./LogStreamWithBadges";
 import LogStreamWithTerminal from "./LogStreamWithTerminal";
-
-const ACTIVE_LOG_STREAM_VARIANT = "terminal" as const;
-
-const LOG_STREAM_COMPONENTS = {
-  badges: LogStreamWithBadges,
-  terminal: LogStreamWithTerminal,
-} as const;
 
 export default function SystemStatus() {
   const systemStatusQuery = useQuery({
@@ -27,7 +19,6 @@ export default function SystemStatus() {
       return getSystemStatusAsync();
     },
   });
-  const ActiveLogStream = LOG_STREAM_COMPONENTS[ACTIVE_LOG_STREAM_VARIANT];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -233,7 +224,7 @@ export default function SystemStatus() {
                       </Table>
                     </Accordion.Panel>
                   </Accordion.Item>
-                  <ActiveLogStream />
+                  <LogStreamWithTerminal />
                 </Accordion>
               )}
             </Group>
