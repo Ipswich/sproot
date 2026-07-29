@@ -1436,6 +1436,112 @@ describe("API Tests", async function () {
     });
   });
 
+  describe("Log Stream Routes", () => {
+    describe("GET /api/v2/system/logs/stream", () => {
+      it("should return 200 with SSE headers", async () => {
+        await new Promise<void>((resolve, reject) => {
+          let settled = false;
+          const req = httpGet("http://127.0.0.1:3000/api/v2/system/logs/stream", (res) => {
+            try {
+              assert.equal(res.statusCode, 200);
+              assert.equal(res.headers["content-type"], "text/event-stream; charset=utf-8");
+              assert.equal(res.headers["cache-control"], "no-cache");
+              assert.equal(res.headers["connection"], "keep-alive");
+            } catch (error) {
+              clearTimeout(timeout);
+              settled = true;
+              req.destroy();
+              reject(error);
+              return;
+            }
+
+            res.once("data", () => {
+              if (settled) return;
+              settled = true;
+              clearTimeout(timeout);
+              req.destroy();
+              resolve();
+            });
+          });
+          const timeout = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            req.destroy();
+            reject(new Error("Log stream did not respond within timeout period"));
+          }, 300);
+          req.on("error", (err) => {
+            if (
+              settled &&
+              (err.message.includes("aborted") || err.message.includes("socket hang up"))
+            ) {
+              return;
+            }
+            if (!settled) {
+              settled = true;
+              clearTimeout(timeout);
+              reject(err);
+            }
+          });
+        });
+      });
+
+      it("should send history events", async () => {
+        const received: string[] = [];
+        await new Promise<void>((resolve, reject) => {
+          let settled = false;
+          const req = httpGet("http://127.0.0.1:3000/api/v2/system/logs/stream", (res) => {
+            try {
+              assert.equal(res.statusCode, 200);
+            } catch (error) {
+              clearTimeout(timeout);
+              settled = true;
+              req.destroy();
+              reject(error);
+              return;
+            }
+
+            res.on("data", (chunk: Buffer) => {
+              const lines = chunk.toString().split("\n");
+              for (const line of lines) {
+                if (line.startsWith("data: ")) {
+                  const payload = JSON.parse(line.slice(6));
+                  received.push(payload.message);
+                  if (settled) return;
+                  settled = true;
+                  clearTimeout(timeout);
+                  req.destroy();
+                  resolve();
+                }
+              }
+            });
+          });
+          const timeout = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            req.destroy();
+            reject(new Error("Log stream did not send data within timeout period"));
+          }, 300);
+          req.on("error", (err) => {
+            if (
+              settled &&
+              (err.message.includes("aborted") || err.message.includes("socket hang up"))
+            ) {
+              return;
+            }
+            if (!settled) {
+              settled = true;
+              clearTimeout(timeout);
+              reject(err);
+            }
+          });
+        });
+
+        // History events should have been sent
+        assert.isAbove(received.length, 0, "Should have received history events");
+      });
+    });
+  });
+
   describe("Journal Tag Routes", () => {
     let createdId: number;
 
