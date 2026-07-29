@@ -9,13 +9,13 @@ export interface ISettingsRepository {
    * Get a single setting by key.
    * Returns undefined if the key does not exist.
    */
-  get<K extends SettingsKey>(key: K): Promise<SettingsSchema[K] | undefined>;
+  getAsync<K extends SettingsKey>(key: K): Promise<SettingsSchema[K] | undefined>;
 
   /**
    * Get multiple settings by keys.
    * Returns a map with values for existing keys; undefined for missing keys.
    */
-  getMany(
+  getManyAsync(
     keys: SettingsKey[],
   ): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>>;
 
@@ -23,23 +23,29 @@ export interface ISettingsRepository {
    * Get all known settings.
    * Returns a map of all keys to their values (undefined for missing).
    */
-  getAll(): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>>;
+  getAllAsync(): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>>;
 
   /**
    * Set or update a setting value.
    * The value must match the type declared in SettingsSchema for the given key.
    */
-  set<K extends SettingsKey>(key: K, value: SettingsSchema[K]): Promise<void>;
+  setAsync<K extends SettingsKey>(key: K, value: SettingsSchema[K]): Promise<void>;
 
   /**
    * Check if a key exists in the settings table.
    * Uses string key since this operates on arbitrary keys, not just known ones.
    */
-  exists(key: string): Promise<boolean>;
+  existsAsync(key: string): Promise<boolean>;
 
   /**
    * Delete a setting by key.
    * Uses string key since this operates on arbitrary keys, not just known ones.
    */
-  delete(key: string): Promise<void>;
+  deleteAsync(key: string): Promise<void>;
+
+  /**
+   * Insert default settings that are missing from the database.
+   * Only inserts keys not already present — never overwrites existing values.
+   */
+  syncDefaultsAsync(): Promise<void>;
 }

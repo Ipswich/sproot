@@ -8270,8 +8270,136 @@ paths:
                           url:
                             example: "/api/v2/entries/-1/tags/1"
                           details:
+                             items:
+                               example: "Journal entry tag with ID -1 not found in journal entry with ID 1."
+
+  /api/v2/settings:
+    get:
+      tags:
+        - "Settings"
+      summary: Get all application settings.
+      description: Returns a map of all known setting keys to their current values.
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                             type: object
+                             additionalProperties: true
+                             example:
+                                sensors.raw_retention: "30 days"
+                                outputs.raw_retention: "60 days"
+                                sensors.5m_agg_retention: "7 days"
+                                outputs.5m_agg_retention: "14 days"
+                                sensors.1h_agg_retention: "30 days"
+                                sensors.1d_agg_retention: "90 days"
+                                outputs.1h_agg_retention: "30 days"
+                                outputs.1d_agg_retention: "90 days"
+                                system.backup_retention: "30 days"
+        503:
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/settings"
+                          details:
                             items:
-                              example: "Journal entry tag with ID -1 not found in journal entry with ID 1."
+                              example: "Failed to retrieve settings."
+    patch:
+      tags:
+        - "Settings"
+      summary: Patch application settings.
+      description: Batch-patch settings. Body is a key-value map; only present keys are updated.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              example:
+                sensors.raw_retention: "45 days"
+                outputs.raw_retention: "90 days"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: object
+                            additionalProperties: true
+                            example:
+                              sensors.raw_retention: "45 days"
+                              outputs.raw_retention: "90 days"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/settings"
+                          details:
+                            items:
+                              example: "Unknown setting key: unknown.key"
+        503:
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/settings"
+                          details:
+                            items:
+                              example: "Failed to update settings."
 
 components:
   schemas:

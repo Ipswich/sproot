@@ -1,6 +1,7 @@
 import type { ISettingsRepository } from "./ISettingsRepository";
 import type { SettingsKey, SettingsSchema } from "./SettingsSchema";
 import { SETTINGS } from "./SettingsSchema";
+import { DEFAULTS } from "./SettingsDefaults";
 import { BaseKnexRepository } from "../repositories/utils/BaseKnexRepository";
 import { Knex } from "knex";
 
@@ -14,7 +15,7 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
     super(connection);
   }
 
-  async get<K extends SettingsKey>(key: K): Promise<SettingsSchema[K] | undefined> {
+  async getAsync<K extends SettingsKey>(key: K): Promise<SettingsSchema[K] | undefined> {
     const result = await this.connection<SettingsRow[]>("settings")
       .select("key", "value")
       .where("key", key)
@@ -27,7 +28,7 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
     return result.value as SettingsSchema[K];
   }
 
-  async getMany(
+  async getManyAsync(
     keys: SettingsKey[],
   ): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>> {
     const result = await this.connection<SettingsRow[]>("settings")
@@ -45,7 +46,7 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
     return map;
   }
 
-  async getAll(): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>> {
+  async getAllAsync(): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>> {
     const result = await this.connection<SettingsRow[]>("settings").select("key", "value");
 
     const map = this.emptySettingsMap();
@@ -59,11 +60,22 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
     return map;
   }
 
-  async set<K extends SettingsKey>(key: K, value: SettingsSchema[K]): Promise<void> {
-    await this.connection("settings").insert({ key, value }).onConflict("key").merge();
+  async setAsync<K extends SettingsKey>(key: K, value: SettingsSchema[K]): Promise<void> {
+    let encodedValue: unknown;
+    if (value === null) {
+      encodedValue = this.connection.raw("'null'::jsonb");
+    } else if (typeof value === "string") {
+      encodedValue = JSON.stringify(value);
+    } else {
+      encodedValue = value;
+    }
+    await this.connection("settings")
+      .insert({ key, value: encodedValue })
+      .onConflict("key")
+      .merge();
   }
 
-  async exists(key: string): Promise<boolean> {
+  async existsAsync(key: string): Promise<boolean> {
     const result = await this.connection("settings").where("key", key).count("* as count").first();
 
     const count = result?.["count"];
@@ -71,8 +83,32 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
     return Number(count ?? 0) > 0;
   }
 
-  async delete(key: string): Promise<void> {
+  async deleteAsync(key: string): Promise<void> {
     await this.connection("settings").where("key", key).del();
+  }
+
+  async syncDefaultsAsync(): Promise<void> {
+    const existingKeys = new Set<string>();
+    for (const def of DEFAULTS) {
+      if (await this.existsAsync(def.key)) {
+        existingKeys.add(def.key);
+      }
+    }
+
+    const keysToInsert = DEFAULTS.filter((def) => !existingKeys.has(def.key));
+
+    if (keysToInsert.length === 0) {
+      return;
+    }
+
+    const rows = keysToInsert.map((def) => ({
+      key: def.key,
+      value: JSON.stringify(def.value),
+      description: def.description,
+      editable: def.editable,
+    }));
+
+    await this.connection("settings").insert(rows).onConflict("key").merge();
   }
 
   private emptySettingsMap(): Record<SettingsKey, SettingsSchema[SettingsKey] | undefined> {
