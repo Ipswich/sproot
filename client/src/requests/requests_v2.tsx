@@ -41,6 +41,17 @@ import type {
 const SERVER_URL =
   import.meta.env["VITE_API_SERVER_URL"] || window.location.origin;
 
+export type SystemLogEvent = {
+  timestamp: string;
+  level: string;
+  message: string;
+  metadata?: Record<string, unknown>;
+};
+
+export function getSystemLogStreamUrl(): string {
+  return `${SERVER_URL}/api/v2/system/logs/stream`;
+}
+
 export async function getReadingTypesAsync(): Promise<
   Record<ReadingType, string>
 > {

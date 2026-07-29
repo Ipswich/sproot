@@ -5,6 +5,7 @@ import { AutomationsTriggeredPayload } from "./automations/AutomationsTriggeredE
 import { CameraSettingsModifiedPayload } from "./camera/CameraSettingsModifiedEvent";
 import { OutputModifiedPayload } from "./outputs/OutputModifiedEvent";
 import { SensorModifiedPayload } from "./sensors/SensorModifiedEvent";
+import { LogEventPayload } from "./logging/LogEvent";
 
 export interface EventMap {
   [Events.AUTOMATIONS_TRIGGERED_EVENT]: AutomationsTriggeredPayload;
@@ -13,4 +14,5 @@ export interface EventMap {
   [Events.SENSOR_MODIFIED_EVENT]: SensorModifiedPayload;
   [Events.OUTPUT_MODIFIED_EVENT]: OutputModifiedPayload;
   [Events.CAMERA_SETTINGS_MODIFIED_EVENT]: CameraSettingsModifiedPayload;
+  [Events.LOG_EVENT]: LogEventPayload;
 }

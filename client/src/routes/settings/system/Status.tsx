@@ -6,10 +6,11 @@ import { Accordion, Group, Table, Title } from "@mantine/core";
 import {
   IconCpu,
   IconDatabase,
+  IconGauge,
   IconLibraryPhoto,
   IconStack,
-  IconGauge,
 } from "@tabler/icons-react";
+import LogStreamWithTerminal from "./LogStreamWithTerminal";
 
 export default function SystemStatus() {
   const systemStatusQuery = useQuery({
@@ -31,7 +32,7 @@ export default function SystemStatus() {
   return (
     <Fragment>
       <Accordion w={"100%"}>
-        <Accordion.Item value="backups">
+        <Accordion.Item value="status">
           <Accordion.Control>
             <Group pl={"xl"}>
               <IconGauge />
@@ -223,6 +224,7 @@ export default function SystemStatus() {
                       </Table>
                     </Accordion.Panel>
                   </Accordion.Item>
+                  <LogStreamWithTerminal />
                 </Accordion>
               )}
             </Group>
