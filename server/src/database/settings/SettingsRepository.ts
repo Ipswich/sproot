@@ -66,7 +66,9 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
   async exists(key: string): Promise<boolean> {
     const result = await this.connection("settings").where("key", key).count("* as count").first();
 
-    return ((result as { count: number })?.count ?? 0) > 0;
+    const count = result?.["count"];
+    if (typeof count === "number") return count > 0;
+    return Number(count ?? 0) > 0;
   }
 
   async delete(key: string): Promise<void> {

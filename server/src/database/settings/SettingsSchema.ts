@@ -29,3 +29,18 @@ export const SETTINGS = {
     "5m_agg_retention": "outputs.5m_agg_retention",
   },
 } as const;
+
+/**
+ * Compile-time assertion that all SETTINGS values are valid SettingsKey members.
+ * If a key is added to SettingsSchema but not to SETTINGS, this line will
+ * produce a TypeScript error, surfacing the mismatch at compile time.
+ */
+type _AllSettingsValuesAreKeys =
+  | (typeof SETTINGS)["sensors"]["raw_retention"]
+  | (typeof SETTINGS)["sensors"]["5m_agg_retention"]
+  | (typeof SETTINGS)["outputs"]["raw_retention"]
+  | (typeof SETTINGS)["outputs"]["5m_agg_retention"];
+
+// Compile-time: every SETTINGS value must be assignable to SettingsKey
+const _assertSettingsValuesAreKeys: _AllSettingsValuesAreKeys extends SettingsKey ? true : never = true;
+void _assertSettingsValuesAreKeys;
