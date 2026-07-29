@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { DI_KEYS } from "../../../utils/DependencyInjectionConstants";
 import { Events } from "../../../eventbus/events/Events";
 import { IEventBus } from "../../../eventbus/IEventBus";
-import { LogStreamService } from "../../../system/LogStreamService";
+import { LogHistoryService } from "../../../system/LogHistoryService";
 
 function safeWrite(res: Response, data: string): void {
   if (res.writableEnded) return;
@@ -10,7 +10,7 @@ function safeWrite(res: Response, data: string): void {
 }
 
 export function logStreamHandler(req: Request, res: Response): void {
-  const logStreamService = req.app.get(DI_KEYS.LogStreamService) as LogStreamService;
+  const logHistoryService = req.app.get(DI_KEYS.LogHistoryService) as LogHistoryService;
   const eventBus = req.app.get(DI_KEYS.EventBus) as IEventBus;
 
   // Set SSE headers
@@ -24,7 +24,7 @@ export function logStreamHandler(req: Request, res: Response): void {
   const historyEventIds = new Set<string>();
 
   // Send history (oldest → newest) as full LogEvent objects
-  const history = logStreamService.getHistory();
+  const history = logHistoryService.getHistory();
   for (const event of history) {
     if (res.writableEnded) return;
     historyEventIds.add(event.eventId);

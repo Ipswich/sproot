@@ -10,7 +10,7 @@ export const DI_KEYS = {
   SystemStatusMonitor: "systemStatusMonitor",
   MdnsService: "mdnsService",
   NotificationActionManager: "notificationActionManager",
-  LogStreamService: "logStreamService",
+  LogHistoryService: "logHistoryService",
 
   // Infrastructure
   KnexConnection: "knexConnection",

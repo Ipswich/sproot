@@ -6,7 +6,7 @@ import * as winston from "winston";
 import "winston-daily-rotate-file";
 
 import { LiveLogTransport } from "./system/LiveLogTransport";
-import { LogStreamService } from "./system/LogStreamService";
+import { IEventBus } from "./eventbus/IEventBus";
 
 const testLogger = winston.createLogger({
   transports: [
@@ -105,7 +105,7 @@ function formatForDebug(info: winston.Logform.TransformableInfo): string {
 
 export function addLogStreamingTransport(
   loggerInstance: winston.Logger,
-  logStreamService: LogStreamService,
+  eventBus: IEventBus,
 ): void {
-  loggerInstance.add(new LiveLogTransport(logStreamService, loggerInstance));
+  loggerInstance.add(new LiveLogTransport(eventBus, loggerInstance));
 }

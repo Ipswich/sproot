@@ -5,14 +5,14 @@ import express, { Express } from "express";
 import winston from "winston";
 import { MemoryEventBus } from "../../../../eventbus/MemoryEventBus";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
-import { LogStreamService } from "../../../../system/LogStreamService";
+import { LogHistoryService } from "../../../../system/LogHistoryService";
 import { LogEvent } from "../../../../eventbus/events/logging/LogEvent";
 import { logStreamHandler } from "../LogStreamHandler";
 import { EventEmitter } from "events";
 
 describe("logStreamHandler", () => {
   let eventBus: MemoryEventBus;
-  let logStreamService: LogStreamService;
+  let logHistoryService: LogHistoryService;
   let logger: winston.Logger;
   let app: Express;
   let mockRes: any;
@@ -32,7 +32,7 @@ describe("logStreamHandler", () => {
     return {
       app: {
         get: (key: string) => {
-          if (key === DI_KEYS.LogStreamService) return logStreamService;
+          if (key === DI_KEYS.LogHistoryService) return logHistoryService;
           if (key === DI_KEYS.EventBus) return eventBus;
           return undefined;
         },
@@ -43,7 +43,7 @@ describe("logStreamHandler", () => {
   beforeEach(() => {
     logger = winston.createLogger({ silent: true });
     eventBus = new MemoryEventBus(logger);
-    logStreamService = new LogStreamService(200, eventBus, logger);
+    logHistoryService = new LogHistoryService(200, eventBus);
     app = express();
   });
 
@@ -73,7 +73,7 @@ describe("logStreamHandler", () => {
     assert.isTrue(mockRes.flushHeaders.calledOnce);
   });
 
-  it("sends history events as SSE data frames", () => {
+  it("sends history events as SSE data frames", async () => {
     createMockResponse();
     const req = createMockRequest(app);
 
@@ -88,8 +88,8 @@ describe("logStreamHandler", () => {
       message: "second",
     });
 
-    logStreamService.publish(event1 as any);
-    logStreamService.publish(event2 as any);
+    await eventBus.publishAsync(event1 as any);
+    await eventBus.publishAsync(event2 as any);
 
     logStreamHandler(req as any, mockRes);
 
@@ -142,7 +142,7 @@ describe("logStreamHandler", () => {
       eventId,
     );
 
-    logStreamService.publish(event as any);
+    await eventBus.publishAsync(event as any);
 
     createMockResponse();
     const req = createMockRequest(app);

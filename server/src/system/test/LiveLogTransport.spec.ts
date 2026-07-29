@@ -2,19 +2,26 @@ import { assert } from "chai";
 import sinon from "sinon";
 import winston from "winston";
 import { LiveLogTransport } from "../LiveLogTransport";
-import { LogStreamService } from "../LogStreamService";
+import { IEventBus } from "../../eventbus/IEventBus";
 import { Events } from "../../eventbus/events/Events";
 
 describe("LiveLogTransport", () => {
-  let streamServiceMock: sinon.SinonStubbedInstance<LogStreamService>;
+  let eventBusMock: sinon.SinonStubbedInstance<IEventBus>;
   let logger: winston.Logger;
   let transport: LiveLogTransport;
 
   beforeEach(() => {
-    streamServiceMock = sinon.createStubInstance(LogStreamService);
+    eventBusMock = {
+      publishAsync: sinon.stub().resolves(),
+      subscribe: sinon.stub().returns(() => {}),
+    } as unknown as sinon.SinonStubbedInstance<IEventBus>;
     logger = winston.createLogger({ silent: true });
-    transport = new LiveLogTransport(streamServiceMock, logger);
+    transport = new LiveLogTransport(eventBusMock, logger);
   });
+
+  function getPublishedEvent(): any {
+    return eventBusMock.publishAsync.firstCall.args[0];
+  }
 
   it("publishes one event per Winston log call", (done) => {
     const info = {
@@ -24,8 +31,8 @@ describe("LiveLogTransport", () => {
     };
 
     transport.log(info, () => {
-      assert.isTrue(streamServiceMock.publish.calledOnce);
-      const event = streamServiceMock.publish.firstCall.args[0];
+      assert.isTrue(eventBusMock.publishAsync.calledOnce);
+      const event = getPublishedEvent();
       assert.strictEqual(event.type, Events.LOG_EVENT);
       assert.strictEqual(event.payload.message, "test message");
       done();
@@ -40,7 +47,7 @@ describe("LiveLogTransport", () => {
     };
 
     transport.log(info, () => {
-      const event = streamServiceMock.publish.firstCall.args[0];
+      const event = getPublishedEvent();
       assert.strictEqual(event.payload.timestamp, "2024-06-01T12:00:00.000Z");
       done();
     });
@@ -54,7 +61,7 @@ describe("LiveLogTransport", () => {
     };
 
     transport.log(info, () => {
-      const event = streamServiceMock.publish.firstCall.args[0];
+      const event = getPublishedEvent();
       assert.strictEqual(event.payload.level, "error");
       done();
     });
@@ -68,7 +75,7 @@ describe("LiveLogTransport", () => {
     };
 
     transport.log(info, () => {
-      const event = streamServiceMock.publish.firstCall.args[0];
+      const event = getPublishedEvent();
       assert.strictEqual(event.payload.message, "debug message with %s and %d args");
       done();
     });
@@ -85,7 +92,7 @@ describe("LiveLogTransport", () => {
     };
 
     transport.log(info, () => {
-      const event = streamServiceMock.publish.firstCall.args[0];
+      const event = getPublishedEvent();
       assert.deepEqual(event.payload.metadata, {
         userId: 42,
         ip: "192.168.1.1",
@@ -110,7 +117,7 @@ describe("LiveLogTransport", () => {
     };
 
     transport.log(info, () => {
-      const event = streamServiceMock.publish.firstCall.args[0];
+      const event = getPublishedEvent();
       assert.deepEqual(event.payload.metadata, {
         customKey: "should-appear",
       });
@@ -126,25 +133,24 @@ describe("LiveLogTransport", () => {
     };
 
     transport.log(info, () => {
-      const event = streamServiceMock.publish.firstCall.args[0];
+      const event = getPublishedEvent();
       assert.isUndefined(event.payload.metadata);
       done();
     });
   });
 
-  it("never throws when LogStreamService.publish throws", (done) => {
-    streamServiceMock.publish.throws(new Error("boom"));
+  it("never throws when event bus publish throws", (done) => {
+    eventBusMock.publishAsync.rejects(new Error("bus error"));
     const info = { level: "info", message: "test", timestamp: "now" };
 
-    // Should not throw
     transport.log(info, () => {
-      assert.isTrue(streamServiceMock.publish.calledOnce);
+      assert.isTrue(eventBusMock.publishAsync.calledOnce);
       done();
     });
   });
 
   it("always invokes callback even on error", (done) => {
-    streamServiceMock.publish.throws(new Error("boom"));
+    eventBusMock.publishAsync.rejects(new Error("bus error"));
     const info = { level: "info", message: "test", timestamp: "now" };
     let callbackInvoked = false;
 
@@ -157,5 +163,20 @@ describe("LiveLogTransport", () => {
       assert.isTrue(callbackInvoked, "Callback should always be invoked");
       done();
     }, 50);
+  });
+
+  it("publishes event with correct type to event bus", (done) => {
+    const info = {
+      level: "info",
+      message: "test",
+      timestamp: "2024-01-15T10:30:00.000Z",
+    };
+
+    transport.log(info, () => {
+      assert.isTrue(eventBusMock.publishAsync.calledOnce);
+      const publishedEvent = getPublishedEvent();
+      assert.strictEqual(publishedEvent.type, Events.LOG_EVENT);
+      done();
+    });
   });
 });

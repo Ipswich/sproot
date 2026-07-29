@@ -1,6 +1,7 @@
 import TransportStream from "winston-transport";
 import winston from "winston";
-import { LogStreamService } from "./LogStreamService";
+import { IEventBus, SprootEvent } from "../eventbus/IEventBus";
+import { Events } from "../eventbus/events/Events";
 import { LogEvent } from "../eventbus/events/logging/LogEvent";
 
 const RESERVED_KEYS = new Set([
@@ -16,12 +17,12 @@ const RESERVED_KEYS = new Set([
 ]);
 
 export class LiveLogTransport extends TransportStream {
-  #streamService: LogStreamService;
+  #eventBus: IEventBus;
   #logger: winston.Logger;
 
-  constructor(streamService: LogStreamService, logger: winston.Logger) {
+  constructor(eventBus: IEventBus, logger: winston.Logger) {
     super();
-    this.#streamService = streamService;
+    this.#eventBus = eventBus;
     this.#logger = logger;
   }
 
@@ -50,7 +51,12 @@ export class LiveLogTransport extends TransportStream {
       };
 
       const event = new LogEvent(payload);
-      this.#streamService.publish(event as Parameters<LogStreamService["publish"]>[0]);
+
+      try {
+        void this.#eventBus.publishAsync(event as SprootEvent<typeof Events.LOG_EVENT>);
+      } catch (err) {
+        this.#logger.error(`LiveLogTransport eventBus publish failed: ${err}`);
+      }
     } catch (err) {
       this.#logger.error(`LiveLogTransport error: ${err}`);
     } finally {
