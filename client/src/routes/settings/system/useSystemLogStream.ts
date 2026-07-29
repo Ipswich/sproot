@@ -7,7 +7,10 @@ import {
 const MAX_LOG_ENTRIES = 200;
 
 export type LogConnectionState =
-  "disconnected" | "connecting" | "connected" | "reconnecting";
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "reconnecting";
 
 export function stripAnsiEscapeCodes(value: string) {
   let sanitizedValue = "";
