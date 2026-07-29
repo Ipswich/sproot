@@ -56,6 +56,7 @@
     "typescript": "^5.5.3"
   },
   "dependencies": {
+    "@sproot/common": "file:../common",
     "bcrypt": "^6.0.0",
     "bme280": "github:jhoffi/bme280-typings",
     "bonjour-service": "^1.3.0",
