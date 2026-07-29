@@ -373,12 +373,7 @@ export async function addAsync(
 
   const automationId = parseInt(request.params["automationId"] ?? "");
   const conditionType = request.params["type"] as
-    | "sensor"
-    | "output"
-    | "time"
-    | "weekday"
-    | "month"
-    | "date-range";
+    "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
 
   const invalidDetails = [];
   if (isNaN(automationId)) {
@@ -1038,12 +1033,7 @@ export async function deleteAsync(
   const automationId = parseInt(request.params["automationId"] ?? "");
   const conditionId = parseInt(request.params["conditionId"] ?? "");
   const conditionType = request.params["type"] as
-    | "sensor"
-    | "output"
-    | "time"
-    | "weekday"
-    | "month"
-    | "date-range";
+    "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
 
   const invalidDetails = [];
   if (isNaN(automationId)) {
