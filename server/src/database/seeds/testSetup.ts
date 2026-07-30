@@ -229,51 +229,39 @@ export async function seed(knex: Knex): Promise<void> {
     },
   ]);
 
-  // Data-query test rows: sensor and output data in 2024-01-01 window for existing tests
-  const dataQueryStart = "2024-01-01 00:05:00";
-  const dataQueryEnd = "2024-01-01 23:55:00";
+  // Data-query test rows: sensor and output data in a 3-day window relative to now
+  const dataQueryEnd = toDbDate();
+  const dayStart = toDbDate(new Date(Date.now() - 3 * 24 * 60 * 60 * 1000));
+  const dayStartNoon = toDbDate(
+    new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 12 * 60 * 60 * 1000),
+  );
+  const dayStartEvening = toDbDate(
+    new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 18 * 60 * 60 * 1000),
+  );
+  const dayStartLate = toDbDate(
+    new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 20 * 60 * 60 * 1000),
+  );
+  const dayStartLate2 = toDbDate(
+    new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 22 * 60 * 60 * 1000),
+  );
 
   await knex("sensor_data").insert([
-    { sensor_id: 1, metric: "temperature", data: 22.5, units: "°C", logTime: dataQueryStart },
-    { sensor_id: 1, metric: "humidity", data: 50.0, units: "%", logTime: dataQueryStart },
-    { sensor_id: 2, metric: "temperature", data: 21.0, units: "°C", logTime: dataQueryStart },
+    { sensor_id: 1, metric: "temperature", data: 22.5, units: "°C", logTime: dayStart },
+    { sensor_id: 1, metric: "humidity", data: 50.0, units: "%", logTime: dayStart },
+    { sensor_id: 2, metric: "temperature", data: 21.0, units: "°C", logTime: dayStart },
     { sensor_id: 1, metric: "temperature", data: 23.0, units: "°C", logTime: dataQueryEnd },
-    {
-      sensor_id: 1,
-      metric: "temperature",
-      data: 23.5,
-      units: "°C",
-      logTime: "2024-01-01 12:00:00",
-    },
-    {
-      sensor_id: 1,
-      metric: "temperature",
-      data: 24.0,
-      units: "°C",
-      logTime: "2024-01-01 18:00:00",
-    },
-    {
-      sensor_id: 1,
-      metric: "temperature",
-      data: 24.5,
-      units: "°C",
-      logTime: "2024-01-01 20:00:00",
-    },
-    {
-      sensor_id: 1,
-      metric: "temperature",
-      data: 25.0,
-      units: "°C",
-      logTime: "2024-01-01 22:00:00",
-    },
+    { sensor_id: 1, metric: "temperature", data: 23.5, units: "°C", logTime: dayStartNoon },
+    { sensor_id: 1, metric: "temperature", data: 24.0, units: "°C", logTime: dayStartEvening },
+    { sensor_id: 1, metric: "temperature", data: 24.5, units: "°C", logTime: dayStartLate },
+    { sensor_id: 1, metric: "temperature", data: 25.0, units: "°C", logTime: dayStartLate2 },
   ]);
 
   await knex("output_data").insert([
-    { output_id: 1, value: 100, controlMode: "manual", logTime: dataQueryStart },
+    { output_id: 1, value: 100, controlMode: "manual", logTime: dayStart },
     { output_id: 1, value: 75, controlMode: "manual", logTime: dataQueryEnd },
-    { output_id: 1, value: 50, controlMode: "manual", logTime: "2024-01-01 12:00:00" },
-    { output_id: 1, value: 25, controlMode: "manual", logTime: "2024-01-01 18:00:00" },
-    { output_id: 5, value: 50, controlMode: "manual", logTime: dataQueryStart },
+    { output_id: 1, value: 50, controlMode: "manual", logTime: dayStartNoon },
+    { output_id: 1, value: 25, controlMode: "manual", logTime: dayStartEvening },
+    { output_id: 5, value: 50, controlMode: "manual", logTime: dayStart },
   ]);
 
   // Data-query test rows: sensor data at 10/8/5 min ago for aggregate path tests
@@ -444,6 +432,7 @@ export async function generateDataQuerySeedData(
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minutes = [0, 20, 40];
   const days = [1, 2, 3];
+  const baseDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
 
   const sensorBatch: Array<{
     sensor_id: number;
@@ -463,7 +452,9 @@ export async function generateDataQuerySeedData(
     for (const hour of hours) {
       for (const minute of minutes) {
         const minuteOffset = minutes.indexOf(minute);
-        const isoDate = new Date(Date.UTC(2024, 0, day, hour, minute)).toISOString();
+        const isoDate = new Date(
+          baseDate.getTime() + day * 86400000 + hour * 3600000 + minute * 60000,
+        ).toISOString();
 
         for (const sensorId of sensorIds) {
           const types = sensorReadingTypes[sensorId]!;
