@@ -39,10 +39,12 @@ describe("RetentionService", () => {
   });
 
   describe("reconcileAsync", () => {
+    const reconcileMethodName = "reconcileAsync";
+
     it("applies retention policy for a valid sensor setting", async () => {
       repo.getAsync.resolves("30 days");
 
-      await service.reconcileAsync("sensors.raw_retention");
+      await service[reconcileMethodName]("sensors.raw_retention");
 
       assert.isTrue(knex.raw.calledTwice);
       const firstCall = knex.raw.firstCall.args[0];
@@ -57,23 +59,24 @@ describe("RetentionService", () => {
     it("applies retention policy for a continuous aggregate", async () => {
       repo.getAsync.resolves("7 days");
 
-      await service.reconcileAsync("sensors.5m_agg_retention");
+      await service[reconcileMethodName]("sensors.5m_agg_retention");
 
       const addCall = knex.raw.secondCall.args[0];
       assert.include(addCall, "sensor_data_5m");
       assert.include(addCall, "INTERVAL '7 days'");
     });
 
-    it("skips policy application when value is empty string", async () => {
+    it("removes retention policy when value is empty string", async () => {
       repo.getAsync.resolves("");
 
-      await service.reconcileAsync("sensors.raw_retention");
+      await service[reconcileMethodName]("sensors.raw_retention");
 
-      assert.isTrue(knex.raw.notCalled);
+      assert.isTrue(knex.raw.calledOnce);
+      assert.include(knex.raw.firstCall.args[0], "remove_retention_policy");
     });
 
     it("skips reconciliation for unknown setting keys", async () => {
-      await service.reconcileAsync("unknown.setting.key");
+      await service[reconcileMethodName]("unknown.setting.key");
 
       assert.isTrue(knex.raw.notCalled);
     });
@@ -82,26 +85,26 @@ describe("RetentionService", () => {
       const warnStub = sinon.stub(logger, "warn");
       repo.getAsync.resolves("not a valid duration");
 
-      await service.reconcileAsync("sensors.raw_retention");
+      await service[reconcileMethodName]("sensors.raw_retention");
 
       assert.isTrue(warnStub.calledOnce);
       assert.isTrue(knex.raw.notCalled);
     });
 
-    it("handles null setting values as empty string", async () => {
+    it("removes retention policy when setting value is null", async () => {
       repo.getAsync.resolves(null as unknown as string);
 
-      await service.reconcileAsync("sensors.raw_retention");
+      await service[reconcileMethodName]("sensors.raw_retention");
 
-      assert.isTrue(knex.raw.notCalled);
+      assert.isTrue(knex.raw.calledOnce);
+      assert.include(knex.raw.firstCall.args[0], "remove_retention_policy");
     });
   });
 
   describe("reconcileAllAsync", () => {
     it("reconciles all registered settings", async () => {
       repo.getAsync.resolves("30 days");
-      const reconcileMethodName = "reconcileAsync";
-      const spy = sinon.spy(service, reconcileMethodName);
+      const spy = sinon.spy(service, "reconcileAsync");
 
       await service.reconcileAllAsync();
 
@@ -128,8 +131,7 @@ describe("RetentionService", () => {
   describe("event subscription", () => {
     it("reconciles on sensor.retention.updated events", async () => {
       repo.getAsync.resolves("60 days");
-      const reconcileMethodName = "reconcileAsync";
-      const reconcileSpy = sinon.spy(service, reconcileMethodName);
+      const reconcileSpy = sinon.spy(service, "reconcileAsync");
 
       const event = {
         type: Events.SENSOR_RETENTION_UPDATED,
@@ -145,8 +147,7 @@ describe("RetentionService", () => {
 
     it("reconciles on output.retention.updated events", async () => {
       repo.getAsync.resolves("90 days");
-      const reconcileMethodName = "reconcileAsync";
-      const reconcileSpy = sinon.spy(service, reconcileMethodName);
+      const reconcileSpy = sinon.spy(service, "reconcileAsync");
 
       const event = {
         type: Events.OUTPUT_RETENTION_UPDATED,
@@ -162,8 +163,7 @@ describe("RetentionService", () => {
 
     it("does not reconcile on backup.retention.updated events", async () => {
       repo.getAsync.resolves("30 days");
-      const reconcileMethodName = "reconcileAsync";
-      const reconcileSpy = sinon.spy(service, reconcileMethodName);
+      const reconcileSpy = sinon.spy(service, "reconcileAsync");
 
       const event = {
         type: Events.BACKUP_RETENTION_UPDATED,
@@ -181,8 +181,7 @@ describe("RetentionService", () => {
   describe("Symbol.dispose", () => {
     it("unsubscribes from event bus", async () => {
       repo.getAsync.resolves("30 days");
-      const reconcileMethodName = "reconcileAsync";
-      const reconcileSpy = sinon.stub(service, reconcileMethodName).resolves();
+      const reconcileSpy = sinon.stub(service, "reconcileAsync").resolves();
 
       service[Symbol.dispose]();
 

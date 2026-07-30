@@ -73,6 +73,11 @@ export class RetentionService {
     const value = await this.#repo.getAsync(settingKey as SettingsKey);
     const stringValue = typeof value === "string" ? value : "";
 
+    if (!stringValue.trim()) {
+      await this.#removeRetentionPolicy(target.table);
+      return;
+    }
+
     const duration = this.#parseDuration(stringValue);
     if (duration === null) {
       this.#logger.warn(
@@ -112,6 +117,12 @@ export class RetentionService {
     if (amount <= 0 || !VALID_DURATION_UNITS.has(unit)) return null;
 
     return `${amount} ${unit}`;
+  }
+
+  async #removeRetentionPolicy(tableName: string): Promise<void> {
+    await this.#knex.raw(`SELECT remove_retention_policy('${tableName}')`).catch(() => {
+      // Policy may not exist; ignore
+    });
   }
 
   async #applyRetentionPolicy(tableName: string, duration: string): Promise<void> {
