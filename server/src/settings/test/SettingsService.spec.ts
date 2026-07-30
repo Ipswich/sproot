@@ -4,10 +4,14 @@ import sinon from "sinon";
 import { SettingsService } from "../SettingsService";
 import { ISettingsRepository } from "../../database/settings/ISettingsRepository";
 import { SETTINGS } from "../../database/settings/SettingsSchema";
+import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
+import { Events } from "../../eventbus/events/Events";
+import winston from "winston";
 
 describe("SettingsService", () => {
   let repoStub: sinon.SinonStubbedInstance<ISettingsRepository>;
   let service: SettingsService;
+  let eventBus: MemoryEventBus;
 
   let mockRepo: ISettingsRepository;
 
@@ -26,7 +30,8 @@ describe("SettingsService", () => {
       deleteAsync: sinon.stub().resolves(),
       syncDefaultsAsync: sinon.stub().resolves(),
     };
-    service = new SettingsService(mockRepo);
+    eventBus = new MemoryEventBus(winston.createLogger({ silent: true }));
+    service = new SettingsService(mockRepo, eventBus);
     repoStub = mockRepo as unknown as sinon.SinonStubbedInstance<ISettingsRepository>;
   });
 
@@ -81,6 +86,68 @@ describe("SettingsService", () => {
     it("should delegate to repo.syncDefaultsAsync", async () => {
       await service.syncDefaultsAsync();
       assert.isTrue(repoStub.syncDefaultsAsync.calledOnce);
+    });
+  });
+
+  describe("setAsync event publishing", () => {
+    it("publishes sensor.retention.updated for sensors.* settings", async () => {
+      const handler = sinon.stub().resolves();
+      eventBus.subscribe(Events.SENSOR_RETENTION_UPDATED, handler);
+
+      await service.setAsync(SETTINGS.sensors.raw_retention, "30 days");
+
+      assert.isTrue(repoStub.setAsync.calledOnceWith(SETTINGS.sensors.raw_retention, "30 days"));
+      assert.isTrue(handler.calledOnce);
+      assert.strictEqual(handler.firstCall.args[0].type, Events.SENSOR_RETENTION_UPDATED);
+      assert.strictEqual(handler.firstCall.args[0].payload.key, SETTINGS.sensors.raw_retention);
+      assert.strictEqual(handler.firstCall.args[0].payload.value, "30 days");
+    });
+
+    it("publishes output.retention.updated for outputs.* settings", async () => {
+      const handler = sinon.stub().resolves();
+      eventBus.subscribe(Events.OUTPUT_RETENTION_UPDATED, handler);
+
+      await service.setAsync(SETTINGS.outputs.raw_retention, "60 days");
+
+      assert.isTrue(handler.calledOnce);
+      assert.strictEqual(handler.firstCall.args[0].type, Events.OUTPUT_RETENTION_UPDATED);
+      assert.strictEqual(handler.firstCall.args[0].payload.key, SETTINGS.outputs.raw_retention);
+    });
+
+    it("publishes backup.retention.updated for system.* settings", async () => {
+      const handler = sinon.stub().resolves();
+      eventBus.subscribe(Events.BACKUP_RETENTION_UPDATED, handler);
+
+      await service.setAsync(SETTINGS.system.backup_retention, "30 days");
+
+      assert.isTrue(handler.calledOnce);
+      assert.strictEqual(handler.firstCall.args[0].type, Events.BACKUP_RETENTION_UPDATED);
+      assert.strictEqual(handler.firstCall.args[0].payload.key, SETTINGS.system.backup_retention);
+    });
+
+    it("does not publish events when eventBus is not provided", async () => {
+      const serviceWithoutBus = new SettingsService(mockRepo);
+      const handler = sinon.stub().resolves();
+      const trackingBus = new MemoryEventBus(winston.createLogger({ silent: true }));
+      trackingBus.subscribe(Events.SENSOR_RETENTION_UPDATED, handler);
+
+      await serviceWithoutBus.setAsync(SETTINGS.sensors.raw_retention, "30 days");
+
+      assert.isTrue(handler.notCalled);
+    });
+
+    it("publishes after repo.setAsync succeeds", async () => {
+      let repoCalled = false;
+      (mockRepo.setAsync as sinon.SinonStub).callsFake(async () => {
+        repoCalled = true;
+      });
+      const handler = sinon.stub().resolves();
+      eventBus.subscribe(Events.SENSOR_RETENTION_UPDATED, handler);
+
+      await service.setAsync(SETTINGS.sensors.raw_retention, "30 days");
+
+      assert.isTrue(repoCalled);
+      assert.isTrue(handler.calledOnce);
     });
   });
 });

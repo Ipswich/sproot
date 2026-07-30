@@ -1,8 +1,26 @@
+import { AnySprootEvent, IEventBus } from "../eventbus/IEventBus";
+import { EventMap } from "../eventbus/events/EventMap";
+import { Events } from "../eventbus/events/Events";
 import { ISettingsRepository } from "../database/settings/ISettingsRepository";
 import type { SettingsKey, SettingsSchema } from "../database/settings/SettingsSchema";
 
 export class SettingsService {
-  constructor(private repo: ISettingsRepository) {}
+  readonly #settingEventMap: Record<SettingsKey, keyof EventMap | undefined> = {
+    "sensors.raw_retention": Events.SENSOR_RETENTION_UPDATED,
+    "sensors.5m_agg_retention": Events.SENSOR_RETENTION_UPDATED,
+    "sensors.1h_agg_retention": Events.SENSOR_RETENTION_UPDATED,
+    "sensors.1d_agg_retention": Events.SENSOR_RETENTION_UPDATED,
+    "outputs.raw_retention": Events.OUTPUT_RETENTION_UPDATED,
+    "outputs.5m_agg_retention": Events.OUTPUT_RETENTION_UPDATED,
+    "outputs.1h_agg_retention": Events.OUTPUT_RETENTION_UPDATED,
+    "outputs.1d_agg_retention": Events.OUTPUT_RETENTION_UPDATED,
+    "system.backup_retention": Events.BACKUP_RETENTION_UPDATED,
+  };
+
+  constructor(
+    private repo: ISettingsRepository,
+    private eventBus?: IEventBus,
+  ) {}
 
   getAllAsync(): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>> {
     return this.repo.getAllAsync();
@@ -18,8 +36,17 @@ export class SettingsService {
     return this.repo.getManyAsync(keys);
   }
 
-  setAsync<K extends SettingsKey>(key: K, value: SettingsSchema[K]): Promise<void> {
-    return this.repo.setAsync(key, value);
+  async setAsync<K extends SettingsKey>(key: K, value: SettingsSchema[K]): Promise<void> {
+    await this.repo.setAsync(key, value);
+    const eventType = this.#settingEventMap[key];
+    if (eventType && this.eventBus) {
+      await this.eventBus.publishAsync({
+        type: eventType,
+        payload: { key: key as string, value: value as string },
+        eventId: crypto.randomUUID(),
+        occurredAt: new Date(),
+      } as AnySprootEvent);
+    }
   }
 
   existsAsync(key: string): Promise<boolean> {
