@@ -6,14 +6,8 @@ import type { SettingsKey, SettingsSchema } from "../database/settings/SettingsS
 
 export class SettingsService {
   readonly #settingEventMap: Record<SettingsKey, keyof EventMap | undefined> = {
-    "sensors.raw_retention": Events.SENSOR_RETENTION_UPDATED,
-    "sensors.5m_agg_retention": Events.SENSOR_RETENTION_UPDATED,
-    "sensors.1h_agg_retention": Events.SENSOR_RETENTION_UPDATED,
-    "sensors.1d_agg_retention": Events.SENSOR_RETENTION_UPDATED,
-    "outputs.raw_retention": Events.OUTPUT_RETENTION_UPDATED,
-    "outputs.5m_agg_retention": Events.OUTPUT_RETENTION_UPDATED,
-    "outputs.1h_agg_retention": Events.OUTPUT_RETENTION_UPDATED,
-    "outputs.1d_agg_retention": Events.OUTPUT_RETENTION_UPDATED,
+    "sensors.data_retention": Events.SENSOR_RETENTION_UPDATED,
+    "outputs.data_retention": Events.OUTPUT_RETENTION_UPDATED,
     "system.backup_retention": Events.BACKUP_RETENTION_UPDATED,
   };
 

@@ -18,10 +18,9 @@ describe("SettingsService", () => {
   beforeEach(() => {
     mockRepo = {
       getAllAsync: sinon.stub().resolves({
-        [SETTINGS.sensors.raw_retention]: undefined,
-        [SETTINGS.outputs.raw_retention]: undefined,
-        [SETTINGS.sensors["5m_agg_retention"]]: undefined,
-        [SETTINGS.outputs["5m_agg_retention"]]: undefined,
+        [SETTINGS.sensors.data_retention]: undefined,
+        [SETTINGS.outputs.data_retention]: undefined,
+        [SETTINGS.system.backup_retention]: undefined,
       }),
       getAsync: sinon.stub().callsFake(async (_key) => undefined),
       getManyAsync: sinon.stub().resolves({}),
@@ -48,14 +47,14 @@ describe("SettingsService", () => {
 
   describe("getAsync", () => {
     it("should delegate to repo.getAsync with the provided key", async () => {
-      await service.getAsync(SETTINGS.sensors.raw_retention);
-      assert.isTrue(repoStub.getAsync.calledOnceWith(SETTINGS.sensors.raw_retention));
+      await service.getAsync(SETTINGS.sensors.data_retention);
+      assert.isTrue(repoStub.getAsync.calledOnceWith(SETTINGS.sensors.data_retention));
     });
   });
 
   describe("getManyAsync", () => {
     it("should delegate to repo.getManyAsync with the provided keys", async () => {
-      const keys = [SETTINGS.sensors.raw_retention, SETTINGS.outputs.raw_retention];
+      const keys = [SETTINGS.sensors.data_retention, SETTINGS.outputs.data_retention];
       await service.getManyAsync(keys);
       assert.isTrue(repoStub.getManyAsync.calledOnceWith(keys));
     });
@@ -63,8 +62,8 @@ describe("SettingsService", () => {
 
   describe("setAsync", () => {
     it("should delegate to repo.setAsync with the provided key and value", async () => {
-      await service.setAsync(SETTINGS.sensors.raw_retention, "30 days");
-      assert.isTrue(repoStub.setAsync.calledOnceWith(SETTINGS.sensors.raw_retention, "30 days"));
+      await service.setAsync(SETTINGS.sensors.data_retention, "30 days");
+      assert.isTrue(repoStub.setAsync.calledOnceWith(SETTINGS.sensors.data_retention, "30 days"));
     });
   });
 
@@ -90,31 +89,31 @@ describe("SettingsService", () => {
   });
 
   describe("setAsync event publishing", () => {
-    it("publishes sensor.retention.updated for sensors.* settings", async () => {
+    it("publishes sensor.retention.updated for sensors.data_retention", async () => {
       const handler = sinon.stub().resolves();
       eventBus.subscribe(Events.SENSOR_RETENTION_UPDATED, handler);
 
-      await service.setAsync(SETTINGS.sensors.raw_retention, "30 days");
+      await service.setAsync(SETTINGS.sensors.data_retention, "30 days");
 
-      assert.isTrue(repoStub.setAsync.calledOnceWith(SETTINGS.sensors.raw_retention, "30 days"));
+      assert.isTrue(repoStub.setAsync.calledOnceWith(SETTINGS.sensors.data_retention, "30 days"));
       assert.isTrue(handler.calledOnce);
       assert.strictEqual(handler.firstCall.args[0].type, Events.SENSOR_RETENTION_UPDATED);
-      assert.strictEqual(handler.firstCall.args[0].payload.key, SETTINGS.sensors.raw_retention);
+      assert.strictEqual(handler.firstCall.args[0].payload.key, SETTINGS.sensors.data_retention);
       assert.strictEqual(handler.firstCall.args[0].payload.value, "30 days");
     });
 
-    it("publishes output.retention.updated for outputs.* settings", async () => {
+    it("publishes output.retention.updated for outputs.data_retention", async () => {
       const handler = sinon.stub().resolves();
       eventBus.subscribe(Events.OUTPUT_RETENTION_UPDATED, handler);
 
-      await service.setAsync(SETTINGS.outputs.raw_retention, "60 days");
+      await service.setAsync(SETTINGS.outputs.data_retention, "60 days");
 
       assert.isTrue(handler.calledOnce);
       assert.strictEqual(handler.firstCall.args[0].type, Events.OUTPUT_RETENTION_UPDATED);
-      assert.strictEqual(handler.firstCall.args[0].payload.key, SETTINGS.outputs.raw_retention);
+      assert.strictEqual(handler.firstCall.args[0].payload.key, SETTINGS.outputs.data_retention);
     });
 
-    it("publishes backup.retention.updated for system.* settings", async () => {
+    it("publishes backup.retention.updated for system.backup_retention", async () => {
       const handler = sinon.stub().resolves();
       eventBus.subscribe(Events.BACKUP_RETENTION_UPDATED, handler);
 
@@ -133,7 +132,7 @@ describe("SettingsService", () => {
       const handler = sinon.stub().resolves();
       eventBus.subscribe(Events.SENSOR_RETENTION_UPDATED, handler);
 
-      await service.setAsync(SETTINGS.sensors.raw_retention, "30 days");
+      await service.setAsync(SETTINGS.sensors.data_retention, "30 days");
 
       assert.isTrue(repoCalled);
       assert.isTrue(handler.calledOnce);

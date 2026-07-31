@@ -11,16 +11,19 @@ interface RetentionTarget {
   type: "hypertable" | "continuous_aggregate";
 }
 
-const RETENTION_REGISTRY: Readonly<Record<string, RetentionTarget>> = {
-  "sensors.raw_retention": { table: "sensor_data", type: "hypertable" },
-  "outputs.raw_retention": { table: "output_data", type: "hypertable" },
-  "sensors.5m_agg_retention": { table: "sensor_data_5m", type: "continuous_aggregate" },
-  "sensors.1h_agg_retention": { table: "sensor_data_1h", type: "continuous_aggregate" },
-  "sensors.1d_agg_retention": { table: "sensor_data_1d", type: "continuous_aggregate" },
-  "outputs.5m_agg_retention": { table: "output_data_5m", type: "continuous_aggregate" },
-  "outputs.1h_agg_retention": { table: "output_data_1h", type: "continuous_aggregate" },
-  "outputs.1d_agg_retention": { table: "output_data_1d", type: "continuous_aggregate" },
-} as const;
+const SENSOR_TARGETS: Readonly<RetentionTarget[]> = [
+  { table: "sensor_data", type: "hypertable" },
+  { table: "sensor_data_5m", type: "continuous_aggregate" },
+  { table: "sensor_data_1h", type: "continuous_aggregate" },
+  { table: "sensor_data_1d", type: "continuous_aggregate" },
+];
+
+const OUTPUT_TARGETS: Readonly<RetentionTarget[]> = [
+  { table: "output_data", type: "hypertable" },
+  { table: "output_data_5m", type: "continuous_aggregate" },
+  { table: "output_data_1h", type: "continuous_aggregate" },
+  { table: "output_data_1d", type: "continuous_aggregate" },
+];
 
 export class RetentionService {
   readonly #logger: winston.Logger;
@@ -44,9 +47,9 @@ export class RetentionService {
   }
 
   async reconcileAsync(settingKey: string): Promise<void> {
-    const target = RETENTION_REGISTRY[settingKey];
-    if (!target) {
-      this.#logger.debug(`No retention target registered for setting: ${settingKey}`);
+    const targets = RETENTION_REGISTRY[settingKey];
+    if (!targets) {
+      this.#logger.debug(`No retention targets registered for setting: ${settingKey}`);
       return;
     }
 
@@ -54,7 +57,7 @@ export class RetentionService {
     const stringValue = typeof value === "string" ? value : "";
 
     if (!stringValue.trim()) {
-      await this.#removeRetentionPolicy(target.table);
+      await this.#removeRetentionPolicyForTargets(targets);
       return;
     }
 
@@ -66,7 +69,7 @@ export class RetentionService {
       return;
     }
 
-    await this.#applyRetentionPolicy(target.table, duration);
+    await this.#applyRetentionPolicyForTargets(targets, duration);
   }
 
   async reconcileAllAsync(): Promise<void> {
@@ -97,19 +100,31 @@ export class RetentionService {
     return `${match[1]} ${match[2]}`;
   }
 
-  async #removeRetentionPolicy(tableName: string): Promise<void> {
-    await this.#knex.raw(`SELECT remove_retention_policy('${tableName}')`).catch(() => {
-      // Policy may not exist; ignore
-    });
+  async #removeRetentionPolicyForTargets(targets: readonly RetentionTarget[]): Promise<void> {
+    for (const target of targets) {
+      await this.#knex.raw(`SELECT remove_retention_policy('${target.table}')`).catch(() => {
+        // Policy may not exist; ignore
+      });
+    }
   }
 
-  async #applyRetentionPolicy(tableName: string, duration: string): Promise<void> {
-    await this.#knex.raw(`SELECT remove_retention_policy('${tableName}')`).catch(() => {
-      // Policy may not exist; ignore
-    });
+  async #applyRetentionPolicyForTargets(
+    targets: readonly RetentionTarget[],
+    duration: string,
+  ): Promise<void> {
+    for (const target of targets) {
+      await this.#knex.raw(`SELECT remove_retention_policy('${target.table}')`).catch(() => {
+        // Policy may not exist; ignore
+      });
 
-    await this.#knex.raw(
-      `SELECT add_retention_policy('${tableName}', drop_after => INTERVAL '${duration}')`,
-    );
+      await this.#knex.raw(
+        `SELECT add_retention_policy('${target.table}', drop_after => INTERVAL '${duration}')`,
+      );
+    }
   }
 }
+
+const RETENTION_REGISTRY: Readonly<Record<string, readonly RetentionTarget[] | undefined>> = {
+  "sensors.data_retention": SENSOR_TARGETS,
+  "outputs.data_retention": OUTPUT_TARGETS,
+};

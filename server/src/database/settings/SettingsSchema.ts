@@ -4,14 +4,8 @@
  * compile-time type safety for known settings.
  */
 export interface SettingsSchema {
-  "sensors.raw_retention": string;
-  "outputs.raw_retention": string;
-  "sensors.5m_agg_retention": string;
-  "outputs.5m_agg_retention": string;
-  "sensors.1h_agg_retention": string;
-  "sensors.1d_agg_retention": string;
-  "outputs.1h_agg_retention": string;
-  "outputs.1d_agg_retention": string;
+  "sensors.data_retention": string;
+  "outputs.data_retention": string;
   "system.backup_retention": string;
 }
 
@@ -22,20 +16,14 @@ export type SettingsKey = keyof SettingsSchema;
  * Namespaced constants for all known setting keys.
  * Use these instead of string literals to avoid magic strings.
  *
- * Example: SETTINGS.sensors.raw_retention
+ * Example: SETTINGS.sensors.data_retention
  */
 export const SETTINGS = {
   sensors: {
-    raw_retention: "sensors.raw_retention",
-    "5m_agg_retention": "sensors.5m_agg_retention",
-    "1h_agg_retention": "sensors.1h_agg_retention",
-    "1d_agg_retention": "sensors.1d_agg_retention",
+    data_retention: "sensors.data_retention",
   },
   outputs: {
-    raw_retention: "outputs.raw_retention",
-    "5m_agg_retention": "outputs.5m_agg_retention",
-    "1h_agg_retention": "outputs.1h_agg_retention",
-    "1d_agg_retention": "outputs.1d_agg_retention",
+    data_retention: "outputs.data_retention",
   },
   system: {
     backup_retention: "system.backup_retention",
@@ -48,14 +36,8 @@ export const SETTINGS = {
  * produce a TypeScript error, surfacing the mismatch at compile time.
  */
 type _AllSettingsValuesAreKeys =
-  | (typeof SETTINGS)["sensors"]["raw_retention"]
-  | (typeof SETTINGS)["sensors"]["5m_agg_retention"]
-  | (typeof SETTINGS)["sensors"]["1h_agg_retention"]
-  | (typeof SETTINGS)["sensors"]["1d_agg_retention"]
-  | (typeof SETTINGS)["outputs"]["raw_retention"]
-  | (typeof SETTINGS)["outputs"]["5m_agg_retention"]
-  | (typeof SETTINGS)["outputs"]["1h_agg_retention"]
-  | (typeof SETTINGS)["outputs"]["1d_agg_retention"]
+  | (typeof SETTINGS)["sensors"]["data_retention"]
+  | (typeof SETTINGS)["outputs"]["data_retention"]
   | (typeof SETTINGS)["system"]["backup_retention"];
 
 // Compile-time: every SETTINGS value must be assignable to SettingsKey

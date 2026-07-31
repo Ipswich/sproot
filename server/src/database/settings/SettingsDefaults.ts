@@ -10,36 +10,12 @@ export interface SettingDefault {
 
 export const DEFAULTS: SettingDefault[] = [
   {
-    key: "sensors.raw_retention",
+    key: "sensors.data_retention",
     value: "30 days",
   },
   {
-    key: "outputs.raw_retention",
+    key: "outputs.data_retention",
     value: "60 days",
-  },
-  {
-    key: "sensors.5m_agg_retention",
-    value: "7 days",
-  },
-  {
-    key: "outputs.5m_agg_retention",
-    value: "14 days",
-  },
-  {
-    key: "sensors.1h_agg_retention",
-    value: "30 days",
-  },
-  {
-    key: "sensors.1d_agg_retention",
-    value: "90 days",
-  },
-  {
-    key: "outputs.1h_agg_retention",
-    value: "30 days",
-  },
-  {
-    key: "outputs.1d_agg_retention",
-    value: "90 days",
   },
   {
     key: "system.backup_retention",

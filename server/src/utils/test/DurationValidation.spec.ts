@@ -31,9 +31,9 @@ describe("DurationValidation", function () {
     });
 
     it("should include context in error message for empty string", function () {
-      const result = validateDuration("", "sensors.raw_retention");
+      const result = validateDuration("", "sensors.data_retention");
       assert.isFalse(result.valid);
-      assert.include(result.errors[0], "sensors.raw_retention");
+      assert.include(result.errors[0], "sensors.data_retention");
       assert.include(result.errors[0], "empty");
     });
 
@@ -64,9 +64,9 @@ describe("DurationValidation", function () {
     });
 
     it("should include context in error message for unknown unit", function () {
-      const result = validateDuration("30 foobars", "outputs.raw_retention");
+      const result = validateDuration("30 foobars", "outputs.data_retention");
       assert.isFalse(result.valid);
-      assert.include(result.errors[0], "outputs.raw_retention");
+      assert.include(result.errors[0], "outputs.data_retention");
     });
 
     it("should accept all valid units from VALID_DURATION_UNITS", function () {

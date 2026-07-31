@@ -36,12 +36,12 @@ describe("SettingsRepository", () => {
   describe("syncDefaultsAsync", () => {
     it("should insert defaults for keys that do not exist", async () => {
       const existsStub = sandbox.stub(repo as any, "existsAsync");
-      existsStub.withArgs("sensors.raw_retention").resolves(true);
+      existsStub.withArgs("sensors.data_retention").resolves(true);
       existsStub.callsFake(async () => false);
 
       await repo.syncDefaultsAsync();
 
-      const expectedRows = DEFAULTS.filter((d) => d.key !== "sensors.raw_retention").map((d) => ({
+      const expectedRows = DEFAULTS.filter((d) => d.key !== "sensors.data_retention").map((d) => ({
         key: d.key,
         value: typeof d.value === "string" ? JSON.stringify(d.value) : d.value,
       }));

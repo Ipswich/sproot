@@ -1,6 +1,6 @@
 import { describe, it } from "mocha";
 import { assert } from "chai";
-import sinon from "sinon";
+import sinon, { stub } from "sinon";
 import winston from "winston";
 import { Knex } from "knex";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
@@ -44,35 +44,40 @@ describe("RetentionService", () => {
     it("applies retention policy for a valid sensor setting", async () => {
       repo.getAsync.resolves("30 days");
 
-      await service[reconcileMethodName]("sensors.raw_retention");
+      await service.reconcileAsync("sensors.data_retention");
 
-      assert.isTrue(knex.raw.calledTwice);
-      const firstCall = knex.raw.firstCall.args[0];
-      const secondCall = knex.raw.secondCall.args[0];
-      assert.include(firstCall, "remove_retention_policy");
-      assert.include(firstCall, "sensor_data");
-      assert.include(secondCall, "add_retention_policy");
-      assert.include(secondCall, "sensor_data");
-      assert.include(secondCall, "INTERVAL '30 days'");
+      // Should call remove + add for each of the 4 sensor tables
+      assert.isTrue(knex.raw.callCount === 8);
+      const call0 = knex.raw.getCall(0).args[0];
+      const call1 = knex.raw.getCall(1).args[0];
+      assert.include(call0, "remove_retention_policy");
+      assert.include(call0, "sensor_data");
+      assert.include(call1, "add_retention_policy");
+      assert.include(call1, "INTERVAL '30 days'");
     });
 
-    it("applies retention policy for a continuous aggregate", async () => {
+    it("applies retention policy to all sensor tables", async () => {
       repo.getAsync.resolves("7 days");
 
-      await service[reconcileMethodName]("sensors.5m_agg_retention");
+      await service.reconcileAsync("sensors.data_retention");
 
-      const addCall = knex.raw.secondCall.args[0];
-      assert.include(addCall, "sensor_data_5m");
-      assert.include(addCall, "INTERVAL '7 days'");
+      const calls = knex.raw.getCalls();
+      const callStrings = calls.map((c) => c.args[0]);
+      assert.isTrue(callStrings.some((s) => s.includes("sensor_data_5m")));
+      assert.isTrue(callStrings.some((s) => s.includes("sensor_data_1h")));
+      assert.isTrue(callStrings.some((s) => s.includes("sensor_data_1d")));
     });
 
     it("removes retention policy when value is empty string", async () => {
       repo.getAsync.resolves("");
 
-      await service[reconcileMethodName]("sensors.raw_retention");
+      await service.reconcileAsync("sensors.data_retention");
 
-      assert.isTrue(knex.raw.calledOnce);
-      assert.include(knex.raw.firstCall.args[0], "remove_retention_policy");
+      // 4 tables × remove only = 4 calls
+      assert.isTrue(knex.raw.callCount === 4);
+      assert.isTrue(
+        knex.raw.getCalls().every((c: any) => c.args[0].includes("remove_retention_policy")),
+      );
     });
 
     it("skips reconciliation for unknown setting keys", async () => {
@@ -85,7 +90,7 @@ describe("RetentionService", () => {
       const warnStub = sinon.stub(logger, "warn");
       repo.getAsync.resolves("not a valid duration");
 
-      await service[reconcileMethodName]("sensors.raw_retention");
+      await service.reconcileAsync("sensors.data_retention");
 
       assert.isTrue(warnStub.calledOnce);
       assert.isTrue(knex.raw.notCalled);
@@ -94,10 +99,11 @@ describe("RetentionService", () => {
     it("removes retention policy when setting value is null", async () => {
       repo.getAsync.resolves(null as unknown as string);
 
-      await service[reconcileMethodName]("sensors.raw_retention");
+      await service.reconcileAsync("sensors.data_retention");
 
-      assert.isTrue(knex.raw.calledOnce);
-      assert.include(knex.raw.firstCall.args[0], "remove_retention_policy");
+      // 4 tables × remove only = 4 calls
+      assert.isTrue(knex.raw.callCount === 4);
+      assert.isTrue(knex.raw.firstCall.args[0].includes("remove_retention_policy"));
     });
   });
 
@@ -108,14 +114,9 @@ describe("RetentionService", () => {
 
       await service.reconcileAllAsync();
 
-      assert.isTrue(spy.callCount === 8);
+      assert.isTrue(spy.callCount === 2);
       const calledKeys = spy.getCalls().map((call) => call.args[0]);
-      assert.includeMembers(calledKeys, [
-        "sensors.raw_retention",
-        "outputs.raw_retention",
-        "sensors.5m_agg_retention",
-        "outputs.1d_agg_retention",
-      ]);
+      assert.includeMembers(calledKeys, ["sensors.data_retention", "outputs.data_retention"]);
     });
 
     it("continues reconciling other settings when one fails", async () => {
@@ -135,14 +136,14 @@ describe("RetentionService", () => {
 
       const event = {
         type: Events.SENSOR_RETENTION_UPDATED,
-        payload: { key: "sensors.raw_retention", value: "60 days" },
+        payload: { key: "sensors.data_retention", value: "60 days" },
         eventId: "test-id",
         occurredAt: new Date(),
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await eventBus.publishAsync(event as any);
 
-      assert.isTrue(reconcileSpy.calledOnceWith("sensors.raw_retention"));
+      assert.isTrue(reconcileSpy.calledOnceWith("sensors.data_retention"));
     });
 
     it("reconciles on output.retention.updated events", async () => {
@@ -151,14 +152,14 @@ describe("RetentionService", () => {
 
       const event = {
         type: Events.OUTPUT_RETENTION_UPDATED,
-        payload: { key: "outputs.1d_agg_retention", value: "90 days" },
+        payload: { key: "outputs.data_retention", value: "90 days" },
         eventId: "test-id",
         occurredAt: new Date(),
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await eventBus.publishAsync(event as any);
 
-      assert.isTrue(reconcileSpy.calledOnceWith("outputs.1d_agg_retention"));
+      assert.isTrue(reconcileSpy.calledOnceWith("outputs.data_retention"));
     });
 
     it("does not reconcile on backup.retention.updated events", async () => {
@@ -181,13 +182,13 @@ describe("RetentionService", () => {
   describe("Symbol.dispose", () => {
     it("unsubscribes from event bus", async () => {
       repo.getAsync.resolves("30 days");
-      const reconcileSpy = sinon.stub(service, "reconcileAsync").resolves();
+      const reconcileSpy = stub(service, "reconcileAsync").resolves();
 
       service[Symbol.dispose]();
 
       const event = {
         type: Events.SENSOR_RETENTION_UPDATED,
-        payload: { key: "sensors.raw_retention", value: "30 days" },
+        payload: { key: "sensors.data_retention", value: "30 days" },
         eventId: "test-id",
         occurredAt: new Date(),
       };
@@ -201,14 +202,14 @@ describe("RetentionService", () => {
   describe("#parseDuration", () => {
     it("accepts valid duration strings", async () => {
       repo.getAsync.resolves("30 days");
-      await service.reconcileAsync("sensors.raw_retention");
+      await service.reconcileAsync("sensors.data_retention");
       assert.isTrue(knex.raw.called);
     });
 
     it("rejects zero duration", async () => {
       repo.getAsync.resolves("0 days");
 
-      await service.reconcileAsync("sensors.raw_retention");
+      await service.reconcileAsync("sensors.data_retention");
 
       assert.isTrue(knex.raw.notCalled);
     });
@@ -216,7 +217,7 @@ describe("RetentionService", () => {
     it("rejects invalid units", async () => {
       repo.getAsync.resolves("30 foobars");
 
-      await service.reconcileAsync("sensors.raw_retention");
+      await service.reconcileAsync("sensors.data_retention");
 
       assert.isTrue(knex.raw.notCalled);
     });
@@ -224,7 +225,7 @@ describe("RetentionService", () => {
     it("normalizes irregular whitespace to single space", async () => {
       repo.getAsync.resolves("30   days");
 
-      await service.reconcileAsync("sensors.raw_retention");
+      await service.reconcileAsync("sensors.data_retention");
 
       const addCall = knex.raw.secondCall.args[0];
       assert.include(addCall, "INTERVAL '30 days'");

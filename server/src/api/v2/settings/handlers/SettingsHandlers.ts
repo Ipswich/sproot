@@ -17,14 +17,8 @@ for (const section of Object.values(SETTINGS)) {
 }
 
 const RETENTION_DURATION_KEYS = new Set<SettingsKey>([
-  "sensors.raw_retention",
-  "outputs.raw_retention",
-  "sensors.5m_agg_retention",
-  "outputs.5m_agg_retention",
-  "sensors.1h_agg_retention",
-  "sensors.1d_agg_retention",
-  "outputs.1h_agg_retention",
-  "outputs.1d_agg_retention",
+  "sensors.data_retention",
+  "outputs.data_retention",
 ]);
 
 function getActualType(value: unknown): string {

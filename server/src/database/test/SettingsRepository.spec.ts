@@ -68,11 +68,11 @@ function createKnexStub(rows: unknown[]): any {
 describe("SettingsRepository", () => {
   describe("get", () => {
     it("should return the value for an existing key", async () => {
-      const rows = [{ key: SETTINGS.sensors.raw_retention, value: "30 days" }];
+      const rows = [{ key: SETTINGS.sensors.data_retention, value: "30 days" }];
       const knex = createKnexStub(rows);
       const repo = new SettingsRepository(knex as any);
 
-      const result = await repo.getAsync(SETTINGS.sensors.raw_retention);
+      const result = await repo.getAsync(SETTINGS.sensors.data_retention);
 
       assert.equal(result, "30 days");
     });
@@ -82,7 +82,7 @@ describe("SettingsRepository", () => {
       const knex = createKnexStub(rows);
       const repo = new SettingsRepository(knex as any);
 
-      const result = await repo.getAsync(SETTINGS.sensors.raw_retention);
+      const result = await repo.getAsync(SETTINGS.sensors.data_retention);
 
       assert.isUndefined(result);
     });
@@ -91,56 +91,54 @@ describe("SettingsRepository", () => {
   describe("getMany", () => {
     it("should return values for existing keys", async () => {
       const rows = [
-        { key: SETTINGS.sensors.raw_retention, value: "30 days" },
-        { key: SETTINGS.outputs.raw_retention, value: "60 days" },
+        { key: SETTINGS.sensors.data_retention, value: "30 days" },
+        { key: SETTINGS.outputs.data_retention, value: "60 days" },
       ];
       const knex = createKnexStub(rows);
       const repo = new SettingsRepository(knex as any);
 
       const result = await repo.getManyAsync([
-        SETTINGS.sensors.raw_retention,
-        SETTINGS.outputs.raw_retention,
+        SETTINGS.sensors.data_retention,
+        SETTINGS.outputs.data_retention,
       ]);
 
-      assert.equal(result[SETTINGS.sensors.raw_retention], "30 days");
-      assert.equal(result[SETTINGS.outputs.raw_retention], "60 days");
+      assert.equal(result[SETTINGS.sensors.data_retention], "30 days");
+      assert.equal(result[SETTINGS.outputs.data_retention], "60 days");
     });
 
     it("should return undefined for missing keys", async () => {
-      const rows = [{ key: SETTINGS.sensors.raw_retention, value: "30 days" }];
+      const rows = [{ key: SETTINGS.sensors.data_retention, value: "30 days" }];
       const knex = createKnexStub(rows);
       const repo = new SettingsRepository(knex as any);
 
       const result = await repo.getManyAsync([
-        SETTINGS.sensors.raw_retention,
-        SETTINGS.outputs.raw_retention,
+        SETTINGS.sensors.data_retention,
+        SETTINGS.outputs.data_retention,
       ]);
 
-      assert.equal(result[SETTINGS.sensors.raw_retention], "30 days");
-      assert.isUndefined(result[SETTINGS.outputs.raw_retention]);
+      assert.equal(result[SETTINGS.sensors.data_retention], "30 days");
+      assert.isUndefined(result[SETTINGS.outputs.data_retention]);
     });
   });
 
   describe("getAll", () => {
     it("should return all settings as a map", async () => {
       const rows = [
-        { key: SETTINGS.sensors.raw_retention, value: "30 days" },
-        { key: SETTINGS.outputs.raw_retention, value: "60 days" },
+        { key: SETTINGS.sensors.data_retention, value: "30 days" },
+        { key: SETTINGS.outputs.data_retention, value: "60 days" },
       ];
       const knex = createKnexStub(rows);
       const repo = new SettingsRepository(knex as any);
 
       const result = await repo.getAllAsync();
 
-      assert.equal(result[SETTINGS.sensors.raw_retention], "30 days");
-      assert.equal(result[SETTINGS.outputs.raw_retention], "60 days");
-      assert.isUndefined(result[SETTINGS.sensors["5m_agg_retention"]]);
-      assert.isUndefined(result[SETTINGS.outputs["5m_agg_retention"]]);
+      assert.equal(result[SETTINGS.sensors.data_retention], "30 days");
+      assert.equal(result[SETTINGS.outputs.data_retention], "60 days");
     });
 
     it("should exclude unknown keys from the result", async () => {
       const rows = [
-        { key: SETTINGS.sensors.raw_retention, value: "30 days" },
+        { key: SETTINGS.sensors.data_retention, value: "30 days" },
         { key: "unknown.foo", value: "bar" },
       ];
       const knex = createKnexStub(rows);
@@ -148,20 +146,13 @@ describe("SettingsRepository", () => {
 
       const result = await repo.getAllAsync();
 
-      assert.equal(result[SETTINGS.sensors.raw_retention], "30 days");
-      assert.isUndefined(result[SETTINGS.sensors["5m_agg_retention"]]);
-      // Verify the result has exactly the expected known keys (9 total), not unknown ones
+      assert.equal(result[SETTINGS.sensors.data_retention], "30 days");
+      // Verify the result has exactly the expected known keys (3 total), not unknown ones
       const keys = Object.keys(result) as SettingsKey[];
-      assert.equal(keys.length, 9);
+      assert.equal(keys.length, 3);
       assert.deepEqual(keys.sort(), [
-        SETTINGS.outputs["1d_agg_retention"],
-        SETTINGS.outputs["1h_agg_retention"],
-        SETTINGS.outputs["5m_agg_retention"],
-        SETTINGS.outputs.raw_retention,
-        SETTINGS.sensors["1d_agg_retention"],
-        SETTINGS.sensors["1h_agg_retention"],
-        SETTINGS.sensors["5m_agg_retention"],
-        SETTINGS.sensors.raw_retention,
+        SETTINGS.outputs.data_retention,
+        SETTINGS.sensors.data_retention,
         SETTINGS.system.backup_retention,
       ]);
     });
@@ -187,7 +178,7 @@ describe("SettingsRepository", () => {
       // this assertion fails, surfacing the mismatch early.
       assert.equal(
         Object.keys(result).length,
-        9,
+        3,
         "getAll must return exactly all known setting keys",
       );
     });
@@ -198,12 +189,12 @@ describe("SettingsRepository", () => {
       const knex = createKnexStub([]);
       const repo = new SettingsRepository(knex as any);
 
-      await repo.setAsync(SETTINGS.sensors.raw_retention, "45 days");
+      await repo.setAsync(SETTINGS.sensors.data_retention, "45 days");
 
       const builder = (knex as any)("settings");
       assert.isTrue(builder.insert.calledOnce);
       const insertArgs = builder.insert.firstCall.args[0];
-      assert.equal(insertArgs.key, SETTINGS.sensors.raw_retention);
+      assert.equal(insertArgs.key, SETTINGS.sensors.data_retention);
       assert.deepEqual(insertArgs.value, JSON.stringify("45 days"));
     });
 
@@ -212,12 +203,12 @@ describe("SettingsRepository", () => {
       const repo = new SettingsRepository(knex as any);
       const objValue = { enabled: true, threshold: 75 };
 
-      await repo.setAsync(SETTINGS.sensors.raw_retention, objValue as any);
+      await repo.setAsync(SETTINGS.sensors.data_retention, objValue as any);
 
       const builder = (knex as any)("settings");
       assert.isTrue(builder.insert.calledOnce);
       const insertArgs = builder.insert.firstCall.args[0];
-      assert.equal(insertArgs.key, SETTINGS.sensors.raw_retention);
+      assert.equal(insertArgs.key, SETTINGS.sensors.data_retention);
       assert.deepEqual(insertArgs.value, { enabled: true, threshold: 75 });
     });
 
@@ -225,12 +216,12 @@ describe("SettingsRepository", () => {
       const knex = createKnexStub([]);
       const repo = new SettingsRepository(knex as any);
 
-      await repo.setAsync(SETTINGS.sensors.raw_retention, "45 days");
+      await repo.setAsync(SETTINGS.sensors.data_retention, "45 days");
 
       const builder = (knex as any)("settings");
       assert.isTrue(builder.insert.calledOnce);
       const insertArgs = builder.insert.firstCall.args[0];
-      assert.equal(insertArgs.key, SETTINGS.sensors.raw_retention);
+      assert.equal(insertArgs.key, SETTINGS.sensors.data_retention);
       assert.equal(insertArgs.value, JSON.stringify("45 days"));
       assert.isTrue(builder.onConflict.calledOnce);
       assert.equal(builder.onConflict.firstCall.args[0], "key");
@@ -244,7 +235,7 @@ describe("SettingsRepository", () => {
       const knex = createKnexStub(rows);
       const repo = new SettingsRepository(knex as any);
 
-      const result = await repo.existsAsync(SETTINGS.sensors.raw_retention);
+      const result = await repo.existsAsync(SETTINGS.sensors.data_retention);
 
       assert.isTrue(result);
     });
@@ -265,7 +256,7 @@ describe("SettingsRepository", () => {
       const knex = createKnexStub([]);
       const repo = new SettingsRepository(knex as any);
 
-      await repo.deleteAsync(SETTINGS.sensors.raw_retention);
+      await repo.deleteAsync(SETTINGS.sensors.data_retention);
 
       const builder = (knex as any)("settings");
       assert.isTrue(builder.del.calledOnce);

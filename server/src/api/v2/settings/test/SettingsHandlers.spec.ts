@@ -19,14 +19,8 @@ describe("SettingsHandlers", () => {
 
     mockService = {
       getAllAsync: sandbox.stub().resolves({
-        [SETTINGS.sensors.raw_retention]: "30 days",
-        [SETTINGS.outputs.raw_retention]: "60 days",
-        [SETTINGS.sensors["5m_agg_retention"]]: "7 days",
-        [SETTINGS.outputs["5m_agg_retention"]]: "14 days",
-        [SETTINGS.sensors["1h_agg_retention"]]: "30 days",
-        [SETTINGS.sensors["1d_agg_retention"]]: "90 days",
-        [SETTINGS.outputs["1h_agg_retention"]]: "30 days",
-        [SETTINGS.outputs["1d_agg_retention"]]: "90 days",
+        [SETTINGS.sensors.data_retention]: "30 days",
+        [SETTINGS.outputs.data_retention]: "60 days",
         [SETTINGS.system.backup_retention]: "30 days",
       }),
       setAsync: sandbox.stub().resolves(),
@@ -60,7 +54,7 @@ describe("SettingsHandlers", () => {
       assert.equal(result.statusCode, 200);
       assert.exists(result.content!.data);
       assert.equal(
-        (result.content!.data as Record<string, unknown>)[SETTINGS.sensors.raw_retention],
+        (result.content!.data as Record<string, unknown>)[SETTINGS.sensors.data_retention],
         "30 days",
       );
       assert.isTrue((mockService.getAllAsync as any).calledOnce);
@@ -79,24 +73,24 @@ describe("SettingsHandlers", () => {
 
   describe("updateSettingsAsync", () => {
     it("should return 200 with updated keys", async () => {
-      mockRequest.body = { [SETTINGS.sensors.raw_retention]: "45 days" };
+      mockRequest.body = { [SETTINGS.sensors.data_retention]: "45 days" };
 
       const result = (await updateSettingsAsync(mockRequest, mockResponse)) as SuccessResponse;
 
       assert.equal(result.statusCode, 200);
       assert.equal(
-        (result.content!.data as Record<string, unknown>)[SETTINGS.sensors.raw_retention],
+        (result.content!.data as Record<string, unknown>)[SETTINGS.sensors.data_retention],
         "45 days",
       );
       assert.isTrue(
-        (mockService.setAsync as any).calledOnceWith(SETTINGS.sensors.raw_retention, "45 days"),
+        (mockService.setAsync as any).calledOnceWith(SETTINGS.sensors.data_retention, "45 days"),
       );
     });
 
     it("should return 200 with multiple updated keys", async () => {
       mockRequest.body = {
-        [SETTINGS.sensors.raw_retention]: "45 days",
-        [SETTINGS.outputs.raw_retention]: "90 days",
+        [SETTINGS.sensors.data_retention]: "45 days",
+        [SETTINGS.outputs.data_retention]: "90 days",
       };
 
       const result = (await updateSettingsAsync(mockRequest, mockResponse)) as SuccessResponse;
@@ -119,7 +113,7 @@ describe("SettingsHandlers", () => {
 
     it("should return 400 for mixed valid and unknown keys", async () => {
       mockRequest.body = {
-        [SETTINGS.sensors.raw_retention]: "45 days",
+        [SETTINGS.sensors.data_retention]: "45 days",
         "unknown.key": "value",
       };
 
@@ -132,7 +126,7 @@ describe("SettingsHandlers", () => {
     });
 
     it("should return 400 for type mismatch (number instead of string)", async () => {
-      mockRequest.body = { [SETTINGS.sensors.raw_retention]: 123 };
+      mockRequest.body = { [SETTINGS.sensors.data_retention]: 123 };
 
       const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
 
@@ -144,17 +138,17 @@ describe("SettingsHandlers", () => {
     });
 
     it("should return 200 for null value (null is accepted for string settings)", async () => {
-      mockRequest.body = { [SETTINGS.sensors.raw_retention]: null };
+      mockRequest.body = { [SETTINGS.sensors.data_retention]: null };
 
       const result = (await updateSettingsAsync(mockRequest, mockResponse)) as SuccessResponse;
 
       assert.equal(result.statusCode, 200);
       assert.equal(
-        (result.content!.data as Record<string, unknown>)[SETTINGS.sensors.raw_retention],
+        (result.content!.data as Record<string, unknown>)[SETTINGS.sensors.data_retention],
         null,
       );
       assert.isTrue(
-        (mockService.setAsync as any).calledOnceWith(SETTINGS.sensors.raw_retention, null),
+        (mockService.setAsync as any).calledOnceWith(SETTINGS.sensors.data_retention, null),
       );
     });
 
@@ -187,7 +181,7 @@ describe("SettingsHandlers", () => {
 
     it("should return 400 with multiple validation errors", async () => {
       mockRequest.body = {
-        [SETTINGS.sensors.raw_retention]: 123,
+        [SETTINGS.sensors.data_retention]: 123,
         "unknown.key": "value",
       };
 
@@ -198,7 +192,7 @@ describe("SettingsHandlers", () => {
     });
 
     it("should return 503 when service throws", async () => {
-      mockRequest.body = { [SETTINGS.sensors.raw_retention]: "45 days" };
+      mockRequest.body = { [SETTINGS.sensors.data_retention]: "45 days" };
       (mockService.setAsync as any).rejects(new Error("DB error"));
 
       const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
@@ -220,7 +214,7 @@ describe("SettingsHandlers", () => {
 
     describe("duration validation for retention settings", () => {
       it("should return 400 for invalid duration unit", async () => {
-        mockRequest.body = { [SETTINGS.sensors.raw_retention]: "30 foobars" };
+        mockRequest.body = { [SETTINGS.sensors.data_retention]: "30 foobars" };
 
         const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
 
@@ -232,7 +226,7 @@ describe("SettingsHandlers", () => {
       });
 
       it("should return 400 for zero duration amount", async () => {
-        mockRequest.body = { [SETTINGS.sensors.raw_retention]: "0 days" };
+        mockRequest.body = { [SETTINGS.sensors.data_retention]: "0 days" };
 
         const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
 
@@ -243,7 +237,7 @@ describe("SettingsHandlers", () => {
       });
 
       it("should return 400 for malformed duration", async () => {
-        mockRequest.body = { [SETTINGS.outputs.raw_retention]: "abc" };
+        mockRequest.body = { [SETTINGS.outputs.data_retention]: "abc" };
 
         const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
 
@@ -254,8 +248,8 @@ describe("SettingsHandlers", () => {
 
       it("should return 200 for valid duration with different units", async () => {
         mockRequest.body = {
-          [SETTINGS.sensors.raw_retention]: "2 weeks",
-          [SETTINGS.outputs["1h_agg_retention"]]: "1 hour",
+          [SETTINGS.sensors.data_retention]: "2 weeks",
+          [SETTINGS.outputs.data_retention]: "1 hour",
         };
 
         const result = (await updateSettingsAsync(mockRequest, mockResponse)) as SuccessResponse;
@@ -280,8 +274,8 @@ describe("SettingsHandlers", () => {
 
       it("should return 400 with errors from multiple retention keys", async () => {
         mockRequest.body = {
-          [SETTINGS.sensors.raw_retention]: "bad value",
-          [SETTINGS.outputs.raw_retention]: "0 days",
+          [SETTINGS.sensors.data_retention]: "bad value",
+          [SETTINGS.outputs.data_retention]: "0 days",
         };
 
         const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
@@ -292,18 +286,18 @@ describe("SettingsHandlers", () => {
       });
 
       it("should return 200 for null value on retention key (removes policy)", async () => {
-        mockRequest.body = { [SETTINGS.sensors.raw_retention]: null };
+        mockRequest.body = { [SETTINGS.sensors.data_retention]: null };
 
         const result = (await updateSettingsAsync(mockRequest, mockResponse)) as SuccessResponse;
 
         assert.equal(result.statusCode, 200);
         assert.isTrue(
-          (mockService.setAsync as any).calledOnceWith(SETTINGS.sensors.raw_retention, null),
+          (mockService.setAsync as any).calledOnceWith(SETTINGS.sensors.data_retention, null),
         );
       });
 
       it("should return 400 for empty string on retention key", async () => {
-        mockRequest.body = { [SETTINGS.sensors.raw_retention]: "" };
+        mockRequest.body = { [SETTINGS.sensors.data_retention]: "" };
 
         const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
 

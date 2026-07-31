@@ -1438,20 +1438,14 @@ describe("API Tests", async function () {
 
   describe("Settings Routes", async () => {
     describe("GET", async () => {
-      it("should return 200 with all 9 settings", async () => {
+      it("should return 200 with all 3 settings", async () => {
         const response = await request(server).get("/api/v2/settings").expect(200);
         const content = response.body["content"];
         validateMiddlewareValues(response);
         assert.isObject(content.data);
-        assert.equal(Object.keys(content.data).length, 9);
-        assert.exists(content.data["sensors.raw_retention"]);
-        assert.exists(content.data["outputs.raw_retention"]);
-        assert.exists(content.data["sensors.5m_agg_retention"]);
-        assert.exists(content.data["outputs.5m_agg_retention"]);
-        assert.exists(content.data["sensors.1h_agg_retention"]);
-        assert.exists(content.data["sensors.1d_agg_retention"]);
-        assert.exists(content.data["outputs.1h_agg_retention"]);
-        assert.exists(content.data["outputs.1d_agg_retention"]);
+        assert.equal(Object.keys(content.data).length, 3);
+        assert.exists(content.data["sensors.data_retention"]);
+        assert.exists(content.data["outputs.data_retention"]);
         assert.exists(content.data["system.backup_retention"]);
       });
     });
@@ -1460,19 +1454,19 @@ describe("API Tests", async function () {
       it("should return 200 with updated settings", async () => {
         const response = await request(server)
           .patch("/api/v2/settings")
-          .send({ "sensors.raw_retention": "45 days" })
+          .send({ "sensors.data_retention": "45 days" })
           .expect(200);
         const content = response.body["content"];
         validateMiddlewareValues(response);
-        assert.equal(content.data["sensors.raw_retention"], "45 days");
+        assert.equal(content.data["sensors.data_retention"], "45 days");
       });
 
       it("should return 200 with multiple updated settings", async () => {
         const response = await request(server)
           .patch("/api/v2/settings")
           .send({
-            "sensors.raw_retention": "45 days",
-            "outputs.raw_retention": "90 days",
+            "sensors.data_retention": "45 days",
+            "outputs.data_retention": "90 days",
           })
           .expect(200);
         const content = response.body["content"];
@@ -1492,7 +1486,7 @@ describe("API Tests", async function () {
       it("should return 400 for type mismatch", async () => {
         const response = await request(server)
           .patch("/api/v2/settings")
-          .send({ "sensors.raw_retention": 123 })
+          .send({ "sensors.data_retention": 123 })
           .expect(400);
         validateMiddlewareValues(response);
         assert.include(response.body.error.details[0], "expected string or null");
@@ -1502,11 +1496,11 @@ describe("API Tests", async function () {
       it("should return 200 for null value", async () => {
         const response = await request(server)
           .patch("/api/v2/settings")
-          .send({ "sensors.raw_retention": null })
+          .send({ "sensors.data_retention": null })
           .expect(200);
         const content = response.body["content"];
         validateMiddlewareValues(response);
-        assert.equal(content.data["sensors.raw_retention"], null);
+        assert.equal(content.data["sensors.data_retention"], null);
       });
 
       it("should return 400 for invalid body (array)", async () => {
