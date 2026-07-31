@@ -10,9 +10,10 @@ import {
   IconLibraryPhoto,
   IconStack,
 } from "@tabler/icons-react";
+import ApplicationSettingsAccordionItem from "./ApplicationSettingsAccordionItem";
 import LogStreamWithTerminal from "./LogStreamWithTerminal";
 
-export default function SystemStatus() {
+export default function Status() {
   const systemStatusQuery = useQuery({
     queryKey: ["systemStatus"],
     queryFn: () => {
@@ -31,7 +32,8 @@ export default function SystemStatus() {
 
   return (
     <Fragment>
-      <Accordion w={"100%"}>
+      <Accordion w={"100%"} multiple defaultValue={["application-settings"]}>
+        <ApplicationSettingsAccordionItem />
         <Accordion.Item value="status">
           <Accordion.Control>
             <Group pl={"xl"}>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { pingAsync } from "../../../requests/requests_v2";
 import { useQuery } from "@tanstack/react-query";
 import RestartButton from "./RestartButton";
-import SystemStatus from "./Status";
+import Status from "./Status";
 import Backups from "./Backups";
 
 export default function SystemSettings() {
@@ -58,7 +58,7 @@ export default function SystemSettings() {
           </Modal>
         ) : (
           <Fragment>
-            <SystemStatus />
+            <Status />
             <Backups />
             <RestartButton />
           </Fragment>
