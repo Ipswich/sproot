@@ -11,11 +11,11 @@ export interface SettingDefault {
 export const DEFAULTS: SettingDefault[] = [
   {
     key: "sensors.data_retention",
-    value: "30 days",
+    value: "2 years",
   },
   {
     key: "outputs.data_retention",
-    value: "60 days",
+    value: "2 years",
   },
   {
     key: "system.backup_retention",

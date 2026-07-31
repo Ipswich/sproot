@@ -1,11 +1,12 @@
 import { Fragment } from "react/jsx-runtime";
-import { Stack, Modal, Group, Loader } from "@mantine/core";
+import { Stack, Modal, Group, Loader, Accordion } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { pingAsync } from "../../../requests/requests_v2";
 import { useQuery } from "@tanstack/react-query";
 import RestartButton from "./RestartButton";
-import Status from "./Status";
-import Backups from "./Backups";
+import StatusAccordionItem from "./StatusAccordionItem";
+import BackupsAccordionItem from "./BackupsAccordionItem";
+import ApplicationSettingsAccordionItem from "./ApplicationSettingsAccordionItem";
 
 export default function SystemSettings() {
   const [serverIsOnline, setServerIsOnline] = useState(true);
@@ -58,8 +59,15 @@ export default function SystemSettings() {
           </Modal>
         ) : (
           <Fragment>
-            <Status />
-            <Backups />
+            <Accordion
+              w={"100%"}
+              // multiple
+              // defaultValue={["application-settings"]}
+            >
+              <StatusAccordionItem />
+              <ApplicationSettingsAccordionItem />
+              <BackupsAccordionItem />
+            </Accordion>
             <RestartButton />
           </Fragment>
         )}

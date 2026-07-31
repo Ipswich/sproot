@@ -18,7 +18,7 @@ import {
   Title,
 } from "@mantine/core";
 import {
-  IconDatabaseCog,
+  IconClockCancel,
   IconDeviceFloppy,
   IconRefresh,
 } from "@tabler/icons-react";
@@ -64,29 +64,29 @@ const retentionUnits: Array<{ value: RetentionUnit; label: string }> = [
 
 const sections: SettingsSection[] = [
   {
-    title: "Sensor data retention",
-    description: "Choose how long sensor history remains queryable before it is aged out.",
+    title: "Sensor Data",
+    description: "Duration to store sensor reading history before deletion.",
     path: "sensors",
     label: "Sensor history",
     helperText: "Applies to stored sensor data across the retention pipeline.",
     emptyText: "Sensor history is kept forever.",
   },
   {
-    title: "Output data retention",
-    description: "Set how long output state history stays available for charts and audits.",
+    title: "Output Data",
+    description: "Duration to store output state history before deletion.",
     path: "outputs",
     label: "Output history",
     helperText: "Applies to retained output state data.",
     emptyText: "Output history is kept forever.",
   },
-  {
-    title: "Backup retention",
-    description: "Choose how long generated system backups remain available.",
-    path: "system.backup_retention",
-    label: "Backup archives",
-    helperText: "Applies to archived system backup files.",
-    emptyText: "Backups are kept forever.",
-  },
+  // {
+  //   title: "Backup Retention",
+  //   description: "Duration to retain system backups before deletion.",
+  //   path: "system.backup_retention",
+  //   label: "Backup archives",
+  //   helperText: "Applies to archived system backup files.",
+  //   emptyText: "Backups are kept forever.",
+  // },
 ];
 
 function createDefaultRetentionValue(): RetentionControlValue {
@@ -146,7 +146,9 @@ function toFormValues(settings: ApplicationSettings): SettingsFormValues {
     sensors: parseRetentionValue(settings["sensors.data_retention"]),
     outputs: parseRetentionValue(settings["outputs.data_retention"]),
     system: {
-      backup_retention: parseRetentionValue(settings["system.backup_retention"]),
+      backup_retention: parseRetentionValue(
+        settings["system.backup_retention"],
+      ),
     },
   };
 }
@@ -183,11 +185,14 @@ function hasChanges(
     return false;
   }
 
-  return Object.keys(getChangedSettings(currentValues, baselineValues)).length > 0;
+  return (
+    Object.keys(getChangedSettings(currentValues, baselineValues)).length > 0
+  );
 }
 
 export default function ApplicationSettingsAccordionItem() {
-  const [baselineValues, setBaselineValues] = useState<SettingsFormValues | null>(null);
+  const [baselineValues, setBaselineValues] =
+    useState<SettingsFormValues | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -214,7 +219,10 @@ export default function ApplicationSettingsAccordionItem() {
       ];
 
       finiteControls.forEach(([path, value]) => {
-        if (value.mode === "finite" && (!Number.isFinite(value.amount) || value.amount < 1)) {
+        if (
+          value.mode === "finite" &&
+          (!Number.isFinite(value.amount) || value.amount < 1)
+        ) {
           errors[path] = "Enter a retention period greater than zero.";
         }
       });
@@ -327,7 +335,10 @@ export default function ApplicationSettingsAccordionItem() {
     form.setFieldValue("system.backup_retention.amount", amount);
   }
 
-  function setRetentionUnit(path: SettingsSection["path"], unit: RetentionUnit) {
+  function setRetentionUnit(
+    path: SettingsSection["path"],
+    unit: RetentionUnit,
+  ) {
     if (path === "sensors") {
       form.setFieldValue("sensors.unit", unit);
       return;
@@ -345,7 +356,7 @@ export default function ApplicationSettingsAccordionItem() {
     <Accordion.Item value="application-settings">
       <Accordion.Control>
         <Group pl={"xl"}>
-          <IconDatabaseCog />
+          <IconClockCancel />
           <Title order={3} fw={450}>
             Data Retention
           </Title>
@@ -374,9 +385,19 @@ export default function ApplicationSettingsAccordionItem() {
                 </Alert>
               )}
 
-              <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg" verticalSpacing="lg">
+              <SimpleGrid
+                cols={{ base: 1, md: 3 }}
+                spacing="lg"
+                verticalSpacing="lg"
+              >
                 {sections.map((section) => (
-                  <Paper key={section.title} withBorder radius="md" p="lg" shadow="xs">
+                  <Paper
+                    key={section.title}
+                    withBorder
+                    radius="md"
+                    p="lg"
+                    shadow="xs"
+                  >
                     <Stack gap="md">
                       <div>
                         <Text fw={600}>{section.title}</Text>
@@ -392,7 +413,9 @@ export default function ApplicationSettingsAccordionItem() {
                           { label: "Forever", value: "forever" },
                           { label: "Custom", value: "finite" },
                         ]}
-                        value={getRetentionValue(form.values, section.path).mode}
+                        value={
+                          getRetentionValue(form.values, section.path).mode
+                        }
                         onChange={(value) => {
                           if (value === "forever" || value === "finite") {
                             setRetentionMode(section.path, value);
@@ -413,11 +436,13 @@ export default function ApplicationSettingsAccordionItem() {
                         style={{
                           overflow: "hidden",
                           maxHeight:
-                            getRetentionValue(form.values, section.path).mode === "finite"
+                            getRetentionValue(form.values, section.path)
+                              .mode === "finite"
                               ? "120px"
                               : "0px",
                           opacity:
-                            getRetentionValue(form.values, section.path).mode === "finite"
+                            getRetentionValue(form.values, section.path)
+                              .mode === "finite"
                               ? 1
                               : 0,
                           transition: "max-height 0.2s ease, opacity 0.2s ease",
@@ -429,16 +454,24 @@ export default function ApplicationSettingsAccordionItem() {
                             min={1}
                             allowNegative={false}
                             allowDecimal={false}
-                            value={getRetentionValue(form.values, section.path).amount}
+                            value={
+                              getRetentionValue(form.values, section.path)
+                                .amount
+                            }
                             error={
                               section.path === "sensors"
                                 ? form.errors["sensors.amount"]
                                 : section.path === "outputs"
                                   ? form.errors["outputs.amount"]
-                                  : form.errors["system.backup_retention.amount"]
+                                  : form.errors[
+                                      "system.backup_retention.amount"
+                                    ]
                             }
                             onChange={(value) => {
-                              if (typeof value === "number" && Number.isFinite(value)) {
+                              if (
+                                typeof value === "number" &&
+                                Number.isFinite(value)
+                              ) {
                                 setRetentionAmount(section.path, value);
                               }
                             }}
@@ -447,9 +480,16 @@ export default function ApplicationSettingsAccordionItem() {
                             label="Unit"
                             searchable={false}
                             allowDeselect={false}
-                            styles={{ input: { cursor: "pointer", caretColor: "transparent" } }}
+                            styles={{
+                              input: {
+                                cursor: "pointer",
+                                caretColor: "transparent",
+                              },
+                            }}
                             data={retentionUnits}
-                            value={getRetentionValue(form.values, section.path).unit}
+                            value={
+                              getRetentionValue(form.values, section.path).unit
+                            }
                             onChange={(value) => {
                               if (
                                 value === "days" ||
