@@ -10,8 +10,6 @@ export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable(SETTINGS_TABLE, (table) => {
     table.text("key").notNullable().primary();
     table.jsonb("value").notNullable();
-    table.text("description").nullable();
-    table.boolean("editable").notNullable().defaultTo(true);
     table.timestamp("updated_at", { useTz: true }).notNullable().defaultTo(knex.fn.now());
   });
 }

@@ -142,6 +142,5 @@ client/.env.development
 build
 .prompts/**.superpowers
 .opencode/
-!.opencode/specs
 .superpowers
 ANCHOR.md

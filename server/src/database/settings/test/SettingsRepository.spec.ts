@@ -44,8 +44,6 @@ describe("SettingsRepository", () => {
       const expectedRows = DEFAULTS.filter((d) => d.key !== "sensors.raw_retention").map((d) => ({
         key: d.key,
         value: typeof d.value === "string" ? JSON.stringify(d.value) : d.value,
-        description: d.description,
-        editable: d.editable,
       }));
 
       assert.isTrue(insertStub.calledWith(expectedRows));
@@ -69,8 +67,6 @@ describe("SettingsRepository", () => {
       const expectedRows = DEFAULTS.map((d) => ({
         key: d.key,
         value: typeof d.value === "string" ? JSON.stringify(d.value) : d.value,
-        description: d.description,
-        editable: d.editable,
       }));
 
       assert.isTrue(insertStub.calledWith(expectedRows));

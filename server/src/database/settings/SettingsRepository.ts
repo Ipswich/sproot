@@ -104,8 +104,6 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
     const rows = keysToInsert.map((def) => ({
       key: def.key,
       value: JSON.stringify(def.value),
-      description: def.description,
-      editable: def.editable,
     }));
 
     await this.connection("settings").insert(rows).onConflict("key").merge();
