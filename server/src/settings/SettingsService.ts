@@ -19,7 +19,7 @@ export class SettingsService {
 
   constructor(
     private repo: ISettingsRepository,
-    private eventBus?: IEventBus,
+    private eventBus: IEventBus,
   ) {}
 
   getAllAsync(): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>> {
@@ -39,7 +39,7 @@ export class SettingsService {
   async setAsync<K extends SettingsKey>(key: K, value: SettingsSchema[K]): Promise<void> {
     await this.repo.setAsync(key, value);
     const eventType = this.#settingEventMap[key];
-    if (eventType && this.eventBus) {
+    if (eventType) {
       await this.eventBus.publishAsync({
         type: eventType,
         payload: { key: key as string, value: value as string },

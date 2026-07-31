@@ -125,17 +125,6 @@ describe("SettingsService", () => {
       assert.strictEqual(handler.firstCall.args[0].payload.key, SETTINGS.system.backup_retention);
     });
 
-    it("does not publish events when eventBus is not provided", async () => {
-      const serviceWithoutBus = new SettingsService(mockRepo);
-      const handler = sinon.stub().resolves();
-      const trackingBus = new MemoryEventBus(winston.createLogger({ silent: true }));
-      trackingBus.subscribe(Events.SENSOR_RETENTION_UPDATED, handler);
-
-      await serviceWithoutBus.setAsync(SETTINGS.sensors.raw_retention, "30 days");
-
-      assert.isTrue(handler.notCalled);
-    });
-
     it("publishes after repo.setAsync succeeds", async () => {
       let repoCalled = false;
       (mockRepo.setAsync as sinon.SinonStub).callsFake(async () => {

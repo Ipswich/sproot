@@ -220,5 +220,14 @@ describe("RetentionService", () => {
 
       assert.isTrue(knex.raw.notCalled);
     });
+
+    it("normalizes irregular whitespace to single space", async () => {
+      repo.getAsync.resolves("30   days");
+
+      await service.reconcileAsync("sensors.raw_retention");
+
+      const addCall = knex.raw.secondCall.args[0];
+      assert.include(addCall, "INTERVAL '30 days'");
+    });
   });
 });

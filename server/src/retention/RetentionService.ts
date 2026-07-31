@@ -4,6 +4,7 @@ import { IEventBus } from "../eventbus/IEventBus";
 import { Events } from "../eventbus/events/Events";
 import { ISettingsRepository } from "../database/settings/ISettingsRepository";
 import type { SettingsKey } from "../database/settings/SettingsSchema";
+import { validateDuration } from "../utils/DurationValidation";
 
 interface RetentionTarget {
   table: string;
@@ -20,27 +21,6 @@ const RETENTION_REGISTRY: Readonly<Record<string, RetentionTarget>> = {
   "outputs.1h_agg_retention": { table: "output_data_1h", type: "continuous_aggregate" },
   "outputs.1d_agg_retention": { table: "output_data_1d", type: "continuous_aggregate" },
 } as const;
-
-const VALID_DURATION_UNITS = new Set([
-  "second",
-  "seconds",
-  "min",
-  "mins",
-  "minute",
-  "minutes",
-  "hour",
-  "hours",
-  "day",
-  "days",
-  "week",
-  "weeks",
-  "month",
-  "months",
-  "year",
-  "years",
-]);
-
-const DURATION_REGEX = /^(\d+)\s+([a-zA-Z]+)$/;
 
 export class RetentionService {
   readonly #logger: winston.Logger;
@@ -106,17 +86,15 @@ export class RetentionService {
   }
 
   #parseDuration(value: string): string | null {
+    const result = validateDuration(value);
+    if (!result.valid) return null;
+    // Reconstruct normalized "N unit" form — validateDuration confirmed the
+    // format, but we need exactly one space between amount and unit for
+    // PostgreSQL INTERVAL compatibility.
     const trimmed = String(value).trim();
-    if (trimmed.length === 0) return null;
-
-    const match = trimmed.match(DURATION_REGEX);
+    const match = trimmed.match(/^(\d+)\s+([a-zA-Z]+)$/);
     if (!match) return null;
-
-    const amount = parseInt(match[1]!, 10);
-    const unit = match[2]!;
-    if (amount <= 0 || !VALID_DURATION_UNITS.has(unit)) return null;
-
-    return `${amount} ${unit}`;
+    return `${match[1]} ${match[2]}`;
   }
 
   async #removeRetentionPolicy(tableName: string): Promise<void> {

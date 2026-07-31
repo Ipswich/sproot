@@ -7,6 +7,7 @@ import {
   SettingsSchema,
   SETTINGS,
 } from "../../../../database/settings/SettingsSchema";
+import { validateDuration } from "../../../../utils/DurationValidation";
 
 const KNOWN_KEYS = new Set<string>();
 for (const section of Object.values(SETTINGS)) {
@@ -14,6 +15,17 @@ for (const section of Object.values(SETTINGS)) {
     KNOWN_KEYS.add(value);
   }
 }
+
+const RETENTION_DURATION_KEYS = new Set<SettingsKey>([
+  "sensors.raw_retention",
+  "outputs.raw_retention",
+  "sensors.5m_agg_retention",
+  "outputs.5m_agg_retention",
+  "sensors.1h_agg_retention",
+  "sensors.1d_agg_retention",
+  "outputs.1h_agg_retention",
+  "outputs.1d_agg_retention",
+]);
 
 function getActualType(value: unknown): string {
   if (value === null) return "null";
@@ -79,6 +91,13 @@ export async function updateSettingsAsync(
     const actualType = getActualType(value);
     if (value !== null && typeof value !== "string") {
       errors.push(`Invalid type for ${key}: expected string or null, got ${actualType}`);
+    }
+    // Validate duration format for retention settings (not backup_retention)
+    if (RETENTION_DURATION_KEYS.has(key as SettingsKey) && value !== null) {
+      const durationResult = validateDuration(value as string, key);
+      if (!durationResult.valid) {
+        errors.push(...durationResult.errors);
+      }
     }
   }
 

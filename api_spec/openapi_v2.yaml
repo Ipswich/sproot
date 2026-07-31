@@ -8296,17 +8296,51 @@ paths:
                         properties:
                           data:
                              type: object
-                             additionalProperties: true
-                             example:
-                                sensors.raw_retention: "30 days"
-                                outputs.raw_retention: "60 days"
-                                sensors.5m_agg_retention: "7 days"
-                                outputs.5m_agg_retention: "14 days"
-                                sensors.1h_agg_retention: "30 days"
-                                sensors.1d_agg_retention: "90 days"
-                                outputs.1h_agg_retention: "30 days"
-                                outputs.1d_agg_retention: "90 days"
-                                system.backup_retention: "30 days"
+                             properties:
+                                sensors.raw_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                   example: "30 days"
+                                outputs.raw_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                   example: "60 days"
+                                sensors.5m_agg_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                   example: "7 days"
+                                outputs.5m_agg_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                   example: "14 days"
+                                sensors.1h_agg_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                   example: "30 days"
+                                sensors.1d_agg_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                   example: "90 days"
+                                outputs.1h_agg_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                   example: "30 days"
+                                outputs.1d_agg_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                   example: "90 days"
+                                system.backup_retention:
+                                   type: string
+                                   x-nullable: true
+                                   example: "30 days"
         503:
           description: Service Unavailable
           content:
@@ -8338,11 +8372,47 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              additionalProperties: true
-              example:
-                sensors.raw_retention: "45 days"
-                outputs.raw_retention: "90 days"
+               type: object
+               properties:
+                 sensors.raw_retention:
+                   type: string
+                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                   x-nullable: true
+                   example: "45 days"
+                 outputs.raw_retention:
+                   type: string
+                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                   x-nullable: true
+                   example: "90 days"
+                 sensors.5m_agg_retention:
+                   type: string
+                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                   x-nullable: true
+                 sensors.1h_agg_retention:
+                   type: string
+                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                   x-nullable: true
+                 sensors.1d_agg_retention:
+                   type: string
+                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                   x-nullable: true
+                 outputs.5m_agg_retention:
+                   type: string
+                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                   x-nullable: true
+                 outputs.1h_agg_retention:
+                   type: string
+                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                   x-nullable: true
+                 outputs.1d_agg_retention:
+                   type: string
+                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                   x-nullable: true
+                 system.backup_retention:
+                   type: string
+                   x-nullable: true
+                   example: "30 days"
+               additionalProperties: false
       responses:
         200:
           description: Success
@@ -8355,13 +8425,49 @@ paths:
                       statusCode:
                         example: 200
                       content:
-                        properties:
-                          data:
-                            type: object
-                            additionalProperties: true
-                            example:
-                              sensors.raw_retention: "45 days"
-                              outputs.raw_retention: "90 days"
+                       properties:
+                           data:
+                             type: object
+                             properties:
+                                sensors.raw_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                   example: "45 days"
+                                outputs.raw_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                   example: "90 days"
+                                sensors.5m_agg_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                sensors.1h_agg_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                sensors.1d_agg_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                outputs.5m_agg_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                outputs.1h_agg_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                outputs.1d_agg_retention:
+                                   type: string
+                                   pattern: "^\\d+\\s+[a-zA-Z]+$"
+                                   x-nullable: true
+                                system.backup_retention:
+                                   type: string
+                                   x-nullable: true
+                                   example: "30 days"
+                             additionalProperties: false
         400:
           description: Bad Request
           content:

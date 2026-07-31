@@ -194,7 +194,7 @@ describe("SettingsHandlers", () => {
       const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
 
       assert.equal(result.statusCode, 400);
-      assert.equal(result.error!.details.length, 2);
+      assert.equal(result.error!.details.length, 3);
     });
 
     it("should return 503 when service throws", async () => {
@@ -216,6 +216,101 @@ describe("SettingsHandlers", () => {
       assert.equal(result.statusCode, 200);
       assert.deepEqual(result.content!.data, {});
       assert.isTrue((mockService.setAsync as any).notCalled);
+    });
+
+    describe("duration validation for retention settings", () => {
+      it("should return 400 for invalid duration unit", async () => {
+        mockRequest.body = { [SETTINGS.sensors.raw_retention]: "30 foobars" };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
+
+        assert.equal(result.statusCode, 400);
+        assert.equal(result.error!.name, "Bad Request");
+        assert.include(result.error!.details[0], "Unknown time unit");
+        assert.include(result.error!.details[0], "foobars");
+        assert.isTrue((mockService.setAsync as any).notCalled);
+      });
+
+      it("should return 400 for zero duration amount", async () => {
+        mockRequest.body = { [SETTINGS.sensors.raw_retention]: "0 days" };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
+
+        assert.equal(result.statusCode, 400);
+        assert.include(result.error!.details[0], "must be positive");
+        assert.include(result.error!.details[0], "0");
+        assert.isTrue((mockService.setAsync as any).notCalled);
+      });
+
+      it("should return 400 for malformed duration", async () => {
+        mockRequest.body = { [SETTINGS.outputs.raw_retention]: "abc" };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
+
+        assert.equal(result.statusCode, 400);
+        assert.include(result.error!.details[0], "does not match expected format");
+        assert.isTrue((mockService.setAsync as any).notCalled);
+      });
+
+      it("should return 200 for valid duration with different units", async () => {
+        mockRequest.body = {
+          [SETTINGS.sensors.raw_retention]: "2 weeks",
+          [SETTINGS.outputs["1h_agg_retention"]]: "1 hour",
+        };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+        assert.equal(result.statusCode, 200);
+        assert.equal((mockService.setAsync as any).callCount, 2);
+      });
+
+      it("should NOT validate duration for system.backup_retention", async () => {
+        mockRequest.body = { [SETTINGS.system.backup_retention]: "not a duration" };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+        assert.equal(result.statusCode, 200);
+        assert.isTrue(
+          (mockService.setAsync as any).calledOnceWith(
+            SETTINGS.system.backup_retention,
+            "not a duration",
+          ),
+        );
+      });
+
+      it("should return 400 with errors from multiple retention keys", async () => {
+        mockRequest.body = {
+          [SETTINGS.sensors.raw_retention]: "bad value",
+          [SETTINGS.outputs.raw_retention]: "0 days",
+        };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
+
+        assert.equal(result.statusCode, 400);
+        assert.isAtLeast(result.error!.details.length, 2);
+        assert.isTrue((mockService.setAsync as any).notCalled);
+      });
+
+      it("should return 200 for null value on retention key (removes policy)", async () => {
+        mockRequest.body = { [SETTINGS.sensors.raw_retention]: null };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+        assert.equal(result.statusCode, 200);
+        assert.isTrue(
+          (mockService.setAsync as any).calledOnceWith(SETTINGS.sensors.raw_retention, null),
+        );
+      });
+
+      it("should return 400 for empty string on retention key", async () => {
+        mockRequest.body = { [SETTINGS.sensors.raw_retention]: "" };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
+
+        assert.equal(result.statusCode, 400);
+        assert.include(result.error!.details[0], "empty");
+        assert.isTrue((mockService.setAsync as any).notCalled);
+      });
     });
   });
 });

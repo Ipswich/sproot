@@ -61,7 +61,7 @@ export default async function setupAsync(): Promise<Express> {
   const journalService = new JournalService(sprootDB.journals as IJournalRepository);
   app.set(DI_KEYS.JournalService, journalService);
 
-  const settingsService = new SettingsService(sprootDB.settings);
+  const settingsService = new SettingsService(sprootDB.settings, eventBus);
   app.set(DI_KEYS.SettingsService, settingsService);
 
   await settingsService.syncDefaultsAsync();
