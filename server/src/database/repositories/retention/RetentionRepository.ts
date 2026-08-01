@@ -20,6 +20,17 @@ export class RetentionRepository extends BaseKnexRepository implements IRetentio
     super(connection);
   }
 
+  async hasRetentionPolicyAsync(tableName: string): Promise<boolean> {
+    const name = validateTableName(tableName);
+    const result = await this.connection<{ job_id: number }[]>("timescaledb_information.jobs")
+      .select("job_id")
+      .where("proc_name", "policy_retention")
+      .where("hypertable_name", name)
+      .first();
+
+    return result !== undefined;
+  }
+
   async removeRetentionPolicyAsync(tableName: string): Promise<void> {
     const name = validateTableName(tableName);
     await this.connection.raw(`SELECT remove_retention_policy('${name}')`);
