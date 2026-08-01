@@ -1,56 +1,33 @@
-FROM debian:12.13-slim
+FROM node:24.13.1-bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
 
-RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
-  echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
-  echo "Acquire::BrokenProxy true;" >> /etc/apt/apt.conf.d/99custom
-
-RUN apt-get update -y && apt-get upgrade -y
-
-# Install curl, nano, python, make, g++, git
-RUN apt-get install curl nano python3 make g++ git udev -y
-
-# Install camera dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl gnupg
-RUN curl -fsSL https://archive.raspberrypi.org/debian/raspberrypi.gpg.key \
-  | gpg --dearmor -o /usr/share/keyrings/raspberrypi-archive-keyring.gpg
-RUN echo "deb [signed-by=/usr/share/keyrings/raspberrypi-archive-keyring.gpg] https://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list
-RUN apt-get update && apt-get -y upgrade
-RUN apt-get install -y --no-install-recommends python3-pip python3-picamera2\
-  && apt-get clean \
-  && apt-get autoremove \
-  && rm -rf /var/cache/apt/archives/* \
-  && rm -rf /var/lib/apt/lists/*
-RUN pip3 install fastapi uvicorn --break-system-packages
-
-# Install NVM (and Node, npm)
-ENV NODE_VERSION=24.13.1
-ENV NVM_VERSION=v0.40.4
-ENV NVM_DIR=/root/.nvm
-RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh | bash \
-  && bash -lc "source $NVM_DIR/nvm.sh && nvm install ${NODE_VERSION} --latest-npm && nvm alias default v${NODE_VERSION}"
-ENV PATH="$NVM_DIR/versions/node/v${NODE_VERSION}/bin/:${PATH}"
-
-# Install gh
-RUN apt-get install -y gpg
-RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg;
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null;
-RUN apt-get update && apt-get install -y gh;
-
-# Install PostgreSQL client tooling
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates wget gnupg
-RUN install -d /usr/share/postgresql-common/pgdg \
-  && wget --quiet -O /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc \
-  && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-RUN apt-get update && apt-get install -y postgresql-client-18
+RUN set -eux; \
+  echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom; \
+  echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom; \
+  echo "Acquire::BrokenProxy true;" >> /etc/apt/apt.conf.d/99custom; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends ca-certificates curl g++ git gnupg make nano python3 python3-pip udev wget; \
+  curl -fsSL https://archive.raspberrypi.org/debian/raspberrypi.gpg.key \
+    | gpg --dearmor -o /usr/share/keyrings/raspberrypi-archive-keyring.gpg; \
+  echo "deb [signed-by=/usr/share/keyrings/raspberrypi-archive-keyring.gpg] https://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list; \
+  curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg; \
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list; \
+  install -d /usr/share/postgresql-common/pgdg; \
+  wget --quiet -O /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc; \
+  echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends gh postgresql-client-18 python3-picamera2; \
+  pip3 install --no-cache-dir fastapi uvicorn --break-system-packages; \
+  rm -rf /var/lib/apt/lists/*
 
 # Copy project
-COPY .. /sproot
+COPY . /sproot
 WORKDIR /sproot
-RUN npm run install:common
-RUN npm run install:server 
-RUN npm run build:server
+RUN npm ci --workspace=common --workspace=server \
+  && npm run build:server
 
 # Expose app ports
 EXPOSE 3000
