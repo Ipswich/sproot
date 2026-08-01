@@ -29,6 +29,8 @@ import {
 import { MdnsService } from "./system/MdnsService";
 import { NotificationActionManager } from "./automation/notifications/NotificationActionManager";
 import { MemoryEventBus } from "./eventbus/MemoryEventBus";
+import { LogHistoryService } from "./system/LogHistoryService";
+import { addLogStreamingTransport } from "./logger";
 
 export default async function setupAsync(): Promise<Express> {
   const app = express();
@@ -46,6 +48,10 @@ export default async function setupAsync(): Promise<Express> {
 
   const eventBus = new MemoryEventBus(logger);
   app.set(DI_KEYS.EventBus, eventBus);
+
+  const logHistoryService = new LogHistoryService(undefined, eventBus);
+  app.set(DI_KEYS.LogHistoryService, logHistoryService);
+  addLogStreamingTransport(logger, eventBus);
 
   const mdnsService = new MdnsService(logger);
   app.set(DI_KEYS.MdnsService, mdnsService);
@@ -164,6 +170,9 @@ export async function gracefulHaltAsync(
 
       // Cleanup notification action manager
       app.get(DI_KEYS.NotificationActionManager)[Symbol.dispose]();
+
+      // Cleanup log history service (unsubscribes from event bus)
+      app.get(DI_KEYS.LogHistoryService)[Symbol.dispose]();
 
       // Close database connection
       await app.get(DI_KEYS.SprootDB)[Symbol.asyncDispose]();

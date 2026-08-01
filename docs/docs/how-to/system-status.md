@@ -46,3 +46,7 @@ This section contains details for the attached camera and its features.
 - Image Count
 - Archive Size
 - Generation Duration
+
+## Log Stream
+
+This section contains a livestream of the logs. Unless you're actively trying to debug something, there's probably not a lot of interesting stuff here. Occasionally errors will flip through, but unless the app is actively crashing, you can just ignore them. Think of them as "gracefully handled" errors. Unexpected, but shrugged off.

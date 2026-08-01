@@ -8,6 +8,7 @@ import {
   systemBackupListHandlerAsync,
   systemBackupRestoreHandlerAsync,
 } from "./BackupHandlers";
+import { logStreamHandler } from "./LogStreamHandler";
 
 const router = express.Router();
 
@@ -55,5 +56,7 @@ router.get("/backups/create/status", async (_req: Request, res: Response) => {
   res.status(response.statusCode).json(response);
   return;
 });
+
+router.get("/logs/stream", logStreamHandler);
 
 export default router;
