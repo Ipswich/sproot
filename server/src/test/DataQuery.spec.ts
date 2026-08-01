@@ -3,15 +3,13 @@ import request from "supertest";
 import { MAX_LIMIT } from "@sproot/common/api/v2/QueryTypes";
 import { server } from "./setup";
 
+const THREE_DAYS_AGO = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
 const SENSOR_TIME_RANGE = {
-  "timeRange.start": "2024-01-01T00:00:00.000Z",
-  "timeRange.end": "2024-01-02T00:00:00.000Z",
+  "timeRange.start": THREE_DAYS_AGO.toISOString(),
+  "timeRange.end": new Date().toISOString(),
 };
 
-const OUTPUT_TIME_RANGE = {
-  "timeRange.start": "2024-01-01T00:00:00.000Z",
-  "timeRange.end": "2024-01-02T00:00:00.000Z",
-};
+const OUTPUT_TIME_RANGE = { ...SENSOR_TIME_RANGE };
 
 describe("DataQuery API - Sensor Data", function () {
   this.timeout(10000);

@@ -11,6 +11,8 @@ export const DI_KEYS = {
   MdnsService: "mdnsService",
   NotificationActionManager: "notificationActionManager",
   LogHistoryService: "logHistoryService",
+  SettingsService: "settingsService",
+  RetentionService: "retentionService",
 
   // Infrastructure
   KnexConnection: "knexConnection",

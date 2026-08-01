@@ -1121,3 +1121,40 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// SettingsRepository composition
+// ---------------------------------------------------------------------------
+
+describe("SettingsRepository composition", () => {
+  it("should expose SettingsRepository as db.settings", async () => {
+    // Inline stub — createKnexStub from SprootDB.spec.ts is not exported,
+    // so we define a minimal one here.
+    function createMinimalKnexStub(): any {
+      const builder: any = {};
+      builder.then = (fn: (v: unknown) => unknown) => Promise.resolve([]).then(fn);
+      return function (_table?: string) {
+        return builder;
+      };
+    }
+
+    const knex = createMinimalKnexStub();
+    // Lazy imports to avoid SprootDB constructor running during module load
+    // (which would call all repository constructors, including the Knex stub).
+    const { SprootDB } = require("../SprootDB") as {
+      SprootDB: typeof import("../SprootDB").SprootDB;
+    };
+    const { SettingsRepository } = require("../settings/SettingsRepository") as {
+      SettingsRepository: typeof import("../settings/SettingsRepository").SettingsRepository;
+    };
+
+    const db = new SprootDB(knex as any);
+
+    assert.isDefined(db.settings, "db.settings should be defined");
+    assert.instanceOf(
+      db.settings,
+      SettingsRepository,
+      "db.settings should be a SettingsRepository instance",
+    );
+  });
+});
