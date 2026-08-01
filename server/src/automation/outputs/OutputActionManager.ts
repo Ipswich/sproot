@@ -238,8 +238,7 @@ export class OutputActionManager implements Disposable {
         `Collision detected on output ${this.#outputId}: ` +
           `${highestPriorityActions
             .map(
-              (action) =>
-                `${action.payload.automationName}=${action.value} (${action.precedence})`,
+              (action) => `${action.payload.automationName}=${action.value} (${action.precedence})`,
             )
             .join(", ")}`,
       );

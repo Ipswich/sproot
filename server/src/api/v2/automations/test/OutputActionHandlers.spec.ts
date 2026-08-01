@@ -587,7 +587,13 @@ describe("OutputActionHandlers.ts tests", () => {
       const outputList = sinon.createStubInstance(OutputList);
       sprootDB.automations.actions.output.getOutputActionAsync.resolves([
         { id: 1, automationId: 1, outputId: 1, value: 100 } as SDBOutputAction,
-        { id: 1, automationId: 1, outputId: 1, value: 100, precedence: "Normal" } as SDBOutputAction,
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 100,
+          precedence: "Normal",
+        } as SDBOutputAction,
       ]);
       sprootDB.automations.getAllAsync.resolves([]);
       sprootDB.automations.actions.output.deleteAsync.resolves();

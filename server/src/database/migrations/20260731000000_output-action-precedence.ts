@@ -33,7 +33,9 @@ export async function up(knex: Knex): Promise<void> {
 
 export async function down(knex: Knex): Promise<void> {
   await knex.raw("DROP VIEW IF EXISTS output_actions_view;");
-  await knex.raw(`ALTER TABLE output_actions DROP CONSTRAINT IF EXISTS ${OUTPUT_ACTION_PRECEDENCE_CONSTRAINT};`);
+  await knex.raw(
+    `ALTER TABLE output_actions DROP CONSTRAINT IF EXISTS ${OUTPUT_ACTION_PRECEDENCE_CONSTRAINT};`,
+  );
 
   await knex.schema.alterTable("output_actions", (table) => {
     table.dropColumn("precedence");

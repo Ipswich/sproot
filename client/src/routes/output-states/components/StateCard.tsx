@@ -77,38 +77,38 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
             <Stack gap="sm">
               <Group justify="space-between" h="80">
                 <SegmentedControl
-                w={"96px"}
-                styles={
-                  controlMode === ControlMode.manual
-                    ? {
-                        root: {
-                          outline: "1px solid var(--mantine-color-blue-3)",
-                        },
-                      }
-                    : {
-                        root: {
-                          outline: "1px solid var(--mantine-color-teal-3)",
-                        },
-                      }
-                }
-                color={segmentedControlColor()}
-                orientation="vertical"
-                value={controlMode}
-                data={[
-                  { label: "Manual", value: ControlMode.manual },
-                  { label: "Automatic", value: ControlMode.automatic },
-                ]}
-                disabled={isSegmentedControlDisabled}
-                onChange={async (value) => {
-                  setSegmentedControlDisabled(true);
-                  setControlMode(value as ControlMode);
-                  await updateOutputControlModeMutation.mutateAsync({
-                    id: output.id,
-                    controlMode: value,
-                  });
-                  setSegmentedControlDisabled(false);
-                }}
-              />
+                  w={"96px"}
+                  styles={
+                    controlMode === ControlMode.manual
+                      ? {
+                          root: {
+                            outline: "1px solid var(--mantine-color-blue-3)",
+                          },
+                        }
+                      : {
+                          root: {
+                            outline: "1px solid var(--mantine-color-teal-3)",
+                          },
+                        }
+                  }
+                  color={segmentedControlColor()}
+                  orientation="vertical"
+                  value={controlMode}
+                  data={[
+                    { label: "Manual", value: ControlMode.manual },
+                    { label: "Automatic", value: ControlMode.automatic },
+                  ]}
+                  disabled={isSegmentedControlDisabled}
+                  onChange={async (value) => {
+                    setSegmentedControlDisabled(true);
+                    setControlMode(value as ControlMode);
+                    await updateOutputControlModeMutation.mutateAsync({
+                      id: output.id,
+                      controlMode: value,
+                    });
+                    setSegmentedControlDisabled(false);
+                  }}
+                />
                 <Stack justify="space-around" flex={1}>
                   {output.isPwm == true ? (
                     <Fragment>
@@ -171,8 +171,13 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                   )}
                 </Stack>
               </Group>
-              {controlMode === ControlMode.automatic && output.activeConflict ? (
-                <Alert color="yellow" variant="light" title="Automation conflict detected">
+              {controlMode === ControlMode.automatic &&
+              output.activeConflict ? (
+                <Alert
+                  color="yellow"
+                  variant="light"
+                  title="Automation conflict detected"
+                >
                   <Stack gap={4}>
                     <Text size="sm">
                       {`${output.name ?? "This output"} received conflicting ${output.activeConflict.precedence.toLowerCase()} precedence requests, so no automatic action was applied.`}
@@ -183,7 +188,8 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                       </Text>
                     ))}
                     <Text size="sm">
-                      Verify the related automations and output actions so they do not request different states at the same precedence.
+                      Verify the related automations and output actions so they
+                      do not request different states at the same precedence.
                     </Text>
                   </Stack>
                 </Alert>

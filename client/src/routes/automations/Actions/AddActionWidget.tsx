@@ -172,7 +172,11 @@ export default function AddActionWidget({
                 {...actionForm.getInputProps("precedence")}
               />
               {conflictingAutomations.length > 0 ? (
-                <Alert color="yellow" variant="light" title="Potential precedence conflict">
+                <Alert
+                  color="yellow"
+                  variant="light"
+                  title="Potential precedence conflict"
+                >
                   <Stack gap={4}>
                     <Text size="sm">
                       {conflictingAutomations.length === 1
@@ -185,7 +189,8 @@ export default function AddActionWidget({
                       </Text>
                     ))}
                     <Text size="sm">
-                      If both automations request different states, neither action will be applied.
+                      If both automations request different states, neither
+                      action will be applied.
                     </Text>
                   </Stack>
                 </Alert>

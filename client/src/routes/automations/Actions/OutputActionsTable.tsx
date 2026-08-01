@@ -98,7 +98,11 @@ function OutputActionRow(
           : `Turn ${output?.name ?? `Output Id: ${output.id}`} ${outputAction.value == 100 ? "On" : "Off"} at ${outputAction.precedence} precedence`}
       </Group>
       {conflictingAutomations.length > 0 ? (
-        <Alert color="yellow" variant="light" title="Potential precedence conflict">
+        <Alert
+          color="yellow"
+          variant="light"
+          title="Potential precedence conflict"
+        >
           <Stack gap={4}>
             <Text size="sm">
               {conflictingAutomations.length === 1
@@ -111,7 +115,8 @@ function OutputActionRow(
               </Text>
             ))}
             <Text size="sm">
-              If both automations request different states, neither action will be applied.
+              If both automations request different states, neither action will
+              be applied.
             </Text>
           </Stack>
         </Alert>
