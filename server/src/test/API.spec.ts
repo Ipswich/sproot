@@ -113,8 +113,8 @@ describe("API Tests", async function () {
           const knexConnection = app.get(DI_KEYS.KnexConnection);
           const eventBus = app.get(DI_KEYS.EventBus);
 
+          let insertedActionId: number;
           await knexConnection("output_actions").insert({
-            id: 99,
             automation_id: 2,
             output_id: 1,
             value: 100,
@@ -122,6 +122,12 @@ describe("API Tests", async function () {
           });
           await eventBus.publishAsync(new OutputActionsModifiedEvent({}));
           await flushAsync();
+
+          const insertedAction = await knexConnection("output_actions")
+            .where({ automation_id: 2, output_id: 1, value: 100, precedence: "High" })
+            .orderBy("id", "desc")
+            .first();
+          insertedActionId = insertedAction.id;
 
           const response = await request(server).get("/api/v2/outputs/1").expect(200);
           const output = response.body["content"].data[0];
@@ -138,7 +144,7 @@ describe("API Tests", async function () {
           ]);
           assert.isNull(output.activeConflict);
 
-          await knexConnection("output_actions").where({ id: 99 }).delete();
+          await knexConnection("output_actions").where({ id: insertedActionId }).delete();
           await eventBus.publishAsync(new OutputActionsModifiedEvent({}));
           await flushAsync();
         });
@@ -147,8 +153,8 @@ describe("API Tests", async function () {
           const knexConnection = app.get(DI_KEYS.KnexConnection);
           const eventBus = app.get(DI_KEYS.EventBus);
 
+          let insertedActionId: number;
           await knexConnection("output_actions").insert({
-            id: 99,
             automation_id: 2,
             output_id: 1,
             value: 100,
@@ -156,6 +162,12 @@ describe("API Tests", async function () {
           });
           await eventBus.publishAsync(new OutputActionsModifiedEvent({}));
           await flushAsync();
+
+          const insertedAction = await knexConnection("output_actions")
+            .where({ automation_id: 2, output_id: 1, value: 100, precedence: "High" })
+            .orderBy("id", "desc")
+            .first();
+          insertedActionId = insertedAction.id;
 
           await eventBus.publishAsync(
             new AutomationsTriggeredEvent(
@@ -195,7 +207,7 @@ describe("API Tests", async function () {
             ],
           });
 
-          await knexConnection("output_actions").where({ id: 99 }).delete();
+          await knexConnection("output_actions").where({ id: insertedActionId }).delete();
           await eventBus.publishAsync(new OutputActionsModifiedEvent({}));
           await flushAsync();
 
@@ -906,10 +918,12 @@ describe("API Tests", async function () {
     });
 
     describe("Create, Delete", async () => {
+      let createdActionId: number;
+
       describe("POST", async () => {
         it("should return 201", async () => {
           assert.lengthOf(await app.get("sprootDB").automations.actions.output.getAllAsync(), 5);
-          await request(server)
+          const response = await request(server)
             .post("/api/v2/output-actions")
             .send({
               automationId: 1,
@@ -918,6 +932,7 @@ describe("API Tests", async function () {
               precedence: "High",
             })
             .expect(201);
+          createdActionId = response.body["content"]["data"]["id"];
           assert.lengthOf(await app.get("sprootDB").automations.actions.output.getAllAsync(), 6);
         });
       });
@@ -925,7 +940,7 @@ describe("API Tests", async function () {
       describe("DELETE", async () => {
         it("should return 200", async () => {
           assert.lengthOf(await app.get("sprootDB").automations.actions.output.getAllAsync(), 6);
-          await request(server).delete("/api/v2/output-actions/6").expect(200);
+          await request(server).delete(`/api/v2/output-actions/${createdActionId}`).expect(200);
           assert.lengthOf(await app.get("sprootDB").automations.actions.output.getAllAsync(), 5);
         });
       });
