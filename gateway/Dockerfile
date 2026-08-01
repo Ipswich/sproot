@@ -1,36 +1,24 @@
-FROM --platform=$BUILDPLATFORM debian:12.13-slim AS build
+FROM --platform=$BUILDPLATFORM node:24.13.1-bookworm-slim AS build
 
-RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
-    echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
-    echo "Acquire::BrokenProxy    true;" >> /etc/apt/apt.conf.d/99custom
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update -y && apt-get upgrade -y
-
-# Install curl
-RUN apt-get install curl -y
-
-# Install NVM (and Node, npm)
-ENV NODE_VERSION=24.13.1
-ENV NVM_VERSION=v0.40.4
-ENV NVM_DIR=/root/.nvm
-RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh | bash \
-  && bash -lc "source $NVM_DIR/nvm.sh && nvm install ${NODE_VERSION} --latest-npm && nvm alias default v${NODE_VERSION}"
-ENV PATH="$NVM_DIR/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+RUN set -eux; \
+  echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom; \
+  echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom; \
+  echo "Acquire::BrokenProxy true;" >> /etc/apt/apt.conf.d/99custom; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends ca-certificates g++ git make python3; \
+  rm -rf /var/lib/apt/lists/*
 
 # Copy project
-COPY .. ./sproot
+COPY . /sproot
 WORKDIR /sproot
-RUN npm run install:common
 ENV NODE_OPTIONS="--max-old-space-size=8192"
 ARG VITE_VERSION
 ARG VITE_API_SERVER_URL
-# Build client
-RUN npm run install:client
-RUN npm run build:client
-
-# Build Docs
-RUN npm run install:docs
-RUN npm run build:docs
+RUN npm ci --workspace=common --workspace=client --workspace=docs \
+  && npm run build:client \
+  && npm run build:docs
 
 FROM nginx:1.29.5-alpine-slim
 RUN apk add --no-cache openssl iproute2
@@ -38,9 +26,7 @@ COPY --from=build ./sproot/client/dist /usr/share/nginx/html
 COPY --from=build ./sproot/docs/build /usr/share/nginx/html/docs
 COPY --from=build ./sproot/gateway/config/nginx.conf /etc/nginx/nginx.conf
 COPY --from=build ./sproot/gateway/config/default.conf /etc/nginx/conf.d/default.conf
-
-COPY --from=build ./sproot/gateway/scripts/docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+COPY --chmod=755 --from=build ./sproot/gateway/scripts/docker-entrypoint.sh /docker-entrypoint.sh
 
 EXPOSE 80
 EXPOSE 443
