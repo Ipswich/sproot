@@ -11,30 +11,33 @@ export class SettingsService {
     "system.backup_retention": Events.BACKUP_RETENTION_UPDATED,
   };
 
-  constructor(
-    private repo: ISettingsRepository,
-    private eventBus: IEventBus,
-  ) {}
+  readonly #settingsRepo: ISettingsRepository;
+  readonly #eventBus: IEventBus;
+
+  constructor(settingsRepo: ISettingsRepository, eventBus: IEventBus) {
+    this.#settingsRepo = settingsRepo;
+    this.#eventBus = eventBus;
+  }
 
   getAllAsync(): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>> {
-    return this.repo.getAllAsync();
+    return this.#settingsRepo.getAllAsync();
   }
 
   getAsync<K extends SettingsKey>(key: K): Promise<SettingsSchema[K] | undefined> {
-    return this.repo.getAsync(key);
+    return this.#settingsRepo.getAsync(key);
   }
 
   getManyAsync(
     keys: SettingsKey[],
   ): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>> {
-    return this.repo.getManyAsync(keys);
+    return this.#settingsRepo.getManyAsync(keys);
   }
 
   async setAsync<K extends SettingsKey>(key: K, value: SettingsSchema[K]): Promise<void> {
-    await this.repo.setAsync(key, value);
+    await this.#settingsRepo.setAsync(key, value);
     const eventType = this.#settingEventMap[key];
     if (eventType) {
-      await this.eventBus.publishAsync({
+      await this.#eventBus.publishAsync({
         type: eventType,
         payload: { key: key as string, value: value as string },
         eventId: crypto.randomUUID(),
@@ -44,14 +47,14 @@ export class SettingsService {
   }
 
   existsAsync(key: string): Promise<boolean> {
-    return this.repo.existsAsync(key);
+    return this.#settingsRepo.existsAsync(key);
   }
 
   deleteAsync(key: string): Promise<void> {
-    return this.repo.deleteAsync(key);
+    return this.#settingsRepo.deleteAsync(key);
   }
 
   syncDefaultsAsync(): Promise<void> {
-    return this.repo.syncDefaultsAsync();
+    return this.#settingsRepo.syncDefaultsAsync();
   }
 }

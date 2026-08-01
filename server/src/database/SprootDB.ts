@@ -3,6 +3,7 @@ import type { ICameraRepository } from "./repositories/camera/ICameraRepository"
 import type { IDeviceZonesRepository } from "./repositories/device-zones/IDeviceZonesRepository";
 import type { IJournalRepository } from "./repositories/journals/IJournalRepository";
 import type { IOutputsRepository } from "./repositories/outputs/IOutputsRepository";
+import type { IRetentionRepository } from "./repositories/retention/IRetentionRepository";
 import type { ISensorsRepository } from "./repositories/sensors/ISensorsRepository";
 import type { ISubcontrollersRepository } from "./repositories/subcontrollers/ISubcontrollersRepository";
 import type { ISystemRepository } from "./repositories/system/ISystemRepository";
@@ -16,6 +17,7 @@ import { DeviceZonesRepository } from "./repositories/device-zones/DeviceZonesRe
 import { InvalidCursorError } from "./repositories/utils/BaseKnexRepository";
 import { JournalsRepository } from "./repositories/journals/JournalsRepository";
 import { OutputsRepository } from "./repositories/outputs/OutputsRepository";
+import { RetentionRepository } from "./repositories/retention/RetentionRepository";
 import { SensorsRepository } from "./repositories/sensors/SensorsRepository";
 import { SubcontrollersRepository } from "./repositories/subcontrollers/SubcontrollersRepository";
 import { SystemRepository } from "./repositories/system/SystemRepository";
@@ -25,6 +27,7 @@ import { UsersRepository } from "./repositories/users/UsersRepository";
 export class SprootDB {
   readonly sensors: ISensorsRepository;
   readonly outputs: IOutputsRepository;
+  readonly retention: IRetentionRepository;
   readonly subcontrollers: ISubcontrollersRepository;
   readonly automations: IAutomationsRepository;
   readonly camera: ICameraRepository;
@@ -40,6 +43,7 @@ export class SprootDB {
     this.#connection = connection;
     this.sensors = new SensorsRepository(connection);
     this.outputs = new OutputsRepository(connection);
+    this.retention = new RetentionRepository(connection);
     this.subcontrollers = new SubcontrollersRepository(connection);
     this.automations = new AutomationsRepository(connection);
     this.camera = new CameraRepository(connection);
