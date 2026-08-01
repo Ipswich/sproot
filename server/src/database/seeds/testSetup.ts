@@ -178,11 +178,11 @@ export async function seed(knex: Knex): Promise<void> {
   ]);
 
   await knex("output_actions").insert([
-    { id: 1, automation_id: 1, output_id: 1, value: 100 },
-    { id: 2, automation_id: 1, output_id: 1, value: 0 },
-    { id: 3, automation_id: 2, output_id: 5, value: 25 },
-    { id: 4, automation_id: 2, output_id: 5, value: 50 },
-    { id: 5, automation_id: 2, output_id: 5, value: 75 },
+    { id: 1, automation_id: 1, output_id: 1, value: 100, precedence: "Normal" },
+    { id: 2, automation_id: 1, output_id: 1, value: 0, precedence: "High" },
+    { id: 3, automation_id: 2, output_id: 5, value: 25, precedence: "Normal" },
+    { id: 4, automation_id: 2, output_id: 5, value: 50, precedence: "High" },
+    { id: 5, automation_id: 2, output_id: 5, value: 75, precedence: "Emergency" },
   ]);
 
   await knex("notification_actions").insert([

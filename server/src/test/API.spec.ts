@@ -7,9 +7,14 @@ import { app, server } from "./setup";
 import fs from "fs";
 import { CameraManager } from "../camera/CameraManager";
 import { FrameBuffer } from "../camera/FrameBuffer";
+import { DI_KEYS } from "../utils/DependencyInjectionConstants";
+import { OutputActionsModifiedEvent } from "../eventbus/events/actions/OutputActionsModifiedEvent";
+import { AutomationsTriggeredEvent } from "../eventbus/events/automations/AutomationsTriggeredEvent";
 
 describe("API Tests", async function () {
   this.timeout(2000);
+
+  const flushAsync = () => new Promise((resolve) => setImmediate(resolve));
   // describe("Authentication Routes", async () => {
   //   before(() => {
   //     process.env["AUTHENTICATION_ENABLED"] = "true";
@@ -70,6 +75,8 @@ describe("API Tests", async function () {
       "color",
       "state",
       "automationTimeout",
+      "actionWarnings",
+      "activeConflict",
     ];
     const stateKeys = ["controlMode", "logTime", "value"];
     describe("Outputs", async () => {
@@ -100,6 +107,100 @@ describe("API Tests", async function () {
           assert.containsAllKeys(content.data[0].state, ["automatic", "controlMode", "manual"]);
           assert.containsAllKeys(content.data[0].state.automatic, stateKeys);
           assert.containsAllKeys(content.data[0].state.manual, stateKeys);
+        });
+
+        it("should include precedence warnings when multiple automations control the same output at the same precedence", async () => {
+          const knexConnection = app.get(DI_KEYS.KnexConnection);
+          const eventBus = app.get(DI_KEYS.EventBus);
+
+          await knexConnection("output_actions").insert({
+            id: 99,
+            automation_id: 2,
+            output_id: 1,
+            value: 100,
+            precedence: "High",
+          });
+          await eventBus.publishAsync(new OutputActionsModifiedEvent({}));
+          await flushAsync();
+
+          const response = await request(server).get("/api/v2/outputs/1").expect(200);
+          const output = response.body["content"].data[0];
+
+          validateMiddlewareValues(response);
+          assert.deepEqual(output.actionWarnings, [
+            {
+              precedence: "High",
+              actions: [
+                { automationId: 1, automationName: "Automation #1" },
+                { automationId: 2, automationName: "Automation #2" },
+              ],
+            },
+          ]);
+          assert.isNull(output.activeConflict);
+
+          await knexConnection("output_actions").where({ id: 99 }).delete();
+          await eventBus.publishAsync(new OutputActionsModifiedEvent({}));
+          await flushAsync();
+        });
+
+        it("should include an active conflict when the highest-precedence triggered actions disagree", async () => {
+          const knexConnection = app.get(DI_KEYS.KnexConnection);
+          const eventBus = app.get(DI_KEYS.EventBus);
+
+          await knexConnection("output_actions").insert({
+            id: 99,
+            automation_id: 2,
+            output_id: 1,
+            value: 100,
+            precedence: "High",
+          });
+          await eventBus.publishAsync(new OutputActionsModifiedEvent({}));
+          await flushAsync();
+
+          await eventBus.publishAsync(
+            new AutomationsTriggeredEvent(
+              new Map([
+                [
+                  1,
+                  {
+                    automationId: 1,
+                    automationName: "Automation #1",
+                    operator: "or",
+                    conditions: { allOf: [], anyOf: [], oneOf: [] },
+                  },
+                ],
+                [
+                  2,
+                  {
+                    automationId: 2,
+                    automationName: "Automation #2",
+                    operator: "or",
+                    conditions: { allOf: [], anyOf: [], oneOf: [] },
+                  },
+                ],
+              ]),
+            ),
+          );
+          await flushAsync();
+
+          const response = await request(server).get("/api/v2/outputs/1").expect(200);
+          const output = response.body["content"].data[0];
+
+          validateMiddlewareValues(response);
+          assert.deepEqual(output.activeConflict, {
+            precedence: "High",
+            actions: [
+              { automationId: 1, automationName: "Automation #1", value: 0 },
+              { automationId: 2, automationName: "Automation #2", value: 100 },
+            ],
+          });
+
+          await knexConnection("output_actions").where({ id: 99 }).delete();
+          await eventBus.publishAsync(new OutputActionsModifiedEvent({}));
+          await flushAsync();
+
+          const cleanupResponse = await request(server).get("/api/v2/outputs/1").expect(200);
+          assert.isNull(cleanupResponse.body["content"].data[0].activeConflict);
         });
       });
       describe("Create, Update, Delete", async () => {
@@ -750,7 +851,13 @@ describe("API Tests", async function () {
         validateMiddlewareValues(response);
         assert.lengthOf(content.data, 5);
         for (let i = 0; i < content.data.length; i++) {
-          assert.containsAllKeys(content.data[i], ["id", "automationId", "outputId", "value"]);
+          assert.containsAllKeys(content.data[i], [
+            "id",
+            "automationId",
+            "outputId",
+            "value",
+            "precedence",
+          ]);
         }
       });
 
@@ -761,16 +868,40 @@ describe("API Tests", async function () {
         const content = response.body["content"];
         validateMiddlewareValues(response);
         assert.lengthOf(content.data, 3);
-        assert.containsAllKeys(content.data[0], ["id", "automationId", "outputId", "value"]);
-        assert.containsAllKeys(content.data[1], ["id", "automationId", "outputId", "value"]);
-        assert.containsAllKeys(content.data[2], ["id", "automationId", "outputId", "value"]);
+        assert.containsAllKeys(content.data[0], [
+          "id",
+          "automationId",
+          "outputId",
+          "value",
+          "precedence",
+        ]);
+        assert.containsAllKeys(content.data[1], [
+          "id",
+          "automationId",
+          "outputId",
+          "value",
+          "precedence",
+        ]);
+        assert.containsAllKeys(content.data[2], [
+          "id",
+          "automationId",
+          "outputId",
+          "value",
+          "precedence",
+        ]);
       });
 
       it("should return 200 and a single output action", async () => {
         const response = await request(server).get("/api/v2/output-actions/1").expect(200);
         const content = response.body["content"];
         validateMiddlewareValues(response);
-        assert.containsAllKeys(content.data, ["id", "automationId", "outputId", "value"]);
+        assert.containsAllKeys(content.data, [
+          "id",
+          "automationId",
+          "outputId",
+          "value",
+          "precedence",
+        ]);
       });
     });
 
@@ -784,6 +915,7 @@ describe("API Tests", async function () {
               automationId: 1,
               outputId: 1,
               value: 100,
+              precedence: "High",
             })
             .expect(201);
           assert.lengthOf(await app.get("sprootDB").automations.actions.output.getAllAsync(), 6);

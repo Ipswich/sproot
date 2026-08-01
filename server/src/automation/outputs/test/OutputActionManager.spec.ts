@@ -72,6 +72,7 @@ describe("OutputActionManager.ts tests", () => {
           automationId: 1,
           outputId: 1,
           value: 75,
+          precedence: "Normal",
         },
       ]);
 
@@ -107,6 +108,7 @@ describe("OutputActionManager.ts tests", () => {
           automationId: 1,
           outputId: 1,
           value: 75,
+          precedence: "Normal",
         },
       ]);
       using manager = await OutputActionManager.createInstanceAsync(
@@ -124,7 +126,7 @@ describe("OutputActionManager.ts tests", () => {
       assert.equal(manager.lastResult, 0);
     });
 
-    it("should return 0 (off) when collision detected (multiple values)", async () => {
+    it("should do nothing when highest-precedence actions conflict", async () => {
       const sprootDB = createStubSprootDB();
       const eventBus = new MemoryEventBus(mockLogger);
 
@@ -134,12 +136,14 @@ describe("OutputActionManager.ts tests", () => {
           automationId: 1,
           outputId: 1,
           value: 50,
+          precedence: "High",
         },
         {
           id: 2,
           automationId: 2,
           outputId: 1,
           value: 75,
+          precedence: "High",
         },
       ]);
 
@@ -169,10 +173,17 @@ describe("OutputActionManager.ts tests", () => {
 
       await publishAutomationEventAsync(eventBus, triggeredAutomations);
 
-      assert.equal(manager.lastResult, 0);
+      assert.isUndefined(manager.lastResult);
+      assert.deepEqual(manager.activeConflict, {
+        precedence: "High",
+        actions: [
+          { automationId: 1, automationName: "automation1", value: 50 },
+          { automationId: 2, automationName: "automation2", value: 75 },
+        ],
+      });
     });
 
-    it("should return value when multiple automations trigger with same value", async () => {
+    it("should ignore lower-precedence disagreements when higher-precedence actions agree", async () => {
       const sprootDB = createStubSprootDB();
       const eventBus = new MemoryEventBus(mockLogger);
       sprootDB.automations.actions.output.getActionsByOutputIdAsync.resolves([
@@ -181,12 +192,88 @@ describe("OutputActionManager.ts tests", () => {
           automationId: 1,
           outputId: 1,
           value: 50,
+          precedence: "Normal",
+        },
+        {
+          id: 2,
+          automationId: 2,
+          outputId: 1,
+          value: 75,
+          precedence: "Normal",
+        },
+        {
+          id: 3,
+          automationId: 3,
+          outputId: 1,
+          value: 50,
+          precedence: "Emergency",
+        },
+        {
+          id: 4,
+          automationId: 4,
+          outputId: 1,
+          value: 50,
+          precedence: "Emergency",
+        },
+      ]);
+      using manager = await OutputActionManager.createInstanceAsync(
+        1,
+        async () => {},
+        eventBus,
+        sprootDB.automations.actions.output,
+        mockLogger,
+        60,
+      );
+
+      const triggeredAutomations = new Map<number, any>();
+      triggeredAutomations.set(1, {
+        automationId: 1,
+        automationName: "automation1",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+      triggeredAutomations.set(2, {
+        automationId: 2,
+        automationName: "automation2",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+      triggeredAutomations.set(3, {
+        automationId: 3,
+        automationName: "automation3",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+      triggeredAutomations.set(4, {
+        automationId: 4,
+        automationName: "automation4",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+
+      await publishAutomationEventAsync(eventBus, triggeredAutomations);
+
+      assert.equal(manager.lastResult, 50);
+      assert.isNull(manager.activeConflict);
+    });
+
+    it("should return value when multiple automations trigger with same highest-precedence value", async () => {
+      const sprootDB = createStubSprootDB();
+      const eventBus = new MemoryEventBus(mockLogger);
+      sprootDB.automations.actions.output.getActionsByOutputIdAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 50,
+          precedence: "High",
         },
         {
           id: 2,
           automationId: 2,
           outputId: 1,
           value: 50,
+          precedence: "High",
         },
       ]);
       using manager = await OutputActionManager.createInstanceAsync(
@@ -226,6 +313,7 @@ describe("OutputActionManager.ts tests", () => {
           automationId: 1,
           outputId: 1,
           value: 75,
+          precedence: "Normal",
         },
       ]);
       using manager = await OutputActionManager.createInstanceAsync(
@@ -273,6 +361,7 @@ describe("OutputActionManager.ts tests", () => {
           automationId: 1,
           outputId: 1,
           value: 50,
+          precedence: "Normal",
         },
       ]);
       using manager = await OutputActionManager.createInstanceAsync(
@@ -306,6 +395,7 @@ describe("OutputActionManager.ts tests", () => {
           automationId: 1,
           outputId: 1,
           value: 50,
+          precedence: "Normal",
         },
       ]);
       using manager = await OutputActionManager.createInstanceAsync(
@@ -336,6 +426,7 @@ describe("OutputActionManager.ts tests", () => {
           automationId: 1,
           outputId: 1,
           value: 75,
+          precedence: "Normal",
         },
       ]);
 
@@ -358,12 +449,14 @@ describe("OutputActionManager.ts tests", () => {
           automationId: 1,
           outputId: 1,
           value: 50,
+          precedence: "Normal",
         },
         {
           id: 2,
           automationId: 2,
           outputId: 1,
           value: 75,
+          precedence: "High",
         },
       ]);
 
@@ -388,12 +481,14 @@ describe("OutputActionManager.ts tests", () => {
         automationId: 1,
         outputId: 1,
         value: 75,
+        precedence: "Emergency",
       });
 
       assert.equal(action.id, 1);
       assert.equal(action.automationId, 1);
       assert.equal(action.outputId, 1);
       assert.equal(action.value, 75);
+      assert.equal(action.precedence, "Emergency");
     });
   });
 });

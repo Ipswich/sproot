@@ -31,6 +31,7 @@ import { SDBJournal } from "@sproot/database/SDBJournal";
 import { SDBJournalTag } from "@sproot/database/SDBJournalTag";
 import { SDBJournalEntryTag } from "@sproot/database/SDBJournalEntryTag";
 import { SDBJournalEntry } from "@sproot/database/SDBJournalEntry";
+import type { OutputActionPrecedence } from "@sproot/common/automation/OutputActionPrecedence";
 import type {
   SensorDataQueryRequest,
   OutputDataQueryRequest,
@@ -597,11 +598,12 @@ export async function addOutputActionAsync(
   automationId: number,
   outputId: number,
   value: number,
+  precedence: OutputActionPrecedence,
 ) {
   const response = await fetch(`${SERVER_URL}/api/v2/output-actions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ automationId, outputId, value }),
+    body: JSON.stringify({ automationId, outputId, value, precedence }),
     mode: "cors",
     // credentials: "include",
   });

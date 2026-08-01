@@ -4,7 +4,7 @@ import {
   getOutputActionsByAutomationIdAsync,
   deleteOutputActionAsync,
 } from "../../../requests/requests_v2";
-import { Group, Text } from "@mantine/core";
+import { Alert, Group, Stack, Text } from "@mantine/core";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { Fragment } from "react/jsx-runtime";
 import DeletablesTable from "../../common/DeletablesTable";
@@ -30,9 +30,12 @@ export default function OutputActionsTable({
     mutationFn: async (outputActionId: number) => {
       await deleteOutputActionAsync(outputActionId);
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({
+    onSettled: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ["outputActions", automationId],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["outputs"],
       });
     },
   });
@@ -48,6 +51,7 @@ export default function OutputActionsTable({
         displayLabel: OutputActionRow(
           outputAction,
           outputs.find((output) => output.id == outputAction.outputId)!,
+          automationId,
         ),
         id: outputAction.id,
         deleteFn: (id: number) => deleteOutputActionMutation.mutateAsync(id),
@@ -74,12 +78,44 @@ export default function OutputActionsTable({
   );
 }
 
-function OutputActionRow(outputAction: SDBOutputAction, output: IOutputBase) {
+function OutputActionRow(
+  outputAction: SDBOutputAction,
+  output: IOutputBase,
+  automationId: number,
+) {
+  const matchingWarning = output.actionWarnings.find(
+    (warning) => warning.precedence === outputAction.precedence,
+  );
+  const conflictingAutomations = (matchingWarning?.actions ?? []).filter(
+    (action) => action.automationId !== automationId,
+  );
+
   return (
-    <Group>
-      {output?.isPwm
-        ? `Set ${output?.name ?? `Output Id: ${output.id}`} to ${String(outputAction.value)}%`
-        : `Turn ${output?.name ?? `Output Id: ${output.id}`} ${outputAction.value == 100 ? "On" : "Off"}`}
-    </Group>
+    <Stack gap="xs">
+      <Group>
+        {output?.isPwm
+          ? `Set ${output?.name ?? `Output Id: ${output.id}`} to ${String(outputAction.value)}% at ${outputAction.precedence} precedence`
+          : `Turn ${output?.name ?? `Output Id: ${output.id}`} ${outputAction.value == 100 ? "On" : "Off"} at ${outputAction.precedence} precedence`}
+      </Group>
+      {conflictingAutomations.length > 0 ? (
+        <Alert color="yellow" variant="light" title="Potential precedence conflict">
+          <Stack gap={4}>
+            <Text size="sm">
+              {conflictingAutomations.length === 1
+                ? `Another automation also controls ${output?.name ?? "this output"} at ${outputAction.precedence} precedence.`
+                : `Other automations also control ${output?.name ?? "this output"} at ${outputAction.precedence} precedence.`}
+            </Text>
+            {conflictingAutomations.map((action) => (
+              <Text key={action.automationId} size="sm">
+                {`- ${action.automationName}`}
+              </Text>
+            ))}
+            <Text size="sm">
+              If both automations request different states, neither action will be applied.
+            </Text>
+          </Stack>
+        </Alert>
+      ) : null}
+    </Stack>
   );
 }

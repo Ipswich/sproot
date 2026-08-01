@@ -1,4 +1,5 @@
 import { SDBOutputState } from "../database/SDBOutputState";
+import { OutputActionPrecedence } from "../automation/OutputActionPrecedence";
 import { Models } from "./Models";
 
 enum ControlMode {
@@ -20,6 +21,8 @@ interface IOutputBase {
   color: string;
   state: IOutputState;
   automationTimeout: number;
+  actionWarnings: OutputActionWarning[];
+  activeConflict: OutputActionConflict | null;
 }
 
 type IOutputState = {
@@ -29,5 +32,30 @@ type IOutputState = {
   value: number;
 };
 
+type OutputActionParticipant = {
+  automationId: number;
+  automationName: string;
+};
+
+type OutputActionWarning = {
+  precedence: OutputActionPrecedence;
+  actions: OutputActionParticipant[];
+};
+
+type OutputActionConflict = {
+  precedence: OutputActionPrecedence;
+  actions: Array<
+    OutputActionParticipant & {
+      value: number;
+    }
+  >;
+};
+
 export { ControlMode };
-export type { IOutputBase, IOutputState };
+export type {
+  IOutputBase,
+  IOutputState,
+  OutputActionConflict,
+  OutputActionParticipant,
+  OutputActionWarning,
+};

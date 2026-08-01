@@ -4,6 +4,10 @@ import { Request, Response } from "express";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { AutomationService } from "../../../../automation/AutomationService";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
+import {
+  isOutputActionPrecedence,
+  OutputActionPrecedence,
+} from "@sproot/common/automation/OutputActionPrecedence";
 
 /**
  * Possible statusCodes: 200, 401, 503
@@ -144,6 +148,7 @@ export async function addAsync(
   const automationId = parseInt(request.body["automationId"] ?? "");
   const outputId = parseInt(request.body["outputId"] ?? "");
   let value = parseInt(request.body["value"] ?? "");
+  const precedence = (request.body["precedence"] ?? "Normal") as string;
 
   const invalidFields = [];
   if (isNaN(automationId)) {
@@ -174,6 +179,9 @@ export async function addAsync(
       value = value > 0 ? 100 : 0;
     }
   }
+  if (!isOutputActionPrecedence(precedence)) {
+    invalidFields.push("Precedence must be one of: Normal, High, Emergency.");
+  }
   if (invalidFields.length > 0) {
     automationResponse = {
       statusCode: 400,
@@ -201,11 +209,22 @@ export async function addAsync(
       return automationResponse;
     }
 
-    const automation = await automationService.addOutputActionAsync(automationId, outputId, value);
+    const automation = await automationService.addOutputActionAsync(
+      automationId,
+      outputId,
+      value,
+      precedence as OutputActionPrecedence,
+    );
     automationResponse = {
       statusCode: 201,
       content: {
-        data: { id: automation, outputId: outputId, automationId: automationId, value: value },
+        data: {
+          id: automation,
+          outputId: outputId,
+          automationId: automationId,
+          value: value,
+          precedence,
+        },
       },
       ...response.locals["defaultProperties"],
     };

@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   Group,
   SegmentedControl,
@@ -10,6 +11,11 @@ import {
   TextInput,
   Textarea,
 } from "@mantine/core";
+import {
+  OUTPUT_ACTION_PRECEDENCE_VALUES,
+  OutputActionPrecedence,
+} from "@sproot/common/automation/OutputActionPrecedence";
+import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { useForm } from "@mantine/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -19,14 +25,14 @@ import {
 
 type ActionType = "output" | "notification";
 
+type AddActionOutputOption = Pick<
+  IOutputBase,
+  "id" | "parentOutputId" | "name" | "isPwm" | "actionWarnings"
+>;
+
 export interface AddActionWidgetProps {
   automationId: number;
-  outputs: {
-    id: number;
-    parentOutputId: number | null;
-    name: string;
-    isPwm: boolean;
-  }[];
+  outputs: AddActionOutputOption[];
   onSaved: () => void;
 }
 
@@ -45,6 +51,7 @@ export default function AddActionWidget({
       actionType: "output" as ActionType,
       outputId: String(rootOutputs[0]?.id ?? ""),
       value: rootOutputs[0]?.isPwm ? 50 : 100,
+      precedence: "Normal" as OutputActionPrecedence,
       subject: "",
       content: "",
     },
@@ -71,6 +78,7 @@ export default function AddActionWidget({
           automationId,
           parseInt(values.outputId),
           values.value,
+          values.precedence,
         );
         return;
       }
@@ -86,6 +94,9 @@ export default function AddActionWidget({
         await queryClient.invalidateQueries({
           queryKey: ["outputActions", automationId],
         });
+        await queryClient.invalidateQueries({
+          queryKey: ["outputs"],
+        });
       } else {
         await queryClient.invalidateQueries({
           queryKey: ["notificationActions", automationId],
@@ -93,6 +104,16 @@ export default function AddActionWidget({
       }
     },
   });
+
+  const selectedOutput = rootOutputs.find(
+    (output) => String(output.id) === actionForm.values.outputId,
+  );
+  const selectedWarning = selectedOutput?.actionWarnings.find(
+    (warning) => warning.precedence === actionForm.values.precedence,
+  );
+  const conflictingAutomations = (selectedWarning?.actions ?? []).filter(
+    (action) => action.automationId !== automationId,
+  );
 
   return (
     <form
@@ -102,6 +123,7 @@ export default function AddActionWidget({
         actionForm.setFieldValue("actionType", "output");
         actionForm.setFieldValue("outputId", String(rootOutputs[0]?.id ?? ""));
         actionForm.setFieldValue("value", rootOutputs[0]?.isPwm ? 50 : 100);
+        actionForm.setFieldValue("precedence", "Normal");
         onSaved();
       })}
     >
@@ -126,7 +148,7 @@ export default function AddActionWidget({
               <Select
                 data={rootOutputs.map((output) => ({
                   value: String(output.id),
-                  label: output.name,
+                  label: output.name ?? `Output Id: ${output.id}`,
                 }))}
                 label="Output"
                 {...actionForm.getInputProps("outputId")}
@@ -141,9 +163,34 @@ export default function AddActionWidget({
                   );
                 }}
               />
-              {rootOutputs.find(
-                (output) => String(output.id) === actionForm.values.outputId,
-              )?.isPwm ? (
+              <Select
+                label="Precedence"
+                data={OUTPUT_ACTION_PRECEDENCE_VALUES.map((precedence) => ({
+                  value: precedence,
+                  label: precedence,
+                }))}
+                {...actionForm.getInputProps("precedence")}
+              />
+              {conflictingAutomations.length > 0 ? (
+                <Alert color="yellow" variant="light" title="Potential precedence conflict">
+                  <Stack gap={4}>
+                    <Text size="sm">
+                      {conflictingAutomations.length === 1
+                        ? `Another automation also controls ${selectedOutput?.name ?? "this output"} at ${actionForm.values.precedence} precedence.`
+                        : `Other automations also control ${selectedOutput?.name ?? "this output"} at ${actionForm.values.precedence} precedence.`}
+                    </Text>
+                    {conflictingAutomations.map((action) => (
+                      <Text key={action.automationId} size="sm">
+                        {`- ${action.automationName}`}
+                      </Text>
+                    ))}
+                    <Text size="sm">
+                      If both automations request different states, neither action will be applied.
+                    </Text>
+                  </Stack>
+                </Alert>
+              ) : null}
+              {selectedOutput?.isPwm ? (
                 <Slider
                   min={0}
                   max={100}
