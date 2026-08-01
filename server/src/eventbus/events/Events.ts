@@ -6,4 +6,7 @@ export const Events = {
   OUTPUT_MODIFIED_EVENT: "output.modified",
   CAMERA_SETTINGS_MODIFIED_EVENT: "camera.settings.modified",
   LOG_EVENT: "system.log.event",
+  SENSOR_RETENTION_UPDATED: "sensor.retention.updated",
+  OUTPUT_RETENTION_UPDATED: "output.retention.updated",
+  BACKUP_RETENTION_UPDATED: "backup.retention.updated",
 } as const;

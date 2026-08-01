@@ -30,6 +30,8 @@ import { MdnsService } from "./system/MdnsService";
 import { NotificationActionManager } from "./automation/notifications/NotificationActionManager";
 import { MemoryEventBus } from "./eventbus/MemoryEventBus";
 import { LogHistoryService } from "./system/LogHistoryService";
+import { SettingsService } from "./settings/SettingsService";
+import { RetentionService } from "./retention/RetentionService";
 import { addLogStreamingTransport } from "./logger";
 
 export default async function setupAsync(): Promise<Express> {
@@ -58,6 +60,19 @@ export default async function setupAsync(): Promise<Express> {
 
   const journalService = new JournalService(sprootDB.journals as IJournalRepository);
   app.set(DI_KEYS.JournalService, journalService);
+
+  const settingsService = new SettingsService(sprootDB.settings, eventBus);
+  app.set(DI_KEYS.SettingsService, settingsService);
+
+  await settingsService.syncDefaultsAsync();
+
+  const retentionService = new RetentionService(
+    sprootDB.settings,
+    sprootDB.retention,
+    eventBus,
+    logger,
+  );
+  app.set(DI_KEYS.RetentionService, retentionService);
 
   const automationService = await AutomationService.createInstanceAsync(
     sprootDB.automations,
@@ -135,6 +150,8 @@ export default async function setupAsync(): Promise<Express> {
   // API v2 handlers
   ApiRootV2(app);
 
+  await retentionService.reconcileAllAsync();
+
   profiler.done({
     message: "Sproot server initialization time",
     level: "debug",
@@ -173,6 +190,9 @@ export async function gracefulHaltAsync(
 
       // Cleanup log history service (unsubscribes from event bus)
       app.get(DI_KEYS.LogHistoryService)[Symbol.dispose]();
+
+      // Cleanup retention service (unsubscribes from event bus)
+      app.get(DI_KEYS.RetentionService)[Symbol.dispose]();
 
       // Close database connection
       await app.get(DI_KEYS.SprootDB)[Symbol.asyncDispose]();

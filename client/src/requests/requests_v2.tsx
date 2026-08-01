@@ -48,6 +48,28 @@ export type SystemLogEvent = {
   metadata?: Record<string, unknown>;
 };
 
+export type ApplicationSettingsKey =
+  | "sensors.data_retention"
+  | "outputs.data_retention"
+  | "system.backup_retention";
+
+export type ApplicationSettings = Partial<
+  Record<ApplicationSettingsKey, string | null>
+>;
+
+function getErrorMessage(
+  response: ErrorResponse,
+  fallbackMessage: string,
+): string {
+  const details = response.error?.details?.filter(Boolean);
+
+  if (details && details.length > 0) {
+    return details.join(", ");
+  }
+
+  return response.error?.name || fallbackMessage;
+}
+
 export function getSystemLogStreamUrl(): string {
   return `${SERVER_URL}/api/v2/system/logs/stream`;
 }
@@ -1353,6 +1375,55 @@ export async function getSystemStatusAsync(): Promise<SystemStatus> {
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
+}
+
+export async function getApplicationSettingsAsync(): Promise<ApplicationSettings> {
+  const response = await fetch(`${SERVER_URL}/api/v2/settings`, {
+    method: "GET",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+
+  const json = (await response.json()) as SuccessResponse | ErrorResponse;
+
+  if (!response.ok) {
+    console.error(`Error fetching application settings: ${response}`);
+    throw new Error(
+      getErrorMessage(
+        json as ErrorResponse,
+        "Failed to load application settings.",
+      ),
+    );
+  }
+
+  return (json as SuccessResponse).content?.data ?? {};
+}
+
+export async function patchApplicationSettingsAsync(
+  settings: ApplicationSettings,
+): Promise<ApplicationSettings> {
+  const response = await fetch(`${SERVER_URL}/api/v2/settings`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(settings),
+    mode: "cors",
+    // credentials: "include",
+  });
+
+  const json = (await response.json()) as SuccessResponse | ErrorResponse;
+
+  if (!response.ok) {
+    console.error(`Error updating application settings: ${response}`);
+    throw new Error(
+      getErrorMessage(
+        json as ErrorResponse,
+        "Failed to update application settings.",
+      ),
+    );
+  }
+
+  return (json as SuccessResponse).content?.data ?? settings;
 }
 
 export async function getSubcontrollerAsync(): Promise<{

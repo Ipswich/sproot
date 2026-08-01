@@ -1436,6 +1436,197 @@ describe("API Tests", async function () {
     });
   });
 
+  describe("Settings Routes", async () => {
+    describe("GET", async () => {
+      it("should return 200 with all 3 settings", async () => {
+        const response = await request(server).get("/api/v2/settings").expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.isObject(content.data);
+        assert.equal(Object.keys(content.data).length, 3);
+        assert.exists(content.data["sensors.data_retention"]);
+        assert.exists(content.data["outputs.data_retention"]);
+        assert.exists(content.data["system.backup_retention"]);
+      });
+    });
+
+    describe("PATCH", async () => {
+      it("should return 200 with updated settings", async () => {
+        const response = await request(server)
+          .patch("/api/v2/settings")
+          .send({ "sensors.data_retention": "45 days" })
+          .expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.equal(content.data["sensors.data_retention"], "45 days");
+      });
+
+      it("should return 200 with multiple updated settings", async () => {
+        const response = await request(server)
+          .patch("/api/v2/settings")
+          .send({
+            "sensors.data_retention": "45 days",
+            "outputs.data_retention": "90 days",
+          })
+          .expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.equal(Object.keys(content.data).length, 2);
+      });
+
+      it("should return 400 for unknown key", async () => {
+        const response = await request(server)
+          .patch("/api/v2/settings")
+          .send({ "unknown.key": "value" })
+          .expect(400);
+        validateMiddlewareValues(response);
+        assert.include(response.body.error.details[0], "Unknown setting key: unknown.key");
+      });
+
+      it("should return 400 for type mismatch", async () => {
+        const response = await request(server)
+          .patch("/api/v2/settings")
+          .send({ "sensors.data_retention": 123 })
+          .expect(400);
+        validateMiddlewareValues(response);
+        assert.include(response.body.error.details[0], "expected string or null");
+        assert.include(response.body.error.details[0], "got number");
+      });
+
+      it("should return 200 for null value", async () => {
+        const response = await request(server)
+          .patch("/api/v2/settings")
+          .send({ "sensors.data_retention": null })
+          .expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.equal(content.data["sensors.data_retention"], null);
+      });
+
+      it("should return 400 for invalid body (array)", async () => {
+        const response = await request(server)
+          .patch("/api/v2/settings")
+          .send(["not", "an", "object"])
+          .expect(400);
+        validateMiddlewareValues(response);
+        assert.include(response.body.error.details[0], "Request body must be a JSON object");
+      });
+
+      it("should return 200 with empty body (no keys to update)", async () => {
+        const response = await request(server).patch("/api/v2/settings").send({}).expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.deepEqual(content.data, {});
+      });
+    });
+  });
+
+  describe("Log Stream Routes", () => {
+    describe("GET /api/v2/system/logs/stream", () => {
+      it("should return 200 with SSE headers", async () => {
+        await new Promise<void>((resolve, reject) => {
+          let settled = false;
+          const req = httpGet("http://127.0.0.1:3000/api/v2/system/logs/stream", (res) => {
+            try {
+              assert.equal(res.statusCode, 200);
+              assert.equal(res.headers["content-type"], "text/event-stream; charset=utf-8");
+              assert.equal(res.headers["cache-control"], "no-cache");
+              assert.equal(res.headers["connection"], "keep-alive");
+            } catch (error) {
+              clearTimeout(timeout);
+              settled = true;
+              req.destroy();
+              reject(error);
+              return;
+            }
+
+            res.once("data", () => {
+              if (settled) return;
+              settled = true;
+              clearTimeout(timeout);
+              req.destroy();
+              resolve();
+            });
+          });
+          const timeout = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            req.destroy();
+            reject(new Error("Log stream did not respond within timeout period"));
+          }, 300);
+          req.on("error", (err) => {
+            if (
+              settled &&
+              (err.message.includes("aborted") || err.message.includes("socket hang up"))
+            ) {
+              return;
+            }
+            if (!settled) {
+              settled = true;
+              clearTimeout(timeout);
+              reject(err);
+            }
+          });
+        });
+      });
+
+      it("should send history events", async () => {
+        const received: string[] = [];
+        await new Promise<void>((resolve, reject) => {
+          let settled = false;
+          const req = httpGet("http://127.0.0.1:3000/api/v2/system/logs/stream", (res) => {
+            try {
+              assert.equal(res.statusCode, 200);
+            } catch (error) {
+              clearTimeout(timeout);
+              settled = true;
+              req.destroy();
+              reject(error);
+              return;
+            }
+
+            res.on("data", (chunk: Buffer) => {
+              const lines = chunk.toString().split("\n");
+              for (const line of lines) {
+                if (line.startsWith("data: ")) {
+                  const payload = JSON.parse(line.slice(6));
+                  received.push(payload.message);
+                  if (settled) return;
+                  settled = true;
+                  clearTimeout(timeout);
+                  req.destroy();
+                  resolve();
+                }
+              }
+            });
+          });
+          const timeout = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            req.destroy();
+            reject(new Error("Log stream did not send data within timeout period"));
+          }, 300);
+          req.on("error", (err) => {
+            if (
+              settled &&
+              (err.message.includes("aborted") || err.message.includes("socket hang up"))
+            ) {
+              return;
+            }
+            if (!settled) {
+              settled = true;
+              clearTimeout(timeout);
+              reject(err);
+            }
+          });
+        });
+
+        // History events should have been sent
+        assert.isAbove(received.length, 0, "Should have received history events");
+      });
+    });
+  });
+
   describe("Journal Tag Routes", () => {
     let createdId: number;
 
