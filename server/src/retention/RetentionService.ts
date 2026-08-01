@@ -108,6 +108,10 @@ export class RetentionService {
   async #removeRetentionPolicyForTargets(targets: readonly RetentionTarget[]): Promise<void> {
     for (const target of targets) {
       try {
+        const exists = await this.#retentionRepo.hasRetentionPolicyAsync(target.table);
+        if (!exists) {
+          continue;
+        }
         await this.#retentionRepo.removeRetentionPolicyAsync(target.table);
       } catch (err) {
         this.#logger.warn(
@@ -123,7 +127,10 @@ export class RetentionService {
   ): Promise<void> {
     for (const target of targets) {
       try {
-        await this.#retentionRepo.removeRetentionPolicyAsync(target.table);
+        const exists = await this.#retentionRepo.hasRetentionPolicyAsync(target.table);
+        if (exists) {
+          await this.#retentionRepo.removeRetentionPolicyAsync(target.table);
+        }
         await this.#retentionRepo.addRetentionPolicyAsync(target.table, duration);
       } catch (err) {
         this.#logger.warn(

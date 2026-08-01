@@ -28,6 +28,7 @@ describe("RetentionService", () => {
       syncDefaultsAsync: sinon.stub().resolves(),
     } as unknown as sinon.SinonStubbedInstance<ISettingsRepository>;
     retentionRepo = {
+      hasRetentionPolicyAsync: sinon.stub().resolves(true),
       removeRetentionPolicyAsync: sinon.stub().resolves(),
       addRetentionPolicyAsync: sinon.stub().resolves(),
       getPolicyJobIdAsync: sinon.stub().resolves(1),
@@ -108,6 +109,28 @@ describe("RetentionService", () => {
 
       // 4 tables × remove only = 4 calls
       assert.isTrue(retentionRepo.removeRetentionPolicyAsync.callCount === 4);
+      assert.isTrue(retentionRepo.addRetentionPolicyAsync.notCalled);
+    });
+
+    it("skips remove when policy does not exist, then adds a new policy", async () => {
+      retentionRepo.hasRetentionPolicyAsync.resolves(false);
+      repo.getAsync.resolves("30 days");
+
+      await service.reconcileAsync("sensors.data_retention");
+
+      assert.isTrue(retentionRepo.hasRetentionPolicyAsync.callCount === 4);
+      assert.isTrue(retentionRepo.removeRetentionPolicyAsync.notCalled);
+      assert.isTrue(retentionRepo.addRetentionPolicyAsync.callCount === 4);
+    });
+
+    it("skips remove when policy does not exist during clear (empty value)", async () => {
+      retentionRepo.hasRetentionPolicyAsync.resolves(false);
+      repo.getAsync.resolves("");
+
+      await service.reconcileAsync("sensors.data_retention");
+
+      assert.isTrue(retentionRepo.hasRetentionPolicyAsync.callCount === 4);
+      assert.isTrue(retentionRepo.removeRetentionPolicyAsync.notCalled);
       assert.isTrue(retentionRepo.addRetentionPolicyAsync.notCalled);
     });
   });

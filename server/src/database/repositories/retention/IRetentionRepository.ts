@@ -4,6 +4,12 @@
  */
 export interface IRetentionRepository {
   /**
+   * Check if a retention policy exists for a hypertable.
+   * Returns true if a retention policy job is found, false otherwise.
+   */
+  hasRetentionPolicyAsync(tableName: string): Promise<boolean>;
+
+  /**
    * Remove the retention policy from a hypertable (or no-op if none exists).
    */
   removeRetentionPolicyAsync(tableName: string): Promise<void>;

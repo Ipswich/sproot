@@ -19,6 +19,38 @@ describe("RetentionRepository", () => {
     sinon.restore();
   });
 
+  describe("hasRetentionPolicyAsync", () => {
+    function createMockWithResult(firstResult: { job_id: number } | undefined): Knex {
+      const queryBuilder = {
+        select: sinon.stub().returns({
+          where: sinon.stub().returns({
+            where: sinon.stub().returns({
+              first: sinon.stub().resolves(firstResult),
+            }),
+          }),
+        }),
+      };
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const mockKnex = ((_tableName: string) => queryBuilder) as unknown as Knex;
+
+      return mockKnex;
+    }
+
+    it("returns true when a retention policy exists", async () => {
+      const mockKnex = createMockWithResult({ job_id: 5001 });
+      const testRepo = new RetentionRepository(mockKnex);
+      const result = await testRepo.hasRetentionPolicyAsync("sensor_data");
+      assert.isTrue(result);
+    });
+
+    it("returns false when no retention policy exists", async () => {
+      const mockKnex = createMockWithResult(undefined);
+      const testRepo = new RetentionRepository(mockKnex);
+      const result = await testRepo.hasRetentionPolicyAsync("unknown_table");
+      assert.isFalse(result);
+    });
+  });
+
   describe("removeRetentionPolicyAsync", () => {
     it("calls remove_retention_policy for the given table", async () => {
       knex.raw.resolves();
