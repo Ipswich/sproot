@@ -2,24 +2,21 @@ import { describe, it } from "mocha";
 import { assert } from "chai";
 import sinon, { stub } from "sinon";
 import winston from "winston";
-import { Knex } from "knex";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { ISettingsRepository } from "../../database/settings/ISettingsRepository";
+import type { IRetentionRepository } from "../../database/repositories/retention/IRetentionRepository";
 import { RetentionService } from "../RetentionService";
 
 describe("RetentionService", () => {
   let eventBus: MemoryEventBus;
-  let knex: sinon.SinonStubbedInstance<Knex>;
   let logger: winston.Logger;
   let repo: sinon.SinonStubbedInstance<ISettingsRepository>;
+  let retentionRepo: sinon.SinonStubbedInstance<IRetentionRepository>;
   let service: RetentionService;
 
   beforeEach(() => {
     eventBus = new MemoryEventBus(winston.createLogger({ silent: true }));
-    knex = {
-      raw: sinon.stub().resolves(),
-    } as unknown as sinon.SinonStubbedInstance<Knex>;
     logger = winston.createLogger({ silent: true });
     repo = {
       getAsync: sinon.stub().resolves("30 days"),
@@ -30,7 +27,14 @@ describe("RetentionService", () => {
       deleteAsync: sinon.stub().resolves(),
       syncDefaultsAsync: sinon.stub().resolves(),
     } as unknown as sinon.SinonStubbedInstance<ISettingsRepository>;
-    service = new RetentionService(eventBus, knex as unknown as Knex, logger, repo);
+    retentionRepo = {
+      hasRetentionPolicyAsync: sinon.stub().resolves(true),
+      removeRetentionPolicyAsync: sinon.stub().resolves(),
+      addRetentionPolicyAsync: sinon.stub().resolves(),
+      getPolicyJobIdAsync: sinon.stub().resolves(1),
+      runPolicyJobAsync: sinon.stub().resolves(),
+    } as unknown as sinon.SinonStubbedInstance<IRetentionRepository>;
+    service = new RetentionService(repo, retentionRepo, eventBus, logger);
   });
 
   afterEach(() => {
@@ -47,13 +51,13 @@ describe("RetentionService", () => {
       await service.reconcileAsync("sensors.data_retention");
 
       // Should call remove + add for each of the 4 sensor tables
-      assert.isTrue(knex.raw.callCount === 8);
-      const call0 = knex.raw.getCall(0).args[0];
-      const call1 = knex.raw.getCall(1).args[0];
-      assert.include(call0, "remove_retention_policy");
-      assert.include(call0, "sensor_data");
-      assert.include(call1, "add_retention_policy");
-      assert.include(call1, "INTERVAL '30 days'");
+      assert.isTrue(retentionRepo.removeRetentionPolicyAsync.callCount === 4);
+      assert.isTrue(retentionRepo.addRetentionPolicyAsync.callCount === 4);
+      const removeCall0 = retentionRepo.removeRetentionPolicyAsync.getCall(0).args[0];
+      const addCall0 = retentionRepo.addRetentionPolicyAsync.getCall(0).args[0];
+      assert.equal(removeCall0, "sensor_data");
+      assert.equal(addCall0, "sensor_data");
+      assert.isTrue(retentionRepo.runPolicyJobAsync.called);
     });
 
     it("applies retention policy to all sensor tables", async () => {
@@ -61,11 +65,14 @@ describe("RetentionService", () => {
 
       await service.reconcileAsync("sensors.data_retention");
 
-      const calls = knex.raw.getCalls();
-      const callStrings = calls.map((c) => c.args[0]);
-      assert.isTrue(callStrings.some((s) => s.includes("sensor_data_5m")));
-      assert.isTrue(callStrings.some((s) => s.includes("sensor_data_1h")));
-      assert.isTrue(callStrings.some((s) => s.includes("sensor_data_1d")));
+      const removeCalls = retentionRepo.removeRetentionPolicyAsync.getCalls();
+      const tableNames = removeCalls.map((c) => c.args[0]);
+      assert.includeMembers(tableNames, [
+        "sensor_data",
+        "sensor_data_5m",
+        "sensor_data_1h",
+        "sensor_data_1d",
+      ]);
     });
 
     it("removes retention policy when value is empty string", async () => {
@@ -74,16 +81,15 @@ describe("RetentionService", () => {
       await service.reconcileAsync("sensors.data_retention");
 
       // 4 tables × remove only = 4 calls
-      assert.isTrue(knex.raw.callCount === 4);
-      assert.isTrue(
-        knex.raw.getCalls().every((c: any) => c.args[0].includes("remove_retention_policy")),
-      );
+      assert.isTrue(retentionRepo.removeRetentionPolicyAsync.callCount === 4);
+      assert.isTrue(retentionRepo.addRetentionPolicyAsync.notCalled);
     });
 
     it("skips reconciliation for unknown setting keys", async () => {
       await service[reconcileMethodName]("unknown.setting.key");
 
-      assert.isTrue(knex.raw.notCalled);
+      assert.isTrue(retentionRepo.removeRetentionPolicyAsync.notCalled);
+      assert.isTrue(retentionRepo.addRetentionPolicyAsync.notCalled);
     });
 
     it("logs warning for invalid duration format", async () => {
@@ -93,7 +99,7 @@ describe("RetentionService", () => {
       await service.reconcileAsync("sensors.data_retention");
 
       assert.isTrue(warnStub.calledOnce);
-      assert.isTrue(knex.raw.notCalled);
+      assert.isTrue(retentionRepo.removeRetentionPolicyAsync.notCalled);
     });
 
     it("removes retention policy when setting value is null", async () => {
@@ -102,30 +108,57 @@ describe("RetentionService", () => {
       await service.reconcileAsync("sensors.data_retention");
 
       // 4 tables × remove only = 4 calls
-      assert.isTrue(knex.raw.callCount === 4);
-      assert.isTrue(knex.raw.firstCall.args[0].includes("remove_retention_policy"));
+      assert.isTrue(retentionRepo.removeRetentionPolicyAsync.callCount === 4);
+      assert.isTrue(retentionRepo.addRetentionPolicyAsync.notCalled);
+    });
+
+    it("skips remove when policy does not exist, then adds a new policy", async () => {
+      retentionRepo.hasRetentionPolicyAsync.resolves(false);
+      repo.getAsync.resolves("30 days");
+
+      await service.reconcileAsync("sensors.data_retention");
+
+      assert.isTrue(retentionRepo.hasRetentionPolicyAsync.callCount === 4);
+      assert.isTrue(retentionRepo.removeRetentionPolicyAsync.notCalled);
+      assert.isTrue(retentionRepo.addRetentionPolicyAsync.callCount === 4);
+    });
+
+    it("skips remove when policy does not exist during clear (empty value)", async () => {
+      retentionRepo.hasRetentionPolicyAsync.resolves(false);
+      repo.getAsync.resolves("");
+
+      await service.reconcileAsync("sensors.data_retention");
+
+      assert.isTrue(retentionRepo.hasRetentionPolicyAsync.callCount === 4);
+      assert.isTrue(retentionRepo.removeRetentionPolicyAsync.notCalled);
+      assert.isTrue(retentionRepo.addRetentionPolicyAsync.notCalled);
     });
   });
 
   describe("reconcileAllAsync", () => {
     it("reconciles all registered settings", async () => {
       repo.getAsync.resolves("30 days");
-      const spy = sinon.spy(service, "reconcileAsync");
 
       await service.reconcileAllAsync();
 
-      assert.isTrue(spy.callCount === 2);
-      const calledKeys = spy.getCalls().map((call) => call.args[0]);
-      assert.includeMembers(calledKeys, ["sensors.data_retention", "outputs.data_retention"]);
+      // 2 settings × 4 tables each = 8 removes, 8 adds, 8 job lookups, 8 job runs
+      assert.equal(retentionRepo.removeRetentionPolicyAsync.callCount, 8);
+      assert.equal(retentionRepo.addRetentionPolicyAsync.callCount, 8);
+      assert.equal(retentionRepo.getPolicyJobIdAsync.callCount, 8);
+      assert.equal(retentionRepo.runPolicyJobAsync.callCount, 8);
     });
 
     it("continues reconciling other settings when one fails", async () => {
       repo.getAsync.resolves("30 days");
-      knex.raw.onFirstCall().rejects(new Error("DB error"));
+      retentionRepo.removeRetentionPolicyAsync.onFirstCall().rejects(new Error("DB error"));
 
       await service.reconcileAllAsync();
 
-      assert.isTrue(knex.raw.callCount >= 2);
+      // 2 settings × 4 tables = 8 removes (1st fails, 7 succeed), 7 adds, 7 job lookups, 7 job runs
+      assert.equal(retentionRepo.removeRetentionPolicyAsync.callCount, 8);
+      assert.equal(retentionRepo.addRetentionPolicyAsync.callCount, 7);
+      assert.equal(retentionRepo.getPolicyJobIdAsync.callCount, 7);
+      assert.equal(retentionRepo.runPolicyJobAsync.callCount, 7);
     });
   });
 
@@ -203,7 +236,7 @@ describe("RetentionService", () => {
     it("accepts valid duration strings", async () => {
       repo.getAsync.resolves("30 days");
       await service.reconcileAsync("sensors.data_retention");
-      assert.isTrue(knex.raw.called);
+      assert.isTrue(retentionRepo.addRetentionPolicyAsync.called);
     });
 
     it("rejects zero duration", async () => {
@@ -211,7 +244,7 @@ describe("RetentionService", () => {
 
       await service.reconcileAsync("sensors.data_retention");
 
-      assert.isTrue(knex.raw.notCalled);
+      assert.isTrue(retentionRepo.addRetentionPolicyAsync.notCalled);
     });
 
     it("rejects invalid units", async () => {
@@ -219,7 +252,7 @@ describe("RetentionService", () => {
 
       await service.reconcileAsync("sensors.data_retention");
 
-      assert.isTrue(knex.raw.notCalled);
+      assert.isTrue(retentionRepo.addRetentionPolicyAsync.notCalled);
     });
 
     it("normalizes irregular whitespace to single space", async () => {
@@ -227,8 +260,74 @@ describe("RetentionService", () => {
 
       await service.reconcileAsync("sensors.data_retention");
 
-      const addCall = knex.raw.secondCall.args[0];
-      assert.include(addCall, "INTERVAL '30 days'");
+      const addCall = retentionRepo.addRetentionPolicyAsync.getCall(0).args[1];
+      assert.equal(addCall, "30 days");
+    });
+  });
+
+  describe("immediate job execution", () => {
+    it("executes the policy job after adding a retention policy", async () => {
+      repo.getAsync.resolves("30 days");
+      retentionRepo.getPolicyJobIdAsync.resolves(42);
+
+      await service.reconcileAsync("sensors.data_retention");
+
+      assert.isTrue(retentionRepo.getPolicyJobIdAsync.called);
+      assert.isTrue(retentionRepo.runPolicyJobAsync.calledWith(42));
+    });
+
+    it("skips job execution when no job ID is found", async () => {
+      repo.getAsync.resolves("30 days");
+      retentionRepo.getPolicyJobIdAsync.resolves(null);
+
+      await service.reconcileAsync("sensors.data_retention");
+
+      assert.isTrue(retentionRepo.getPolicyJobIdAsync.called);
+      assert.isTrue(retentionRepo.runPolicyJobAsync.notCalled);
+    });
+
+    it("logs warning but continues when job execution fails", async () => {
+      repo.getAsync.resolves("30 days");
+      retentionRepo.getPolicyJobIdAsync.resolves(99);
+      retentionRepo.runPolicyJobAsync.rejects(new Error("Job execution failed"));
+      const warnStub = sinon.stub(logger, "warn");
+
+      await service.reconcileAsync("sensors.data_retention");
+
+      sinon.assert.calledWith(
+        warnStub,
+        sinon.match((msg: string) =>
+          msg.includes("Failed to immediately execute retention policy"),
+        ),
+      );
+      assert.isTrue(retentionRepo.runPolicyJobAsync.calledWith(99));
+    });
+  });
+
+  describe("error handling", () => {
+    it("logs warning but continues to next table when policy add fails", async () => {
+      repo.getAsync.resolves("30 days");
+      retentionRepo.addRetentionPolicyAsync
+        .onFirstCall()
+        .rejects(new Error("Policy already exists"));
+      const warnStub = sinon.stub(logger, "warn");
+
+      await service.reconcileAsync("sensors.data_retention");
+
+      assert.isTrue(warnStub.called);
+      // Should still try to apply policies for remaining tables
+      assert.isTrue(retentionRepo.removeRetentionPolicyAsync.callCount >= 4);
+    });
+
+    it("logs warning when removing policy fails", async () => {
+      repo.getAsync.resolves("");
+      retentionRepo.removeRetentionPolicyAsync.rejects(new Error("Remove failed"));
+      const warnStub = sinon.stub(logger, "warn");
+
+      await service.reconcileAsync("sensors.data_retention");
+
+      assert.isTrue(warnStub.called);
+      assert.isTrue(retentionRepo.removeRetentionPolicyAsync.callCount === 4);
     });
   });
 });

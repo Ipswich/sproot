@@ -67,10 +67,10 @@ export default async function setupAsync(): Promise<Express> {
   await settingsService.syncDefaultsAsync();
 
   const retentionService = new RetentionService(
-    eventBus,
-    knexConnection,
-    logger,
     sprootDB.settings,
+    sprootDB.retention,
+    eventBus,
+    logger,
   );
   app.set(DI_KEYS.RetentionService, retentionService);
 

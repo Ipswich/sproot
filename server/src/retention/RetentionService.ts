@@ -1,9 +1,9 @@
-import { Knex } from "knex";
-import winston from "winston";
-import { IEventBus } from "../eventbus/IEventBus";
-import { Events } from "../eventbus/events/Events";
 import { ISettingsRepository } from "../database/settings/ISettingsRepository";
 import type { SettingsKey } from "../database/settings/SettingsSchema";
+import type { IRetentionRepository } from "../database/repositories/retention/IRetentionRepository";
+import { IEventBus } from "../eventbus/IEventBus";
+import { Events } from "../eventbus/events/Events";
+import winston from "winston";
 import { validateDuration } from "../utils/DurationValidation";
 
 interface RetentionTarget {
@@ -27,15 +27,20 @@ const OUTPUT_TARGETS: Readonly<RetentionTarget[]> = [
 
 export class RetentionService {
   readonly #logger: winston.Logger;
-  readonly #knex: Knex;
-  readonly #repo: ISettingsRepository;
+  readonly #settingsRepo: ISettingsRepository;
+  readonly #retentionRepo: IRetentionRepository;
   readonly #unsubscribeSensor: () => void;
   readonly #unsubscribeOutput: () => void;
 
-  constructor(eventBus: IEventBus, knex: Knex, logger: winston.Logger, repo: ISettingsRepository) {
-    this.#knex = knex;
+  constructor(
+    settingsRepo: ISettingsRepository,
+    retentionRepo: IRetentionRepository,
+    eventBus: IEventBus,
+    logger: winston.Logger,
+  ) {
     this.#logger = logger;
-    this.#repo = repo;
+    this.#settingsRepo = settingsRepo;
+    this.#retentionRepo = retentionRepo;
 
     this.#unsubscribeSensor = eventBus.subscribe(Events.SENSOR_RETENTION_UPDATED, (event) => {
       void this.reconcileAsync(event.payload.key);
@@ -53,7 +58,7 @@ export class RetentionService {
       return;
     }
 
-    const value = await this.#repo.getAsync(settingKey as SettingsKey);
+    const value = await this.#settingsRepo.getAsync(settingKey as SettingsKey);
     const stringValue = typeof value === "string" ? value : "";
 
     if (!stringValue.trim()) {
@@ -102,9 +107,17 @@ export class RetentionService {
 
   async #removeRetentionPolicyForTargets(targets: readonly RetentionTarget[]): Promise<void> {
     for (const target of targets) {
-      await this.#knex.raw(`SELECT remove_retention_policy('${target.table}')`).catch(() => {
-        // Policy may not exist; ignore
-      });
+      try {
+        const exists = await this.#retentionRepo.hasRetentionPolicyAsync(target.table);
+        if (!exists) {
+          continue;
+        }
+        await this.#retentionRepo.removeRetentionPolicyAsync(target.table);
+      } catch (err) {
+        this.#logger.warn(
+          `Failed to remove retention policy for ${target.table}: ${(err as Error).message}`,
+        );
+      }
     }
   }
 
@@ -113,13 +126,32 @@ export class RetentionService {
     duration: string,
   ): Promise<void> {
     for (const target of targets) {
-      await this.#knex.raw(`SELECT remove_retention_policy('${target.table}')`).catch(() => {
-        // Policy may not exist; ignore
-      });
+      try {
+        const exists = await this.#retentionRepo.hasRetentionPolicyAsync(target.table);
+        if (exists) {
+          await this.#retentionRepo.removeRetentionPolicyAsync(target.table);
+        }
+        await this.#retentionRepo.addRetentionPolicyAsync(target.table, duration);
+      } catch (err) {
+        this.#logger.warn(
+          `Failed to apply retention policy for ${target.table}: ${(err as Error).message}`,
+        );
+        continue;
+      }
 
-      await this.#knex.raw(
-        `SELECT add_retention_policy('${target.table}', drop_after => INTERVAL '${duration}')`,
-      );
+      try {
+        const jobId = await this.#retentionRepo.getPolicyJobIdAsync(target.table);
+        if (jobId !== null) {
+          await this.#retentionRepo.runPolicyJobAsync(jobId);
+          this.#logger.info(
+            `Retention policy executed immediately for ${target.table} (job ${jobId})`,
+          );
+        }
+      } catch (err) {
+        this.#logger.warn(
+          `Failed to immediately execute retention policy for ${target.table}: ${(err as Error).message}`,
+        );
+      }
     }
   }
 }
