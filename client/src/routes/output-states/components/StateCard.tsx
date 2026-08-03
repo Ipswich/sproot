@@ -15,6 +15,7 @@ import {
   Text,
   rem,
 } from "@mantine/core";
+import { getOutputActionPrecedenceColor } from "@sproot/common/automation/OutputActionPrecedence";
 import { StatsRing } from "./StatsRing";
 import { useMutation } from "@tanstack/react-query";
 
@@ -178,9 +179,20 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                   variant="light"
                   title="Automation conflict detected"
                 >
-                  <Stack gap={4}>
+                  <Stack gap={4} ta="left">
                     <Text size="sm">
-                      {`${output.name ?? "This output"} received conflicting ${output.activeConflict.precedence.toLowerCase()} precedence requests, so no automatic action was applied.`}
+                      {`${output.name ?? "This output"} received conflicting `}
+                      <Text
+                        inherit
+                        c={getOutputActionPrecedenceColor(
+                          output.activeConflict.precedence,
+                        )}
+                        span
+                        fw={600}
+                      >
+                        {output.activeConflict.precedence}
+                      </Text>
+                      {` precedence requests, so no automatic action was applied.`}
                     </Text>
                     {conflictAutomationNames?.map((automationName) => (
                       <Text key={automationName} size="sm">

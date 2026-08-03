@@ -4,10 +4,39 @@ import {
   getOutputActionsByAutomationIdAsync,
   deleteOutputActionAsync,
 } from "../../../requests/requests_v2";
-import { Alert, Group, Stack, Text } from "@mantine/core";
+import { Alert, Stack, Text } from "@mantine/core";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { Fragment } from "react/jsx-runtime";
 import DeletablesTable from "../../common/DeletablesTable";
+import { getOutputActionPrecedenceColor } from "@sproot/common/automation/OutputActionPrecedence";
+
+function PrecedenceText({ precedence }: { precedence: string }) {
+  return (
+    <Text inherit c={getOutputActionPrecedenceColor(precedence)} span fw={600}>
+      {precedence}
+    </Text>
+  );
+}
+
+function ActionLabel({
+  output,
+  outputAction,
+}: {
+  output: IOutputBase;
+  outputAction: SDBOutputAction;
+}) {
+  const outputName = output?.name ?? `Output Id: ${output.id}`;
+  if (output?.isPwm) {
+    return (
+      // prettier-ignore
+      <Text ta="left" size="sm">Set {outputName} to {String(outputAction.value)}% (<Text inherit c={getOutputActionPrecedenceColor(outputAction.precedence)} span fw={600}>{outputAction.precedence}</Text>)</Text>
+    );
+  }
+  return (
+    // prettier-ignore
+    <Text ta="left" size="sm">Turn {outputName} {outputAction.value == 100 ? "On" : "Off"} (<Text inherit c={getOutputActionPrecedenceColor(outputAction.precedence)} span fw={600}>{outputAction.precedence}</Text>)</Text>
+  );
+}
 
 export interface OutputActionsTableProps {
   automationId: number;
@@ -91,23 +120,33 @@ function OutputActionRow(
   );
 
   return (
-    <Stack gap="xs">
-      <Group>
-        {output?.isPwm
-          ? `Set ${output?.name ?? `Output Id: ${output.id}`} to ${String(outputAction.value)}% at ${outputAction.precedence} precedence`
-          : `Turn ${output?.name ?? `Output Id: ${output.id}`} ${outputAction.value == 100 ? "On" : "Off"} at ${outputAction.precedence} precedence`}
-      </Group>
+    <>
+      <Stack gap="xs">
+        <ActionLabel output={output} outputAction={outputAction} />
+      </Stack>
       {conflictingAutomations.length > 0 ? (
         <Alert
           color="yellow"
           variant="light"
           title="Potential precedence conflict"
+          mt="xs"
         >
-          <Stack gap={4}>
+          <Stack gap={4} ta="left">
             <Text size="sm">
-              {conflictingAutomations.length === 1
-                ? `Another automation also controls ${output?.name ?? "this output"} at ${outputAction.precedence} precedence.`
-                : `Other automations also control ${output?.name ?? "this output"} at ${outputAction.precedence} precedence.`}
+              {conflictingAutomations.length === 1 ? (
+                <>
+                  Another automation also controls{" "}
+                  {output?.name ?? "this output"} at{" "}
+                  <PrecedenceText precedence={outputAction.precedence} />{" "}
+                  precedence.
+                </>
+              ) : (
+                <>
+                  Other automations also control {output?.name ?? "this output"}{" "}
+                  at <PrecedenceText precedence={outputAction.precedence} />{" "}
+                  precedence.
+                </>
+              )}
             </Text>
             {conflictingAutomations.map((action) => (
               <Text key={action.automationId} size="sm">
@@ -121,6 +160,6 @@ function OutputActionRow(
           </Stack>
         </Alert>
       ) : null}
-    </Stack>
+    </>
   );
 }

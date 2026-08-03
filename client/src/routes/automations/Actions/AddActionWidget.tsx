@@ -14,6 +14,7 @@ import {
 import {
   OUTPUT_ACTION_PRECEDENCE_VALUES,
   OutputActionPrecedence,
+  getOutputActionPrecedenceColor,
 } from "@sproot/common/automation/OutputActionPrecedence";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { useForm } from "@mantine/form";
@@ -22,6 +23,14 @@ import {
   addNotificationActionAsync,
   addOutputActionAsync,
 } from "../../../requests/requests_v2";
+
+function PrecedenceText({ precedence }: { precedence: string }) {
+  return (
+    <Text inherit c={getOutputActionPrecedenceColor(precedence)} span fw={600}>
+      {precedence}
+    </Text>
+  );
+}
 
 type ActionType = "output" | "notification";
 
@@ -176,12 +185,29 @@ export default function AddActionWidget({
                   color="yellow"
                   variant="light"
                   title="Potential precedence conflict"
+                  mt="xs"
                 >
-                  <Stack gap={4}>
+                  <Stack gap={4} ta="left">
                     <Text size="sm">
-                      {conflictingAutomations.length === 1
-                        ? `Another automation also controls ${selectedOutput?.name ?? "this output"} at ${actionForm.values.precedence} precedence.`
-                        : `Other automations also control ${selectedOutput?.name ?? "this output"} at ${actionForm.values.precedence} precedence.`}
+                      {conflictingAutomations.length === 1 ? (
+                        <>
+                          Another automation also controls{" "}
+                          {selectedOutput?.name ?? "this output"} at{" "}
+                          <PrecedenceText
+                            precedence={actionForm.values.precedence}
+                          />{" "}
+                          precedence.
+                        </>
+                      ) : (
+                        <>
+                          Other automations also control{" "}
+                          {selectedOutput?.name ?? "this output"} at{" "}
+                          <PrecedenceText
+                            precedence={actionForm.values.precedence}
+                          />{" "}
+                          precedence.
+                        </>
+                      )}
                     </Text>
                     {conflictingAutomations.map((action) => (
                       <Text key={action.automationId} size="sm">
