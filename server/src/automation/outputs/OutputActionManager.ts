@@ -1,10 +1,15 @@
 import type { IOutputActionsRepository } from "../../database/repositories/automations/actions/IOutputActionsRepository";
 import { IAutomationEventPayload } from "@sproot/automation/IAutomationEventPayload";
+import {
+  OUTPUT_ACTION_PRECEDENCE_PRIORITY,
+  OutputActionPrecedence,
+} from "@sproot/common/automation/OutputActionPrecedence";
 import { OutputAction } from "./OutputAction";
 import winston from "winston";
 import { IEventBus } from "../../eventbus/IEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
+import { OutputActionConflict, OutputActionWarning } from "@sproot/outputs/IOutputBase";
 
 export class OutputActionManager implements Disposable {
   #outputId: number;
@@ -14,6 +19,8 @@ export class OutputActionManager implements Disposable {
   #lastRunAt: number | null = null;
   #lastActionValue: number | undefined = undefined;
   #actionMap: Map<number, OutputAction> = new Map();
+  #actionWarnings: OutputActionWarning[] = [];
+  #activeConflict: OutputActionConflict | null = null;
   #automationTimeout: number; // Per-output timeout
   #triggeredActionFunction: (result: number | undefined) => Promise<void>;
   #listenerCleanupFunction: () => void;
@@ -101,6 +108,15 @@ export class OutputActionManager implements Disposable {
   get lastResult(): number | undefined {
     return this.#lastActionValue;
   }
+
+  get actionWarnings(): OutputActionWarning[] {
+    return this.#actionWarnings;
+  }
+
+  get activeConflict(): OutputActionConflict | null {
+    return this.#activeConflict;
+  }
+
   /**
    * Reload output actions from the database
    */
@@ -109,10 +125,53 @@ export class OutputActionManager implements Disposable {
       const outputActions = await this.#outputActionsRepository.getActionsByOutputIdAsync(
         this.#outputId,
       );
-      this.#actionMap = new Map(outputActions.map((a) => [a.automationId, new OutputAction(a)]));
+      this.#actionMap = new Map();
+
+      for (const outputAction of outputActions) {
+        const nextAction = new OutputAction(outputAction);
+        const currentAction = this.#actionMap.get(nextAction.automationId);
+
+        if (
+          currentAction == null ||
+          OUTPUT_ACTION_PRECEDENCE_PRIORITY[nextAction.precedence] >
+            OUTPUT_ACTION_PRECEDENCE_PRIORITY[currentAction.precedence] ||
+          (OUTPUT_ACTION_PRECEDENCE_PRIORITY[nextAction.precedence] ===
+            OUTPUT_ACTION_PRECEDENCE_PRIORITY[currentAction.precedence] &&
+            nextAction.id > currentAction.id)
+        ) {
+          this.#actionMap.set(nextAction.automationId, nextAction);
+        }
+      }
+
+      this.#actionWarnings = this.#buildActionWarnings(Array.from(this.#actionMap.values()));
+      this.#activeConflict = null;
     } catch (error) {
       this.#logger.error(`Error reloading actions for output ${this.#outputId} - ${error}`);
     }
+  }
+
+  #buildActionWarnings(outputActions: OutputAction[]): OutputActionWarning[] {
+    const groupedActions = new Map<OutputActionPrecedence, OutputAction[]>();
+
+    for (const action of outputActions) {
+      const actions = groupedActions.get(action.precedence) ?? [];
+      actions.push(action);
+      groupedActions.set(action.precedence, actions);
+    }
+
+    return Array.from(groupedActions.entries())
+      .filter(([, actions]) => actions.length > 1)
+      .sort(
+        ([left], [right]) =>
+          OUTPUT_ACTION_PRECEDENCE_PRIORITY[right] - OUTPUT_ACTION_PRECEDENCE_PRIORITY[left],
+      )
+      .map(([precedence, actions]) => ({
+        precedence,
+        actions: actions.map((action) => ({
+          automationId: action.automationId,
+          automationName: action.automationName ?? `Automation ${action.automationId}`,
+        })),
+      }));
   }
 
   /**
@@ -139,6 +198,7 @@ export class OutputActionManager implements Disposable {
     // Find which automations have actions on this output
     const triggeredActions: {
       value: number;
+      precedence: OutputActionPrecedence;
       payload: IAutomationEventPayload;
     }[] = [];
 
@@ -152,34 +212,59 @@ export class OutputActionManager implements Disposable {
 
         triggeredActions.push({
           value: action.value,
+          precedence: action.precedence,
           payload,
         });
       }
     }
 
     if (triggeredActions.length === 0) {
+      this.#activeConflict = null;
       this.#lastActionValue = 0;
       return this.#lastActionValue; // No automations triggered, default to off
     }
 
-    // Detect collisions: multiple automations with different values
+    let highestPriority = -Infinity;
+    for (const action of triggeredActions) {
+      highestPriority = Math.max(
+        highestPriority,
+        OUTPUT_ACTION_PRECEDENCE_PRIORITY[action.precedence],
+      );
+    }
+
+    const highestPriorityActions = triggeredActions.filter(
+      (action) => OUTPUT_ACTION_PRECEDENCE_PRIORITY[action.precedence] === highestPriority,
+    );
+
     const valueCounts = new Map<number, number>();
-    for (const { value } of triggeredActions) {
+    for (const { value } of highestPriorityActions) {
       valueCounts.set(value, (valueCounts.get(value) || 0) + 1);
     }
 
-    // Collision detected, default to off
+    // Collision detected among the highest-priority actions, so do nothing.
     if (valueCounts.size > 1) {
+      this.#activeConflict = {
+        precedence: highestPriorityActions[0]!.precedence,
+        actions: highestPriorityActions.map((action) => ({
+          automationId: action.payload.automationId,
+          automationName: action.payload.automationName,
+          value: action.value,
+        })),
+      };
       this.#logger.warn(
         `Collision detected on output ${this.#outputId}: ` +
-          `${triggeredActions.map((t) => `${t.payload.automationName}=${t.value}`).join(", ")}`,
+          `${highestPriorityActions
+            .map(
+              (action) => `${action.payload.automationName}=${action.value} (${action.precedence})`,
+            )
+            .join(", ")}`,
       );
-      this.#lastActionValue = 0;
-      return this.#lastActionValue;
+      this.#lastActionValue = undefined;
+      return undefined;
     }
 
-    // No collision - return the single value
-    this.#lastActionValue = triggeredActions.length > 0 ? triggeredActions[0]!.value : 0;
+    this.#activeConflict = null;
+    this.#lastActionValue = highestPriorityActions[0]!.value;
     return this.#lastActionValue;
   }
 

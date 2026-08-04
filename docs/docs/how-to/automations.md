@@ -186,5 +186,8 @@ You can add or remove actions by expanding the `Actions` drop down to reveal you
 - Output Actions, used to trigger output changes
   - Selecting this action type will reveal a list of outputs to choose from.
   - If the selected output supports PWM, you will also be able to enable PWM and set the desired level with the slider.
+  - Output actions also utilize "precedence".
+    - Precendence has three levels, `Normal`, `High`, and `Emergency`. The action with the highest precedence will take effect.
+    - When two output actions with the same precedence give an output conflicting instructions, neither action will take effect. Agreeing instructions will take effect.
 - Notification Actions, used to trigger in-app alerts
   - Selecting this action type will reveal the notification options so you can configure the alert that should be sent when the automation is triggered.

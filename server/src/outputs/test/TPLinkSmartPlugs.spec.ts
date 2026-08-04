@@ -568,6 +568,7 @@ describe("tplinkPlug.ts tests", async function () {
         automationId: 1,
         outputId: 1,
         value: 100,
+        precedence: "Normal",
       },
     ] as SDBOutputAction[]);
     const eventBus = new MemoryEventBus(logger);

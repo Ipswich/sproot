@@ -296,6 +296,7 @@ export default function EditAutomationModal({
                                 parentOutputId: output.parentOutputId,
                                 isPwm: output.isPwm,
                                 name: output.name ?? "",
+                                actionWarnings: output.actionWarnings,
                               }))}
                               onSaved={closeAddAction}
                             />

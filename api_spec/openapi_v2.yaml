@@ -3611,7 +3611,7 @@ paths:
           example: "1"
       description: >
         Returns a list of output actions. This includes basic information about each action, 
-        such as the Id, the output Id, and the value that will be set when the linked automation is triggered.
+        such as the Id, the output Id, precedence, and the value that will be set when the linked automation is triggered.
       responses:
         200:
           description: "Success"
@@ -3785,7 +3785,7 @@ paths:
         - "Output Actions"
       summary: Get an output action by Id.
       description: >
-        Returns the output action with the given Id. This includes the Id, the output Id, and the value that will be set when the linked automation is triggered.
+        Returns the output action with the given Id. This includes the Id, the output Id, precedence, and the value that will be set when the linked automation is triggered.
       parameters:
         - in: path
           name: outputActionId
@@ -8754,7 +8754,7 @@ components:
     OutputBase:
       description: >
         A basic output object that is returned by the API. This expands upon SDBOutput, including the
-        ID and state of the output. This maps to what the app keeps in memory.
+        ID, state, static action warnings, and any active automation conflict for the output. This maps to what the app keeps in memory.
       allOf:
         - $ref: "#/components/schemas/SDBOutput"
         - type: object
@@ -8780,6 +8780,14 @@ components:
                 automatic:
                   allOf:
                     - $ref: "#/components/schemas/SDBOutputState"
+            actionWarnings:
+              type: array
+              items:
+                $ref: "#/components/schemas/OutputActionWarning"
+            activeConflict:
+              nullable: true
+              allOf:
+                - $ref: "#/components/schemas/OutputActionConflict"
 
     SDBOutputState:
       description: >
@@ -8827,21 +8835,93 @@ components:
       type: object
       required:
         - "automationId"
+        - "outputId"
         - "value"
+        - "precedence"
       properties:
         id:
-          readOnly: true
-          type: number
-          example: 1
-        automationId:
           type: number
           example: 1
         outputId:
           type: number
-          example: 1
+          example: 3
+        automationId:
+          type: number
+          example: 2
         value:
           type: number
-          example: 50
+          example: 100
+        precedence:
+          type: string
+          enum:
+            - "Normal"
+            - "High"
+            - "Emergency"
+          example: "High"
+
+    OutputActionWarning:
+      description: >
+        A warning indicating that multiple output actions share the same precedence on an output.
+      type: object
+      required:
+        - "precedence"
+        - "actions"
+      properties:
+        precedence:
+          type: string
+          enum:
+            - "Normal"
+            - "High"
+            - "Emergency"
+          example: "High"
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/OutputActionParticipant"
+
+    OutputActionConflict:
+      description: >
+        A currently active automation conflict for an output at the highest triggered precedence.
+      type: object
+      required:
+        - "precedence"
+        - "actions"
+      properties:
+        precedence:
+          type: string
+          enum:
+            - "Normal"
+            - "High"
+            - "Emergency"
+          example: "Emergency"
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/OutputActionConflictParticipant"
+
+    OutputActionParticipant:
+      type: object
+      required:
+        - "automationId"
+        - "automationName"
+      properties:
+        automationId:
+          type: number
+          example: 4
+        automationName:
+          type: string
+          example: "Greenhouse Cooling"
+
+    OutputActionConflictParticipant:
+      allOf:
+        - $ref: "#/components/schemas/OutputActionParticipant"
+        - type: object
+          required:
+            - "value"
+          properties:
+            value:
+              type: number
+              example: 100
 
     NotificationAction:
       description: >

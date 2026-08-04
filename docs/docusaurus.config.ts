@@ -135,13 +135,13 @@ const config: Config = {
             },
             {
               type: "doc",
-              label: "Backups",
-              docId: "how-to/backups",
+              label: "System Status",
+              docId: "how-to/system-status",
             },
             {
               type: "doc",
-              label: "System Status",
-              docId: "how-to/system-status",
+              label: "Backups",
+              docId: "how-to/backups",
             },
           ],
         },

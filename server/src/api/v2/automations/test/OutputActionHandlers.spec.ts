@@ -124,6 +124,7 @@ describe("OutputActionHandlers.ts tests", () => {
           automationId: 1,
           outputId: 1,
           value: 100,
+          precedence: "Normal",
         } as SDBOutputAction,
       ]);
 
@@ -150,6 +151,7 @@ describe("OutputActionHandlers.ts tests", () => {
           outputId: 1,
           automationId: 1,
           value: 100,
+          precedence: "Normal",
         },
       ]);
     });
@@ -170,6 +172,7 @@ describe("OutputActionHandlers.ts tests", () => {
           automationId: 1,
           outputId: 1,
           value: 100,
+          precedence: "Normal",
         } as SDBOutputAction,
       ]);
 
@@ -198,6 +201,7 @@ describe("OutputActionHandlers.ts tests", () => {
           outputId: 1,
           automationId: 1,
           value: 100,
+          precedence: "Normal",
         },
       ]);
     });
@@ -253,6 +257,7 @@ describe("OutputActionHandlers.ts tests", () => {
           automationId: 1,
           outputId: 1,
           value: 100,
+          precedence: "Normal",
         } as SDBOutputAction,
       ]);
 
@@ -278,6 +283,7 @@ describe("OutputActionHandlers.ts tests", () => {
         automationId: 1,
         outputId: 1,
         value: 100,
+        precedence: "Normal",
       });
     });
 
@@ -428,6 +434,7 @@ describe("OutputActionHandlers.ts tests", () => {
           automationId: "1",
           outputId: 1,
           value: 100,
+          precedence: "High",
         },
       } as unknown as Request;
 
@@ -440,6 +447,7 @@ describe("OutputActionHandlers.ts tests", () => {
         automationId: 1,
         outputId: 1,
         value: 100,
+        precedence: "High",
       });
 
       // Not PWM, value should get adjusted to 100 since it's greater than 0
@@ -453,6 +461,7 @@ describe("OutputActionHandlers.ts tests", () => {
         automationId: 1,
         outputId: 2,
         value: 100,
+        precedence: "High",
       });
     });
 
@@ -485,6 +494,7 @@ describe("OutputActionHandlers.ts tests", () => {
           automationId: "a",
           outputId: "b",
           value: "c",
+          precedence: "Unexpected",
         },
         originalUrl: "/api/v2/output-action",
       } as unknown as Request;
@@ -498,6 +508,7 @@ describe("OutputActionHandlers.ts tests", () => {
         "Invalid or missing automation Id.",
         "Invalid or missing output Id.",
         "Invalid or missing value.",
+        "Precedence must be one of: Normal, High, Emergency.",
       ]);
       assert.equal(error.error.url, mockRequest.originalUrl);
 
@@ -508,6 +519,7 @@ describe("OutputActionHandlers.ts tests", () => {
         "Invalid or missing automation Id.",
         "Invalid or missing output Id.",
         "Value must be between 0 and 100.",
+        "Precedence must be one of: Normal, High, Emergency.",
       ]);
     });
 
@@ -545,6 +557,7 @@ describe("OutputActionHandlers.ts tests", () => {
           automationId: "1",
           outputId: 1,
           value: 100,
+          precedence: "Normal",
         },
         originalUrl: "/api/v2/output-action",
       } as unknown as Request;
@@ -574,6 +587,13 @@ describe("OutputActionHandlers.ts tests", () => {
       const outputList = sinon.createStubInstance(OutputList);
       sprootDB.automations.actions.output.getOutputActionAsync.resolves([
         { id: 1, automationId: 1, outputId: 1, value: 100 } as SDBOutputAction,
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 100,
+          precedence: "Normal",
+        } as SDBOutputAction,
       ]);
       sprootDB.automations.getAllAsync.resolves([]);
       sprootDB.automations.actions.output.deleteAsync.resolves();

@@ -17,6 +17,7 @@ import { AutomationsTriggeredEvent } from "../eventbus/events/automations/Automa
 import { OutputActionsModifiedEvent } from "../eventbus/events/actions/OutputActionsModifiedEvent";
 import { NotificationActionsModifiedEvent } from "../eventbus/events/actions/NotificationActionsModifiedEvent";
 import type { IAutomationsRepository } from "../database/repositories/automations/IAutomationsRepository";
+import { OutputActionPrecedence } from "@sproot/common/automation/OutputActionPrecedence";
 
 /**
  * Central automation evaluator and event emitter.
@@ -325,11 +326,13 @@ class AutomationService {
     automationId: number,
     outputId: number,
     value: number,
+    precedence: OutputActionPrecedence,
   ): Promise<number> {
     const result = await this.#automationsRepository.actions.output.addAsync(
       automationId,
       outputId,
       value,
+      precedence,
     );
     await this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));
     return result;

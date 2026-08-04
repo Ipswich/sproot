@@ -75,6 +75,14 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     return this.state.controlMode;
   }
 
+  get actionWarnings(): IOutputBase["actionWarnings"] {
+    return this.#actionManager?.actionWarnings ?? [];
+  }
+
+  get activeConflict(): IOutputBase["activeConflict"] {
+    return this.#actionManager?.activeConflict ?? null;
+  }
+
   get outputData(): IOutputBase {
     const {
       id,
@@ -91,6 +99,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       state,
       automationTimeout,
     } = this;
+
     return {
       id,
       model,
@@ -105,6 +114,8 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       color,
       state,
       automationTimeout,
+      actionWarnings: this.actionWarnings,
+      activeConflict: this.activeConflict,
     };
   }
 
@@ -267,7 +278,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
 
   async #actionFunctionWrapperAsync(actionValue: number | undefined): Promise<void> {
     if (actionValue === undefined) {
-      return; // No action to take (output in timeout)
+      return; // No action to take (output in timeout or precedence conflict)
     }
 
     await this.setStateAsync({
