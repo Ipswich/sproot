@@ -140,6 +140,11 @@ const config: Config = {
             },
             {
               type: "doc",
+              label: "Data Retention",
+              docId: "how-to/data-retention",
+            },
+            {
+              type: "doc",
               label: "Backups",
               docId: "how-to/backups",
             },
