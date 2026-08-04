@@ -13,11 +13,13 @@ import * as sinon from "sinon";
 import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
 import { Models } from "@sproot/common/outputs/Models";
+import { AvailableDevice } from "@sproot/common/utility/DeviceTypes";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 
 const createMockOutputsRepo = (): IOutputsRepository => ({
   getAllAsync: async () => [],
   getByIdAsync: async () => [],
+  getByModelAsync: async () => [],
   addAsync: async () => 0,
   updateAsync: async () => {},
   deleteAsync: async () => {},
@@ -320,5 +322,90 @@ describe("PCA9685.ts tests", function () {
       controlMode: ControlMode.automatic,
     } as SDBOutputState);
     assert.equal(setDutyCycleStub.callCount, 8);
+  });
+});
+
+describe("PCA9685.getAvailableDevices", () => {
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  it("should return all 1024 devices (64 addresses x 16 channels) when no outputs exist", async () => {
+    const logger = winston.createLogger({ silent: true }) as winston.Logger;
+    const outputsRepo = createMockOutputsRepo();
+    sinon.stub(outputsRepo, "getByModelAsync").resolves([]);
+    const pca = new PCA9685(
+      new MemoryEventBus(logger),
+      outputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
+      5,
+      5,
+      5,
+      800,
+      logger,
+    );
+    const result = await pca.getAvailableDevices();
+    assert.lengthOf(result, 1024);
+    assert.equal(result[0]!.address, "0x40");
+    assert.deepEqual(result[0]!.pins, ["0"]);
+    assert.isNull(result[0]!.subcontrollerId);
+  });
+
+  it("should filter out used channels for an address", async () => {
+    const logger = winston.createLogger({ silent: true }) as winston.Logger;
+    const outputsRepo = createMockOutputsRepo();
+    sinon.stub(outputsRepo, "getByModelAsync").resolves([
+      {
+        id: 1,
+        model: Models.PCA9685,
+        address: "0x40",
+        pin: "0",
+        subcontrollerId: null,
+      } as SDBOutput,
+      {
+        id: 2,
+        model: Models.PCA9685,
+        address: "0x40",
+        pin: "1",
+        subcontrollerId: null,
+      } as SDBOutput,
+    ]);
+    const pca = new PCA9685(
+      new MemoryEventBus(logger),
+      outputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
+      5,
+      5,
+      5,
+      800,
+      logger,
+    );
+    const result = await pca.getAvailableDevices();
+    assert.lengthOf(result, 1022);
+    const ch0Devices = result.filter((d: AvailableDevice) => d.address === "0x40");
+    assert.lengthOf(ch0Devices, 14);
+    assert.isFalse(ch0Devices.some((d: AvailableDevice) => d.pins?.includes("0")));
+    assert.isFalse(ch0Devices.some((d: AvailableDevice) => d.pins?.includes("1")));
+  });
+
+  it("should return alias: null for all PCA9685 devices", async () => {
+    const logger = winston.createLogger({ silent: true }) as winston.Logger;
+    const outputsRepo = createMockOutputsRepo();
+    sinon.stub(outputsRepo, "getByModelAsync").resolves([]);
+    const pca = new PCA9685(
+      new MemoryEventBus(logger),
+      outputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
+      5,
+      5,
+      5,
+      800,
+      logger,
+    );
+    const result = await pca.getAvailableDevices();
+    assert.isTrue(result.every((d: AvailableDevice) => d.alias === null));
   });
 });

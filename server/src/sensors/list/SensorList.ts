@@ -10,11 +10,11 @@ import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
 import { SDBSensor } from "@sproot/common/database/SDBSensor";
 import { ISensorsRepository } from "../../database/repositories/sensors/ISensorsRepository";
 import { ISubcontrollersRepository } from "../../database/repositories/subcontrollers/ISubcontrollersRepository";
-import { DefaultColors } from "@sproot/common/utility/Constants";
 import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
 import { ReadingType } from "@sproot/common/sensors/ReadingType";
-import { Models } from "@sproot/common/sensors/Models";
+import { Models, I2C_SENSOR_ADDRESSES, I2C_SENSOR_PINS } from "@sproot/common/sensors/Models";
+import { AvailableDevice } from "@sproot/common/utility/DeviceTypes";
 import { MdnsService } from "../../system/MdnsService";
 import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
 import { IEventBus } from "../../eventbus/IEventBus";
@@ -32,7 +32,6 @@ class SensorList {
   #initialCacheLookback: number;
   #cacheBucketMinutes: number;
   #isUpdating: boolean = false;
-  #ds18b20UpdateSetInterval: NodeJS.Timeout | null = null;
   #listenerCleanupFunction: () => void;
 
   static createInstanceAsync(
@@ -139,17 +138,6 @@ class SensorList {
   }
 
   async regenerateAsync(): Promise<this> {
-    if (!this.#ds18b20UpdateSetInterval) {
-      await this.addUnreconizedDS18B20sToSDBAsync().catch((err) => {
-        this.#logger.error(`Failed to add unrecognized DS18B20's to database. ${err}`);
-      });
-      this.#ds18b20UpdateSetInterval = setInterval(async () => {
-        await this.addUnreconizedDS18B20sToSDBAsync().catch((err) => {
-          this.#logger.error(`Failed to add unrecognized DS18B20's to database. ${err}`);
-        });
-      }, 5000);
-    }
-
     if (this.#isUpdating) {
       this.#logger.warn("SensorList is already updating, skipping regenerateAsync call.");
       return this;
@@ -270,9 +258,6 @@ class SensorList {
 
   async [Symbol.asyncDispose]() {
     this.#listenerCleanupFunction();
-    if (this.#ds18b20UpdateSetInterval) {
-      clearInterval(this.#ds18b20UpdateSetInterval);
-    }
     await this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
   }
 
@@ -289,6 +274,136 @@ class SensorList {
   async deleteSensorAsync(sensorId: number): Promise<void> {
     await this.#sensorsRepository.deleteAsync(sensorId);
     await this.#eventBus.publishAsync(new SensorModifiedEvent({}));
+  }
+
+  async getAvailableDevices(model: string, filterUsed: boolean = true): Promise<AvailableDevice[]> {
+    if (model in I2C_SENSOR_ADDRESSES) {
+      return this.#getI2CSensorAvailableDevices(model, filterUsed);
+    }
+
+    if (model === "DS18B20" || model === "ESP32_DS18B20") {
+      return this.#getDS18B20AvailableDevices(model, filterUsed);
+    }
+
+    return [];
+  }
+
+  async detectDS18B20AddressesAsync(): Promise<
+    Array<{ address: string; subcontrollerId: number | null }>
+  > {
+    const results: Array<{ address: string; subcontrollerId: number | null }> = [];
+    const knownSubcontrollers = await this.#subcontrollersRepository.getAllAsync();
+
+    for (const subcontroller of knownSubcontrollers) {
+      const addresses = await ESP32_DS18B20.getAddressesAsync(subcontroller.hostName);
+      for (const address of addresses) {
+        results.push({ address, subcontrollerId: subcontroller.id });
+      }
+    }
+
+    const localAddresses = await DS18B20.getAddressesAsync();
+    for (const address of localAddresses) {
+      results.push({ address, subcontrollerId: null });
+    }
+
+    return results;
+  }
+
+  async #getDS18B20AvailableDevices(
+    model: string,
+    filterUsed: boolean,
+  ): Promise<AvailableDevice[]> {
+    const detected = await this.detectDS18B20AddressesAsync();
+
+    const isRemote = model === "ESP32_DS18B20";
+    const relevant = detected.filter((d) =>
+      isRemote ? d.subcontrollerId !== null : d.subcontrollerId === null,
+    );
+
+    if (!filterUsed) {
+      return relevant.map((d) => ({
+        alias: null,
+        address: d.address,
+        pins: null,
+        subcontrollerId: d.subcontrollerId,
+      }));
+    }
+
+    const usedSensors = await this.#sensorsRepository.getDS18B20AddressesAsync();
+    const usedKeys = new Set(usedSensors.map((s) => `${s.subcontrollerId ?? "null"}:${s.address}`));
+
+    return relevant
+      .filter((d) => !usedKeys.has(`${d.subcontrollerId ?? "null"}:${d.address}`))
+      .map((d) => ({
+        alias: null,
+        address: d.address,
+        pins: null,
+        subcontrollerId: d.subcontrollerId,
+      }));
+  }
+
+  async #getI2CSensorAvailableDevices(
+    model: string,
+    filterUsed: boolean,
+  ): Promise<AvailableDevice[]> {
+    const staticAddresses = I2C_SENSOR_ADDRESSES[model]!;
+    const hasPins = model in I2C_SENSOR_PINS;
+    const modelPins = hasPins ? I2C_SENSOR_PINS[model]! : null;
+
+    if (!filterUsed) {
+      return staticAddresses.map((address) => ({
+        alias: null,
+        address,
+        pins: modelPins,
+        subcontrollerId: null,
+      }));
+    }
+
+    const modelsToCheck = this.#getSharedModelGroup(model);
+    const usedSensors: SDBSensor[] = [];
+    for (const m of modelsToCheck) {
+      usedSensors.push(...(await this.#sensorsRepository.getByModelAsync(m)));
+    }
+
+    const usedAddresses = new Set(usedSensors.map((s) => s.address));
+    const usedAddressPins = new Map<string, Set<string>>();
+    for (const s of usedSensors) {
+      if (s.pin) {
+        if (!usedAddressPins.has(s.address!)) {
+          usedAddressPins.set(s.address!, new Set());
+        }
+        usedAddressPins.get(s.address!)!.add(s.pin);
+      }
+    }
+
+    return staticAddresses
+      .filter((addr) => !usedAddresses.has(addr))
+      .map((address) => {
+        if (!hasPins) {
+          return { alias: null, address, pins: null, subcontrollerId: null };
+        }
+        const usedForAddress = usedAddressPins.get(address);
+        let pins: string[] | null;
+        if (!usedForAddress || usedForAddress.size === 0) {
+          pins = modelPins!;
+        } else {
+          pins = modelPins!.filter((p) => !usedForAddress.has(p));
+        }
+        return { alias: null, address, pins, subcontrollerId: null };
+      });
+  }
+
+  #getSharedModelGroup(model: string): string[] {
+    const sharedModels = [
+      "ADS1115",
+      "ESP32_ADS1115",
+      "CAPACITIVE_MOISTURE_SENSOR",
+      "ESP32_CAPACITIVE_MOISTURE_SENSOR",
+    ];
+    if (sharedModels.includes(model)) {
+      return sharedModels;
+    }
+    return [model];
   }
 
   async #touchAllSensorsAsync(fn: (arg0: SensorBase) => Promise<void>): Promise<void> {
@@ -496,92 +611,6 @@ class SensorList {
     if (newSensor) {
       this.#sensors[sensor.id] = newSensor;
     }
-  }
-
-  async addUnreconizedDS18B20sToSDBAsync() {
-    // Get all DS18B20 sensors from database
-    const subcontrollers = await this.#subcontrollersRepository.getAllAsync();
-    const sensorsFromDatabase = await this.#sensorsRepository.getDS18B20AddressesAsync();
-    const addToDatabasePromises: Promise<void>[] = [];
-
-    // Get all DS18B20s from known ESP32 devices
-    const remoteDeviceAddresses = [] as {
-      subcontrollerId: number;
-      hostName: string;
-      deviceId: string;
-    }[];
-    await Promise.all(
-      subcontrollers.map(async (subcontroller) => {
-        const ipAddress = this.#mdnsService.getIPAddressByHostName(subcontroller.hostName);
-        if (!ipAddress) {
-          this.#logger.warn(
-            `Could not find IP address for ESP32 DS18B20 device with hostName ${subcontroller.hostName}, skipping...`,
-          );
-          return;
-        }
-        const addresses = await ESP32_DS18B20.getAddressesAsync(ipAddress);
-        addresses.map((address) => {
-          remoteDeviceAddresses.push({
-            subcontrollerId: subcontroller.id,
-            hostName: subcontroller.hostName,
-            deviceId: address,
-          });
-        });
-      }),
-    );
-
-    // Filter remote devices
-    for (const addresses of remoteDeviceAddresses) {
-      if (
-        sensorsFromDatabase.some(
-          (s) => s.subcontrollerId == addresses.subcontrollerId && s.address === addresses.deviceId,
-        )
-      ) {
-        continue;
-      } else {
-        this.#logger.info(
-          `Adding unrecognized ESP32_DS18B20 sensor {subcontrollerId: ${addresses.subcontrollerId}, deviceId: ${addresses.deviceId} to database}`,
-        );
-        addToDatabasePromises.push(
-          this.#sensorsRepository.addAsync({
-            name: `New ESP32_DS18B20 ..${addresses.deviceId.slice(-4)}`,
-            model: Models.ESP32_DS18B20,
-            address: addresses.deviceId,
-            subcontrollerId: addresses.subcontrollerId,
-            color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
-          } as SDBSensor),
-        );
-      }
-    }
-
-    // Get all DS18B20s from local device
-    const localDeviceAddresses = await DS18B20.getAddressesAsync();
-
-    // Filter local devices
-    for (const address of localDeviceAddresses) {
-      if (sensorsFromDatabase.some((s) => s.subcontrollerId == null && s.address === address)) {
-        continue;
-      } else {
-        this.#logger.info(`Adding unrecognized DS18B20 sensor ${address} to database`);
-        addToDatabasePromises.push(
-          this.#sensorsRepository.addAsync({
-            name: `New DS18B20 ..${address.slice(-4)}`,
-            model: Models.DS18B20,
-            address: address,
-            color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
-          } as SDBSensor),
-        );
-      }
-    }
-
-    const awaitedPromises = await Promise.allSettled(addToDatabasePromises);
-    awaitedPromises.forEach((result) => {
-      if (result.status === "rejected") {
-        this.#logger.error(
-          `Could not add unrecognized (ESP) DS18B20 sensor to database ${result.reason}`,
-        );
-      }
-    });
   }
 
   async #disposeSensorAsync(sensor: SensorBase) {

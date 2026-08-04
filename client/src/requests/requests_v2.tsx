@@ -13,7 +13,7 @@ import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBOutputAction } from "@sproot/database/SDBOutputAction";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { SDBDeviceZone } from "@sproot/database/SDBDeviceZone";
-import { AvailableDevice } from "@sproot/outputs/AvailableDevice";
+import { AvailableDevice } from "@sproot/utility/DeviceTypes";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import { SystemStatus } from "@sproot/system/SystemStatus";
 import {

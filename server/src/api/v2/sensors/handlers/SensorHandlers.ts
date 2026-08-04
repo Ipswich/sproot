@@ -2,8 +2,65 @@ import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { SDBSensor } from "@sproot/database/SDBSensor";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
-import { ModelList, Models } from "@sproot/common/sensors/Models";
+import { I2C_SENSOR_ADDRESSES, I2C_SENSOR_PINS, Models } from "@sproot/common/sensors/Models";
 import { SensorList } from "../../../../sensors/list/SensorList";
+
+function validateAddress(model: string, address: string | null | undefined): string | null {
+  if (address == null || address === "") return "address";
+
+  // DS18B20 validation: 16 chars, starts with "28", hex digits only
+  if (model === "DS18B20" || model === "ESP32_DS18B20") {
+    if (address.length !== 16 || !address.startsWith("28")) {
+      return "address";
+    }
+    if (!/^[0-9a-fA-F]+$/.test(address.replace(/-/g, ""))) {
+      return "address";
+    }
+    return null;
+  }
+
+  // I2C sensor validation: address must be in static list
+  if (model in I2C_SENSOR_ADDRESSES) {
+    const addresses = I2C_SENSOR_ADDRESSES[model as keyof typeof I2C_SENSOR_ADDRESSES]!;
+    if (!addresses.includes(address)) {
+      return "address";
+    }
+    return null;
+  }
+
+  // Unknown model — no address validation
+  return null;
+}
+
+function validatePin(model: string, pin: string | null | undefined): string | null {
+  // Models with no pins - null/undefined is valid, any provided value is invalid
+  if (
+    model === "DS18B20" ||
+    model === "ESP32_DS18B20" ||
+    model === "BME280" ||
+    model === "ESP32_BME280"
+  ) {
+    if (pin != null && pin !== "") {
+      return "pin";
+    }
+    return null;
+  }
+
+  // Other models: pin must be provided
+  if (pin == null || pin === "") return "pin";
+
+  // I2C sensor validation: pin must be in static list
+  if (model in I2C_SENSOR_PINS) {
+    const pins = I2C_SENSOR_PINS[model as keyof typeof I2C_SENSOR_PINS]!;
+    if (!pins.includes(pin)) {
+      return "pin";
+    }
+    return null;
+  }
+
+  // Unknown model — no pin validation
+  return null;
+}
 
 /**
  * Possible statusCodes: 200, 404
@@ -86,17 +143,13 @@ export async function addAsync(
       `Invalid model: ${newSensor.model}. Supported models are: ${Object.keys(Models).join(", ")}`,
     );
   }
-  if (
-    newSensor.model == ModelList.ADS1115 ||
-    newSensor.model == ModelList.CAPACITIVE_MOISTURE_SENSOR
-  ) {
-    if (newSensor.pin == undefined || newSensor.pin == null) {
-      missingFields.push("Missing required field: pin");
-    }
+  const addressValidation = validateAddress(newSensor.model, newSensor.address);
+  if (addressValidation) {
+    missingFields.push(`Invalid address for model ${newSensor.model}`);
   }
-
-  if (newSensor.address == undefined || newSensor.address == null) {
-    missingFields.push("Missing required field: address");
+  const pinValidation = validatePin(newSensor.model, newSensor.pin);
+  if (pinValidation) {
+    missingFields.push(`Invalid pin for model ${newSensor.model}`);
   }
 
   if (missingFields.length > 0) {
@@ -191,6 +244,32 @@ export async function updateAsync(
     request.body["highCalibrationPoint"] ?? sensorData.highCalibrationPoint;
   sensorData.deviceZoneId =
     request.body["deviceZoneId"] ?? request.body["deviceZoneId"] ?? sensorData.deviceZoneId;
+
+  const updateDetails: string[] = [];
+  if (request.body["address"] !== undefined) {
+    const addressValidation = validateAddress(sensorData.model, request.body["address"]);
+    if (addressValidation) {
+      updateDetails.push(`Invalid address for model ${sensorData.model}`);
+    }
+  }
+  if (request.body["pin"] !== undefined) {
+    const pinValidation = validatePin(sensorData.model, request.body["pin"]);
+    if (pinValidation) {
+      updateDetails.push(`Invalid pin for model ${sensorData.model}`);
+    }
+  }
+  if (updateDetails.length > 0) {
+    updateSensorResponse = {
+      statusCode: 400,
+      error: {
+        name: "Bad Request",
+        url: request.originalUrl,
+        details: updateDetails,
+      },
+      ...response.locals["defaultProperties"],
+    };
+    return updateSensorResponse;
+  }
 
   try {
     await sensorList.updateSensorAsync(sensorData);

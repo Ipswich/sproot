@@ -2111,7 +2111,7 @@ paths:
                         properties:
                           data:
                             allOf:
-                              - $ref: "#/components/schemas/AvailableDevices"
+                              - $ref: "#/components/schemas/AvailableDevice"
         400:
           description: "Bad request"
           content:
@@ -5151,6 +5151,67 @@ paths:
                           details:
                             items:
                               example: "Invalid or Missing JWT."
+  /api/v2/sensors/available-devices/{model}:
+    get:
+      summary: Get available devices for a sensor model
+      parameters:
+        - name: model
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The sensor model to get available devices for
+        - name: filterUsed
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: If true, filter out addresses already in use
+      responses:
+        "200":
+          description: List of available devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                  timestamp:
+                    type: string
+                    format: date-time
+                  requestId:
+                    type: string
+                  content:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/AvailableDevice"
+        "400":
+          description: Bad request (invalid model or missing model parameter)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    $ref: "#/components/schemas/ErrorResponse"
   /api/v2/device-zones:
     get:
       security:
@@ -6517,7 +6578,7 @@ paths:
                               example:
                                 - "Failed to add journal entry tag to database."
                                 - "Database connection failed."
-  
+
   /api/v2/tags/entries/{tagId}:
     patch:
       security:
@@ -6908,7 +6969,7 @@ paths:
                               example:
                                 - "Failed to add journal to database."
                                 - "Database connection failed."
-  
+
   /api/v2/journals/{journalId}:
     parameters:
       - in: path
@@ -7313,7 +7374,7 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/ErrorResponse"
                   - properties:
-                      statusCode: 
+                      statusCode:
                         example: 404
                       error:
                         properties:
@@ -7466,7 +7527,6 @@ paths:
                                 - "Failed to remove tag from journal in database."
                                 - "Database connection failed."
 
-  
   /api/v2/journals/{journalId}/entries:
     get:
       security:
@@ -7516,7 +7576,7 @@ paths:
                                   type: array
                                   items:
                                     $ref: "#/components/schemas/SDBJournalEntryTag"
-        
+
         401:
           description: "Unauthorized"
           content:
@@ -7693,7 +7753,7 @@ paths:
                               example:
                                 - "Failed to add journal entry to database."
                                 - "Database connection failed."
-  
+
   /api/v2/entries/{entryId}:
     get:
       security:
@@ -8270,8 +8330,8 @@ paths:
                           url:
                             example: "/api/v2/entries/-1/tags/1"
                           details:
-                             items:
-                               example: "Journal entry tag with ID -1 not found in journal entry with ID 1."
+                            items:
+                              example: "Journal entry tag with ID -1 not found in journal entry with ID 1."
 
   /api/v2/settings:
     get:
@@ -8295,7 +8355,7 @@ paths:
                       content:
                         properties:
                           data:
-                             $ref: "#/components/schemas/SettingsSchema"
+                            $ref: "#/components/schemas/SettingsSchema"
         503:
           description: Service Unavailable
           content:
@@ -8340,9 +8400,9 @@ paths:
                       statusCode:
                         example: 200
                       content:
-                       properties:
-                           data:
-                             $ref: "#/components/schemas/SettingsSchema"
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SettingsSchema"
         400:
           description: Bad Request
           content:
@@ -9322,22 +9382,26 @@ components:
         type:
           type: string
 
-    AvailableDevices:
-      description: >
-        A list of available devices
-      type: array
-      items:
-        type: object
-        properties:
-          alias:
+    AvailableDevice:
+      type: object
+      properties:
+        alias:
+          type: string
+          nullable: true
+          description: Human-readable name for the device, or null
+        address:
+          type: string
+          description: I2C address, 1-Wire serial, or bus address
+        pins:
+          type: array
+          items:
             type: string
-            example: Plug 1
-          externalId:
-            type: string
-            example: 8006C5CA540AABD8165111F62C70CFD3236B0B3703
-          address:
-            type: string
-            example: 192.168.2.138
+          nullable: true
+          description: Available pins/channels for this address, or null for devices without pins
+        subcontrollerId:
+          type: integer
+          nullable: true
+          description: Subcontroller ID if the device is on an ESP32, null for local
 
     SDBDeviceZone:
       description: >
@@ -9354,7 +9418,7 @@ components:
         name:
           type: string
           example: "Living Room"
-    
+
     SDBJournalTag:
       description: >
         A journal tag object that is stored in the database. Contains all the information needed to 
@@ -9373,7 +9437,7 @@ components:
         color:
           type: string
           example: "#0000ff"
-    
+
     SDBJournalEntryTag:
       description: >
         A journal entry tag object that is stored in the database. Contains all the information needed to 
@@ -9392,7 +9456,7 @@ components:
         color:
           type: string
           example: "#0000ff"
-    
+
     SDBJournal:
       description: >
         A journal object that is stored in the database. Contains all the information needed to 
@@ -9442,7 +9506,7 @@ components:
           type: string
           format: date-time
           example: "2021-12-31T23:59:59.000Z"
-    
+
     SDBJournalEntry:
       description: >
         A journal entry object that is stored in the database. Contains all the information needed to 
@@ -9487,7 +9551,7 @@ components:
         - $ref: "#/components/schemas/SDBJournalEntry"
       required:
         - "content"
-      
+
     ReadingTypes:
       description: >
         An obejct of active sensor reading types and their units.

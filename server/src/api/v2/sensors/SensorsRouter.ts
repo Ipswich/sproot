@@ -3,6 +3,7 @@ import { addAsync, deleteAsync, get, updateAsync } from "./handlers/SensorHandle
 import { supportedModelsHandler } from "./handlers/SupportedModelsHandlers";
 import { readingTypesHandler } from "./handlers/ReadingTypesHandler";
 import { sensorDataQueryHandlerAsync } from "./handlers/SensorDataQueryHandler";
+import { getAvailableDevices } from "./handlers/AvailableDevicesHandlers";
 
 const router = express.Router();
 
@@ -58,6 +59,12 @@ router.patch("/:sensorId", async (req: Request, res: Response) => {
 router.delete("/:sensorId", async (req: Request, res: Response) => {
   const response = await deleteAsync(req, res);
 
+  res.status(response.statusCode).json(response);
+  return;
+});
+
+router.get("/available-devices/:model", async (req: Request, res: Response) => {
+  const response = await getAvailableDevices(req, res);
   res.status(response.statusCode).json(response);
   return;
 });

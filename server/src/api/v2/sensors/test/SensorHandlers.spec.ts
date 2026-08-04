@@ -25,7 +25,7 @@ describe("SensorHandlers.ts tests", () => {
         id: 2,
         name: "test sensor 2",
         model: "DS18B20",
-        address: "28-00001",
+        address: "28FFFFFFFFFFFF02",
         lastReading: { temperature: "25.000" },
         lastReadingTime: null,
         units: { temperature: "°C" },
@@ -124,7 +124,7 @@ describe("SensorHandlers.ts tests", () => {
       const newSensor = {
         name: "test sensor 4",
         model: Models.DS18B20,
-        address: "28-00002",
+        address: "28FFFFFFFFFFFF01",
         color: "#000000",
         subcontrollerId: null,
       } as SDBSensor;
@@ -147,7 +147,8 @@ describe("SensorHandlers.ts tests", () => {
       assert.isUndefined(sensorList.addSensorAsync.firstCall.args[0].pin);
 
       newSensor.model = "CAPACITIVE_MOISTURE_SENSOR";
-      newSensor.pin = "4";
+      newSensor.address = "0x48";
+      newSensor.pin = "0";
       success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 201);
       assert.deepEqual(success.content?.data, newSensor);
@@ -177,7 +178,8 @@ describe("SensorHandlers.ts tests", () => {
       assert.deepEqual(error.error["details"], [
         "Missing required field: name",
         "Missing required field: model",
-        "Missing required field: address",
+        "Invalid address for model undefined",
+        "Invalid pin for model undefined",
       ]);
       assert.isTrue(sensorList.addSensorAsync.notCalled);
 
@@ -190,7 +192,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.error.url, "/api/v2/sensors");
       assert.deepEqual(error.error["details"], [
         "Missing required field: name",
-        "Missing required field: address",
+        "Invalid address for model BME280",
       ]);
       assert.isTrue(sensorList.addSensorAsync.notCalled);
 
@@ -203,8 +205,8 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.error.url, "/api/v2/sensors");
       assert.deepEqual(error.error["details"], [
         "Missing required field: name",
-        "Missing required field: pin",
-        "Missing required field: address",
+        "Invalid address for model ADS1115",
+        "Invalid pin for model ADS1115",
       ]);
       assert.isTrue(sensorList.addSensorAsync.notCalled);
 
@@ -218,7 +220,8 @@ describe("SensorHandlers.ts tests", () => {
       assert.deepEqual(error.error["details"], [
         "Missing required field: name",
         `Invalid model: Not A Valid Model. Supported models are: ${Object.keys(Models).join(", ")}`,
-        "Missing required field: address",
+        "Invalid address for model Not A Valid Model",
+        "Invalid pin for model Not A Valid Model",
       ]);
       assert.isTrue(sensorList.addSensorAsync.notCalled);
     });
@@ -227,7 +230,7 @@ describe("SensorHandlers.ts tests", () => {
       const newSensor = {
         name: "test sensor 4",
         model: "DS18B20",
-        address: "28-00002",
+        address: "28FFFFFFFFFFFF01",
         color: "#000000",
       } as SDBSensor;
 
@@ -277,7 +280,7 @@ describe("SensorHandlers.ts tests", () => {
           id: 1,
           name: "test sensor 4",
           model: "DS18B20",
-          address: "28-00002",
+          address: "28FFFFFFFFFFFF01",
           color: "#000000",
         } as SDBSensor,
       };
@@ -304,7 +307,7 @@ describe("SensorHandlers.ts tests", () => {
         id: 1,
         name: "test sensor 4",
         model: "DS18B20",
-        address: "28-00002",
+        address: "28FFFFFFFFFFFF01",
         color: "#000000",
         lowCalibrationPoint: 10,
         highCalibrationPoint: 90,
@@ -341,7 +344,7 @@ describe("SensorHandlers.ts tests", () => {
           id: 1,
           name: "test sensor 4",
           model: "DS18B20",
-          address: "28-00002",
+          address: "28FFFFFFFFFFFF01",
           color: "#000000",
         } as SDBSensor,
       };
@@ -372,7 +375,7 @@ describe("SensorHandlers.ts tests", () => {
           id: 1,
           name: "test sensor 4",
           model: "DS18B20",
-          address: "28-00002",
+          address: "28FFFFFFFFFFFF01",
           color: "#000000",
         } as SDBSensor,
       };
@@ -403,7 +406,7 @@ describe("SensorHandlers.ts tests", () => {
           id: 1,
           name: "test sensor 4",
           model: "DS18B20",
-          address: "28-00002",
+          address: "28FFFFFFFFFFFF01",
           color: "#000000",
         } as SDBSensor,
       };
@@ -459,7 +462,7 @@ describe("SensorHandlers.ts tests", () => {
           id: 1,
           name: "test sensor 4",
           model: "DS18B20",
-          address: "28-00002",
+          address: "28FFFFFFFFFFFF01",
           color: "#000000",
         } as SDBSensor,
       };
@@ -486,7 +489,7 @@ describe("SensorHandlers.ts tests", () => {
           id: 1,
           name: "test sensor 4",
           model: "DS18B20",
-          address: "28-00002",
+          address: "28FFFFFFFFFFFF01",
           color: "#000000",
         } as SDBSensor,
       };
@@ -516,7 +519,7 @@ describe("SensorHandlers.ts tests", () => {
           id: 1,
           name: "test sensor 4",
           model: "DS18B20",
-          address: "28-00002",
+          address: "28FFFFFFFFFFFF01",
           color: "#000000",
         } as SDBSensor,
       };
@@ -546,7 +549,7 @@ describe("SensorHandlers.ts tests", () => {
           id: 1,
           name: "test sensor 4",
           model: "DS18B20",
-          address: "28-00002",
+          address: "28FFFFFFFFFFFF01",
           color: "#000000",
         } as SDBSensor,
       };
@@ -573,6 +576,85 @@ describe("SensorHandlers.ts tests", () => {
         "DB Error",
       ]);
       assert.isTrue(sensorList.deleteSensorAsync.calledOnceWithExactly(1));
+    });
+  });
+
+  describe("address validation", () => {
+    let sensorList: sinon.SinonStubbedInstance<SensorList>;
+    const mockResponse = {
+      locals: {
+        defaultProperties: {
+          timestamp: new Date().toISOString(),
+          requestId: "1234",
+        },
+      },
+    } as unknown as Response;
+
+    beforeEach(() => {
+      sensorList = sinon.createStubInstance(SensorList);
+      sensorList.addSensorAsync.resolves();
+    });
+
+    afterEach(() => {
+      sinon.restore();
+    });
+
+    it("should return 400 for DS18B20 with wrong address length", async () => {
+      const mockRequest = {
+        app: { get: (_: string) => sensorList },
+        body: { model: "DS18B20", address: "28-short", name: "test" },
+      } as unknown as Request;
+      const result = await addAsync(mockRequest, mockResponse);
+      assert.equal(result.statusCode, 400);
+      assert.isTrue(
+        (result as ErrorResponse).error.details.some((d: string) => d.includes("Invalid address")),
+      );
+    });
+
+    it("should return 400 for DS18B20 not starting with 28", async () => {
+      const mockRequest = {
+        app: { get: (_: string) => sensorList },
+        body: { model: "DS18B20", address: "29-00000abc1234", name: "test" },
+      } as unknown as Request;
+      const result = await addAsync(mockRequest, mockResponse);
+      assert.equal(result.statusCode, 400);
+      assert.isTrue(
+        (result as ErrorResponse).error.details.some((d: string) => d.includes("Invalid address")),
+      );
+    });
+
+    it("should return 400 for BME280 with address not in static list", async () => {
+      const mockRequest = {
+        app: { get: (_: string) => sensorList },
+        body: { model: "BME280", address: "0xFF", name: "test" },
+      } as unknown as Request;
+      const result = await addAsync(mockRequest, mockResponse);
+      assert.equal(result.statusCode, 400);
+      assert.isTrue(
+        (result as ErrorResponse).error.details.some((d: string) => d.includes("Invalid address")),
+      );
+    });
+
+    it("should accept valid DS18B20 address and call sensorList.addSensorAsync", async () => {
+      sensorList.addSensorAsync.resolves();
+      const mockRequest = {
+        app: { get: (_: string) => sensorList },
+        body: { model: "DS18B20", address: "28ffffffffffff01", name: "test" },
+      } as unknown as Request;
+      const result = await addAsync(mockRequest, mockResponse);
+      assert.equal(result.statusCode, 201);
+      assert.isTrue(sensorList.addSensorAsync.calledOnce);
+    });
+
+    it("should accept valid BME280 address and call sensorList.addSensorAsync", async () => {
+      sensorList.addSensorAsync.resolves();
+      const mockRequest = {
+        app: { get: (_: string) => sensorList },
+        body: { model: "BME280", address: "0x76", name: "test" },
+      } as unknown as Request;
+      const result = await addAsync(mockRequest, mockResponse);
+      assert.equal(result.statusCode, 201);
+      assert.isTrue(sensorList.addSensorAsync.calledOnce);
     });
   });
 });

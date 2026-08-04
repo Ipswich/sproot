@@ -10,6 +10,7 @@ import { SDBOutput } from "@sproot/common/database/SDBOutput";
 import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
 import winston from "winston";
 import { Models } from "@sproot/common/outputs/Models";
+import { AvailableDevice } from "@sproot/common/utility/DeviceTypes";
 import { MdnsService } from "../../system/MdnsService";
 import { OutputGroup } from "../OutputGroup";
 import { IEventBus } from "../../eventbus/IEventBus";
@@ -160,18 +161,18 @@ class OutputList implements AsyncDisposable {
     await Promise.all(promises);
   }
 
-  getAvailableDevices(
+  async getAvailableDevices(
     model: string,
     address?: string,
     filterUsed?: boolean,
-  ): Record<string, string>[] {
+  ): Promise<AvailableDevice[]> {
     switch (model) {
       case Models.PCA9685:
-        return this.#PCA9685.getAvailableDevices(address);
+        return this.#PCA9685.getAvailableDevices(address, filterUsed);
       case Models.ESP32_PCA9685:
-        return this.#ESP32_PCA9685.getAvailableDevices(address);
+        return this.#ESP32_PCA9685.getAvailableDevices(address, filterUsed);
       case Models.TPLINK_SMART_PLUG:
-        return this.#TPLinkSmartPlugs.getAvailableDevices(address, filterUsed);
+        return Promise.resolve(this.#TPLinkSmartPlugs.getAvailableDevices(address, filterUsed));
       default:
         return [];
     }

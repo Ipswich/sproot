@@ -876,6 +876,7 @@ const createMockSprootDB = (): any => {
       getAllAsync: stub(),
       getByIdAsync: stub(),
       getDS18B20AddressesAsync: stub(),
+      getByModelAsync: stub(),
       addAsync: stub(),
       updateAsync: stub(),
       updateSensorCalibrationAsync: stub(),

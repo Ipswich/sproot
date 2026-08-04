@@ -31,6 +31,12 @@ export class OutputsRepository extends BaseKnexRepository implements IOutputsRep
       .where("id", id);
   }
 
+  async getByModelAsync(model: string): Promise<SDBOutput[]> {
+    return this.connection("outputs")
+      .select("*", "subcontroller_id as subcontrollerId")
+      .where("model", model);
+  }
+
   async addAsync(output: SDBOutput): Promise<number> {
     return this.insertAndGetIdAsync("outputs", {
       name: output.name,

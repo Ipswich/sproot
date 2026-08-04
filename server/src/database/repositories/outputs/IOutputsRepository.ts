@@ -6,6 +6,7 @@ import { OutputDataQueryRequest, OutputDataQueryResponse } from "@sproot/api/v2/
 export interface IOutputsRepository {
   getAllAsync(): Promise<SDBOutput[]>;
   getByIdAsync(id: number): Promise<SDBOutput[]>;
+  getByModelAsync(model: string): Promise<SDBOutput[]>;
   addAsync(output: SDBOutput): Promise<number>;
   updateAsync(output: SDBOutput): Promise<void>;
   deleteAsync(id: number): Promise<void>;

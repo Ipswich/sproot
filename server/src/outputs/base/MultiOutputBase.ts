@@ -5,7 +5,7 @@ import { ControlMode, IOutputBase } from "@sproot/common/outputs/IOutputBase";
 
 import winston from "winston";
 import { SDBOutputState } from "@sproot/database/SDBOutputState";
-import { AvailableDevice } from "@sproot/common/outputs/AvailableDevice";
+import { AvailableDevice } from "@sproot/common/utility/DeviceTypes";
 import { OutputBase } from "./OutputBase";
 import { SDBOutput } from "@sproot/database/SDBOutput";
 import { IEventBus } from "../../eventbus/IEventBus";
@@ -47,7 +47,7 @@ export abstract class MultiOutputBase implements AsyncDisposable {
   }
 
   abstract createOutputAsync(output: SDBOutput): Promise<IOutputBase | undefined>;
-  abstract getAvailableDevices(host?: string): AvailableDevice[];
+  abstract getAvailableDevices(host?: string): Promise<AvailableDevice[]>;
   abstract [Symbol.asyncDispose](): Promise<void>;
 
   get outputData(): Record<string, IOutputBase> {

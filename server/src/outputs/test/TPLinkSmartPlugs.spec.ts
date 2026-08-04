@@ -23,6 +23,7 @@ import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/Aut
 const createMockOutputsRepo = (): IOutputsRepository => ({
   getAllAsync: async () => [],
   getByIdAsync: async () => [],
+  getByModelAsync: async () => [],
   addAsync: async () => 0,
   updateAsync: async () => {},
   deleteAsync: async () => {},
@@ -182,11 +183,11 @@ describe("tplinkPlug.ts tests", async function () {
     );
 
     // No devices should be available at first - takes a hot sec for events to get emitted
-    assert.equal(Object.keys(tplinkSmartPlugs.getAvailableDevices()).length, 0);
+    assert.equal(Object.keys(await tplinkSmartPlugs.getAvailableDevices()).length, 0);
 
     // Wait a moment for the device to be detected
     await new Promise((resolve) => setTimeout(resolve, 200));
-    assert.equal(Object.keys(tplinkSmartPlugs.getAvailableDevices()).length, 6);
+    assert.equal(Object.keys(await tplinkSmartPlugs.getAvailableDevices()).length, 6);
 
     const output1 = await tplinkSmartPlugs.createOutputAsync({
       id: 1,
@@ -198,11 +199,14 @@ describe("tplinkPlug.ts tests", async function () {
       isInvertedPwm: false,
     } as SDBOutput);
 
-    assert.equal(Object.keys(tplinkSmartPlugs.getAvailableDevices()).length, 5);
-    assert.equal(Object.keys(tplinkSmartPlugs.getAvailableDevices(undefined, false)).length, 6);
+    assert.equal(Object.keys(await tplinkSmartPlugs.getAvailableDevices()).length, 5);
+    assert.equal(
+      Object.keys(await tplinkSmartPlugs.getAvailableDevices(undefined, false)).length,
+      6,
+    );
     await tplinkSmartPlugs.disposeOutputAsync(output1!);
 
-    assert.equal(Object.keys(tplinkSmartPlugs.getAvailableDevices()).length, 6);
+    assert.equal(Object.keys(await tplinkSmartPlugs.getAvailableDevices()).length, 6);
   });
 
   it("creation should skip outputs that are already being created", async function () {

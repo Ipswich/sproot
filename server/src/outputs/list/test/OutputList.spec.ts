@@ -17,6 +17,7 @@ import { MemoryEventBus } from "../../../eventbus/MemoryEventBus";
 const createMockOutputsRepo = (): IOutputsRepository => ({
   getAllAsync: async () => [],
   getByIdAsync: async () => [],
+  getByModelAsync: async () => [],
   addAsync: async () => 0,
   updateAsync: async () => {},
   deleteAsync: async () => {},

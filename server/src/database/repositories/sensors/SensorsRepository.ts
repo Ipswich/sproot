@@ -45,6 +45,11 @@ export class SensorsRepository extends BaseKnexRepository implements ISensorsRep
     return this.normalizeSensors(sensors);
   }
 
+  async getByModelAsync(model: string): Promise<SDBSensor[]> {
+    const sensors = await this.connection("sensors").where("model", model);
+    return this.normalizeSensors(sensors);
+  }
+
   async addAsync(sensor: SDBSensor): Promise<void> {
     return this.connection("sensors").insert({
       name: sensor.name,

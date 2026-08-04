@@ -4,11 +4,12 @@ import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
 import type { IOutputsRepository } from "../database/repositories/outputs/IOutputsRepository";
 import type { IOutputActionsRepository } from "../database/repositories/automations/actions/IOutputActionsRepository";
 import type { ISubcontrollersRepository } from "../database/repositories/subcontrollers/ISubcontrollersRepository";
-import { AvailableDevice } from "@sproot/common/outputs/AvailableDevice";
+import { AvailableDevice } from "@sproot/common/utility/DeviceTypes";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 import { MdnsService } from "../system/MdnsService";
 import { IEventBus } from "../eventbus/IEventBus";
+import { PCA9685_I2C_ADDRESSES, PCA9685_CHANNELS, Models } from "@sproot/common/outputs/Models";
 
 class ESP32_PCA9685 extends MultiOutputBase {
   #mdnsService: MdnsService;
@@ -80,11 +81,51 @@ class ESP32_PCA9685 extends MultiOutputBase {
     return this.outputs[output.id];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  override getAvailableDevices(_address?: string): AvailableDevice[] {
-    return [];
-    // const childIds = Array.from({ length: 16 }, (_, i) => i.toString());
-    // return childIds.filter((childId) => !this.usedPins[address]?.includes(childId));
+  override async getAvailableDevices(
+    _address?: string,
+    _filterUsed?: boolean,
+  ): Promise<AvailableDevice[]> {
+    const subcontrollers = await this.subcontrollersRepository.getAllAsync();
+    const allOutputs = await this.outputsRepository.getByModelAsync(Models.ESP32_PCA9685);
+    const results: AvailableDevice[] = [];
+
+    for (const subcontroller of subcontrollers) {
+      const subcontrollerOutputs = allOutputs.filter((o) => o.subcontrollerId === subcontroller.id);
+
+      const usedAddressPins = new Map<string, Set<string>>();
+      for (const output of subcontrollerOutputs) {
+        if (!usedAddressPins.has(output.address)) {
+          usedAddressPins.set(output.address, new Set());
+        }
+        usedAddressPins.get(output.address)!.add(output.pin);
+      }
+
+      for (const address of PCA9685_I2C_ADDRESSES) {
+        const usedPins = usedAddressPins.get(address);
+        if (!usedPins || usedPins.size === 0) {
+          for (const channel of PCA9685_CHANNELS) {
+            results.push({
+              alias: null,
+              address,
+              pins: [channel],
+              subcontrollerId: subcontroller.id,
+            });
+          }
+        } else {
+          for (const channel of PCA9685_CHANNELS) {
+            if (!usedPins.has(channel)) {
+              results.push({
+                alias: null,
+                address,
+                pins: [channel],
+                subcontrollerId: subcontroller.id,
+              });
+            }
+          }
+        }
+      }
+    }
+    return results;
   }
 
   override async [Symbol.asyncDispose](): Promise<void> {

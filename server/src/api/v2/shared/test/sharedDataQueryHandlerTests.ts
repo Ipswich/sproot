@@ -24,6 +24,7 @@ const createMockSensorsRepo = (): ISensorsRepository => ({
   getAllAsync: async () => [],
   getByIdAsync: async () => [],
   getDS18B20AddressesAsync: async () => [],
+  getByModelAsync: async () => [],
   addAsync: async () => {},
   updateAsync: async () => {},
   updateSensorCalibrationAsync: async () => {},
@@ -37,6 +38,7 @@ const createMockSensorsRepo = (): ISensorsRepository => ({
 const createMockOutputsRepo = (): IOutputsRepository => ({
   getAllAsync: async () => [],
   getByIdAsync: async () => [],
+  getByModelAsync: async () => [],
   addAsync: async () => 0,
   updateAsync: async () => {},
   deleteAsync: async () => {},

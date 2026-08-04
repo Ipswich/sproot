@@ -6,7 +6,7 @@ import type { IOutputActionsRepository } from "../database/repositories/automati
 import type { ISubcontrollersRepository } from "../database/repositories/subcontrollers/ISubcontrollersRepository";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
-import { AvailableDevice } from "@sproot/common/outputs/AvailableDevice";
+import { AvailableDevice } from "@sproot/common/utility/DeviceTypes";
 import { ControlMode } from "@sproot/common/outputs/IOutputBase";
 import { EventEmitter } from "events";
 import { toDbDate } from "../utils/dateUtils";
@@ -81,7 +81,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     return [...new Set(this.plugRegistry.getAll().map((plug) => plug.host))];
   }
 
-  getAvailableDevices(host?: string, filterUsed: boolean = true): AvailableDevice[] {
+  async getAvailableDevices(host?: string, filterUsed: boolean = true): Promise<AvailableDevice[]> {
     let plugs = this.plugRegistry.getAll();
 
     if (host != undefined) {
@@ -102,7 +102,8 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     return plugs.map((plug) => ({
       alias: plug.alias,
       address: plug.host,
-      externalId: plug.childId!,
+      pins: [String(plug.childId!)],
+      subcontrollerId: null,
     }));
   }
 

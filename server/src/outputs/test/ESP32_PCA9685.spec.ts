@@ -4,6 +4,7 @@ import type { ISubcontrollersRepository } from "../../database/repositories/subc
 import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
 import { ESP32_PCA9685 } from "../ESP32_PCA9685";
 import { SDBOutput } from "@sproot/common/database/SDBOutput";
+import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
 import { OutputBase } from "../base/OutputBase";
 import { Models } from "@sproot/common/outputs/Models";
 import { ControlMode } from "@sproot/common/outputs/IOutputBase";
@@ -15,10 +16,12 @@ import * as sinon from "sinon";
 import winston from "winston";
 import { MdnsService } from "../../system/MdnsService";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
+import { AvailableDevice } from "@sproot/common/utility/DeviceTypes";
 
 const createMockOutputsRepo = (): IOutputsRepository => ({
   getAllAsync: async () => [],
   getByIdAsync: async () => [],
+  getByModelAsync: async () => [],
   addAsync: async () => 0,
   updateAsync: async () => {},
   deleteAsync: async () => {},
@@ -352,5 +355,135 @@ describe("ESP32_PCA9685.ts tests", function () {
     } as SDBOutputState);
     assert.equal(callCount, 7);
     scope.done();
+  });
+});
+
+describe("ESP32_PCA9685.getAvailableDevices", function () {
+  this.beforeEach(() => {
+    sinon.stub(mockSubcontrollersRepo, "getAllAsync").resolves([
+      {
+        id: 1,
+        hostName: "esp32-1",
+        type: "ESP32",
+        name: "ESP32 1",
+        secureToken: null,
+      } as SDBSubcontroller,
+    ]);
+  });
+
+  this.afterEach(() => {
+    sinon.restore();
+  });
+
+  it("should return devices per subcontroller with correct subcontrollerId", async () => {
+    sinon.stub(mockOutputsRepo, "getByModelAsync").resolves([]);
+    const logger = winston.createLogger({ silent: true }) as winston.Logger;
+    const mdnsService = sinon.createStubInstance(MdnsService);
+    const esp = new ESP32_PCA9685(
+      new MemoryEventBus(logger),
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo as any,
+      mdnsService as any,
+      5,
+      5,
+      5,
+      800,
+      logger,
+    );
+    const result = await esp.getAvailableDevices();
+    assert.lengthOf(result, 1024);
+    assert.equal(result[0]!.subcontrollerId, 1);
+  });
+
+  it("should return 2048 devices (2 subcontrollers x 1024) with correct subcontrollerId", async () => {
+    (mockSubcontrollersRepo.getAllAsync as any).resolves([
+      {
+        id: 1,
+        hostName: "esp32-1",
+        type: "ESP32",
+        name: "ESP32 1",
+        secureToken: null,
+      } as SDBSubcontroller,
+      {
+        id: 2,
+        hostName: "esp32-2",
+        type: "ESP32",
+        name: "ESP32 2",
+        secureToken: null,
+      } as SDBSubcontroller,
+    ]);
+    sinon.stub(mockOutputsRepo, "getByModelAsync").resolves([]);
+    const logger = winston.createLogger({ silent: true }) as winston.Logger;
+    const mdnsService = sinon.createStubInstance(MdnsService);
+    const esp = new ESP32_PCA9685(
+      new MemoryEventBus(logger),
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo as any,
+      mdnsService as any,
+      5,
+      5,
+      5,
+      800,
+      logger,
+    );
+    const result = await esp.getAvailableDevices();
+    assert.lengthOf(result, 2048);
+    const sub1Devices = result.filter((d: AvailableDevice) => d.subcontrollerId === 1);
+    const sub2Devices = result.filter((d: AvailableDevice) => d.subcontrollerId === 2);
+    assert.lengthOf(sub1Devices, 1024);
+    assert.lengthOf(sub2Devices, 1024);
+  });
+
+  it("should filter used channels per subcontroller per address", async () => {
+    sinon.stub(mockOutputsRepo, "getByModelAsync").resolves([
+      {
+        id: 1,
+        model: Models.ESP32_PCA9685,
+        address: "0x40",
+        pin: "0",
+        subcontrollerId: 1,
+      } as SDBOutput,
+    ]);
+    const logger = winston.createLogger({ silent: true }) as winston.Logger;
+    const mdnsService = sinon.createStubInstance(MdnsService);
+    const esp = new ESP32_PCA9685(
+      new MemoryEventBus(logger),
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo as any,
+      mdnsService as any,
+      5,
+      5,
+      5,
+      800,
+      logger,
+    );
+    const result = await esp.getAvailableDevices();
+    assert.lengthOf(result, 1023);
+    const ch0Devices = result.filter((d: AvailableDevice) => d.address === "0x40");
+    assert.lengthOf(ch0Devices, 15);
+    assert.isFalse(ch0Devices.some((d: AvailableDevice) => d.pins?.includes("0")));
+  });
+
+  it("should return alias: null for all ESP32_PCA9685 devices", async () => {
+    sinon.stub(mockOutputsRepo, "getByModelAsync").resolves([]);
+    const logger = winston.createLogger({ silent: true }) as winston.Logger;
+    const mdnsService = sinon.createStubInstance(MdnsService);
+    const esp = new ESP32_PCA9685(
+      new MemoryEventBus(logger),
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo as any,
+      mdnsService as any,
+      5,
+      5,
+      5,
+      800,
+      logger,
+    );
+    const result = await esp.getAvailableDevices();
+    assert.isTrue(result.every((d: AvailableDevice) => d.alias === null));
   });
 });

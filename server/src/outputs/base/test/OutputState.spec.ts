@@ -10,6 +10,7 @@ import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
 const createMockOutputsRepo = (): IOutputsRepository => ({
   getAllAsync: async () => [],
   getByIdAsync: async () => [],
+  getByModelAsync: async () => [],
   addAsync: async () => 0,
   updateAsync: async () => {},
   deleteAsync: async () => {},

@@ -30,16 +30,17 @@ export async function getAvailableDevices(
 
   try {
     if ((Object.values(Models) as string[]).includes(request.params["model"]!)) {
-      const pins = outputList.getAvailableDevices(
+      const filterUsedRaw = request.query["filterUsed"];
+      const filterUsed = filterUsedRaw === "false" ? false : true;
+
+      const devices = await outputList.getAvailableDevices(
         request.params["model"]!,
         request.query["address"] as string,
-        request.query["filterUsed"] as boolean | undefined,
+        filterUsed,
       );
       getAvailableIdentifiersResponse = {
         statusCode: 200,
-        content: {
-          data: pins,
-        },
+        content: { data: devices },
         ...response.locals["defaultProperties"],
       };
     } else {

@@ -7,6 +7,7 @@ export interface ISensorsRepository {
   getAllAsync(): Promise<SDBSensor[]>;
   getByIdAsync(id: number): Promise<SDBSensor[]>;
   getDS18B20AddressesAsync(): Promise<SDBSensor[]>;
+  getByModelAsync(model: string): Promise<SDBSensor[]>;
   addAsync(sensor: SDBSensor): Promise<void>;
   updateAsync(sensor: SDBSensor): Promise<void>;
   updateSensorCalibrationAsync(
