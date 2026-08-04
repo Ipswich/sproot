@@ -386,6 +386,80 @@ describe("OutputActionManager.ts tests", () => {
       assert.equal(manager.lastResult, 50);
     });
 
+    it("should keep the highest-precedence action per automation regardless of database row order", async () => {
+      const sprootDB = createStubSprootDB();
+      const eventBus = new MemoryEventBus(mockLogger);
+      sprootDB.automations.actions.output.getActionsByOutputIdAsync.resolves([
+        {
+          id: 2,
+          automationId: 1,
+          outputId: 1,
+          value: 0,
+          precedence: "High",
+          automationName: "automation1",
+        },
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 100,
+          precedence: "Normal",
+          automationName: "automation1",
+        },
+        {
+          id: 3,
+          automationId: 2,
+          outputId: 1,
+          value: 100,
+          precedence: "High",
+          automationName: "automation2",
+        },
+      ]);
+
+      using manager = await OutputActionManager.createInstanceAsync(
+        1,
+        async () => {},
+        eventBus,
+        sprootDB.automations.actions.output,
+        mockLogger,
+        0,
+      );
+
+      assert.deepEqual(manager.actionWarnings, [
+        {
+          precedence: "High",
+          actions: [
+            { automationId: 1, automationName: "automation1" },
+            { automationId: 2, automationName: "automation2" },
+          ],
+        },
+      ]);
+
+      const triggeredAutomations = new Map<number, any>();
+      triggeredAutomations.set(1, {
+        automationId: 1,
+        automationName: "automation1",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+      triggeredAutomations.set(2, {
+        automationId: 2,
+        automationName: "automation2",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+
+      await publishAutomationEventAsync(eventBus, triggeredAutomations);
+
+      assert.deepEqual(manager.activeConflict, {
+        precedence: "High",
+        actions: [
+          { automationId: 1, automationName: "automation1", value: 0 },
+          { automationId: 2, automationName: "automation2", value: 100 },
+        ],
+      });
+    });
+
     it("should load actions from database on 'OutputActionsUpdated' event", async () => {
       const sprootDB = createStubSprootDB();
       const eventBus = new MemoryEventBus(mockLogger);

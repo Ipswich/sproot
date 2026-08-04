@@ -8,13 +8,35 @@ import fs from "fs";
 import { CameraManager } from "../camera/CameraManager";
 import { FrameBuffer } from "../camera/FrameBuffer";
 import { DI_KEYS } from "../utils/DependencyInjectionConstants";
-import { OutputActionsModifiedEvent } from "../eventbus/events/actions/OutputActionsModifiedEvent";
 import { AutomationsTriggeredEvent } from "../eventbus/events/automations/AutomationsTriggeredEvent";
 
 describe("API Tests", async function () {
   this.timeout(2000);
 
   const flushAsync = () => new Promise((resolve) => setImmediate(resolve));
+  const delayAsync = (milliseconds: number) =>
+    new Promise((resolve) => setTimeout(resolve, milliseconds));
+  const waitForOutputAsync = async (
+    outputId: number,
+    predicate: (output: any) => boolean,
+    attempts = 20,
+  ) => {
+    let lastOutput: any;
+
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      const response = await request(server).get(`/api/v2/outputs/${outputId}`).expect(200);
+      lastOutput = response.body["content"].data[0];
+
+      if (predicate(lastOutput)) {
+        validateMiddlewareValues(response);
+        return lastOutput;
+      }
+
+      await delayAsync(25);
+    }
+
+    assert.fail(`Timed out waiting for output ${outputId}: ${JSON.stringify(lastOutput)}`);
+  };
   // describe("Authentication Routes", async () => {
   //   before(() => {
   //     process.env["AUTHENTICATION_ENABLED"] = "true";
@@ -110,109 +132,141 @@ describe("API Tests", async function () {
         });
 
         it("should include precedence warnings when multiple automations control the same output at the same precedence", async () => {
-          const knexConnection = app.get(DI_KEYS.KnexConnection);
-          const eventBus = app.get(DI_KEYS.EventBus);
+          let createdActionId: number | undefined;
 
-          let insertedActionId: number;
-          await knexConnection("output_actions").insert({
-            automation_id: 2,
-            output_id: 1,
-            value: 100,
-            precedence: "High",
-          });
-          await eventBus.publishAsync(new OutputActionsModifiedEvent({}));
-          await flushAsync();
+          try {
+            const createResponse = await request(server)
+              .post("/api/v2/output-actions")
+              .send({
+                automationId: 2,
+                outputId: 1,
+                value: 100,
+                precedence: "High",
+              })
+              .expect(201);
 
-          const insertedAction = await knexConnection("output_actions")
-            .where({ automation_id: 2, output_id: 1, value: 100, precedence: "High" })
-            .orderBy("id", "desc")
-            .first();
-          insertedActionId = insertedAction.id;
+            validateMiddlewareValues(createResponse);
+            createdActionId = createResponse.body["content"].data.id;
 
-          const response = await request(server).get("/api/v2/outputs/1").expect(200);
-          const output = response.body["content"].data[0];
+            const output = await waitForOutputAsync(
+              1,
+              (candidate) =>
+                Array.isArray(candidate.actionWarnings) && candidate.actionWarnings.length === 1,
+            );
 
-          validateMiddlewareValues(response);
-          assert.deepEqual(output.actionWarnings, [
-            {
-              precedence: "High",
-              actions: [
-                { automationId: 1, automationName: "Automation #1" },
-                { automationId: 2, automationName: "Automation #2" },
-              ],
-            },
-          ]);
-          assert.isNull(output.activeConflict);
-
-          await knexConnection("output_actions").where({ id: insertedActionId }).delete();
-          await eventBus.publishAsync(new OutputActionsModifiedEvent({}));
-          await flushAsync();
+            assert.deepEqual(output.actionWarnings, [
+              {
+                precedence: "High",
+                actions: [
+                  { automationId: 1, automationName: "Automation #1" },
+                  { automationId: 2, automationName: "Automation #2" },
+                ],
+              },
+            ]);
+            assert.isNull(output.activeConflict);
+          } finally {
+            if (createdActionId !== undefined) {
+              await request(server).delete(`/api/v2/output-actions/${createdActionId}`).expect(200);
+              await waitForOutputAsync(
+                1,
+                (candidate) =>
+                  Array.isArray(candidate.actionWarnings) && candidate.actionWarnings.length === 0,
+              );
+            }
+          }
         });
 
         it("should include an active conflict when the highest-precedence triggered actions disagree", async () => {
-          const knexConnection = app.get(DI_KEYS.KnexConnection);
           const eventBus = app.get(DI_KEYS.EventBus);
 
-          let insertedActionId: number;
-          await knexConnection("output_actions").insert({
-            automation_id: 2,
-            output_id: 1,
-            value: 100,
-            precedence: "High",
-          });
-          await eventBus.publishAsync(new OutputActionsModifiedEvent({}));
-          await flushAsync();
+          let createdActionId: number | undefined;
 
-          const insertedAction = await knexConnection("output_actions")
-            .where({ automation_id: 2, output_id: 1, value: 100, precedence: "High" })
-            .orderBy("id", "desc")
-            .first();
-          insertedActionId = insertedAction.id;
+          try {
+            const timeoutUpdateResponse = await request(server)
+              .patch("/api/v2/outputs/1")
+              .send({ automationTimeout: 0 })
+              .expect(200);
 
-          await eventBus.publishAsync(
-            new AutomationsTriggeredEvent(
-              new Map([
-                [
-                  1,
-                  {
-                    automationId: 1,
-                    automationName: "Automation #1",
-                    operator: "or",
-                    conditions: { allOf: [], anyOf: [], oneOf: [] },
-                  },
-                ],
-                [
-                  2,
-                  {
-                    automationId: 2,
-                    automationName: "Automation #2",
-                    operator: "or",
-                    conditions: { allOf: [], anyOf: [], oneOf: [] },
-                  },
-                ],
-              ]),
-            ),
-          );
-          await flushAsync();
+            validateMiddlewareValues(timeoutUpdateResponse);
 
-          const response = await request(server).get("/api/v2/outputs/1").expect(200);
-          const output = response.body["content"].data[0];
+            const createResponse = await request(server)
+              .post("/api/v2/output-actions")
+              .send({
+                automationId: 2,
+                outputId: 1,
+                value: 100,
+                precedence: "High",
+              })
+              .expect(201);
 
-          validateMiddlewareValues(response);
-          assert.deepEqual(output.activeConflict, {
-            precedence: "High",
-            actions: [
-              { automationId: 1, automationName: "Automation #1", value: 0 },
-              { automationId: 2, automationName: "Automation #2", value: 100 },
-            ],
-          });
+            validateMiddlewareValues(createResponse);
+            createdActionId = createResponse.body["content"].data.id;
 
-          await knexConnection("output_actions").where({ id: insertedActionId }).delete();
-          await eventBus.publishAsync(new OutputActionsModifiedEvent({}));
-          await flushAsync();
+            const warningOutput = await waitForOutputAsync(
+              1,
+              (candidate) =>
+                Array.isArray(candidate.actionWarnings) && candidate.actionWarnings.length === 1,
+            );
+            assert.lengthOf(warningOutput.actionWarnings, 1);
 
-          const cleanupResponse = await request(server).get("/api/v2/outputs/1").expect(200);
-          assert.isNull(cleanupResponse.body["content"].data[0].activeConflict);
+            await eventBus.publishAsync(
+              new AutomationsTriggeredEvent(
+                new Map([
+                  [
+                    1,
+                    {
+                      automationId: 1,
+                      automationName: "Automation #1",
+                      operator: "or",
+                      conditions: { allOf: [], anyOf: [], oneOf: [] },
+                    },
+                  ],
+                  [
+                    2,
+                    {
+                      automationId: 2,
+                      automationName: "Automation #2",
+                      operator: "or",
+                      conditions: { allOf: [], anyOf: [], oneOf: [] },
+                    },
+                  ],
+                ]),
+              ),
+            );
+            await flushAsync();
+
+            const output = await waitForOutputAsync(
+              1,
+              (candidate) => candidate.activeConflict !== null,
+            );
+
+            assert.deepEqual(output.activeConflict, {
+              precedence: "High",
+              actions: [
+                { automationId: 1, automationName: "Automation #1", value: 0 },
+                { automationId: 2, automationName: "Automation #2", value: 100 },
+              ],
+            });
+          } finally {
+            if (createdActionId !== undefined) {
+              await request(server).delete(`/api/v2/output-actions/${createdActionId}`).expect(200);
+              const cleanupOutput = await waitForOutputAsync(
+                1,
+                (candidate) =>
+                  Array.isArray(candidate.actionWarnings) &&
+                  candidate.actionWarnings.length === 0 &&
+                  candidate.activeConflict === null,
+              );
+              assert.isNull(cleanupOutput.activeConflict);
+            }
+
+            const timeoutResetResponse = await request(server)
+              .patch("/api/v2/outputs/1")
+              .send({ automationTimeout: 1 })
+              .expect(200);
+
+            validateMiddlewareValues(timeoutResetResponse);
+          }
         });
       });
       describe("Create, Update, Delete", async () => {

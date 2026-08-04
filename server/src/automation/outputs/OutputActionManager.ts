@@ -125,7 +125,24 @@ export class OutputActionManager implements Disposable {
       const outputActions = await this.#outputActionsRepository.getActionsByOutputIdAsync(
         this.#outputId,
       );
-      this.#actionMap = new Map(outputActions.map((a) => [a.automationId, new OutputAction(a)]));
+      this.#actionMap = new Map();
+
+      for (const outputAction of outputActions) {
+        const nextAction = new OutputAction(outputAction);
+        const currentAction = this.#actionMap.get(nextAction.automationId);
+
+        if (
+          currentAction == null ||
+          OUTPUT_ACTION_PRECEDENCE_PRIORITY[nextAction.precedence] >
+            OUTPUT_ACTION_PRECEDENCE_PRIORITY[currentAction.precedence] ||
+          (OUTPUT_ACTION_PRECEDENCE_PRIORITY[nextAction.precedence] ===
+            OUTPUT_ACTION_PRECEDENCE_PRIORITY[currentAction.precedence] &&
+            nextAction.id > currentAction.id)
+        ) {
+          this.#actionMap.set(nextAction.automationId, nextAction);
+        }
+      }
+
       this.#actionWarnings = this.#buildActionWarnings(Array.from(this.#actionMap.values()));
       this.#activeConflict = null;
     } catch (error) {
