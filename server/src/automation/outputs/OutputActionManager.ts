@@ -190,10 +190,13 @@ export class OutputActionManager implements Disposable {
       this.#lastRunAt !== null &&
       nowTimestamp < this.#lastRunAt + this.#automationTimeout * 1000
     ) {
-      this.#lastActionValue = undefined;
-      return this.#lastActionValue; // Too soon, skip
+      return undefined; // Too soon, skip — preserve lastActionValue
     }
-    this.#lastRunAt = nowTimestamp;
+    // Start the timeout clock if this is the first event (ensures collisions are rate-limited too)
+    if (this.#lastRunAt === null) {
+      this.#lastRunAt = nowTimestamp;
+    }
+    let resolvedValue: number | undefined;
 
     // Find which automations have actions on this output
     const triggeredActions: {
@@ -220,8 +223,12 @@ export class OutputActionManager implements Disposable {
 
     if (triggeredActions.length === 0) {
       this.#activeConflict = null;
-      this.#lastActionValue = 0;
-      return this.#lastActionValue; // No automations triggered, default to off
+      resolvedValue = 0;
+      if (resolvedValue !== this.#lastActionValue) {
+        this.#lastRunAt = nowTimestamp;
+      }
+      this.#lastActionValue = resolvedValue;
+      return this.#lastActionValue;
     }
 
     let highestPriority = -Infinity;
@@ -259,12 +266,20 @@ export class OutputActionManager implements Disposable {
             )
             .join(", ")}`,
       );
-      this.#lastActionValue = undefined;
-      return undefined;
+      resolvedValue = undefined;
+      if (resolvedValue !== this.#lastActionValue) {
+        this.#lastRunAt = nowTimestamp;
+      }
+      this.#lastActionValue = resolvedValue;
+      return this.#lastActionValue;
     }
 
     this.#activeConflict = null;
-    this.#lastActionValue = highestPriorityActions[0]!.value;
+    resolvedValue = highestPriorityActions[0]!.value;
+    if (resolvedValue !== this.#lastActionValue) {
+      this.#lastRunAt = nowTimestamp;
+    }
+    this.#lastActionValue = resolvedValue;
     return this.#lastActionValue;
   }
 
