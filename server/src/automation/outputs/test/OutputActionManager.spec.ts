@@ -304,7 +304,7 @@ describe("OutputActionManager.ts tests", () => {
       assert.equal(manager.lastResult, 50);
     });
 
-    it("should respect timeout (not process event too soon)", async () => {
+    it("should block events within timeout window and preserve lastResult", async () => {
       const sprootDB = createStubSprootDB();
       const eventBus = new MemoryEventBus(mockLogger);
       sprootDB.automations.actions.output.getActionsByOutputIdAsync.resolves([
@@ -341,13 +341,271 @@ describe("OutputActionManager.ts tests", () => {
       );
       assert.equal(manager.lastResult, 75);
 
-      // Second call immediately should be blocked by timeout
+      // Second call immediately should be blocked by timeout; lastResult preserves the last value
       await publishAutomationEventAsync(
         eventBus,
         triggeredAutomations,
         new Date("2026-05-10T10:00:30Z"),
       );
+      assert.equal(manager.lastResult, 75);
+    });
+
+    it("should not reset timeout when same value is resolved", async () => {
+      const sprootDB = createStubSprootDB();
+      const eventBus = new MemoryEventBus(mockLogger);
+      sprootDB.automations.actions.output.getActionsByOutputIdAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 75,
+          precedence: "Normal",
+        },
+      ]);
+      using manager = await OutputActionManager.createInstanceAsync(
+        1,
+        async () => {},
+        eventBus,
+        sprootDB.automations.actions.output,
+        mockLogger,
+        60, // 60 second timeout
+      );
+
+      const triggeredAutomations = new Map<number, any>();
+      triggeredAutomations.set(1, {
+        automationId: 1,
+        automationName: "testAutomation",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+
+      // First call at T+0 — should succeed, #lastRunAt = T+0
+      await publishAutomationEventAsync(
+        eventBus,
+        triggeredAutomations,
+        new Date("2026-05-10T10:00:00Z"),
+      );
+      assert.equal(manager.lastResult, 75);
+
+      // Second call at T+61 — timeout window passed, same value resolved.
+      // Fix: #lastRunAt stays T+0 (value unchanged), so T+62 passes the timeout.
+      await publishAutomationEventAsync(
+        eventBus,
+        triggeredAutomations,
+        new Date("2026-05-10T10:01:01Z"),
+      );
+      assert.equal(manager.lastResult, 75);
+
+      // Third call at T+62 — #lastRunAt still T+0, T+62 >= T+0+60s passes through.
+      await publishAutomationEventAsync(
+        eventBus,
+        triggeredAutomations,
+        new Date("2026-05-10T10:01:02Z"),
+      );
+      assert.equal(manager.lastResult, 75);
+    });
+
+    it("should reset timeout when value changes from 75 to 0 (no automations trigger)", async () => {
+      const sprootDB = createStubSprootDB();
+      const eventBus = new MemoryEventBus(mockLogger);
+      sprootDB.automations.actions.output.getActionsByOutputIdAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 75,
+          precedence: "Normal",
+        },
+      ]);
+      using manager = await OutputActionManager.createInstanceAsync(
+        1,
+        async () => {},
+        eventBus,
+        sprootDB.automations.actions.output,
+        mockLogger,
+        60,
+      );
+
+      // First call with automation triggered — sets value to 75
+      const triggeredAutomations = new Map<number, any>();
+      triggeredAutomations.set(1, {
+        automationId: 1,
+        automationName: "testAutomation",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+
+      await publishAutomationEventAsync(
+        eventBus,
+        triggeredAutomations,
+        new Date("2026-05-10T10:00:00Z"),
+      );
+      assert.equal(manager.lastResult, 75);
+
+      // Second call with NO automations triggered — value changes to 0
+      // Timeout should reset because value changed (75 → 0)
+      await publishAutomationEventAsync(eventBus, new Map(), new Date("2026-05-10T10:01:00Z"));
+      assert.equal(manager.lastResult, 0);
+
+      // Third call 5s later — blocked by new timeout (value changed 75→0 at T+60).
+      // lastResult preserves the last successfully resolved value (0), not undefined.
+      await publishAutomationEventAsync(eventBus, new Map(), new Date("2026-05-10T10:01:05Z"));
+      assert.equal(manager.lastResult, 0);
+    });
+
+    it("should reset timeout when value changes from 0 to 75 (automation triggers after no-trigger)", async () => {
+      const sprootDB = createStubSprootDB();
+      const eventBus = new MemoryEventBus(mockLogger);
+      sprootDB.automations.actions.output.getActionsByOutputIdAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 75,
+          precedence: "Normal",
+        },
+      ]);
+      using manager = await OutputActionManager.createInstanceAsync(
+        1,
+        async () => {},
+        eventBus,
+        sprootDB.automations.actions.output,
+        mockLogger,
+        60,
+      );
+
+      // First call with NO automations triggered — sets value to 0
+      await publishAutomationEventAsync(eventBus, new Map(), new Date("2026-05-10T10:00:00Z"));
+      assert.equal(manager.lastResult, 0);
+
+      // Second call with automation triggered — value changes to 75
+      // Timeout should reset because value changed (0 → 75)
+      const triggeredAutomations = new Map<number, any>();
+      triggeredAutomations.set(1, {
+        automationId: 1,
+        automationName: "testAutomation",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+
+      await publishAutomationEventAsync(
+        eventBus,
+        triggeredAutomations,
+        new Date("2026-05-10T10:01:00Z"),
+      );
+      assert.equal(manager.lastResult, 75);
+
+      // Third call 5s later — blocked by new timeout (value changed 0→75 at T+60).
+      // lastResult preserves the last successfully resolved value (75), not undefined.
+      await publishAutomationEventAsync(
+        eventBus,
+        triggeredAutomations,
+        new Date("2026-05-10T10:01:05Z"),
+      );
+      assert.equal(manager.lastResult, 75);
+    });
+
+    it("should not reset timeout when no automations triggered repeatedly (same value 0)", async () => {
+      let actionCallCount = 0;
+      const sprootDB = createStubSprootDB();
+      const eventBus = new MemoryEventBus(mockLogger);
+      sprootDB.automations.actions.output.getActionsByOutputIdAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 75,
+          precedence: "Normal",
+        },
+      ]);
+      using manager = await OutputActionManager.createInstanceAsync(
+        1,
+        async () => {
+          actionCallCount++;
+        },
+        eventBus,
+        sprootDB.automations.actions.output,
+        mockLogger,
+        60,
+      );
+
+      // First call with no automations triggered — sets value to 0
+      await publishAutomationEventAsync(eventBus, new Map(), new Date("2026-05-10T10:00:00Z"));
+      assert.equal(manager.lastResult, 0);
+      assert.equal(actionCallCount, 1);
+
+      // Second call at T+61 — timeout passed (61 >= 60), same value (0) resolved.
+      // Fix: #lastRunAt stays T+0, so T+62 still passes the timeout.
+      await publishAutomationEventAsync(eventBus, new Map(), new Date("2026-05-10T10:01:01Z"));
+      assert.equal(manager.lastResult, 0);
+      assert.equal(actionCallCount, 2);
+
+      // Third call at T+62 — #lastRunAt still T+0, T+62 >= T+0+60s passes through.
+      await publishAutomationEventAsync(eventBus, new Map(), new Date("2026-05-10T10:01:02Z"));
+      assert.equal(manager.lastResult, 0);
+      assert.equal(actionCallCount, 3);
+    });
+
+    it("should not reset timeout when value stays undefined (collision no-op)", async () => {
+      let actionCallCount = 0;
+      const sprootDB = createStubSprootDB();
+      const eventBus = new MemoryEventBus(mockLogger);
+      sprootDB.automations.actions.output.getActionsByOutputIdAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 50,
+          precedence: "High",
+        },
+        {
+          id: 2,
+          automationId: 2,
+          outputId: 1,
+          value: 75,
+          precedence: "High",
+        },
+      ]);
+      using manager = await OutputActionManager.createInstanceAsync(
+        1,
+        async () => {
+          actionCallCount++;
+        },
+        eventBus,
+        sprootDB.automations.actions.output,
+        mockLogger,
+        60,
+      );
+
+      // First call with both automations triggered — collision → undefined
+      const triggeredBoth = new Map<number, any>();
+      triggeredBoth.set(1, {
+        automationId: 1,
+        automationName: "automation1",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+      triggeredBoth.set(2, {
+        automationId: 2,
+        automationName: "automation2",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+
+      await publishAutomationEventAsync(eventBus, triggeredBoth, new Date("2026-05-10T10:00:00Z"));
       assert.isUndefined(manager.lastResult);
+      assert.equal(actionCallCount, 1);
+
+      // Second call at T+61 — timeout passed, collision → undefined (same value).
+      // Fix: #lastRunAt stays T+0 (undefined === undefined, no reset).
+      await publishAutomationEventAsync(eventBus, triggeredBoth, new Date("2026-05-10T10:01:01Z"));
+      assert.isUndefined(manager.lastResult);
+      assert.equal(actionCallCount, 2);
+
+      // Third call at T+62 — T+62 >= T+0+60s passes through, collision→undefined again.
+      await publishAutomationEventAsync(eventBus, triggeredBoth, new Date("2026-05-10T10:01:02Z"));
+      assert.isUndefined(manager.lastResult);
+      assert.equal(actionCallCount, 3);
     });
   });
 
