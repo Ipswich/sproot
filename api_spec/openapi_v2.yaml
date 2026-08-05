@@ -2072,8 +2072,9 @@ paths:
         - "Outputs"
       summary: Gets gets available devices for a given output model.
       description: >
-        Gets available devices for a given model. Optionally, filter by address. Useful for getting
-        devices you could create an output with.
+        Gets device options for a given output model. Returns all discovered or static options for
+        the model, and can optionally filter out options already in use. For multi-pin devices,
+        each item includes the remaining available pins for that address.
       parameters:
         - in: path
           name: model
@@ -2092,10 +2093,17 @@ paths:
         - in: query
           name: filterUsed
           required: false
-          description: Output address
+          description: Whether to filter out already-used addresses or pins. Defaults to true.
           schema:
             type: boolean
           example: false
+        - in: query
+          name: subcontrollerId
+          required: false
+          description: Limit results to a specific subcontroller for ESP32-backed models.
+          schema:
+            type: integer
+          example: 1
       responses:
         200:
           description: "Success"
@@ -5095,6 +5103,102 @@ paths:
                             example: "Unauthorized"
                           url:
                             example: "/api/v2/sensors/supported-models"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+
+  /api/v2/sensors/available-devices/{model}:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Sensors"
+      summary: Get device options for a given sensor model.
+      description: >
+        Gets device options for a given sensor model. Returns all discovered or static options for
+        the model, and can optionally filter out options already in use. For multi-pin devices,
+        each item includes the remaining available pins for that address.
+      parameters:
+        - in: path
+          name: model
+          required: true
+          description: "Sensor model"
+          schema:
+            type: string
+          example: "DS18B20"
+        - in: query
+          name: address
+          required: false
+          description: Limit results to a specific device address.
+          schema:
+            type: string
+          example: "0x76"
+        - in: query
+          name: filterUsed
+          required: false
+          description: Whether to filter out already-used addresses or pins. Defaults to true.
+          schema:
+            type: boolean
+          example: false
+        - in: query
+          name: subcontrollerId
+          required: false
+          description: Limit results to a specific subcontroller for ESP32-backed models.
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            allOf:
+                              - $ref: "#/components/schemas/AvailableDevices"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/sensors/available-devices"
+                          details:
+                            example:
+                              - Model unsupported not recognized.
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/sensors/available-devices"
                           details:
                             items:
                               example: "Invalid or Missing JWT."
@@ -9402,22 +9506,47 @@ components:
         type:
           type: string
 
+    AvailableDevice:
+      description: >
+        A discovered or static device option that may be selected when creating or updating a
+        sensor or output.
+      type: object
+      required:
+        - address
+        - pins
+        - subcontrollerId
+        - externalId
+      properties:
+        alias:
+          nullable: true
+          type: string
+          example: Plug 1
+        address:
+          type: string
+          example: 0x40
+        pins:
+          nullable: true
+          type: array
+          items:
+            type: string
+          example:
+            - "0"
+            - "1"
+        subcontrollerId:
+          nullable: true
+          type: integer
+          example: 1
+        externalId:
+          nullable: true
+          type: string
+          example: 8006C5CA540AABD8165111F62C70CFD3236B0B3703
+
     AvailableDevices:
       description: >
-        A list of available devices
+        A list of available device options.
       type: array
       items:
-        type: object
-        properties:
-          alias:
-            type: string
-            example: Plug 1
-          externalId:
-            type: string
-            example: 8006C5CA540AABD8165111F62C70CFD3236B0B3703
-          address:
-            type: string
-            example: 192.168.2.138
+        $ref: "#/components/schemas/AvailableDevice"
 
     SDBDeviceZone:
       description: >

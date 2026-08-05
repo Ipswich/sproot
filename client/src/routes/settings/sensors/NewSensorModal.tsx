@@ -7,7 +7,6 @@ import {
   ColorInput,
   ScrollArea,
   ColorPicker,
-  NumberInput,
 } from "@mantine/core";
 import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
 import {
@@ -22,6 +21,7 @@ import { Fragment } from "react";
 import { useRevalidator } from "react-router-dom";
 import { Models } from "@sproot/common/sensors/Models";
 import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
+import AvailableSensorDeviceFields from "./forms/AvailableSensorDeviceFields";
 
 interface NewSensorModalProps {
   supportedModels: Record<string, string>;
@@ -39,8 +39,12 @@ export default function NewSensorModal({
   const revalidator = useRevalidator();
   const addSensorMutation = useMutation({
     mutationFn: async (newSensorValues: ISensorBase) => {
-      // BME280 does not use a pin
-      if (newSensorValues.model === Models.BME280) {
+      if (
+        newSensorValues.model === Models.BME280 ||
+        newSensorValues.model === Models.ESP32_BME280 ||
+        newSensorValues.model === Models.DS18B20 ||
+        newSensorValues.model === Models.ESP32_DS18B20
+      ) {
         newSensorValues.pin = null;
       }
 
@@ -236,27 +240,7 @@ export default function NewSensorModal({
               required
             />
           )}
-          <TextInput
-            maxLength={64}
-            label="Address"
-            placeholder="0x76"
-            {...newSensorForm.getInputProps("address")}
-          />
-          {(newSensorForm.values.model === Models.ADS1115 ||
-            newSensorForm.values.model === Models.CAPACITIVE_MOISTURE_SENSOR ||
-            newSensorForm.values.model === Models.ESP32_ADS1115 ||
-            newSensorForm.values.model ===
-              Models.ESP32_CAPACITIVE_MOISTURE_SENSOR) && (
-            <NumberInput
-              defaultValue={0}
-              label="Pin"
-              clampBehavior="strict"
-              allowDecimal={false}
-              min={0}
-              max={3}
-              {...newSensorForm.getInputProps("pin")}
-            />
-          )}
+          <AvailableSensorDeviceFields form={newSensorForm} />
           <Group justify="flex-end" mt="md">
             <Button type="submit">Add Sensor</Button>
           </Group>

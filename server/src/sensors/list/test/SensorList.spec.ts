@@ -11,6 +11,7 @@ import winston from "winston";
 import { MdnsService } from "../../../system/MdnsService";
 import { ESP32_DS18B20 } from "../../ESP32_DS18B20";
 import { MemoryEventBus } from "../../../eventbus/MemoryEventBus";
+import { Models } from "@sproot/common/sensors/Models";
 
 const createMockSensorsRepo = (): ISensorsRepository => ({
   getAllAsync: async () => [],
@@ -41,7 +42,7 @@ describe("SensorList.ts tests", function () {
     sinon.restore();
   });
 
-  it("should create, update, and delete sensors, adding a DS18B20", async function () {
+  it("should create, update, and delete sensors without auto-adding DS18B20 devices", async function () {
     const mockMdnsService = sinon.createStubInstance(MdnsService);
     const getAllAsyncStub = sinon.stub(mockSensorsRepo, "getAllAsync").resolves([
       {
@@ -73,10 +74,6 @@ describe("SensorList.ts tests", function () {
     );
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
-    sinon
-      .stub(mockSensorsRepo, "getDS18B20AddressesAsync")
-      .resolves([{ address: "28-00000" } as SDBSensor, { address: "28-00001" } as SDBSensor]);
-    sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000", "28-00001", "28-00002"]);
     const addSensorSpy = sinon.spy(mockSensorsRepo, "addAsync");
 
     await using sensorList = await SensorList.createInstanceAsync(
@@ -90,7 +87,7 @@ describe("SensorList.ts tests", function () {
       logger,
     );
 
-    assert.equal(addSensorSpy.callCount, 1);
+    assert.equal(addSensorSpy.callCount, 0);
     assert.equal(Object.keys(sensorList.sensors).length, 3);
 
     getAllAsyncStub.resolves([
@@ -139,11 +136,6 @@ describe("SensorList.ts tests", function () {
     );
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
-    sinon
-      .stub(mockSensorsRepo, "getDS18B20AddressesAsync")
-      .resolves([{ address: "28-00000" } as SDBSensor]);
-    sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
-
     await using sensorList = await SensorList.createInstanceAsync(
       eventBus,
       mockSensorsRepo,
@@ -199,7 +191,6 @@ describe("SensorList.ts tests", function () {
     const eventBus = new MemoryEventBus(logger);
 
     const getSensorsStub = sinon.stub(mockSensorsRepo, "getAllAsync").resolves([mockBME280Data]);
-    const getAddressesStub = sinon.stub(DS18B20, "getAddressesAsync").resolves([]);
     await using sensorList = await SensorList.createInstanceAsync(
       eventBus,
       mockSensorsRepo,
@@ -213,10 +204,6 @@ describe("SensorList.ts tests", function () {
 
     mockBME280Data["address"] = "0x76";
     getSensorsStub.resolves([mockBME280Data, mockDS18B20Data]);
-    sinon
-      .stub(mockSensorsRepo, "getDS18B20AddressesAsync")
-      .resolves([{ address: "28-00000" } as SDBSensor]);
-    getAddressesStub.resolves(["28-00000"]);
     await sensorList.regenerateAsync();
 
     mockDS18B20Data["address"] = "28-00000";
@@ -226,44 +213,55 @@ describe("SensorList.ts tests", function () {
     assert.isTrue(loggerSpy.calledThrice);
   });
 
-  it("should add unrecognized (ESP32) DS18B20 sensors to the database", async function () {
-    const clock = sinon.useFakeTimers();
+  it("should expose available sensor devices with shared pin filtering", async function () {
     const mockMdnsService = sinon.createStubInstance(MdnsService);
     mockMdnsService.getIPAddressByHostName.returns("127.0.0.12");
-
-    // We're not using nock here because apparently fake timers skips node IO calls.
     const mockESP32DS18B20 = sinon.stub(ESP32_DS18B20, "getAddressesAsync");
     mockESP32DS18B20.callsFake(async (ipAddress?: string) => {
       if (ipAddress === "127.0.0.12") {
-        return ["28-00000", "28-00001", "28-00002"];
+        return ["28-10000", "28-10001"];
       }
       return [];
     });
-    const mockDS18B20Data1 = {
+    const mockSensorData1 = {
       id: 1,
       name: "test sensor 1",
-      model: "DS18B20",
-      address: "28-00004",
+      model: "BME280",
+      address: "0x76",
     } as SDBSensor;
-    const mockDS18B20Data2 = {
+    const mockSensorData2 = {
       id: 2,
       name: "test sensor 2",
-      model: "ESP32_DS18B20",
-      address: "28-00001", // Already exists in DB and on remote
-      subcontrollerId: 1,
+      model: "ADS1115",
+      address: "0x48",
+      pin: "0",
     } as SDBSensor;
-    const mockDS18B20Data3 = {
+    const mockSensorData3 = {
       id: 3,
       name: "test sensor 3",
-      model: "DS18B20",
-      address: "28-00002",
-      subcontrollerId: 1,
+      model: "CAPACITIVE_MOISTURE_SENSOR",
+      address: "0x48",
+      pin: "2",
     } as SDBSensor;
-    const mockDS18B20Data4 = {
+    const mockSensorData4 = {
       id: 4,
       name: "test sensor 4",
       model: "DS18B20",
       address: "28-00000",
+    } as SDBSensor;
+    const mockSensorData5 = {
+      id: 5,
+      name: "test sensor 5",
+      model: "ESP32_DS18B20",
+      address: "28-10000",
+      subcontrollerId: 1,
+    } as SDBSensor;
+    const mockSensorData6 = {
+      id: 6,
+      name: "test sensor 6",
+      model: "ESP32_ADS1115",
+      address: "0x49",
+      pin: "1",
       subcontrollerId: 1,
     } as SDBSensor;
     sinon.stub(winston, "createLogger").callsFake(
@@ -285,11 +283,16 @@ describe("SensorList.ts tests", function () {
         secureToken: null,
       } as SDBSubcontroller,
     ]);
-    const mockGetDS18B20AddressesAsync = sinon.stub(mockSensorsRepo, "getDS18B20AddressesAsync");
-    mockGetDS18B20AddressesAsync.resolves([mockDS18B20Data1, mockDS18B20Data2]);
+    sinon.stub(mockSensorsRepo, "getAllAsync").resolves([
+      mockSensorData1,
+      mockSensorData2,
+      mockSensorData3,
+      mockSensorData4,
+      mockSensorData5,
+      mockSensorData6,
+    ]);
+    sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000", "28-00001"]);
 
-    const addSensorSpy = sinon.stub(mockSensorsRepo, "addAsync");
-    const ds18b20GetAddressesStub = sinon.stub(DS18B20, "getAddressesAsync").resolves([]);
     await using sensorList = await SensorList.createInstanceAsync(
       eventBus,
       mockSensorsRepo,
@@ -301,53 +304,64 @@ describe("SensorList.ts tests", function () {
       logger,
     );
 
-    assert.equal(addSensorSpy.callCount, 2);
-
-    assert.equal(addSensorSpy.getCalls()[0]!.args[0].address, "28-00000");
-    assert.equal(addSensorSpy.getCalls()[0]!.args[0].model, "ESP32_DS18B20");
-    assert.equal(addSensorSpy.getCalls()[0]!.args[0].subcontrollerId, 1);
-
-    assert.equal(addSensorSpy.getCalls()[1]!.args[0].address, "28-00002");
-    assert.equal(addSensorSpy.getCalls()[1]!.args[0].model, "ESP32_DS18B20");
-    assert.equal(addSensorSpy.getCalls()[1]!.args[0].subcontrollerId, 1);
-
-    // Simulate connecting some DS18B20s.
-    addSensorSpy.resetHistory();
-    ds18b20GetAddressesStub.resolves(["28-00003", "28-00004", "28-00005"]); // 28-00003, 28-00004 - local devices, 28-00005 - remote device
-    mockESP32DS18B20.callsFake(async (ipAddress?: string) => {
-      if (ipAddress === "127.0.0.12") {
-        return ["28-00000", "28-00001", "28-00002", "28-00006"];
-      }
-      return [];
-    });
-    mockGetDS18B20AddressesAsync.resolves([
-      mockDS18B20Data1,
-      mockDS18B20Data2,
-      mockDS18B20Data3,
-      mockDS18B20Data4,
+    assert.deepEqual(await sensorList.getAvailableDevices(Models.BME280), [
+      {
+        alias: null,
+        address: "0x77",
+        pins: null,
+        subcontrollerId: null,
+        externalId: null,
+      },
     ]);
 
-    // Shouldn't retriger adding unrecognized sensors
-    await sensorList.regenerateAsync();
-    assert.equal(addSensorSpy.callCount, 0);
+    assert.deepEqual(await sensorList.getAvailableDevices(Models.ADS1115, "0x48"), [
+      {
+        alias: null,
+        address: "0x48",
+        pins: ["1", "3"],
+        subcontrollerId: null,
+        externalId: null,
+      },
+    ]);
 
-    // Advance the clock to trigger the periodic check
-    await clock.tickAsync(5100);
+    assert.deepEqual(await sensorList.getAvailableDevices(Models.CAPACITIVE_MOISTURE_SENSOR, "0x48"), [
+      {
+        alias: null,
+        address: "0x48",
+        pins: ["1", "3"],
+        subcontrollerId: null,
+        externalId: null,
+      },
+    ]);
 
-    assert.equal(addSensorSpy.callCount, 3);
+    assert.deepEqual(await sensorList.getAvailableDevices(Models.DS18B20), [
+      {
+        alias: null,
+        address: "28-00001",
+        pins: null,
+        subcontrollerId: null,
+        externalId: null,
+      },
+    ]);
 
-    assert.equal(addSensorSpy.getCalls()[0]!.args[0].address, "28-00006");
-    assert.equal(addSensorSpy.getCalls()[0]!.args[0].model, "ESP32_DS18B20");
-    assert.equal(addSensorSpy.getCalls()[0]!.args[0].subcontrollerId, 1);
+    assert.deepEqual(await sensorList.getAvailableDevices(Models.ESP32_DS18B20, undefined, true, 1), [
+      {
+        alias: "Test ESP32",
+        address: "28-10001",
+        pins: null,
+        subcontrollerId: 1,
+        externalId: null,
+      },
+    ]);
 
-    assert.equal(addSensorSpy.getCalls()[1]!.args[0].address, "28-00003");
-    assert.equal(addSensorSpy.getCalls()[1]!.args[0].model, "DS18B20");
-    assert.isUndefined(addSensorSpy.getCalls()[1]!.args[0].subcontrollerId);
-
-    assert.equal(addSensorSpy.getCalls()[2]!.args[0].address, "28-00005");
-    assert.equal(addSensorSpy.getCalls()[2]!.args[0].model, "DS18B20");
-    assert.isUndefined(addSensorSpy.getCalls()[2]!.args[0].subcontrollerId);
-
-    clock.restore();
+    assert.deepEqual(await sensorList.getAvailableDevices(Models.ESP32_ADS1115, "0x49", true, 1), [
+      {
+        alias: null,
+        address: "0x49",
+        pins: ["0", "2", "3"],
+        subcontrollerId: 1,
+        externalId: null,
+      },
+    ]);
   });
 });

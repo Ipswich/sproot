@@ -1,5 +1,7 @@
 export type AvailableDevice = {
-  alias: string;
+  alias: string | null;
   address: string;
-  externalId: string;
+  pins: string[] | null;
+  subcontrollerId: number | null;
+  externalId: string | null;
 };

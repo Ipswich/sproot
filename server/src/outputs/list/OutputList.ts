@@ -160,16 +160,17 @@ class OutputList implements AsyncDisposable {
     await Promise.all(promises);
   }
 
-  getAvailableDevices(
+  async getAvailableDevices(
     model: string,
     address?: string,
     filterUsed?: boolean,
-  ): Record<string, string>[] {
+    subcontrollerId?: number,
+  ) {
     switch (model) {
       case Models.PCA9685:
-        return this.#PCA9685.getAvailableDevices(address);
+        return this.#PCA9685.getAvailableDevices(address, filterUsed);
       case Models.ESP32_PCA9685:
-        return this.#ESP32_PCA9685.getAvailableDevices(address);
+        return this.#ESP32_PCA9685.getAvailableDevices(address, filterUsed, subcontrollerId);
       case Models.TPLINK_SMART_PLUG:
         return this.#TPLinkSmartPlugs.getAvailableDevices(address, filterUsed);
       default:

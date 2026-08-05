@@ -33,12 +33,15 @@ export async function getAvailableDevices(
       const pins = outputList.getAvailableDevices(
         request.params["model"]!,
         request.query["address"] as string,
-        request.query["filterUsed"] as boolean | undefined,
+        request.query["filterUsed"] !== "false",
+        request.query["subcontrollerId"] != null
+          ? parseInt(request.query["subcontrollerId"] as string, 10)
+          : undefined,
       );
       getAvailableIdentifiersResponse = {
         statusCode: 200,
         content: {
-          data: pins,
+          data: await pins,
         },
         ...response.locals["defaultProperties"],
       };

@@ -2,7 +2,7 @@ import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { SDBSensor } from "@sproot/database/SDBSensor";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
-import { ModelList, Models } from "@sproot/common/sensors/Models";
+import { Models } from "@sproot/common/sensors/Models";
 import { SensorList } from "../../../../sensors/list/SensorList";
 
 /**
@@ -87,8 +87,10 @@ export async function addAsync(
     );
   }
   if (
-    newSensor.model == ModelList.ADS1115 ||
-    newSensor.model == ModelList.CAPACITIVE_MOISTURE_SENSOR
+    newSensor.model == Models.ADS1115 ||
+    newSensor.model == Models.CAPACITIVE_MOISTURE_SENSOR ||
+    newSensor.model == Models.ESP32_ADS1115 ||
+    newSensor.model == Models.ESP32_CAPACITIVE_MOISTURE_SENSOR
   ) {
     if (newSensor.pin == undefined || newSensor.pin == null) {
       missingFields.push("Missing required field: pin");

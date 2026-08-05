@@ -334,6 +334,25 @@ describe("API Tests", async function () {
           });
         });
       });
+
+      describe("AvailableDevices", async () => {
+        it("should return static PCA9685 options", async () => {
+          const response = await request(server)
+            .get("/api/v2/outputs/available-devices/PCA9685")
+            .expect(200);
+
+          const content = response.body["content"];
+          validateMiddlewareValues(response);
+          assert.lengthOf(content.data, 64);
+          const firstBoard = content.data[0];
+          assert.deepEqual(firstBoard.address, "0x40");
+          assert.isNull(firstBoard.alias);
+          assert.isNull(firstBoard.externalId);
+          assert.isNull(firstBoard.subcontrollerId);
+          assert.isArray(firstBoard.pins);
+          assert.notInclude(firstBoard.pins, "0");
+        });
+      });
     });
   });
 
@@ -1199,6 +1218,26 @@ describe("API Tests", async function () {
             ESP32_CAPACITIVE_MOISTURE_SENSOR: "ESP32 Capacitive Moisture Sensor",
             ESP32_DS18B20: "ESP32 DS18B20",
           });
+        });
+      });
+
+      describe("AvailableDevices", async () => {
+        it("should return static BME280 options", async () => {
+          const response = await request(server)
+            .get("/api/v2/sensors/available-devices/BME280")
+            .expect(200);
+
+          const content = response.body["content"];
+          validateMiddlewareValues(response);
+          assert.deepEqual(content.data, [
+            {
+              alias: null,
+              address: "0x77",
+              pins: null,
+              subcontrollerId: null,
+              externalId: null,
+            },
+          ]);
         });
       });
     });
