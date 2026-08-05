@@ -10,6 +10,12 @@ import { MultiOutputBase } from "./base/MultiOutputBase";
 import { MdnsService } from "../system/MdnsService";
 import { IEventBus } from "../eventbus/IEventBus";
 
+const PCA9685_ADDRESSES = Array.from(
+  { length: 64 },
+  (_, index) => `0x${(0x40 + index).toString(16).toUpperCase()}`,
+);
+const PCA9685_PINS = Array.from({ length: 16 }, (_, index) => index.toString());
+
 class ESP32_PCA9685 extends MultiOutputBase {
   #mdnsService: MdnsService;
 
@@ -80,11 +86,38 @@ class ESP32_PCA9685 extends MultiOutputBase {
     return this.outputs[output.id];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  override getAvailableDevices(_address?: string): AvailableDevice[] {
-    return [];
-    // const childIds = Array.from({ length: 16 }, (_, i) => i.toString());
-    // return childIds.filter((childId) => !this.usedPins[address]?.includes(childId));
+  override async getAvailableDevices(
+    address?: string,
+    filterUsed: boolean = true,
+    subcontrollerId?: number,
+  ): Promise<AvailableDevice[]> {
+    const subcontrollers = await this.subcontrollersRepository.getAllAsync();
+    const relevantSubcontrollers = subcontrollerId
+      ? subcontrollers.filter((device) => device.id === subcontrollerId)
+      : subcontrollers;
+    const addresses = address ? [address] : PCA9685_ADDRESSES;
+
+    return relevantSubcontrollers.flatMap((device) => {
+      const usedAddresses =
+        (this.usedPins[device.id] as Record<string, string[]> | undefined) ?? {};
+
+      return addresses
+        .map((candidateAddress) => {
+          const usedPins = usedAddresses[candidateAddress] ?? [];
+          const availablePins = filterUsed
+            ? PCA9685_PINS.filter((pin) => !usedPins.includes(pin))
+            : [...PCA9685_PINS];
+
+          return {
+            alias: device.name,
+            address: candidateAddress,
+            pins: availablePins,
+            subcontrollerId: device.id,
+            externalId: null,
+          };
+        })
+        .filter((availableDevice) => availableDevice.pins.length > 0);
+    });
   }
 
   override async [Symbol.asyncDispose](): Promise<void> {

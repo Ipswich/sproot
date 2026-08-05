@@ -47,7 +47,11 @@ export abstract class MultiOutputBase implements AsyncDisposable {
   }
 
   abstract createOutputAsync(output: SDBOutput): Promise<IOutputBase | undefined>;
-  abstract getAvailableDevices(host?: string): AvailableDevice[];
+  abstract getAvailableDevices(
+    address?: string,
+    filterUsed?: boolean,
+    subcontrollerId?: number,
+  ): Promise<AvailableDevice[]>;
   abstract [Symbol.asyncDispose](): Promise<void>;
 
   get outputData(): Record<string, IOutputBase> {

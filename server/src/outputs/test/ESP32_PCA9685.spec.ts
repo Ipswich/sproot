@@ -149,6 +149,27 @@ describe("ESP32_PCA9685.ts tests", function () {
     assert.equal((pca9685.usedPins["1"] as Record<string, string[]>)["0x40"]!.length, 2);
     assert.isUndefined(pca9685.outputs["4"]);
 
+    const filteredDevices = await pca9685.getAvailableDevices("0x40", true, 1);
+    assert.deepEqual(filteredDevices[0]?.pins, [
+      "0",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+    ]);
+
+    const unfilteredDevices = await pca9685.getAvailableDevices("0x40", false, 1);
+    assert.lengthOf(unfilteredDevices[0]?.pins ?? [], 16);
+
     // disposing with a non existent pin should also not cause issues
     await pca9685.disposeOutputAsync({ pin: "3", address: "0x40" } as OutputBase);
 

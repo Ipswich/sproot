@@ -6,7 +6,6 @@ import {
   ColorInput,
   ScrollArea,
   ColorPicker,
-  NumberInput,
   Select,
 } from "@mantine/core";
 import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
@@ -26,6 +25,7 @@ import { useRevalidator } from "react-router-dom";
 import { Models } from "@sproot/common/sensors/Models";
 import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
 import ConfirmDeleteButton from "../../../components/ConfirmDeleteButton";
+import AvailableSensorDeviceFields from "./forms/AvailableSensorDeviceFields";
 
 interface EditTableProps {
   sensors: Record<string, ISensorBase>;
@@ -46,8 +46,12 @@ export default function EditTable({
 
   const updateSensorMutation = useMutation({
     mutationFn: async (newSensorValues: ISensorBase) => {
-      // BME280 does not use a pin
-      if (newSensorValues.model === Models.BME280) {
+      if (
+        newSensorValues.model === Models.BME280 ||
+        newSensorValues.model === Models.ESP32_BME280 ||
+        newSensorValues.model === Models.DS18B20 ||
+        newSensorValues.model === Models.ESP32_DS18B20
+      ) {
         newSensorValues.pin = null;
       }
 
@@ -281,24 +285,10 @@ export default function EditTable({
               required
             />
           )}
-          <TextInput
-            maxLength={64}
-            label="Address"
-            placeholder={selectedSensor.address ?? ""}
-            {...updateSensorForm.getInputProps("address")}
+          <AvailableSensorDeviceFields
+            form={updateSensorForm}
+            selectedSensor={selectedSensor}
           />
-          {(updateSensorForm.values.model === Models.ADS1115 ||
-            updateSensorForm.values.model ===
-              Models.CAPACITIVE_MOISTURE_SENSOR) && (
-            <NumberInput
-              label="Pin"
-              clampBehavior="strict"
-              allowDecimal={false}
-              min={0}
-              max={3}
-              {...updateSensorForm.getInputProps("pin")}
-            />
-          )}
           <Group justify="space-between" mt="md">
             <ConfirmDeleteButton
               disabled={isUpdating}

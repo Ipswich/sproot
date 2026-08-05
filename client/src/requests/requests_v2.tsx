@@ -1212,8 +1212,9 @@ export async function getAvailableDevicesAsync(
   model: string,
   address?: string,
   filterUsed = true,
+  subcontrollerId?: number,
 ): Promise<AvailableDevice[]> {
-  const queryString = queryBuilder({ address, filterUsed });
+  const queryString = queryBuilder({ address, filterUsed, subcontrollerId });
   try {
     const response = await fetch(
       `${SERVER_URL}/api/v2/outputs/available-devices/${model}/?${queryString}`,
@@ -1228,6 +1229,30 @@ export async function getAvailableDevicesAsync(
     return deserializedResponse.content?.data;
   } catch (e) {
     console.error(`Error fetching children for ${model}: ${e}`);
+    return [];
+  }
+}
+
+export async function getAvailableSensorDevicesAsync(
+  model: string,
+  address?: string,
+  filterUsed = true,
+  subcontrollerId?: number,
+): Promise<AvailableDevice[]> {
+  const queryString = queryBuilder({ address, filterUsed, subcontrollerId });
+  try {
+    const response = await fetch(
+      `${SERVER_URL}/api/v2/sensors/available-devices/${model}/?${queryString}`,
+      {
+        method: "GET",
+        headers: {},
+        mode: "cors",
+      },
+    );
+    const deserializedResponse = (await response.json()) as SuccessResponse;
+    return deserializedResponse.content?.data;
+  } catch (e) {
+    console.error(`Error fetching sensor devices for ${model}: ${e}`);
     return [];
   }
 }
@@ -1895,7 +1920,7 @@ export async function fetchOutputDataAsync(
 }
 
 function queryBuilder(
-  params: Record<string, string | boolean | undefined>,
+  params: Record<string, string | number | boolean | undefined>,
 ): string {
   return (
     Object.entries(params)
