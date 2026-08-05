@@ -10,8 +10,9 @@ import { MultiOutputBase } from "./base/MultiOutputBase";
 import { MdnsService } from "../system/MdnsService";
 import { IEventBus } from "../eventbus/IEventBus";
 
-const PCA9685_ADDRESSES = Array.from({ length: 64 }, (_, index) =>
-  `0x${(0x40 + index).toString(16).toUpperCase()}`,
+const PCA9685_ADDRESSES = Array.from(
+  { length: 64 },
+  (_, index) => `0x${(0x40 + index).toString(16).toUpperCase()}`,
 );
 const PCA9685_PINS = Array.from({ length: 16 }, (_, index) => index.toString());
 
@@ -97,7 +98,8 @@ class ESP32_PCA9685 extends MultiOutputBase {
     const addresses = address ? [address] : PCA9685_ADDRESSES;
 
     return relevantSubcontrollers.flatMap((device) => {
-      const usedAddresses = (this.usedPins[device.id] as Record<string, string[]> | undefined) ?? {};
+      const usedAddresses =
+        (this.usedPins[device.id] as Record<string, string[]> | undefined) ?? {};
 
       return addresses
         .map((candidateAddress) => {

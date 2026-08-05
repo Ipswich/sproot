@@ -81,10 +81,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     return [...new Set(this.plugRegistry.getAll().map((plug) => plug.host))];
   }
 
-  async getAvailableDevices(
-    host?: string,
-    filterUsed: boolean = true,
-  ): Promise<AvailableDevice[]> {
+  async getAvailableDevices(host?: string, filterUsed: boolean = true): Promise<AvailableDevice[]> {
     let plugs = this.plugRegistry.getAll();
 
     if (host != undefined) {

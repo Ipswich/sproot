@@ -552,7 +552,11 @@ class SensorList {
     return subcontrollerIds.flatMap((candidateSubcontrollerId) => {
       return addresses
         .map((candidateAddress) => {
-          const usedPins = this.#getUsedPins(modelGroup, candidateAddress, candidateSubcontrollerId);
+          const usedPins = this.#getUsedPins(
+            modelGroup,
+            candidateAddress,
+            candidateSubcontrollerId,
+          );
           const availablePins =
             allPins == null
               ? null
@@ -598,10 +602,7 @@ class SensorList {
       return addresses
         .filter((candidateAddress) => (address ? candidateAddress === address : true))
         .filter((candidateAddress) => {
-          return (
-            !filterUsed ||
-            !this.#isAddressUsed([Models.DS18B20], candidateAddress, null)
-          );
+          return !filterUsed || !this.#isAddressUsed([Models.DS18B20], candidateAddress, null);
         })
         .map((candidateAddress) => ({
           alias: null,
@@ -646,7 +647,10 @@ class SensorList {
     return devices.flat();
   }
 
-  async #resolveSubcontrollerIds(model: string, subcontrollerId?: number): Promise<Array<number | null>> {
+  async #resolveSubcontrollerIds(
+    model: string,
+    subcontrollerId?: number,
+  ): Promise<Array<number | null>> {
     if (!model.startsWith("ESP32_")) {
       return [null];
     }

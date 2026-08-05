@@ -283,14 +283,16 @@ describe("SensorList.ts tests", function () {
         secureToken: null,
       } as SDBSubcontroller,
     ]);
-    sinon.stub(mockSensorsRepo, "getAllAsync").resolves([
-      mockSensorData1,
-      mockSensorData2,
-      mockSensorData3,
-      mockSensorData4,
-      mockSensorData5,
-      mockSensorData6,
-    ]);
+    sinon
+      .stub(mockSensorsRepo, "getAllAsync")
+      .resolves([
+        mockSensorData1,
+        mockSensorData2,
+        mockSensorData3,
+        mockSensorData4,
+        mockSensorData5,
+        mockSensorData6,
+      ]);
     sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000", "28-00001"]);
 
     await using sensorList = await SensorList.createInstanceAsync(
@@ -324,15 +326,18 @@ describe("SensorList.ts tests", function () {
       },
     ]);
 
-    assert.deepEqual(await sensorList.getAvailableDevices(Models.CAPACITIVE_MOISTURE_SENSOR, "0x48"), [
-      {
-        alias: null,
-        address: "0x48",
-        pins: ["1", "3"],
-        subcontrollerId: null,
-        externalId: null,
-      },
-    ]);
+    assert.deepEqual(
+      await sensorList.getAvailableDevices(Models.CAPACITIVE_MOISTURE_SENSOR, "0x48"),
+      [
+        {
+          alias: null,
+          address: "0x48",
+          pins: ["1", "3"],
+          subcontrollerId: null,
+          externalId: null,
+        },
+      ],
+    );
 
     assert.deepEqual(await sensorList.getAvailableDevices(Models.DS18B20), [
       {
@@ -344,15 +349,18 @@ describe("SensorList.ts tests", function () {
       },
     ]);
 
-    assert.deepEqual(await sensorList.getAvailableDevices(Models.ESP32_DS18B20, undefined, true, 1), [
-      {
-        alias: "Test ESP32",
-        address: "28-10001",
-        pins: null,
-        subcontrollerId: 1,
-        externalId: null,
-      },
-    ]);
+    assert.deepEqual(
+      await sensorList.getAvailableDevices(Models.ESP32_DS18B20, undefined, true, 1),
+      [
+        {
+          alias: "Test ESP32",
+          address: "28-10001",
+          pins: null,
+          subcontrollerId: 1,
+          externalId: null,
+        },
+      ],
+    );
 
     assert.deepEqual(await sensorList.getAvailableDevices(Models.ESP32_ADS1115, "0x49", true, 1), [
       {

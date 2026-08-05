@@ -10,8 +10,9 @@ import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 import { IEventBus } from "../eventbus/IEventBus";
 
-const PCA9685_ADDRESSES = Array.from({ length: 64 }, (_, index) =>
-  `0x${(0x40 + index).toString(16).toUpperCase()}`,
+const PCA9685_ADDRESSES = Array.from(
+  { length: 64 },
+  (_, index) => `0x${(0x40 + index).toString(16).toUpperCase()}`,
 );
 const PCA9685_PINS = Array.from({ length: 16 }, (_, index) => index.toString());
 

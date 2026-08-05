@@ -37,7 +37,8 @@ export default function ESP32_PCA9685Form({
   });
   const devices = getDevices.data ?? [];
   const selectedDevice =
-    devices.find((device) => device.address === form.values.address) ?? devices[0];
+    devices.find((device) => device.address === form.values.address) ??
+    devices[0];
   const pinOptions = (selectedDevice?.pins ?? []).map((pin) => ({
     label: pin,
     value: pin,
@@ -95,7 +96,9 @@ export default function ESP32_PCA9685Form({
         value={form.values.address || null}
         onChange={(value) => {
           form.setFieldValue("address", value ?? "");
-          const device = devices.find((candidate) => candidate.address === value);
+          const device = devices.find(
+            (candidate) => candidate.address === value,
+          );
           form.setFieldValue("pin", device?.pins?.[0] ?? "");
         }}
       />
