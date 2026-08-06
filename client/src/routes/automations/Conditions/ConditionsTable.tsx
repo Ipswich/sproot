@@ -9,7 +9,15 @@ import {
   deleteDateRangeConditionAsync,
   getConditionsAsync,
 } from "../../../requests/requests_v2";
-import { Button, Code, Collapse, Group, Space, Title, Text } from "@mantine/core";
+import {
+  Button,
+  Code,
+  Collapse,
+  Group,
+  Space,
+  Title,
+  Text,
+} from "@mantine/core";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
@@ -23,7 +31,10 @@ import { useDisclosure } from "@mantine/hooks";
 import DeletablesTable from "../../common/DeletablesTable";
 import NewConditionWidget from "./NewConditionWidget";
 import { convertCelsiusToFahrenheit } from "@sproot/common/utility/DisplayFormats";
-import { formatMilitaryTime, formatDateTime } from "@sproot/common/utility/TimeMethods";
+import {
+  formatMilitaryTime,
+  formatDateTime,
+} from "@sproot/common/utility/TimeMethods";
 
 export interface ConditionsTableProps {
   automationId: number;

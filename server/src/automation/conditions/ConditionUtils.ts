@@ -72,7 +72,10 @@ export function evaluateTime(
   return evaluateTimeWindow(now, startTime, endTime) && evaluateTimeRepeat(now, schedule);
 }
 
-export function getTimeWindowType(startTime?: string | null, endTime?: string | null): TimeWindowType {
+export function getTimeWindowType(
+  startTime?: string | null,
+  endTime?: string | null,
+): TimeWindowType {
   if (startTime == null && endTime == null) {
     return "always";
   }

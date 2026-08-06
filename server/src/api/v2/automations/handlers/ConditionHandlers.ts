@@ -51,7 +51,9 @@ function validateTimeConditionConfig(config: TimeConditionConfig, invalidFields:
   const hasRepeatInterval = config.repeatInterval != null;
   const hasRepeatDuration = config.repeatDuration != null;
   if (hasRepeatInterval !== hasRepeatDuration) {
-    invalidFields.push("Repeat interval and repeat duration must either both be set or both be null.");
+    invalidFields.push(
+      "Repeat interval and repeat duration must either both be set or both be null.",
+    );
   }
 
   if (!hasRepeatInterval) {
@@ -488,7 +490,12 @@ export async function addAsync(
 
   const automationId = parseInt(request.params["automationId"] ?? "");
   const conditionType = request.params["type"] as
-    "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
+    | "sensor"
+    | "output"
+    | "time"
+    | "weekday"
+    | "month"
+    | "date-range";
 
   const invalidDetails = [];
   if (isNaN(automationId)) {
@@ -1170,7 +1177,12 @@ export async function deleteAsync(
   const automationId = parseInt(request.params["automationId"] ?? "");
   const conditionId = parseInt(request.params["conditionId"] ?? "");
   const conditionType = request.params["type"] as
-    "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
+    | "sensor"
+    | "output"
+    | "time"
+    | "weekday"
+    | "month"
+    | "date-range";
 
   const invalidDetails = [];
   if (isNaN(automationId)) {

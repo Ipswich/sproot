@@ -72,7 +72,8 @@ async function createDatabaseIfNotExistsAsync(config: Knex.Config): Promise<bool
 async function seedDatabaseAsync(connection: Knex) {
   if (process.env["NODE_ENV"] == "test") {
     const configuredExtensions = connection.client.config.seeds?.loadExtensions as
-      string[] | undefined;
+      | string[]
+      | undefined;
     const seedExtension = configuredExtensions?.[0] ?? ".ts";
     await connection.seed.run({ specific: `testSetup${seedExtension}` });
     await reseedDatabaseSequencesAsync(connection);

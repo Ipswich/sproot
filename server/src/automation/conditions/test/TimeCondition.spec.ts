@@ -1,5 +1,9 @@
 import { TimeCondition } from "../TimeCondition";
-import { derivePhaseAnchor, evaluateTimeRepeat, hasValidRepeatConfiguration } from "../ConditionUtils";
+import {
+  derivePhaseAnchor,
+  evaluateTimeRepeat,
+  hasValidRepeatConfiguration,
+} from "../ConditionUtils";
 
 import { assert } from "chai";
 
@@ -117,16 +121,7 @@ describe("TimeCondition.ts tests", () => {
     });
 
     it("should evaluate wrapping repeating schedules from the current window start", () => {
-      const timeCondition = new TimeCondition(
-        1,
-        "allOf",
-        "23:30",
-        "04:00",
-        17,
-        5,
-        "default",
-        null,
-      );
+      const timeCondition = new TimeCondition(1, "allOf", "23:30", "04:00", 17, 5, "default", null);
 
       assert.isTrue(timeCondition.evaluate(new Date("2026-08-05T23:30:00")));
       assert.isFalse(timeCondition.evaluate(new Date("2026-08-05T23:35:00")));
@@ -140,18 +135,18 @@ describe("TimeCondition.ts tests", () => {
       assert.isFalse(timeCondition.evaluate(new Date("2026-08-05T10:00:00")));
     });
 
-   it("should reject partial repeat configuration", () => {
-        assert.isFalse(
-          evaluateTimeRepeat(new Date("2026-08-05T10:00:00"), {
-            id: 1,
-            groupType: "allOf",
-            startTime: "08:00",
-            endTime: "17:00",
-            repeatInterval: 10,
-            repeatDuration: null,
-          }),
-        );
-      });
+    it("should reject partial repeat configuration", () => {
+      assert.isFalse(
+        evaluateTimeRepeat(new Date("2026-08-05T10:00:00"), {
+          id: 1,
+          groupType: "allOf",
+          startTime: "08:00",
+          endTime: "17:00",
+          repeatInterval: 10,
+          repeatDuration: null,
+        }),
+      );
+    });
 
     it("should reject when repeatDuration >= repeatInterval", () => {
       assert.isFalse(

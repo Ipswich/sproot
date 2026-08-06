@@ -756,14 +756,18 @@ describe("API Tests", async function () {
 
             const updated = (
               await app.get("sprootDB").automations.conditions.time.getAsync(1)
-            ).find((condition: { id: number }) => condition.id === createResponse.body.content.data.id);
+            ).find(
+              (condition: { id: number }) => condition.id === createResponse.body.content.data.id,
+            );
 
             assert.equal(updated.repeatInterval, 17);
             assert.equal(updated.repeatDuration, 5);
             assert.equal(updated.phaseAnchorType, "window");
 
             await request(server)
-              .delete(`/api/v2/automations/1/conditions/time/${createResponse.body.content.data.id}`)
+              .delete(
+                `/api/v2/automations/1/conditions/time/${createResponse.body.content.data.id}`,
+              )
               .expect(200);
           });
         });

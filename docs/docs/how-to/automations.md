@@ -173,9 +173,12 @@ The `Condition Type` drop down will give you the options for the variety of cond
 - Date Range
   - Evaluates to true between the start date and end date.
 - Time
+  - Supports continuous intervals, and periodically across an interval:
   - Can evaluate to true between the start time and end time.
   - Can evaluate to true always
   - Can evaluate to true during a provided minute.
+  - Can evaluate to true for the first N number of minutes in an M minute long interval.
+    - Configurable period anchor allows you to run this "always" or "between" with consistent behavior using a fixed date and time or a daily time.
 
 The `Group` drop down will let you select which [condition group](#condition-groups) this particular condition will be added to.
 

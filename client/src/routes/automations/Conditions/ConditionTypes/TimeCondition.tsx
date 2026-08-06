@@ -51,7 +51,8 @@ export default function TimeCondition({
   groupType,
 }: TimeConditionProps) {
   const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
-  const [timeConditionType, setTimeConditionType] = useState<TimeConditionType>("Between");
+  const [timeConditionType, setTimeConditionType] =
+    useState<TimeConditionType>("Between");
 
   const initialAnchorType = resolveDefaultAnchorType("Between");
   const conditionsQuery = useQuery({
@@ -114,7 +115,10 @@ export default function TimeCondition({
         if (value === "" || !Number.isInteger(value) || value <= 0) {
           return "Repeat duration must be a positive whole number of minutes";
         }
-        if (typeof values.repeatInterval === "number" && value >= values.repeatInterval) {
+        if (
+          typeof values.repeatInterval === "number" &&
+          value >= values.repeatInterval
+        ) {
           return "Repeat duration must be less than the interval";
         }
         return null;
@@ -138,7 +142,7 @@ export default function TimeCondition({
 
   const repeatControlsVisible = timeConditionType !== "Once";
   const selectedAnchorType = timeConditionForm.values.phaseAnchorType;
-   const anchorOptions = [
+  const anchorOptions = [
     { value: "clock", label: "Clock" },
     { value: "fixed", label: "Fixed time" },
     {
@@ -156,7 +160,8 @@ export default function TimeCondition({
             timeConditionType === "Always" ? null : values.startTime || null;
           const endTime =
             timeConditionType === "Between" ? values.endTime || null : null;
-          const repeatEnabled = values.repeatMode === "Periodic" && timeConditionType !== "Once";
+          const repeatEnabled =
+            values.repeatMode === "Periodic" && timeConditionType !== "Once";
           const phaseAnchorType = repeatEnabled ? values.phaseAnchorType : null;
           const phaseAnchorValue =
             !repeatEnabled || phaseAnchorType === null
@@ -335,7 +340,10 @@ export default function TimeCondition({
                     value={selectedAnchorType}
                     onChange={(value) => {
                       const nextValue = (value ?? null) as PhaseAnchorType;
-                      timeConditionForm.setFieldValue("phaseAnchorType", nextValue);
+                      timeConditionForm.setFieldValue(
+                        "phaseAnchorType",
+                        nextValue,
+                      );
                       if (nextValue !== "clock" && nextValue !== "fixed") {
                         timeConditionForm.setFieldValue("phaseAnchorValue", "");
                       }
