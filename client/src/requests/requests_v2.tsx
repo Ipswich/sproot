@@ -690,8 +690,7 @@ export async function addNotificationActionAsync(
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data as
-    | SDBNotificationAction
-    | undefined;
+    SDBNotificationAction | undefined;
 }
 
 export async function deleteNotificationActionAsync(id: number): Promise<void> {
