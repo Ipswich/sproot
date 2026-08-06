@@ -136,7 +136,9 @@ function toFormValues(settings: ApplicationSettings): SettingsFormValues {
     sensors: parseRetentionValue(settings["sensors.data_retention"]),
     outputs: parseRetentionValue(settings["outputs.data_retention"]),
     system: {
-      backup_retention: parseRetentionValue(settings["system.backup_retention"]),
+      backup_retention: parseRetentionValue(
+        settings["system.backup_retention"],
+      ),
       latitude: settings["system.latitude"] ?? "",
       longitude: settings["system.longitude"] ?? "",
     },
@@ -177,11 +179,14 @@ function hasChanges(
     return false;
   }
 
-  return Object.keys(getChangedSettings(currentValues, baselineValues)).length > 0;
+  return (
+    Object.keys(getChangedSettings(currentValues, baselineValues)).length > 0
+  );
 }
 
 export default function ApplicationSettingsAccordionItem() {
-  const [baselineValues, setBaselineValues] = useState<SettingsFormValues | null>(null);
+  const [baselineValues, setBaselineValues] =
+    useState<SettingsFormValues | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -210,7 +215,10 @@ export default function ApplicationSettingsAccordionItem() {
       ];
 
       finiteControls.forEach(([path, value]) => {
-        if (value.mode === "finite" && (!Number.isFinite(value.amount) || value.amount < 1)) {
+        if (
+          value.mode === "finite" &&
+          (!Number.isFinite(value.amount) || value.amount < 1)
+        ) {
           errors[path] = "Enter a retention period greater than zero.";
         }
       });
@@ -224,8 +232,13 @@ export default function ApplicationSettingsAccordionItem() {
 
       if (values.system.longitude.trim() !== "") {
         const longitude = Number(values.system.longitude);
-        if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
-          errors["system.longitude"] = "Enter a longitude between -180 and 180.";
+        if (
+          !Number.isFinite(longitude) ||
+          longitude < -180 ||
+          longitude > 180
+        ) {
+          errors["system.longitude"] =
+            "Enter a longitude between -180 and 180.";
         }
       }
 
@@ -258,7 +271,9 @@ export default function ApplicationSettingsAccordionItem() {
     onError: (error) => {
       setSaveMessage(null);
       setSaveError(
-        error instanceof Error ? error.message : "Failed to update application settings.",
+        error instanceof Error
+          ? error.message
+          : "Failed to update application settings.",
       );
     },
   });
@@ -302,7 +317,10 @@ export default function ApplicationSettingsAccordionItem() {
     return values.system.backup_retention;
   }
 
-  function setRetentionMode(path: SettingsSection["path"], mode: RetentionMode) {
+  function setRetentionMode(
+    path: SettingsSection["path"],
+    mode: RetentionMode,
+  ) {
     if (path === "sensors") {
       form.setFieldValue("sensors.mode", mode);
       return;
@@ -330,7 +348,10 @@ export default function ApplicationSettingsAccordionItem() {
     form.setFieldValue("system.backup_retention.amount", amount);
   }
 
-  function setRetentionUnit(path: SettingsSection["path"], unit: RetentionUnit) {
+  function setRetentionUnit(
+    path: SettingsSection["path"],
+    unit: RetentionUnit,
+  ) {
     if (path === "sensors") {
       form.setFieldValue("sensors.unit", unit);
       return;
@@ -377,9 +398,19 @@ export default function ApplicationSettingsAccordionItem() {
                 </Alert>
               )}
 
-              <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg" verticalSpacing="lg">
+              <SimpleGrid
+                cols={{ base: 1, md: 3 }}
+                spacing="lg"
+                verticalSpacing="lg"
+              >
                 {sections.map((section) => (
-                  <Paper key={section.title} withBorder radius="md" p="lg" shadow="xs">
+                  <Paper
+                    key={section.title}
+                    withBorder
+                    radius="md"
+                    p="lg"
+                    shadow="xs"
+                  >
                     <Stack gap="md">
                       <div>
                         <Text fw={600}>{section.title}</Text>
@@ -395,7 +426,9 @@ export default function ApplicationSettingsAccordionItem() {
                           { label: "Forever", value: "forever" },
                           { label: "Custom", value: "finite" },
                         ]}
-                        value={getRetentionValue(form.values, section.path).mode}
+                        value={
+                          getRetentionValue(form.values, section.path).mode
+                        }
                         onChange={(value) => {
                           if (value === "forever" || value === "finite") {
                             setRetentionMode(section.path, value);
@@ -407,11 +440,13 @@ export default function ApplicationSettingsAccordionItem() {
                         style={{
                           overflow: "hidden",
                           maxHeight:
-                            getRetentionValue(form.values, section.path).mode === "finite"
+                            getRetentionValue(form.values, section.path)
+                              .mode === "finite"
                               ? "120px"
                               : "0px",
                           opacity:
-                            getRetentionValue(form.values, section.path).mode === "finite"
+                            getRetentionValue(form.values, section.path)
+                              .mode === "finite"
                               ? 1
                               : 0,
                           transition: "max-height 0.2s ease, opacity 0.2s ease",
@@ -423,16 +458,24 @@ export default function ApplicationSettingsAccordionItem() {
                             min={1}
                             allowNegative={false}
                             allowDecimal={false}
-                            value={getRetentionValue(form.values, section.path).amount}
+                            value={
+                              getRetentionValue(form.values, section.path)
+                                .amount
+                            }
                             error={
                               section.path === "sensors"
                                 ? form.errors["sensors.amount"]
                                 : section.path === "outputs"
                                   ? form.errors["outputs.amount"]
-                                  : form.errors["system.backup_retention.amount"]
+                                  : form.errors[
+                                      "system.backup_retention.amount"
+                                    ]
                             }
                             onChange={(value) => {
-                              if (typeof value === "number" && Number.isFinite(value)) {
+                              if (
+                                typeof value === "number" &&
+                                Number.isFinite(value)
+                              ) {
                                 setRetentionAmount(section.path, value);
                               }
                             }}
@@ -448,7 +491,9 @@ export default function ApplicationSettingsAccordionItem() {
                               },
                             }}
                             data={retentionUnits}
-                            value={getRetentionValue(form.values, section.path).unit}
+                            value={
+                              getRetentionValue(form.values, section.path).unit
+                            }
                             onChange={(value) => {
                               if (
                                 value === "days" ||
@@ -472,8 +517,9 @@ export default function ApplicationSettingsAccordionItem() {
                   <div>
                     <Text fw={600}>Solar And Lunar Timing</Text>
                     <Text size="sm" c="dimmed">
-                      Latitude and longitude are used to calculate dynamic sunrise, sunset,
-                      moonrise, moonset, and related automation time points.
+                      Latitude and longitude are used to calculate dynamic
+                      sunrise, sunset, moonrise, moonset, and related automation
+                      time points.
                     </Text>
                   </div>
                   <SimpleGrid cols={{ base: 1, md: 2 }} spacing="sm">
@@ -483,7 +529,10 @@ export default function ApplicationSettingsAccordionItem() {
                       value={form.values.system.latitude}
                       error={form.errors["system.latitude"]}
                       onChange={(event) =>
-                        form.setFieldValue("system.latitude", event.currentTarget.value)
+                        form.setFieldValue(
+                          "system.latitude",
+                          event.currentTarget.value,
+                        )
                       }
                     />
                     <TextInput
@@ -492,12 +541,16 @@ export default function ApplicationSettingsAccordionItem() {
                       value={form.values.system.longitude}
                       error={form.errors["system.longitude"]}
                       onChange={(event) =>
-                        form.setFieldValue("system.longitude", event.currentTarget.value)
+                        form.setFieldValue(
+                          "system.longitude",
+                          event.currentTarget.value,
+                        )
                       }
                     />
                   </SimpleGrid>
                   <Text size="sm" c="dimmed">
-                    Leave either field blank to disable solar and lunar automation time points.
+                    Leave either field blank to disable solar and lunar
+                    automation time points.
                   </Text>
                 </Stack>
               </Paper>

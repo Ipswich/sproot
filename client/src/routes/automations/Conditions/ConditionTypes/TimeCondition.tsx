@@ -71,9 +71,11 @@ export default function TimeCondition({
   const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
   const [timeConditionType, setTimeConditionType] =
     useState<TimeConditionType>("Between");
-  const [startTimeMode, setStartTimeMode] = useState<TimeExpressionMode>("clock");
+  const [startTimeMode, setStartTimeMode] =
+    useState<TimeExpressionMode>("clock");
   const [endTimeMode, setEndTimeMode] = useState<TimeExpressionMode>("clock");
-  const [phaseAnchorMode, setPhaseAnchorMode] = useState<TimeExpressionMode>("clock");
+  const [phaseAnchorMode, setPhaseAnchorMode] =
+    useState<TimeExpressionMode>("clock");
 
   const initialAnchorType = resolveDefaultAnchorType("Between");
   const conditionsQuery = useQuery({
@@ -224,7 +226,8 @@ export default function TimeCondition({
         <Stack>
           {!hasDynamicTimeSupport && (
             <Alert color="yellow" title="Dynamic time points are unavailable">
-              Set latitude and longitude in System Settings to unlock solar and lunar events.
+              Set latitude and longitude in System Settings to unlock solar and
+              lunar events.
             </Alert>
           )}
           <SegmentedControl
@@ -414,7 +417,10 @@ export default function TimeCondition({
                         timeConditionForm.setFieldValue("phaseAnchorValue", "");
                       }}
                       onChange={(value) =>
-                        timeConditionForm.setFieldValue("phaseAnchorValue", value)
+                        timeConditionForm.setFieldValue(
+                          "phaseAnchorValue",
+                          value,
+                        )
                       }
                     />
                   )}
@@ -472,7 +478,10 @@ function TimeExpressionField({
         fullWidth
         value={mode}
         onChange={(nextMode) => {
-          if (nextMode === "clock" || (nextMode === "dynamic" && dynamicEnabled)) {
+          if (
+            nextMode === "clock" ||
+            (nextMode === "dynamic" && dynamicEnabled)
+          ) {
             onModeChange(nextMode as TimeExpressionMode);
           }
         }}

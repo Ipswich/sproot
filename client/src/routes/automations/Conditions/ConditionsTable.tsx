@@ -504,7 +504,9 @@ function formatAnchorSummary(timeCondition: SDBTimeCondition): string {
       return "Period anchor: Window start";
 
     case "clock": {
-      const dynamicLabel = getDynamicTimePointLabel(timeCondition.phaseAnchorValue);
+      const dynamicLabel = getDynamicTimePointLabel(
+        timeCondition.phaseAnchorValue,
+      );
       if (dynamicLabel) {
         return `Period anchor: ${dynamicLabel}`;
       }
