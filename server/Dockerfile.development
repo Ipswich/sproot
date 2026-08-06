@@ -26,6 +26,13 @@ RUN set -eux; \
 # Copy project
 COPY . /sproot
 WORKDIR /sproot
+RUN set -eux; \
+  install -d /var/lib/sproot/server/logs /var/lib/sproot/server/images /var/lib/sproot/server/certs /var/lib/sproot/server/backups; \
+  rm -rf /sproot/server/logs /sproot/server/images /sproot/server/certs /sproot/server/backups; \
+  ln -s /var/lib/sproot/server/logs /sproot/server/logs; \
+  ln -s /var/lib/sproot/server/images /sproot/server/images; \
+  ln -s /var/lib/sproot/server/certs /sproot/server/certs; \
+  ln -s /var/lib/sproot/server/backups /sproot/server/backups
 RUN npm ci --workspace=common --workspace=server \
   && npm run build:server
 

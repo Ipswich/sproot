@@ -1,11 +1,13 @@
 services:
   server:
+    init: true
     depends_on:
       postgres:
         condition: service_healthy
     build:
        context: ./
        dockerfile: ./server/Dockerfile.development
+    working_dir: /sproot
     environment:
       TZ: America/Los_Angeles
       NODE_ENV: development
@@ -24,11 +26,11 @@ services:
       BACKUP_RETENTION_DAYS: 30
     volumes:
       - /run/udev:/run/udev:ro
-      - /sys:/sys
-      - ./docker_volumes/sproot/server/logs:/sproot/server/logs
-      - ./docker_volumes/sproot/server/images:/sproot/server/images
-      - ./docker_volumes/sproot/server/certs:/sproot/server/certs
-      - ./docker_volumes/sproot/server/backups:/sproot/server/backups
+      - /sys:/sys:ro
+      - ./docker_volumes/sproot/server/logs:/var/lib/sproot/server/logs
+      - ./docker_volumes/sproot/server/images:/var/lib/sproot/server/images
+      - ./docker_volumes/sproot/server/certs:/var/lib/sproot/server/certs
+      - ./docker_volumes/sproot/server/backups:/var/lib/sproot/server/backups
     network_mode: "host"
     privileged: true
     expose:

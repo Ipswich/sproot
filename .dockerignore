@@ -1,2 +1,15 @@
 node_modules
+**/node_modules
 docker_volumes
+**/dist
+**/build
+**/coverage
+server/logs
+server/backups
+server/images
+server/certs
+client/dist
+docs/build
+esp32/.pio
+!common/dist
+!common/dist/**
