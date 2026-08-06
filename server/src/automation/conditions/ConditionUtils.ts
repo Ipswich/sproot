@@ -3,9 +3,9 @@ import {
   ITimeCondition,
   TimeConditionPhaseAnchorType,
 } from "@sproot/common/automation/ITimeCondition";
-import { isBetweenTimeStamp, isBetweenMonthDate } from "@sproot/common/utility/TimeMethods";
+import { isBetweenMonthDate } from "@sproot/common/utility/TimeMethods";
+import { TimeExpressionResolver } from "./TimeExpressionResolver";
 
-const TIME_REGEX = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
 const MINUTE_IN_MS = 60 * 1000;
 
 type TimeWindowType = "always" | "between" | "once" | "invalid";
@@ -51,6 +51,7 @@ export function evaluateMonth(now: Date, activeMonthsAsDecimal: number): boolean
 
 export function evaluateTime(
   now: Date,
+  timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
   startTime?: string | null,
   endTime?: string | null,
   repeatInterval?: number | null,
@@ -69,7 +70,10 @@ export function evaluateTime(
     phaseAnchorValue,
   );
 
-  return evaluateTimeWindow(now, startTime, endTime) && evaluateTimeRepeat(now, schedule);
+  return (
+    evaluateTimeWindow(now, timeExpressionResolver, startTime, endTime) &&
+    evaluateTimeRepeat(now, schedule, timeExpressionResolver)
+  );
 }
 
 export function getTimeWindowType(
@@ -81,16 +85,10 @@ export function getTimeWindowType(
   }
 
   if (startTime != null && endTime != null) {
-    if (!TIME_REGEX.test(startTime) || !TIME_REGEX.test(endTime)) {
-      return "invalid";
-    }
     return "between";
   }
 
   if (startTime != null && endTime == null) {
-    if (!TIME_REGEX.test(startTime)) {
-      return "invalid";
-    }
     return "once";
   }
 
@@ -99,6 +97,7 @@ export function getTimeWindowType(
 
 export function evaluateTimeWindow(
   now: Date,
+  timeExpressionResolver: TimeExpressionResolver,
   startTime?: string | null,
   endTime?: string | null,
 ): boolean {
@@ -108,12 +107,22 @@ export function evaluateTimeWindow(
     // if neither startTime nor endTime, return true
     return true;
   } else if (windowType == "between") {
-    // if both startTime and endTime and, check if it's between those two
-    return isBetweenTimeStamp(startTime, endTime, now);
+    const bounds = deriveTimeWindowBounds(timeExpressionResolver, now, startTime!, endTime!);
+    if (bounds == null) {
+      return false;
+    }
+
+    return now.getTime() >= bounds.start.getTime() && now.getTime() < bounds.end.getTime();
   } else if (windowType == "once") {
-    // if only startTime and startTime is now, return true
-    const [startHours, startMinutes] = parseTimeParts(startTime!);
-    return startHours == now.getHours() && startMinutes == now.getMinutes();
+    const start = timeExpressionResolver.resolveToDate(startTime!, now);
+    return (
+      start != null &&
+      start.getHours() == now.getHours() &&
+      start.getMinutes() == now.getMinutes() &&
+      start.getDate() == now.getDate() &&
+      start.getMonth() == now.getMonth() &&
+      start.getFullYear() == now.getFullYear()
+    );
   }
   // anything else, return false.
   return false;
@@ -171,7 +180,11 @@ export function resolvePhaseAnchorType(
   return null;
 }
 
-export function derivePhaseAnchor(schedule: ITimeCondition, now: Date): Date | null {
+export function derivePhaseAnchor(
+  schedule: ITimeCondition,
+  now: Date,
+  timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
+): Date | null {
   const resolvedAnchorType = resolvePhaseAnchorType(schedule);
   if (resolvedAnchorType == null) {
     return null;
@@ -183,13 +196,17 @@ export function derivePhaseAnchor(schedule: ITimeCondition, now: Date): Date | n
     case "fixed":
       return deriveFixedAnchor(schedule.phaseAnchorValue);
     case "clock":
-      return deriveClockAnchor(schedule.phaseAnchorValue, now);
+      return deriveClockAnchor(timeExpressionResolver, schedule.phaseAnchorValue, now);
     case "window":
-      return deriveWindowAnchor(schedule.startTime, now);
+      return deriveWindowAnchor(timeExpressionResolver, schedule.startTime, schedule.endTime, now);
   }
 }
 
-export function evaluateTimeRepeat(now: Date, schedule: ITimeCondition): boolean {
+export function evaluateTimeRepeat(
+  now: Date,
+  schedule: ITimeCondition,
+  timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
+): boolean {
   if (!hasValidRepeatConfiguration(schedule)) {
     return false;
   }
@@ -198,7 +215,7 @@ export function evaluateTimeRepeat(now: Date, schedule: ITimeCondition): boolean
     return true;
   }
 
-  const anchor = derivePhaseAnchor(schedule, now);
+  const anchor = derivePhaseAnchor(schedule, now, timeExpressionResolver);
   if (anchor == null) {
     return false;
   }
@@ -213,36 +230,26 @@ export function evaluateTimeRepeat(now: Date, schedule: ITimeCondition): boolean
   return elapsedMs % intervalMs < durationMs;
 }
 
-function deriveClockAnchor(phaseAnchorValue: string | null | undefined, now: Date): Date | null {
-  if (phaseAnchorValue == null || !TIME_REGEX.test(phaseAnchorValue)) {
-    return null;
-  }
-
-  const [hours, minutes] = parseTimeParts(phaseAnchorValue);
-  const anchor = new Date(now);
-  anchor.setHours(hours, minutes, 0, 0);
-
-  if (anchor.getTime() > now.getTime()) {
-    anchor.setDate(anchor.getDate() - 1);
-  }
-
-  return anchor;
+function deriveClockAnchor(
+  timeExpressionResolver: TimeExpressionResolver,
+  phaseAnchorValue: string | null | undefined,
+  now: Date,
+): Date | null {
+  return timeExpressionResolver.resolveMostRecentOccurrence(phaseAnchorValue, now);
 }
 
-function deriveWindowAnchor(startTime: string | null | undefined, now: Date): Date | null {
-  if (startTime == null || !TIME_REGEX.test(startTime)) {
+function deriveWindowAnchor(
+  timeExpressionResolver: TimeExpressionResolver,
+  startTime: string | null | undefined,
+  endTime: string | null | undefined,
+  now: Date,
+): Date | null {
+  if (startTime == null || endTime == null) {
     return null;
   }
 
-  const [hours, minutes] = parseTimeParts(startTime);
-  const anchor = new Date(now);
-  anchor.setHours(hours, minutes, 0, 0);
-
-  if (anchor.getTime() > now.getTime()) {
-    anchor.setDate(anchor.getDate() - 1);
-  }
-
-  return anchor;
+  const bounds = deriveTimeWindowBounds(timeExpressionResolver, now, startTime, endTime);
+  return bounds?.start ?? null;
 }
 
 function deriveFixedAnchor(phaseAnchorValue: string | null | undefined): Date | null {
@@ -258,9 +265,37 @@ function deriveFixedAnchor(phaseAnchorValue: string | null | undefined): Date | 
   return anchor;
 }
 
-function parseTimeParts(timeValue: string): [number, number] {
-  const [hours, minutes] = timeValue.split(":").map(Number);
-  return [hours ?? 0, minutes ?? 0];
+function deriveTimeWindowBounds(
+  timeExpressionResolver: TimeExpressionResolver,
+  now: Date,
+  startTime: string,
+  endTime: string,
+): { start: Date; end: Date } | null {
+  const startToday = timeExpressionResolver.resolveToDate(startTime, now);
+  const endToday = timeExpressionResolver.resolveToDate(endTime, now);
+
+  if (startToday == null || endToday == null) {
+    return null;
+  }
+
+  if (startToday.getTime() < endToday.getTime()) {
+    return { start: startToday, end: endToday };
+  }
+
+  if (now.getTime() >= startToday.getTime()) {
+    const endTomorrow = new Date(endToday);
+    endTomorrow.setDate(endTomorrow.getDate() + 1);
+    return { start: startToday, end: endTomorrow };
+  }
+
+  const previousDate = new Date(now);
+  previousDate.setDate(previousDate.getDate() - 1);
+  const startYesterday = timeExpressionResolver.resolveToDate(startTime, previousDate);
+  if (startYesterday == null) {
+    return null;
+  }
+
+  return { start: startYesterday, end: endToday };
 }
 
 function createTimeConditionSchedule(

@@ -4,8 +4,42 @@ import {
   evaluateTimeRepeat,
   hasValidRepeatConfiguration,
 } from "../ConditionUtils";
+import { TimeExpressionResolver } from "../TimeExpressionResolver";
 
 import { assert } from "chai";
+
+async function createResolverAsync(
+  latitude: string | null = "40.7128",
+  longitude: string | null = "-74.0060",
+): Promise<TimeExpressionResolver> {
+  return TimeExpressionResolver.createInstanceAsync(
+    {
+      getAsync: async () => undefined,
+      getManyAsync: async () => ({
+        "sensors.data_retention": undefined,
+        "outputs.data_retention": undefined,
+        "system.backup_retention": undefined,
+        "system.latitude": latitude,
+        "system.longitude": longitude,
+      }),
+      getAllAsync: async () => ({
+        "sensors.data_retention": undefined,
+        "outputs.data_retention": undefined,
+        "system.backup_retention": undefined,
+        "system.latitude": latitude,
+        "system.longitude": longitude,
+      }),
+      setAsync: async () => undefined,
+      existsAsync: async () => false,
+      deleteAsync: async () => undefined,
+      syncDefaultsAsync: async () => undefined,
+    },
+    {
+      publishAsync: async () => undefined,
+      subscribe: () => () => undefined,
+    },
+  );
+}
 
 describe("TimeCondition.ts tests", () => {
   describe("evaluate", () => {
@@ -171,6 +205,35 @@ describe("TimeCondition.ts tests", () => {
         }),
       );
     });
+
+    it("should evaluate a dynamic solar window when coordinates are configured", async () => {
+      const resolver = await createResolverAsync();
+      const start = resolver.resolveToDate("goldenHourEnd", new Date("2026-08-05T12:00:00"));
+      const end = resolver.resolveToDate("nauticalDusk", new Date("2026-08-05T12:00:00"));
+
+      assert.isNotNull(start);
+      assert.isNotNull(end);
+
+      const midpoint = new Date((start!.getTime() + end!.getTime()) / 2);
+      const timeCondition = new TimeCondition(
+        1,
+        "allOf",
+        "goldenHourEnd",
+        "nauticalDusk",
+        null,
+        null,
+        null,
+        null,
+        resolver,
+      );
+
+      assert.isTrue(timeCondition.evaluate(midpoint));
+    });
+
+    it("should return false for dynamic points when coordinates are unavailable", () => {
+      const timeCondition = new TimeCondition(1, "allOf", "sunrise", null);
+      assert.isFalse(timeCondition.evaluate(new Date("2026-08-05T06:00:00")));
+    });
   });
 
   describe("hasValidRepeatConfiguration", () => {
@@ -293,6 +356,32 @@ describe("TimeCondition.ts tests", () => {
 
       assert.isNotNull(anchor);
       assert.equal(anchor?.toISOString(), "2026-08-01T12:00:00.000Z");
+    });
+
+    it("should derive dynamic phase anchors from the most recent solar event", async () => {
+      const resolver = await createResolverAsync();
+      const now = new Date("2026-08-05T18:00:00");
+
+      const anchor = derivePhaseAnchor(
+        {
+          id: 1,
+          groupType: "allOf",
+          startTime: null,
+          endTime: null,
+          repeatInterval: 120,
+          repeatDuration: 30,
+          phaseAnchorType: "clock",
+          phaseAnchorValue: "sunrise",
+        },
+        now,
+        resolver,
+      );
+
+      assert.isNotNull(anchor);
+      assert.equal(
+        anchor?.getTime(),
+        resolver.resolveMostRecentOccurrence("sunrise", now)?.getTime(),
+      );
     });
   });
 });

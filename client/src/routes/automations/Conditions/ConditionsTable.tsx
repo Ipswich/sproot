@@ -35,6 +35,7 @@ import {
   formatMilitaryTime,
   formatDateTime,
 } from "@sproot/common/utility/TimeMethods";
+import { getDynamicTimePointLabel } from "@sproot/common/automation/TimeConditionTimePoints";
 
 export interface ConditionsTableProps {
   automationId: number;
@@ -446,8 +447,8 @@ function OutputConditionRow(outputCondition: SDBOutputCondition): ReactNode {
 }
 
 function TimeConditionRow(timeCondition: SDBTimeCondition): ReactNode {
-  const formattedStart = formatMilitaryTime(timeCondition.startTime);
-  const formattedEnd = formatMilitaryTime(timeCondition.endTime);
+  const formattedStart = formatTimeExpression(timeCondition.startTime);
+  const formattedEnd = formatTimeExpression(timeCondition.endTime);
 
   const windowSummary =
     !formattedStart && !formattedEnd
@@ -472,7 +473,7 @@ function TimeConditionRow(timeCondition: SDBTimeCondition): ReactNode {
   );
 }
 
-function formatRepeatSummary(timeCondition: SDBTimeCondition): string | null {
+function formatRepeatSummary(timeCondition: SDBTimeCondition): ReactNode {
   if (
     timeCondition.repeatInterval == null ||
     timeCondition.repeatDuration == null
@@ -503,6 +504,11 @@ function formatAnchorSummary(timeCondition: SDBTimeCondition): string {
       return "Period anchor: Window start";
 
     case "clock": {
+      const dynamicLabel = getDynamicTimePointLabel(timeCondition.phaseAnchorValue);
+      if (dynamicLabel) {
+        return `Period anchor: ${dynamicLabel}`;
+      }
+
       const formatted = formatMilitaryTime(timeCondition.phaseAnchorValue);
       return formatted ? `Period anchor: Daily at ${formatted}` : "";
     }
@@ -515,6 +521,15 @@ function formatAnchorSummary(timeCondition: SDBTimeCondition): string {
     default:
       return "";
   }
+}
+
+function formatTimeExpression(value: string | null): string | undefined {
+  const dynamicLabel = getDynamicTimePointLabel(value);
+  if (dynamicLabel) {
+    return dynamicLabel;
+  }
+
+  return formatMilitaryTime(value);
 }
 
 function WeekdayConditionRow(weekdayCondition: SDBWeekdayCondition): ReactNode {

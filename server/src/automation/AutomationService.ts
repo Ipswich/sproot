@@ -19,6 +19,7 @@ import { NotificationActionsModifiedEvent } from "../eventbus/events/actions/Not
 import type { IAutomationsRepository } from "../database/repositories/automations/IAutomationsRepository";
 import { OutputActionPrecedence } from "@sproot/common/automation/OutputActionPrecedence";
 import { TimeConditionPhaseAnchorType } from "@sproot/common/automation/ITimeCondition";
+import { TimeExpressionResolver } from "./conditions/TimeExpressionResolver";
 
 /**
  * Central automation evaluator and event emitter.
@@ -29,13 +30,20 @@ class AutomationService {
   #automationsRepository: IAutomationsRepository;
   #eventBus: IEventBus;
   #logger: winston.Logger;
+  #timeExpressionResolver: TimeExpressionResolver;
 
   static async createInstanceAsync(
     automationsRepository: IAutomationsRepository,
     eventBus: IEventBus,
     logger: winston.Logger,
+    timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
   ): Promise<AutomationService> {
-    const service = new AutomationService(automationsRepository, eventBus, logger);
+    const service = new AutomationService(
+      automationsRepository,
+      eventBus,
+      logger,
+      timeExpressionResolver,
+    );
     await service.loadAllAutomationsAsync();
     return service;
   }
@@ -44,11 +52,17 @@ class AutomationService {
     automationsRepository: IAutomationsRepository,
     eventBus: IEventBus,
     logger: winston.Logger,
+    timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
   ) {
     this.#automationsRepository = automationsRepository;
     this.#eventBus = eventBus;
     this.#automations = new Map();
     this.#logger = logger;
+    this.#timeExpressionResolver = timeExpressionResolver;
+  }
+
+  get timeExpressionResolver(): TimeExpressionResolver {
+    return this.#timeExpressionResolver;
   }
 
   /**
@@ -66,6 +80,7 @@ class AutomationService {
           automation.operator,
           automation.enabled,
           this.#automationsRepository.conditions,
+          this.#timeExpressionResolver,
         );
         return [automation.id, automationInstance] as [number, Automation];
       });

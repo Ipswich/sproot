@@ -173,7 +173,7 @@ The `Condition Type` drop down will give you the options for the variety of cond
 - Date Range
   - Evaluates to true between the start date and end date.
 - Time
-  - Supports continuous intervals, and periodically across an interval:
+  - Supports continuous intervals, and periodically across an interval. Also dynamic time points, like `Sunrise` or `Moonset`. 
   - Can evaluate to true between the start time and end time.
   - Can evaluate to true always
   - Can evaluate to true during a provided minute.

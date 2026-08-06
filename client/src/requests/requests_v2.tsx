@@ -52,7 +52,9 @@ export type SystemLogEvent = {
 export type ApplicationSettingsKey =
   | "sensors.data_retention"
   | "outputs.data_retention"
-  | "system.backup_retention";
+  | "system.backup_retention"
+  | "system.latitude"
+  | "system.longitude";
 
 export type ApplicationSettings = Partial<
   Record<ApplicationSettingsKey, string | null>

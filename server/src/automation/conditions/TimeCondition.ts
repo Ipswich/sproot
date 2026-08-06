@@ -1,6 +1,7 @@
 import { ITimeCondition, TimeConditionPhaseAnchorType } from "@sproot/automation/ITimeCondition";
 import { evaluateTime } from "./ConditionUtils";
 import { ConditionGroupType } from "@sproot/automation/ConditionTypes";
+import { TimeExpressionResolver } from "./TimeExpressionResolver";
 
 export class TimeCondition implements ITimeCondition {
   id: number;
@@ -11,6 +12,7 @@ export class TimeCondition implements ITimeCondition {
   repeatDuration?: number | null;
   phaseAnchorType?: TimeConditionPhaseAnchorType | null;
   phaseAnchorValue?: string | null;
+  #timeExpressionResolver: TimeExpressionResolver;
   constructor(
     id: number,
     groupType: ConditionGroupType,
@@ -20,9 +22,11 @@ export class TimeCondition implements ITimeCondition {
     repeatDuration?: number | null,
     phaseAnchorType?: TimeConditionPhaseAnchorType | null,
     phaseAnchorValue?: string | null,
+    timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
   ) {
     this.id = id;
     this.groupType = groupType;
+    this.#timeExpressionResolver = timeExpressionResolver;
     this.startTime = startTime ?? null;
     this.endTime = endTime ?? null;
     this.repeatInterval = repeatInterval ?? null;
@@ -34,6 +38,7 @@ export class TimeCondition implements ITimeCondition {
   evaluate(now: Date): boolean {
     return evaluateTime(
       now,
+      this.#timeExpressionResolver,
       this.startTime,
       this.endTime,
       this.repeatInterval,

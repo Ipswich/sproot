@@ -1,33 +1,51 @@
 import {
+  Alert,
   Button,
   Collapse,
   Group,
   NumberInput,
   Select,
+  SegmentedControl,
   Stack,
   Space,
   TextInput,
-  SegmentedControl,
 } from "@mantine/core";
 import { TimeInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { ConditionGroupType } from "@sproot/automation/ConditionTypes";
+import {
+  DYNAMIC_TIME_POINT_LABELS,
+  DYNAMIC_TIME_POINT_VALUES,
+  isDynamicTimePoint,
+} from "@sproot/common/automation/TimeConditionTimePoints";
+import { ReactNode } from "react";
+import { useState } from "react";
 import { Fragment } from "react/jsx-runtime";
 import {
   addTimeConditionAsync,
+  getApplicationSettingsAsync,
   getConditionsAsync,
 } from "../../../../requests/requests_v2";
-import { ConditionGroupType } from "@sproot/automation/ConditionTypes";
-import { useState } from "react";
 
 type TimeConditionType = "Once" | "Between" | "Always";
 type PhaseAnchorType = "window" | "clock" | "fixed" | null;
+type TimeExpressionMode = "clock" | "dynamic";
 
 function resolveDefaultAnchorType(type: TimeConditionType): PhaseAnchorType {
   if (type === "Once") return null;
-  if (type === "Always") return "fixed";
+  if (type === "Always") return "clock";
   return "window";
 }
+
+function resolveExpressionMode(value: string): TimeExpressionMode {
+  return isDynamicTimePoint(value) ? "dynamic" : "clock";
+}
+
+const dynamicTimePointOptions = DYNAMIC_TIME_POINT_VALUES.map((value) => ({
+  value,
+  label: DYNAMIC_TIME_POINT_LABELS[value],
+}));
 
 type TimeConditionFormValues = {
   startTime: string;
@@ -53,12 +71,23 @@ export default function TimeCondition({
   const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
   const [timeConditionType, setTimeConditionType] =
     useState<TimeConditionType>("Between");
+  const [startTimeMode, setStartTimeMode] = useState<TimeExpressionMode>("clock");
+  const [endTimeMode, setEndTimeMode] = useState<TimeExpressionMode>("clock");
+  const [phaseAnchorMode, setPhaseAnchorMode] = useState<TimeExpressionMode>("clock");
 
   const initialAnchorType = resolveDefaultAnchorType("Between");
   const conditionsQuery = useQuery({
     queryKey: ["conditions", automationId],
     queryFn: () => getConditionsAsync(automationId),
   });
+  const settingsQuery = useQuery({
+    queryKey: ["applicationSettings"],
+    queryFn: () => getApplicationSettingsAsync(),
+  });
+
+  const hasDynamicTimeSupport =
+    typeof settingsQuery.data?.["system.latitude"] === "string" &&
+    typeof settingsQuery.data?.["system.longitude"] === "string";
 
   const addTimeMutation = useMutation({
     mutationFn: async (timeCondition: {
@@ -90,15 +119,15 @@ export default function TimeCondition({
       startTime: (value: string) =>
         timeConditionType !== "Always" && value === ""
           ? "Start time is required"
-          : value === "" || regex.test(value)
+          : value === "" || regex.test(value) || isDynamicTimePoint(value)
             ? null
-            : "Start time must be null or proper time format",
+            : "Start time must be HH:MM or a supported solar/lunar point",
       endTime: (value: string) =>
         timeConditionType === "Between" && value === ""
           ? "End time is required"
-          : value === "" || regex.test(value)
+          : value === "" || regex.test(value) || isDynamicTimePoint(value)
             ? null
-            : "End time must be null or proper time format",
+            : "End time must be HH:MM or a supported solar/lunar point",
       repeatInterval: (value, values) => {
         if (values.repeatMode !== "Periodic" || timeConditionType === "Once") {
           return null;
@@ -128,7 +157,9 @@ export default function TimeCondition({
           return null;
         }
         if (values.phaseAnchorType === "clock") {
-          return regex.test(value) ? null : "Clock anchor must use HH:MM";
+          return regex.test(value) || isDynamicTimePoint(value)
+            ? null
+            : "Anchor must use HH:MM or a supported solar/lunar point";
         }
         if (values.phaseAnchorType === "fixed") {
           return value !== "" && !Number.isNaN(new Date(value).getTime())
@@ -143,7 +174,7 @@ export default function TimeCondition({
   const repeatControlsVisible = timeConditionType !== "Once";
   const selectedAnchorType = timeConditionForm.values.phaseAnchorType;
   const anchorOptions = [
-    { value: "clock", label: "Clock" },
+    { value: "clock", label: "Time point" },
     { value: "fixed", label: "Fixed time" },
     {
       value: "window",
@@ -184,10 +215,18 @@ export default function TimeCondition({
           });
           timeConditionForm.reset();
           setTimeConditionType("Between");
+          setStartTimeMode("clock");
+          setEndTimeMode("clock");
+          setPhaseAnchorMode("clock");
           toggleAddNewCondition();
         })}
       >
         <Stack>
+          {!hasDynamicTimeSupport && (
+            <Alert color="yellow" title="Dynamic time points are unavailable">
+              Set latitude and longitude in System Settings to unlock solar and lunar events.
+            </Alert>
+          )}
           <SegmentedControl
             flex={1}
             value={timeConditionType}
@@ -199,8 +238,10 @@ export default function TimeCondition({
                   ...timeConditionForm.values,
                   startTime: "",
                   endTime: "",
-                  phaseAnchorType: "fixed",
+                  phaseAnchorType: "clock",
                 });
+                setStartTimeMode("clock");
+                setEndTimeMode("clock");
               }
               if (nextType === "Between") {
                 timeConditionForm.setValues({
@@ -218,54 +259,66 @@ export default function TimeCondition({
                   phaseAnchorType: null,
                   phaseAnchorValue: "",
                 });
+                setEndTimeMode("clock");
               }
             }}
             data={["Once", "Between", "Always"]}
             color="blue"
           />
-          <Group justify="space-around">
+          <Stack>
             {timeConditionType === "Once" && (
-              <Fragment>
-                <TimeInput
-                  required
-                  label="Run at"
-                  onChange={(value) => {
-                    timeConditionForm.setFieldValue(
-                      "startTime",
-                      value.currentTarget.value,
-                    );
-                  }}
-                />
-              </Fragment>
+              <TimeExpressionField
+                label="Run at"
+                required
+                value={timeConditionForm.values.startTime}
+                mode={startTimeMode}
+                dynamicEnabled={hasDynamicTimeSupport}
+                error={timeConditionForm.errors["startTime"]}
+                onModeChange={(mode) => {
+                  setStartTimeMode(mode);
+                  timeConditionForm.setFieldValue("startTime", "");
+                }}
+                onChange={(value) => {
+                  timeConditionForm.setFieldValue("startTime", value);
+                }}
+              />
             )}
             {timeConditionType === "Between" && (
               <Fragment>
-                <TimeInput
+                <TimeExpressionField
                   label="Start time"
                   required
                   value={timeConditionForm.values.startTime}
+                  mode={startTimeMode}
+                  dynamicEnabled={hasDynamicTimeSupport}
+                  error={timeConditionForm.errors["startTime"]}
+                  onModeChange={(mode) => {
+                    setStartTimeMode(mode);
+                    timeConditionForm.setFieldValue("startTime", "");
+                  }}
                   onChange={(value) => {
-                    timeConditionForm.setFieldValue(
-                      "startTime",
-                      value.currentTarget.value,
-                    );
+                    timeConditionForm.setFieldValue("startTime", value);
                   }}
                 />
-                <TimeInput
+                <TimeExpressionField
                   label="End time"
                   required
                   value={timeConditionForm.values.endTime}
-                  onChange={(value) =>
-                    timeConditionForm.setFieldValue(
-                      "endTime",
-                      value.currentTarget.value,
-                    )
-                  }
+                  mode={endTimeMode}
+                  dynamicEnabled={hasDynamicTimeSupport}
+                  error={timeConditionForm.errors["endTime"]}
+                  onModeChange={(mode) => {
+                    setEndTimeMode(mode);
+                    timeConditionForm.setFieldValue("endTime", "");
+                  }}
+                  onChange={(value) => {
+                    timeConditionForm.setFieldValue("endTime", value);
+                  }}
                 />
               </Fragment>
             )}
             {timeConditionType === "Always" && <Fragment />}
-          </Group>
+          </Stack>
           {repeatControlsVisible && (
             <Stack gap="sm">
               <SegmentedControl
@@ -350,22 +403,24 @@ export default function TimeCondition({
                     }}
                   />
                   {selectedAnchorType === "clock" && (
-                    <TimeInput
-                      // label="Clock anchor"
+                    <TimeExpressionField
+                      label="Period anchor"
                       value={timeConditionForm.values.phaseAnchorValue}
-                      onChange={(value) =>
-                        timeConditionForm.setFieldValue(
-                          "phaseAnchorValue",
-                          value.currentTarget.value,
-                        )
-                      }
+                      mode={phaseAnchorMode}
+                      dynamicEnabled={hasDynamicTimeSupport}
                       error={timeConditionForm.errors["phaseAnchorValue"]}
+                      onModeChange={(mode) => {
+                        setPhaseAnchorMode(mode);
+                        timeConditionForm.setFieldValue("phaseAnchorValue", "");
+                      }}
+                      onChange={(value) =>
+                        timeConditionForm.setFieldValue("phaseAnchorValue", value)
+                      }
                     />
                   )}
                   {selectedAnchorType === "fixed" && (
                     <TextInput
                       type="datetime-local"
-                      // label="Fixed anchor"
                       value={timeConditionForm.values.phaseAnchorValue}
                       onChange={(value) =>
                         timeConditionForm.setFieldValue(
@@ -387,5 +442,66 @@ export default function TimeCondition({
         <Space h={"12px"} />
       </form>
     </Fragment>
+  );
+}
+
+type TimeExpressionFieldProps = {
+  label: string;
+  value: string;
+  mode: TimeExpressionMode;
+  onChange: (value: string) => void;
+  onModeChange: (mode: TimeExpressionMode) => void;
+  error?: ReactNode;
+  required?: boolean;
+  dynamicEnabled: boolean;
+};
+
+function TimeExpressionField({
+  label,
+  value,
+  mode,
+  onChange,
+  onModeChange,
+  error,
+  required,
+  dynamicEnabled,
+}: TimeExpressionFieldProps) {
+  return (
+    <Stack gap="xs">
+      <SegmentedControl
+        fullWidth
+        value={mode}
+        onChange={(nextMode) => {
+          if (nextMode === "clock" || (nextMode === "dynamic" && dynamicEnabled)) {
+            onModeChange(nextMode as TimeExpressionMode);
+          }
+        }}
+        data={[
+          { label: "Clock", value: "clock" },
+          { label: "Solar/Lunar", value: "dynamic", disabled: !dynamicEnabled },
+        ]}
+      />
+      {mode === "clock" ? (
+        <TimeInput
+          required={required ?? false}
+          label={label}
+          value={mode === resolveExpressionMode(value) ? value : ""}
+          onChange={(event) => onChange(event.currentTarget.value)}
+          error={error}
+        />
+      ) : (
+        <Select
+          required={required ?? false}
+          searchable
+          allowDeselect={false}
+          label={label}
+          placeholder="Select a solar or lunar event"
+          data={dynamicTimePointOptions}
+          value={mode === resolveExpressionMode(value) ? value : null}
+          onChange={(nextValue) => onChange(nextValue ?? "")}
+          error={error}
+        />
+      )}
+    </Stack>
   );
 }

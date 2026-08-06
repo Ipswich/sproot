@@ -715,6 +715,55 @@ describe("API Tests", async function () {
               })
               .expect(400);
           });
+
+          it("should reject dynamic time points when location settings are missing", async () => {
+            await request(server)
+              .patch("/api/v2/settings")
+              .send({
+                "system.latitude": null,
+                "system.longitude": null,
+              })
+              .expect(200);
+
+            await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "sunrise",
+              })
+              .expect(400);
+          });
+
+          it("should create a dynamic time condition when location settings are configured", async () => {
+            await request(server)
+              .patch("/api/v2/settings")
+              .send({
+                "system.latitude": "40.7128",
+                "system.longitude": "-74.0060",
+              })
+              .expect(200);
+
+            const response = await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "goldenHourEnd",
+                endTime: "nauticalDusk",
+                repeatInterval: 30,
+                repeatDuration: 10,
+                phaseAnchorType: "clock",
+                phaseAnchorValue: "sunset",
+              })
+              .expect(201);
+
+            assert.equal(response.body.content.data.startTime, "goldenHourEnd");
+            assert.equal(response.body.content.data.endTime, "nauticalDusk");
+            assert.equal(response.body.content.data.phaseAnchorValue, "sunset");
+
+            await request(server)
+              .delete(`/api/v2/automations/1/conditions/time/${response.body.content.data.id}`)
+              .expect(200);
+          });
         });
 
         describe("PATCH", async () => {
@@ -1767,15 +1816,16 @@ describe("API Tests", async function () {
 
   describe("Settings Routes", async () => {
     describe("GET", async () => {
-      it("should return 200 with all 3 settings", async () => {
+      it("should return 200 with all 5 settings", async () => {
         const response = await request(server).get("/api/v2/settings").expect(200);
         const content = response.body["content"];
         validateMiddlewareValues(response);
         assert.isObject(content.data);
-        assert.equal(Object.keys(content.data).length, 3);
+        assert.equal(Object.keys(content.data).length, 5);
         assert.exists(content.data["sensors.data_retention"]);
         assert.exists(content.data["outputs.data_retention"]);
         assert.exists(content.data["system.backup_retention"]);
+        assert.containsAllKeys(content.data, ["system.latitude", "system.longitude"]);
       });
     });
 
@@ -1846,6 +1896,32 @@ describe("API Tests", async function () {
         const content = response.body["content"];
         validateMiddlewareValues(response);
         assert.deepEqual(content.data, {});
+      });
+
+      it("should accept valid latitude and longitude settings", async () => {
+        const response = await request(server)
+          .patch("/api/v2/settings")
+          .send({
+            "system.latitude": "40.7128",
+            "system.longitude": "-74.0060",
+          })
+          .expect(200);
+
+        validateMiddlewareValues(response);
+        assert.equal(response.body.content.data["system.latitude"], "40.7128");
+        assert.equal(response.body.content.data["system.longitude"], "-74.0060");
+      });
+
+      it("should reject an out-of-range latitude", async () => {
+        const response = await request(server)
+          .patch("/api/v2/settings")
+          .send({
+            "system.latitude": "91",
+          })
+          .expect(400);
+
+        validateMiddlewareValues(response);
+        assert.include(response.body.error.details[0], "must be between -90 and 90");
       });
     });
   });
