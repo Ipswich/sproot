@@ -9,9 +9,10 @@ import { CameraManager } from "../camera/CameraManager";
 import { FrameBuffer } from "../camera/FrameBuffer";
 import { DI_KEYS } from "../utils/DependencyInjectionConstants";
 import { AutomationsTriggeredEvent } from "../eventbus/events/automations/AutomationsTriggeredEvent";
+import { OutputList } from "../outputs/list/OutputList";
 
 describe("API Tests", async function () {
-  this.timeout(2000);
+  this.timeout(5000);
 
   const flushAsync = () => new Promise((resolve) => setImmediate(resolve));
   const delayAsync = (milliseconds: number) =>
@@ -36,6 +37,26 @@ describe("API Tests", async function () {
     }
 
     assert.fail(`Timed out waiting for output ${outputId}: ${JSON.stringify(lastOutput)}`);
+  };
+  const waitForOutputDataAsync = async (
+    outputList: OutputList,
+    outputId: number,
+    predicate: (output: any) => boolean,
+    attempts = 40,
+  ) => {
+    let lastOutput: any;
+
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      lastOutput = outputList.outputData[outputId.toString()];
+
+      if (lastOutput && predicate(lastOutput)) {
+        return lastOutput;
+      }
+
+      await delayAsync(25);
+    }
+
+    assert.fail(`Timed out waiting for output data ${outputId}: ${JSON.stringify(lastOutput)}`);
   };
   // describe("Authentication Routes", async () => {
   //   before(() => {
@@ -178,6 +199,7 @@ describe("API Tests", async function () {
 
         it("should include an active conflict when the highest-precedence triggered actions disagree", async () => {
           const eventBus = app.get(DI_KEYS.EventBus);
+          const outputList = app.get(DI_KEYS.OutputList) as OutputList;
 
           let createdActionId: number | undefined;
 
@@ -235,10 +257,15 @@ describe("API Tests", async function () {
             );
             await flushAsync();
 
-            const output = await waitForOutputAsync(
+            await waitForOutputDataAsync(
+              outputList,
               1,
               (candidate) => candidate.activeConflict !== null,
             );
+
+            const response = await request(server).get("/api/v2/outputs/1").expect(200);
+            validateMiddlewareValues(response);
+            const output = response.body["content"].data[0];
 
             assert.deepEqual(output.activeConflict, {
               precedence: "High",

@@ -229,6 +229,19 @@ describe("SettingsRepository", () => {
       assert.equal(builder.onConflict.firstCall.args[0], "key");
       assert.isTrue(builder.merge.calledOnce);
     });
+
+    it("should store null values as json null", async () => {
+      const knex = createKnexStub([]);
+      const repo = new SettingsRepository(knex as any);
+
+      await repo.setAsync(SETTINGS.system.latitude, null);
+
+      const builder = (knex as any)("settings");
+      assert.isTrue(builder.insert.calledOnce);
+      const insertArgs = builder.insert.firstCall.args[0];
+      assert.equal(insertArgs.key, SETTINGS.system.latitude);
+      assert.equal(insertArgs.value.toQuery(), "'null'::jsonb");
+    });
   });
 
   describe("exists", () => {
