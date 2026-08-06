@@ -18,6 +18,7 @@ import { OutputActionsModifiedEvent } from "../eventbus/events/actions/OutputAct
 import { NotificationActionsModifiedEvent } from "../eventbus/events/actions/NotificationActionsModifiedEvent";
 import type { IAutomationsRepository } from "../database/repositories/automations/IAutomationsRepository";
 import { OutputActionPrecedence } from "@sproot/common/automation/OutputActionPrecedence";
+import { TimeConditionPhaseAnchorType } from "@sproot/common/automation/ITimeCondition";
 
 /**
  * Central automation evaluator and event emitter.
@@ -184,12 +185,20 @@ class AutomationService {
     type: ConditionGroupType,
     startTime: string | null | undefined,
     endTime: string | null | undefined,
+    repeatInterval: number | null | undefined,
+    repeatDuration: number | null | undefined,
+    phaseAnchorType: TimeConditionPhaseAnchorType | null | undefined,
+    phaseAnchorValue: string | null | undefined,
   ): Promise<number> {
     const resultId = await this.#automationsRepository.conditions.time.addAsync(
       automationId,
       type,
       startTime,
       endTime,
+      repeatInterval,
+      repeatDuration,
+      phaseAnchorType,
+      phaseAnchorValue,
     );
     await this.#postAutomationChangeFunctionAsync();
     return resultId;

@@ -9,7 +9,7 @@ import {
   deleteDateRangeConditionAsync,
   getConditionsAsync,
 } from "../../../requests/requests_v2";
-import { Button, Code, Collapse, Group, Space, Title } from "@mantine/core";
+import { Button, Code, Collapse, Group, Space, Title, Text } from "@mantine/core";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
@@ -23,7 +23,7 @@ import { useDisclosure } from "@mantine/hooks";
 import DeletablesTable from "../../common/DeletablesTable";
 import NewConditionWidget from "./NewConditionWidget";
 import { convertCelsiusToFahrenheit } from "@sproot/common/utility/DisplayFormats";
-import { formatMilitaryTime } from "@sproot/common/utility/TimeMethods";
+import { formatMilitaryTime, formatDateTime } from "@sproot/common/utility/TimeMethods";
 
 export interface ConditionsTableProps {
   automationId: number;
@@ -438,15 +438,72 @@ function TimeConditionRow(timeCondition: SDBTimeCondition): ReactNode {
   const formattedStart = formatMilitaryTime(timeCondition.startTime);
   const formattedEnd = formatMilitaryTime(timeCondition.endTime);
 
+  const windowSummary =
+    !formattedStart && !formattedEnd
+      ? "Always"
+      : formattedStart && !formattedEnd
+        ? `At ${formattedStart}`
+        : `Between ${formattedStart} and ${formattedEnd}`;
+
+  const repeatSummary = formatRepeatSummary(timeCondition);
+
   return (
-    <Group>
-      {!formattedStart && !formattedEnd && "Always"}
-      {formattedStart && !formattedEnd && `Time is ${formattedStart}`}
-      {formattedStart &&
-        formattedEnd &&
-        `Time is between ${formattedStart} and ${formattedEnd}`}
+    <Group gap={0}>
+      <div>
+        <Text ta="left">{windowSummary}</Text>
+        {repeatSummary && (
+          <Text ta="left" size="sm" c="dimmed">
+            ↳ {repeatSummary}
+          </Text>
+        )}
+      </div>
     </Group>
   );
+}
+
+function formatRepeatSummary(timeCondition: SDBTimeCondition): string | null {
+  if (
+    timeCondition.repeatInterval == null ||
+    timeCondition.repeatDuration == null
+  ) {
+    return null;
+  }
+
+  const anchorSummary = formatAnchorSummary(timeCondition);
+
+  return (
+    <>
+      {`Every ${timeCondition.repeatInterval} min • Active first ${timeCondition.repeatDuration} min${timeCondition.repeatDuration === 1 ? "" : "s"}`}
+      {anchorSummary && (
+        <Text ta="left" size="sm" c="dimmed">
+          ↳ {anchorSummary}
+        </Text>
+      )}
+    </>
+  );
+}
+
+function formatAnchorSummary(timeCondition: SDBTimeCondition): string {
+  switch (timeCondition.phaseAnchorType) {
+    case "epoch":
+      return "Global reference";
+
+    case "window":
+      return "Period anchor: Window start";
+
+    case "clock": {
+      const formatted = formatMilitaryTime(timeCondition.phaseAnchorValue);
+      return formatted ? `Period anchor: Daily at ${formatted}` : "";
+    }
+
+    case "fixed": {
+      const formatted = formatDateTime(timeCondition.phaseAnchorValue);
+      return formatted ? `Period anchor: ${formatted}` : "";
+    }
+
+    default:
+      return "";
+  }
 }
 
 function WeekdayConditionRow(weekdayCondition: SDBWeekdayCondition): ReactNode {

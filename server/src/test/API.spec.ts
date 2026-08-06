@@ -644,6 +644,10 @@ describe("API Tests", async function () {
             "groupType",
             "startTime",
             "endTime",
+            "repeatInterval",
+            "repeatDuration",
+            "phaseAnchorType",
+            "phaseAnchorValue",
           ]);
         });
       });
@@ -661,6 +665,55 @@ describe("API Tests", async function () {
               })
               .expect(201);
             assert.lengthOf(await app.get("sprootDB").automations.conditions.time.getAsync(1), 3);
+          });
+
+          it("should create a repeating time condition", async () => {
+            const response = await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "08:00",
+                endTime: "17:00",
+                repeatInterval: 30,
+                repeatDuration: 10,
+                phaseAnchorType: "default",
+              })
+              .expect(201);
+
+            assert.equal(response.body.content.data.repeatInterval, 30);
+            assert.equal(response.body.content.data.repeatDuration, 10);
+            assert.equal(response.body.content.data.phaseAnchorType, "default");
+            assert.isNull(response.body.content.data.phaseAnchorValue);
+
+            await request(server)
+              .delete(`/api/v2/automations/1/conditions/time/${response.body.content.data.id}`)
+              .expect(200);
+          });
+
+          it("should reject a time condition when repeatDuration >= repeatInterval", async () => {
+            await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "08:00",
+                endTime: "17:00",
+                repeatInterval: 30,
+                repeatDuration: 30,
+                phaseAnchorType: "default",
+              })
+              .expect(400);
+
+            await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "08:00",
+                endTime: "17:00",
+                repeatInterval: 30,
+                repeatDuration: 45,
+                phaseAnchorType: "default",
+              })
+              .expect(400);
           });
         });
 
@@ -680,6 +733,38 @@ describe("API Tests", async function () {
               (await app.get("sprootDB").automations.conditions.time.getAsync(1))[2].startTime,
               "01:00",
             );
+          });
+
+          it("should update a time condition with repeat settings", async () => {
+            const createResponse = await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "23:30",
+                endTime: "04:00",
+              })
+              .expect(201);
+
+            await request(server)
+              .patch(`/api/v2/automations/1/conditions/time/${createResponse.body.content.data.id}`)
+              .send({
+                repeatInterval: 17,
+                repeatDuration: 5,
+                phaseAnchorType: "window",
+              })
+              .expect(200);
+
+            const updated = (
+              await app.get("sprootDB").automations.conditions.time.getAsync(1)
+            ).find((condition: { id: number }) => condition.id === createResponse.body.content.data.id);
+
+            assert.equal(updated.repeatInterval, 17);
+            assert.equal(updated.repeatDuration, 5);
+            assert.equal(updated.phaseAnchorType, "window");
+
+            await request(server)
+              .delete(`/api/v2/automations/1/conditions/time/${createResponse.body.content.data.id}`)
+              .expect(200);
           });
         });
 

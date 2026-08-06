@@ -101,4 +101,28 @@ function isBetweenMonthDate(
   }
 }
 
-export { isBetweenTimeStamp, isBetweenMonthDate, formatMilitaryTime };
+/**
+ * Formats a datetime-local string (e.g. "2026-08-01T12:00") into a human-readable format like "Aug 1, 2026 at 12:00PM".
+ * @param dateTimeString ISO-like datetime string
+ * @returns formatted string, or the original value if parsing fails
+ */
+function formatDateTime(dateTimeString?: string | null): string | undefined {
+  if (!dateTimeString) {
+    return undefined;
+  }
+  const date = new Date(dateTimeString);
+  if (Number.isNaN(date.getTime())) {
+    return dateTimeString;
+  }
+  const datePart = date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  const timePart = formatMilitaryTime(
+    `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`,
+  );
+  return `${datePart} at ${timePart}`;
+}
+
+export { isBetweenTimeStamp, isBetweenMonthDate, formatMilitaryTime, formatDateTime };
