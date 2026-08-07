@@ -29,6 +29,7 @@ import {
 } from "../../../../requests/requests_v2";
 import { useSolarLunarTimes } from "./useSolarLunarTimes";
 import type { SolarLunarTimesMap } from "./useSolarLunarTimes";
+import { formatMilitaryTime } from "@sproot/common/utility/TimeMethods";
 
 type TimeConditionType = "Once" | "Between" | "Always";
 type PhaseAnchorType = "window" | "clock" | "fixed" | null;
@@ -560,7 +561,7 @@ function TimeExpressionField({
 }
 
 function formatTime(date: Date): string {
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${hours}:${minutes}`;
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+  return formatMilitaryTime(`${hh}:${mm}`) ?? "";
 }
