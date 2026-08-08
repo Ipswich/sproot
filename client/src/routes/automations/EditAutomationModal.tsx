@@ -283,7 +283,7 @@ export default function EditAutomationModal({
                             Add Action
                           </Button>
                           <Collapse
-                            in={addActionOpened}
+                            expanded={addActionOpened}
                             transitionDuration={300}
                           >
                             <Space h={12} />

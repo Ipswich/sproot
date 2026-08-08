@@ -169,7 +169,7 @@ export async function patchSubcontrollerHandlerAsync(
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
-  const { deviceId } = request.params;
+  const { deviceId } = request.params as { deviceId: string | undefined };
   const { name } = request.body;
 
   const errorStrings: string[] = [];
@@ -246,9 +246,9 @@ export async function deleteSubcontrollerAsync(
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
-  const { deviceId } = request.params;
+  const { deviceId } = request.params as { deviceId: string | undefined };
 
-  const id = parseInt(deviceId ?? "", 10);
+  const id = parseInt(deviceId as string, 10);
   if (isNaN(id)) {
     return {
       statusCode: 400,

@@ -29,9 +29,9 @@ export async function getAvailableDevices(
   }
 
   try {
-    if ((Object.values(Models) as string[]).includes(request.params["model"]!)) {
+    if ((Object.values(Models) as string[]).includes(request.params["model"]! as string)) {
       const pins = outputList.getAvailableDevices(
-        request.params["model"]!,
+        request.params["model"]! as string,
         request.query["address"] as string,
         request.query["filterUsed"] !== "false",
         request.query["subcontrollerId"] != null

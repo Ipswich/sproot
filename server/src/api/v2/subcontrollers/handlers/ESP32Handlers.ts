@@ -223,7 +223,7 @@ export async function updateESP32FirmwareOTAAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   // const mdnsService = request.app.get("mdnsService") as MdnsService;
-  const { deviceId } = request.params;
+  const { deviceId } = request.params as { deviceId: string | undefined };
   if (deviceId != undefined && isNaN(parseInt(deviceId, 10))) {
     return {
       statusCode: 400,

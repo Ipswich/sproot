@@ -46,7 +46,10 @@ export async function getAsync(request: Request, response: Response) {
 export async function getByIdAsync(request: Request, response: Response) {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
-  if (request.params["automationId"] == null || isNaN(parseInt(request.params["automationId"]))) {
+  if (
+    request.params["automationId"] == null ||
+    isNaN(parseInt(request.params["automationId"] as string))
+  ) {
     automationResponse = {
       statusCode: 400,
       error: {
@@ -61,7 +64,7 @@ export async function getByIdAsync(request: Request, response: Response) {
 
   try {
     const automation = (
-      await sprootDB.automations.getByIdAsync(parseInt(request.params["automationId"]))
+      await sprootDB.automations.getByIdAsync(parseInt(request.params["automationId"] as string))
     )[0];
     if (automation == null) {
       return {
@@ -69,7 +72,7 @@ export async function getByIdAsync(request: Request, response: Response) {
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Automation with Id ${request.params["automationId"]} not found.`],
+          details: [`Automation with Id ${request.params["automationId"] as string} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -168,7 +171,10 @@ export async function updateAsync(request: Request, response: Response) {
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let updateAutomationResponse: SuccessResponse | ErrorResponse;
-  if (request.params["automationId"] == null || isNaN(parseInt(request.params["automationId"]))) {
+  if (
+    request.params["automationId"] == null ||
+    isNaN(parseInt(request.params["automationId"] as string))
+  ) {
     updateAutomationResponse = {
       statusCode: 400,
       error: {
@@ -183,7 +189,7 @@ export async function updateAsync(request: Request, response: Response) {
 
   try {
     const automation = (
-      await sprootDB.automations.getByIdAsync(parseInt(request.params["automationId"]))
+      await sprootDB.automations.getByIdAsync(parseInt(request.params["automationId"] as string))
     )[0];
     if (automation == null) {
       updateAutomationResponse = {
@@ -202,7 +208,7 @@ export async function updateAsync(request: Request, response: Response) {
     automation.operator = request.body["operator"] ?? automation.operator;
     automation.enabled = request.body["enabled"] ?? automation.enabled;
     await automationService.updateAutomationAsync(
-      parseInt(request.params["automationId"]),
+      parseInt(request.params["automationId"] as string),
       automation.name,
       automation.operator,
       automation.enabled,
@@ -239,7 +245,10 @@ export async function deleteAsync(request: Request, response: Response) {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let deleteAutomationResponse: SuccessResponse | ErrorResponse;
 
-  if (request.params["automationId"] == null || isNaN(parseInt(request.params["automationId"]))) {
+  if (
+    request.params["automationId"] == null ||
+    isNaN(parseInt(request.params["automationId"] as string))
+  ) {
     deleteAutomationResponse = {
       statusCode: 400,
       error: {
@@ -255,7 +264,7 @@ export async function deleteAsync(request: Request, response: Response) {
 
   try {
     const automation = await sprootDB.automations.getByIdAsync(
-      parseInt(request.params["automationId"]),
+      parseInt(request.params["automationId"] as string),
     );
     if (automation.length == 0) {
       deleteAutomationResponse = {
@@ -263,14 +272,16 @@ export async function deleteAsync(request: Request, response: Response) {
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Automation with Id ${request.params["automationId"]} not found.`],
+          details: [`Automation with Id ${request.params["automationId"] as string} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
       return deleteAutomationResponse;
     }
 
-    await automationService.deleteAutomationAsync(parseInt(request.params["automationId"]));
+    await automationService.deleteAutomationAsync(
+      parseInt(request.params["automationId"] as string),
+    );
 
     deleteAutomationResponse = {
       statusCode: 200,

@@ -1,4 +1,8 @@
-import { DatePickerInput, type DatePickerInputProps } from "@mantine/dates";
+import {
+  DatePickerInput,
+  DateTimePicker,
+  type DatePickerInputProps,
+} from "@mantine/dates";
 import { useEffect, useRef, useState } from "react";
 
 type Props = {
@@ -12,6 +16,7 @@ type Props = {
   clearable?: boolean;
   type?: "default" | "multiple" | "range";
   dropdownContent?: React.ReactNode;
+  withTime?: boolean;
 };
 
 export default function PopoverDatePickerInput({
@@ -24,6 +29,7 @@ export default function PopoverDatePickerInput({
   size = "sm",
   clearable,
   type = "range",
+  withTime,
 }: Props) {
   const dpType: NonNullable<DatePickerInputProps["type"]> = type ?? "range";
   const [internalValue, setInternalValue] = useState<
@@ -44,24 +50,51 @@ export default function PopoverDatePickerInput({
       : (value ?? [null, null]);
 
   return (
-    <DatePickerInput
-      type={dpType}
-      value={displayValue}
-      onChange={(nextValue) => {
-        setInternalValue(nextValue as [Date | null, Date | null]);
-        onChange(nextValue as [Date | null, Date | null]);
-      }}
-      valueFormat={valueFormat ?? (ignoreYear ? "MMMM D" : "MMMM D, YYYY")}
-      size={size}
-      dropdownType="popover"
-      label={placeholder}
-      styles={{ input: { cursor: "pointer" } }}
-      maxDate={new Date()}
-      {...(placeholder ? { placeholder } : {})}
-      {...(allowSingleDateInRange !== undefined
-        ? { allowSingleDateInRange }
-        : {})}
-      {...(clearable !== undefined ? { clearable } : {})}
-    />
+    <>
+      {withTime ? (
+        <DateTimePicker
+          type={dpType}
+          value={displayValue}
+          onChange={(nextValue) => {
+            setInternalValue(nextValue as [Date | null, Date | null]);
+            onChange(nextValue as [Date | null, Date | null]);
+          }}
+          valueFormat={
+            valueFormat ??
+            (ignoreYear ? "MMMM D h:mm A" : "MMMM D, YYYY h:mm A")
+          }
+          size={size}
+          dropdownType="popover"
+          label={placeholder}
+          styles={{ input: { cursor: "pointer" } }}
+          maxDate={new Date()}
+          {...(placeholder ? { placeholder } : {})}
+          {...(allowSingleDateInRange !== undefined
+            ? { allowSingleDateInRange }
+            : {})}
+          {...(clearable !== undefined ? { clearable } : {})}
+        />
+      ) : (
+        <DatePickerInput
+          type={dpType}
+          value={displayValue}
+          onChange={(nextValue) => {
+            setInternalValue(nextValue as [Date | null, Date | null]);
+            onChange(nextValue as [Date | null, Date | null]);
+          }}
+          valueFormat={valueFormat ?? (ignoreYear ? "MMMM D" : "MMMM D, YYYY")}
+          size={size}
+          dropdownType="popover"
+          label={placeholder}
+          styles={{ input: { cursor: "pointer" } }}
+          maxDate={new Date()}
+          {...(placeholder ? { placeholder } : {})}
+          {...(allowSingleDateInRange !== undefined
+            ? { allowSingleDateInRange }
+            : {})}
+          {...(clearable !== undefined ? { clearable } : {})}
+        />
+      )}
+    </>
   );
 }

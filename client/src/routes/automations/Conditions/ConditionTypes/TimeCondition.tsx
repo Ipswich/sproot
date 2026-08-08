@@ -272,7 +272,7 @@ export default function TimeCondition({
         />
         <Stack>
           <Collapse
-            in={timeConditionType === "Between"}
+            expanded={timeConditionType === "Between"}
             transitionDuration={220}
             transitionTimingFunction="ease"
           >
@@ -310,7 +310,7 @@ export default function TimeCondition({
             />
           </Collapse>
           <Collapse
-            in={timeConditionType === "Once"}
+            expanded={timeConditionType === "Once"}
             transitionDuration={220}
             transitionTimingFunction="ease"
           >
@@ -360,7 +360,7 @@ export default function TimeCondition({
               color="blue"
             />
             <Collapse
-              in={timeConditionForm.values.repeatMode === "Periodic"}
+              expanded={timeConditionForm.values.repeatMode === "Periodic"}
               transitionDuration={220}
               transitionTimingFunction="ease"
             >

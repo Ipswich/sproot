@@ -14,8 +14,8 @@ export async function getAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let journalId: number | undefined = undefined;
-  if (req.params["journalId"]) {
-    journalId = parseInt(req.params["journalId"], 10);
+  if (req.params["journalId"] as string) {
+    journalId = parseInt(req.params["journalId"] as string, 10);
     if (isNaN(journalId) || journalId <= 0) {
       response = {
         statusCode: 400,
@@ -148,7 +148,7 @@ export async function updateAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
 
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
+  const journalId = parseInt((req.params["journalId"] as string) ?? "", 10);
   if (isNaN(journalId)) {
     response = {
       statusCode: 400,
@@ -293,7 +293,7 @@ export async function deleteAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
 
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
+  const journalId = parseInt((req.params["journalId"] as string) ?? "", 10);
   if (isNaN(journalId)) {
     response = {
       statusCode: 400,
@@ -351,7 +351,7 @@ export async function addTagAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
+  const journalId = parseInt((req.params["journalId"] as string) ?? "", 10);
   const tagId = parseInt(req.body["tagId"] ?? "", 10);
 
   const badRequests: string[] = [];
@@ -449,8 +449,8 @@ export async function removeTagAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
-  const tagId = parseInt(req.params["tagId"] ?? "", 10);
+  const journalId = parseInt(req.params["journalId"] as string, 10);
+  const tagId = parseInt(req.params["tagId"] as string, 10);
 
   const badRequests: string[] = [];
   if (isNaN(journalId)) {

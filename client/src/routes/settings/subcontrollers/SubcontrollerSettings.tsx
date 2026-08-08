@@ -1,12 +1,13 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, Suspense, lazy, useEffect, useState } from "react";
 import { getSubcontrollerAsync } from "@sproot/sproot-client/src/requests/requests_v2";
-import { Button, Stack, rem } from "@mantine/core";
+import { Button, Loader, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import EditTable from "@sproot/sproot-client/src/routes/settings/subcontrollers/EditTable";
 import { useQuery } from "@tanstack/react-query";
 import NewSubcontrollerModal from "./NewSubcontrollerModal";
 import { ISubcontroller } from "@sproot/system/ISubcontroller";
-import FlashSubcontroller from "./FlashSubcontroller";
+
+const FlashSubcontroller = lazy(() => import("./FlashSubcontroller"));
 
 export default function SubcontrollerSettings() {
   const [
@@ -62,7 +63,9 @@ export default function SubcontrollerSettings() {
             Connect
           </Button>
         </Fragment>
-        <FlashSubcontroller />
+        <Suspense fallback={<Loader color="teal" type="bars" size="sm" />}>
+          <FlashSubcontroller />
+        </Suspense>
       </Stack>
     </Fragment>
   );

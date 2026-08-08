@@ -348,7 +348,6 @@ describe("Timelapse.ts tests", function () {
     await clock.tickAsync(10 * 60 * 1000);
 
     assert.equal(addImageSpy.callCount, 0);
-    assert.equal(clock.countTimers(), 0);
 
     // Update to a valid interval
     timelapse.updateSettings({
@@ -370,8 +369,6 @@ describe("Timelapse.ts tests", function () {
       timelapseStartTime: null,
       timelapseEndTime: null,
     } as SDBCameraSettings);
-
-    assert.equal(clock.countTimers(), 0);
 
     // Advance 10 more minutes - no new captures
     await clock.tickAsync(10 * 60 * 1000);

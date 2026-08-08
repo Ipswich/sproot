@@ -75,8 +75,8 @@ export async function getByIdAsync(
   let automationResponse: SuccessResponse | ErrorResponse;
 
   if (
-    request.params["outputActionId"] == null ||
-    isNaN(parseInt(request.params["outputActionId"]))
+    (request.params["outputActionId"] as string) == null ||
+    isNaN(parseInt(request.params["outputActionId"] as string))
   ) {
     automationResponse = {
       statusCode: 400,
@@ -91,7 +91,7 @@ export async function getByIdAsync(
   }
 
   try {
-    const outputActionId = parseInt(request.params["outputActionId"] ?? "");
+    const outputActionId = parseInt((request.params["outputActionId"] as string) ?? "");
     const automation = (
       await sprootDB.automations.actions.output.getOutputActionAsync(outputActionId)
     )[0];
@@ -101,7 +101,9 @@ export async function getByIdAsync(
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`OutputAction with Id ${request.params["outputActionId"]} not found.`],
+          details: [
+            `OutputAction with Id ${request.params["outputActionId"] as string} not found.`,
+          ],
         },
         ...response.locals["defaultProperties"],
       };
@@ -257,8 +259,8 @@ export async function deleteAsync(
   let automationResponse: SuccessResponse | ErrorResponse;
 
   if (
-    request.params["outputActionId"] == null ||
-    isNaN(parseInt(request.params["outputActionId"]))
+    (request.params["outputActionId"] as string) == null ||
+    isNaN(parseInt(request.params["outputActionId"] as string))
   ) {
     automationResponse = {
       statusCode: 400,
@@ -273,7 +275,7 @@ export async function deleteAsync(
   }
 
   try {
-    const outputActionId = parseInt(request.params["outputActionId"] ?? "");
+    const outputActionId = parseInt((request.params["outputActionId"] as string) ?? "");
     const action = (
       await sprootDB.automations.actions.output.getOutputActionAsync(outputActionId)
     )[0];
@@ -283,7 +285,9 @@ export async function deleteAsync(
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`OutputAction with Id ${request.params["outputActionId"]} not found.`],
+          details: [
+            `OutputAction with Id ${request.params["outputActionId"] as string} not found.`,
+          ],
         },
         ...response.locals["defaultProperties"],
       };
