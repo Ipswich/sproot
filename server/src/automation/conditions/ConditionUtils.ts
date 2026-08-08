@@ -271,31 +271,17 @@ function deriveTimeWindowBounds(
   startTime: string,
   endTime: string,
 ): { start: Date; end: Date } | null {
-  const startToday = timeExpressionResolver.resolveToDate(startTime, now);
-  const endToday = timeExpressionResolver.resolveToDate(endTime, now);
-
-  if (startToday == null || endToday == null) {
+  const start = timeExpressionResolver.resolveMostRecentOccurrence(startTime, now);
+  if (start == null) {
     return null;
   }
 
-  if (startToday.getTime() < endToday.getTime()) {
-    return { start: startToday, end: endToday };
-  }
-
-  if (now.getTime() >= startToday.getTime()) {
-    const endTomorrow = new Date(endToday);
-    endTomorrow.setDate(endTomorrow.getDate() + 1);
-    return { start: startToday, end: endTomorrow };
-  }
-
-  const previousDate = new Date(now);
-  previousDate.setDate(previousDate.getDate() - 1);
-  const startYesterday = timeExpressionResolver.resolveToDate(startTime, previousDate);
-  if (startYesterday == null) {
+  const end = timeExpressionResolver.resolveNextOccurrence(endTime, start);
+  if (end == null) {
     return null;
   }
 
-  return { start: startYesterday, end: endToday };
+  return { start, end };
 }
 
 function createTimeConditionSchedule(

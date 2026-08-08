@@ -8,6 +8,7 @@ import { SETTINGS } from "../../database/settings/SettingsSchema";
 
 const TIME_REGEX = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
 const SEARCH_DAY_OFFSETS = [0, -1, -2, -3, -4, -5, -6, -7];
+const SEARCH_FORWARD_DAY_OFFSETS = [0, 1, 2, 3, 4, 5, 6, 7];
 
 type Coordinates = {
   latitude: number;
@@ -118,6 +119,40 @@ export class TimeExpressionResolver {
       candidateDate.setDate(candidateDate.getDate() + dayOffset);
       const candidate = resolveDynamicTimePoint(expression, candidateDate, this.#coordinates);
       if (candidate != null && candidate.getTime() <= now.getTime()) {
+        return candidate;
+      }
+    }
+
+    return null;
+  }
+
+  resolveNextOccurrence(expression: string | null | undefined, after: Date): Date | null {
+    if (expression == null) {
+      return null;
+    }
+
+    if (TIME_REGEX.test(expression)) {
+      const candidate = resolveClockTime(expression, after);
+      if (candidate == null) {
+        return null;
+      }
+
+      if (candidate.getTime() <= after.getTime()) {
+        candidate.setDate(candidate.getDate() + 1);
+      }
+
+      return candidate;
+    }
+
+    if (!isDynamicTimePoint(expression) || this.#coordinates == null) {
+      return null;
+    }
+
+    for (const dayOffset of SEARCH_FORWARD_DAY_OFFSETS) {
+      const candidateDate = new Date(after);
+      candidateDate.setDate(candidateDate.getDate() + dayOffset);
+      const candidate = resolveDynamicTimePoint(expression, candidateDate, this.#coordinates);
+      if (candidate != null && candidate.getTime() > after.getTime()) {
         return candidate;
       }
     }
