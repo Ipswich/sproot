@@ -46,12 +46,41 @@ export class TimeExpressionResolver {
     this.#unsubscribeLongitude = () => {};
 
     if (eventBus != null) {
-      this.#unsubscribeLatitude = eventBus.subscribe(Events.SYSTEM_LATITUDE_UPDATED, () => {
-        void this.refreshCoordinatesAsync();
-      });
-      this.#unsubscribeLongitude = eventBus.subscribe(Events.SYSTEM_LONGITUDE_UPDATED, () => {
-        void this.refreshCoordinatesAsync();
-      });
+      this.#unsubscribeLatitude = eventBus.subscribe(
+        Events.SYSTEM_LATITUDE_UPDATED,
+        (event) => {
+          this.#handleCoordinateUpdate("latitude", event.payload.value);
+        },
+      );
+      this.#unsubscribeLongitude = eventBus.subscribe(
+        Events.SYSTEM_LONGITUDE_UPDATED,
+        (event) => {
+          this.#handleCoordinateUpdate("longitude", event.payload.value);
+        },
+      );
+    }
+  }
+
+  #handleCoordinateUpdate(
+    coordinate: "latitude" | "longitude",
+    value: string | null,
+  ): void {
+    const parsed = parseCoordinate(value, coordinate === "latitude" ? -90 : -180, coordinate === "latitude" ? 90 : 180);
+
+    if (parsed == null) {
+      this.#coordinates = null;
+      return;
+    }
+
+    if (this.#coordinates == null) {
+      void this.refreshCoordinatesAsync();
+      return;
+    }
+
+    if (coordinate === "latitude") {
+      this.#coordinates = { ...this.#coordinates, latitude: parsed };
+    } else {
+      this.#coordinates = { ...this.#coordinates, longitude: parsed };
     }
   }
 
