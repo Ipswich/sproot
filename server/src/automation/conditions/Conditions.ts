@@ -245,6 +245,10 @@ export class Conditions {
         id: condition.id,
         startTime: condition.startTime ?? undefined,
         endTime: condition.endTime ?? undefined,
+        repeatInterval: condition.repeatInterval ?? undefined,
+        repeatDuration: condition.repeatDuration ?? undefined,
+        phaseAnchorType: condition.phaseAnchorType ?? undefined,
+        phaseAnchorValue: condition.phaseAnchorValue ?? undefined,
       };
     }
     if (condition instanceof WeekdayCondition) {
@@ -322,6 +326,10 @@ export class Conditions {
             timeCondition.groupType,
             timeCondition.startTime,
             timeCondition.endTime,
+            timeCondition.repeatInterval,
+            timeCondition.repeatDuration,
+            timeCondition.phaseAnchorType,
+            timeCondition.phaseAnchorValue,
           );
         });
       }),

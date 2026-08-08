@@ -17,6 +17,123 @@ import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 import { DateRangeCondition } from "../../../../automation/conditions/DateRangeCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
+import { TimeConditionPhaseAnchorType } from "@sproot/automation/ITimeCondition";
+
+const TIME_REGEX = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
+const TIME_CONDITION_PHASE_ANCHOR_TYPES: TimeConditionPhaseAnchorType[] = [
+  "default",
+  "epoch",
+  "window",
+  "clock",
+  "fixed",
+];
+
+type TimeConditionConfig = {
+  startTime: string | null;
+  endTime: string | null;
+  repeatInterval: number | null;
+  repeatDuration: number | null;
+  phaseAnchorType: TimeConditionPhaseAnchorType | null;
+  phaseAnchorValue: string | null;
+};
+
+function validateTimeConditionConfig(config: TimeConditionConfig, invalidFields: string[]): void {
+  if (config.startTime != null && !TIME_REGEX.test(config.startTime)) {
+    invalidFields.push("Invalid or missing start time.");
+  }
+  if (config.endTime != null && !TIME_REGEX.test(config.endTime)) {
+    invalidFields.push("Invalid or missing end time.");
+  }
+  if (config.startTime == null && config.endTime != null) {
+    invalidFields.push("End time requires a start time.");
+  }
+
+  const hasRepeatInterval = config.repeatInterval != null;
+  const hasRepeatDuration = config.repeatDuration != null;
+  if (hasRepeatInterval !== hasRepeatDuration) {
+    invalidFields.push(
+      "Repeat interval and repeat duration must either both be set or both be null.",
+    );
+  }
+
+  if (!hasRepeatInterval) {
+    if (config.phaseAnchorType != null || config.phaseAnchorValue != null) {
+      invalidFields.push("Phase anchor requires a repeat pattern.");
+    }
+    return;
+  }
+
+  if (!Number.isInteger(config.repeatInterval) || config.repeatInterval! <= 0) {
+    invalidFields.push("Repeat interval must be a positive integer number of minutes.");
+  }
+  if (!Number.isInteger(config.repeatDuration) || config.repeatDuration! <= 0) {
+    invalidFields.push("Repeat duration must be a positive integer number of minutes.");
+  }
+  if (
+    config.repeatInterval != null &&
+    config.repeatDuration != null &&
+    config.repeatDuration >= config.repeatInterval
+  ) {
+    invalidFields.push("Repeat duration must be less than repeat interval.");
+  }
+  if (config.startTime != null && config.endTime == null) {
+    invalidFields.push("Once schedules do not support repeat patterns.");
+  }
+
+  if (
+    config.phaseAnchorType != null &&
+    !TIME_CONDITION_PHASE_ANCHOR_TYPES.includes(config.phaseAnchorType)
+  ) {
+    invalidFields.push("Invalid phase anchor type.");
+    return;
+  }
+
+  switch (config.phaseAnchorType) {
+    case "clock":
+      if (config.phaseAnchorValue == null || !TIME_REGEX.test(config.phaseAnchorValue)) {
+        invalidFields.push("Clock phase anchors require an HH:MM phase anchor value.");
+      }
+      return;
+    case "fixed":
+      if (
+        config.phaseAnchorValue == null ||
+        Number.isNaN(new Date(config.phaseAnchorValue).getTime())
+      ) {
+        invalidFields.push("Fixed phase anchors require a valid absolute timestamp.");
+      }
+      return;
+    case "window":
+      if (config.startTime == null || config.endTime == null) {
+        invalidFields.push("Window phase anchors require a between window.");
+      }
+      if (config.phaseAnchorValue != null) {
+        invalidFields.push("Window phase anchors do not accept a phase anchor value.");
+      }
+      return;
+    case "epoch":
+    case "default":
+    case null:
+      if (config.phaseAnchorValue != null) {
+        invalidFields.push("This phase anchor type does not accept a phase anchor value.");
+      }
+      return;
+  }
+}
+
+function normalizeTimeConditionConfig(partial: Partial<TimeConditionConfig>): TimeConditionConfig {
+  return {
+    startTime: partial.startTime ?? null,
+    endTime: partial.endTime ?? null,
+    repeatInterval: partial.repeatInterval ?? null,
+    repeatDuration: partial.repeatDuration ?? null,
+    phaseAnchorType: partial.phaseAnchorType ?? null,
+    phaseAnchorValue: partial.phaseAnchorValue ?? null,
+  };
+}
+
+function getDefinedOrFallback<T>(value: T | undefined, fallback: T): T {
+  return value === undefined ? fallback : value;
+}
 
 /**
  * Possible statusCodes: 200, 400, 401, 404, 503
@@ -506,27 +623,37 @@ export async function addAsync(
         );
         break;
       case "time": {
-        const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
-        if (request.body.startTime != null && !regex.test(request.body.startTime)) {
-          invalidFields.push("Invalid or missing start time.");
-        }
-        if (request.body.endTime != null && !regex.test(request.body.endTime)) {
-          invalidFields.push("Invalid or missing end time.");
-        }
+        const config = normalizeTimeConditionConfig({
+          startTime: request.body.startTime,
+          endTime: request.body.endTime,
+          repeatInterval: request.body.repeatInterval,
+          repeatDuration: request.body.repeatDuration,
+          phaseAnchorType: request.body.phaseAnchorType,
+          phaseAnchorValue: request.body.phaseAnchorValue,
+        });
+        validateTimeConditionConfig(config, invalidFields);
         if (invalidFields.length > 0) {
           break;
         }
         resultId = await automationService.addTimeConditionAsync(
           automationId,
           request.body.groupType,
-          request.body.startTime ?? null,
-          request.body.endTime ?? null,
+          config.startTime,
+          config.endTime,
+          config.repeatInterval,
+          config.repeatDuration,
+          config.phaseAnchorType,
+          config.phaseAnchorValue,
         );
         creationResult = new TimeCondition(
           resultId,
           request.body.groupType,
-          request.body.startTime ?? null,
-          request.body.endTime ?? null,
+          config.startTime,
+          config.endTime,
+          config.repeatInterval,
+          config.repeatDuration,
+          config.phaseAnchorType,
+          config.phaseAnchorValue,
         );
         break;
       }
@@ -863,26 +990,38 @@ export async function updateAsync(
       }
       case "time": {
         const sdbTimeCondition = sdbcondition as SDBTimeCondition;
+        const config = normalizeTimeConditionConfig({
+          startTime: getDefinedOrFallback(request.body.startTime, sdbTimeCondition.startTime),
+          endTime: getDefinedOrFallback(request.body.endTime, sdbTimeCondition.endTime),
+          repeatInterval: getDefinedOrFallback(
+            request.body.repeatInterval,
+            sdbTimeCondition.repeatInterval,
+          ),
+          repeatDuration: getDefinedOrFallback(
+            request.body.repeatDuration,
+            sdbTimeCondition.repeatDuration,
+          ),
+          phaseAnchorType: getDefinedOrFallback(
+            request.body.phaseAnchorType,
+            sdbTimeCondition.phaseAnchorType,
+          ),
+          phaseAnchorValue: getDefinedOrFallback(
+            request.body.phaseAnchorValue,
+            sdbTimeCondition.phaseAnchorValue,
+          ),
+        });
 
         condition = new TimeCondition(
           sdbTimeCondition.id,
           sdbTimeCondition.groupType,
-          sdbTimeCondition.startTime,
-          sdbTimeCondition.endTime,
+          config.startTime,
+          config.endTime,
+          config.repeatInterval,
+          config.repeatDuration,
+          config.phaseAnchorType,
+          config.phaseAnchorValue,
         );
-        if (request.body.startTime !== undefined) {
-          condition.startTime = request.body.startTime;
-        }
-        if (request.body.endTime !== undefined) {
-          condition.endTime = request.body.endTime;
-        }
-        const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
-        if (condition.startTime != null && !regex.test(condition.startTime)) {
-          invalidDetails.push("Invalid start time.");
-        }
-        if (condition.endTime != null && !regex.test(condition.endTime)) {
-          invalidDetails.push("Invalid end time.");
-        }
+        validateTimeConditionConfig(config, invalidDetails);
         if (invalidDetails.length > 0) {
           break;
         }

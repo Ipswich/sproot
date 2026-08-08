@@ -442,15 +442,21 @@ export async function deleteOutputConditionAsync(
 export async function addTimeConditionAsync(
   automationId: number,
   groupType: ConditionGroupType,
-  startTime: string | null,
-  endTime: string | null,
+  timeCondition: {
+    startTime: string | null;
+    endTime: string | null;
+    repeatInterval: number | null;
+    repeatDuration: number | null;
+    phaseAnchorType: "default" | "epoch" | "window" | "clock" | "fixed" | null;
+    phaseAnchorValue: string | null;
+  },
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions/time`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ groupType, startTime, endTime }),
+      body: JSON.stringify({ groupType, ...timeCondition }),
       mode: "cors",
       // credentials: "include",
     },
