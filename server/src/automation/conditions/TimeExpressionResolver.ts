@@ -46,26 +46,21 @@ export class TimeExpressionResolver {
     this.#unsubscribeLongitude = () => {};
 
     if (eventBus != null) {
-      this.#unsubscribeLatitude = eventBus.subscribe(
-        Events.SYSTEM_LATITUDE_UPDATED,
-        (event) => {
-          this.#handleCoordinateUpdate("latitude", event.payload.value);
-        },
-      );
-      this.#unsubscribeLongitude = eventBus.subscribe(
-        Events.SYSTEM_LONGITUDE_UPDATED,
-        (event) => {
-          this.#handleCoordinateUpdate("longitude", event.payload.value);
-        },
-      );
+      this.#unsubscribeLatitude = eventBus.subscribe(Events.SYSTEM_LATITUDE_UPDATED, (event) => {
+        this.#handleCoordinateUpdate("latitude", event.payload.value);
+      });
+      this.#unsubscribeLongitude = eventBus.subscribe(Events.SYSTEM_LONGITUDE_UPDATED, (event) => {
+        this.#handleCoordinateUpdate("longitude", event.payload.value);
+      });
     }
   }
 
-  #handleCoordinateUpdate(
-    coordinate: "latitude" | "longitude",
-    value: string | null,
-  ): void {
-    const parsed = parseCoordinate(value, coordinate === "latitude" ? -90 : -180, coordinate === "latitude" ? 90 : 180);
+  #handleCoordinateUpdate(coordinate: "latitude" | "longitude", value: string | null): void {
+    const parsed = parseCoordinate(
+      value,
+      coordinate === "latitude" ? -90 : -180,
+      coordinate === "latitude" ? 90 : 180,
+    );
 
     if (parsed == null) {
       this.#coordinates = null;
@@ -211,9 +206,11 @@ function resolveDynamicTimePoint(
   referenceDate: Date,
   coordinates: Coordinates,
 ): Date | null {
+  const astronomicalReferenceDate = resolveAstronomicalReferenceDate(referenceDate);
+
   if (expression === "moonrise" || expression === "moonset") {
     const moonTimes = SunCalc.getMoonTimes(
-      referenceDate,
+      astronomicalReferenceDate,
       coordinates.latitude,
       coordinates.longitude,
     ) as { rise?: Date; set?: Date; alwaysUp?: boolean; alwaysDown?: boolean };
@@ -226,12 +223,29 @@ function resolveDynamicTimePoint(
   }
 
   const solarTimes = SunCalc.getTimes(
-    referenceDate,
+    astronomicalReferenceDate,
     coordinates.latitude,
     coordinates.longitude,
   ) as Record<string, Date | undefined>;
 
   return solarTimes[expression] ?? null;
+}
+
+function resolveAstronomicalReferenceDate(referenceDate: Date): Date {
+  // SunCalc resolves events from the UTC date portion of the input Date.
+  // Anchor to a UTC-stable instant derived from the local calendar date so
+  // dynamic events follow the same local-day semantics as resolveClockTime().
+  return new Date(
+    Date.UTC(
+      referenceDate.getFullYear(),
+      referenceDate.getMonth(),
+      referenceDate.getDate(),
+      12,
+      0,
+      0,
+      0,
+    ),
+  );
 }
 
 function parseCoordinate(

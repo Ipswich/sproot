@@ -267,31 +267,50 @@ describe("TimeCondition.ts tests", () => {
 
       assert.isNotNull(sunrise);
       assert.isNotNull(sunset);
-      assert.isBelow(
-        sunrise!.getTime(),
-        referenceDate.getTime(),
-        "sunrise should be on the prior UTC date",
+      assert.notEqual(
+        sunrise!.toISOString().slice(0, 10),
+        sunset!.toISOString().slice(0, 10),
+        "sunrise and sunset should span different UTC dates",
       );
-      assert.isAbove(
-        sunset!.getTime(),
-        referenceDate.getTime(),
-        "sunset should be on the current UTC date",
-      );
+    });
 
-      const midpoint = new Date((sunrise!.getTime() + sunset!.getTime()) / 2);
-      const timeCondition = new TimeCondition(
-        1,
-        "allOf",
-        "sunrise",
-        "sunset",
-        null,
-        null,
-        null,
-        null,
-        resolver,
-      );
+    it("should resolve sunset from the local calendar date after midnight UTC", async () => {
+      const resolver = await createResolverAsync("45.5152", "-122.6784");
+      const noonReference = new Date("2026-08-08T12:00:00-07:00");
+      const utcBoundaryReference = new Date("2026-08-08T17:00:00-07:00");
 
-      assert.isTrue(timeCondition.evaluate(midpoint));
+      const sunsetAtNoon = resolver.resolveToDate("sunset", noonReference);
+      const sunsetAtUtcBoundary = resolver.resolveToDate("sunset", utcBoundaryReference);
+
+      assert.isNotNull(sunsetAtNoon);
+      assert.isNotNull(sunsetAtUtcBoundary);
+      assert.equal(sunsetAtUtcBoundary!.getTime(), sunsetAtNoon!.getTime());
+    });
+
+    it("should resolve sunrise from the local calendar date before local noon in positive-offset timezones", async () => {
+      const resolver = await createResolverAsync("35.6895", "139.6917");
+      const earlyMorningReference = new Date("2026-08-07T00:30:00+09:00");
+      const noonReference = new Date("2026-08-07T12:00:00+09:00");
+
+      const sunriseEarlyMorning = resolver.resolveToDate("sunrise", earlyMorningReference);
+      const sunriseAtNoon = resolver.resolveToDate("sunrise", noonReference);
+
+      assert.isNotNull(sunriseEarlyMorning);
+      assert.isNotNull(sunriseAtNoon);
+      assert.equal(sunriseEarlyMorning!.getTime(), sunriseAtNoon!.getTime());
+    });
+
+    it("should resolve moonrise from the local calendar date after midnight UTC", async () => {
+      const resolver = await createResolverAsync("45.5152", "-122.6784");
+      const noonReference = new Date("2026-08-08T12:00:00-07:00");
+      const utcBoundaryReference = new Date("2026-08-08T17:00:00-07:00");
+
+      const moonriseAtNoon = resolver.resolveToDate("moonrise", noonReference);
+      const moonriseAtUtcBoundary = resolver.resolveToDate("moonrise", utcBoundaryReference);
+
+      assert.isNotNull(moonriseAtNoon);
+      assert.isNotNull(moonriseAtUtcBoundary);
+      assert.equal(moonriseAtUtcBoundary!.getTime(), moonriseAtNoon!.getTime());
     });
 
     it("should keep a moonrise-to-moonset window active until the exact moonset instant", async () => {
