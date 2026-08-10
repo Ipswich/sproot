@@ -35,6 +35,7 @@ type Props = {
   value: [Date | null, Date | null] | null;
   onChange: (v: [Date | null, Date | null]) => void;
   placeholder?: string;
+  label?: string;
   valueFormat?: string;
   ignoreYear?: boolean;
   allowSingleDateInRange?: boolean;
@@ -49,6 +50,7 @@ export default function PopoverDatePickerInput({
   value,
   onChange,
   placeholder,
+  label,
   valueFormat,
   ignoreYear,
   allowSingleDateInRange,
@@ -96,11 +98,11 @@ export default function PopoverDatePickerInput({
           onChange={(nextValue) => handleChange(nextValue)}
           valueFormat={
             valueFormat ??
-            (ignoreYear ? "MMMM D h:mm A" : "MMMM D, YYYY h:mm A")
+            (ignoreYear ? "MMM D h:mm A" : "MMM D, 'YY h:mm A")
           }
           size={size}
           dropdownType="popover"
-          label={placeholder}
+          label={label}
           styles={{ input: { cursor: "pointer" } }}
           maxDate={new Date()}
           {...(placeholder ? { placeholder } : {})}
@@ -114,10 +116,10 @@ export default function PopoverDatePickerInput({
           type={dpType}
           value={displayValue}
           onChange={(nextValue) => handleChange(nextValue)}
-          valueFormat={valueFormat ?? (ignoreYear ? "MMMM D" : "MMMM D, YYYY")}
+          valueFormat={valueFormat ?? (ignoreYear ? "MMM D" : "MMM D, 'YY")}
           size={size}
           dropdownType="popover"
-          label={placeholder}
+          label={label}
           styles={{ input: { cursor: "pointer" } }}
           maxDate={new Date()}
           {...(placeholder ? { placeholder } : {})}

@@ -76,14 +76,8 @@ export default function JournalCard({ journal, tags }: JournalCardProps) {
               <Text
                 fz="sm"
                 c="dimmed"
-                style={{
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  display: "block",
-                  width: "100%",
-                  marginTop: 0,
-                }}
+                truncate="end"
+                style={{ marginTop: 0 }}
               >
                 {journal.description ?? ""}
               </Text>

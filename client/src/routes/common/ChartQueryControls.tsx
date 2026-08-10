@@ -168,6 +168,7 @@ export default function ChartQueryControls({
           clearable
           withTime
           placeholder="Select date range"
+          label="Select date range"
           value={
             customRange ? [customRange.start, customRange.end] : [null, null]
           }

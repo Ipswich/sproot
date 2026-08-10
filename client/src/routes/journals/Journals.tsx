@@ -11,8 +11,10 @@ import {
   ActionIcon,
   Paper,
   Text,
+  Collapse,
 } from "@mantine/core";
 import {
+  IconFilter,
   IconPlus,
   IconSortAscending,
   IconSortDescending,
@@ -83,6 +85,7 @@ export default function Journals() {
   }, [sortBy, sortDir]);
   const [isSorting, setIsSorting] = useState(false);
   const firstRenderRef = useRef(true);
+  const [filtersOpened, { toggle: toggleFilters }] = useDisclosure(false);
 
   useEffect(() => {
     if (firstRenderRef.current) {
@@ -340,111 +343,115 @@ export default function Journals() {
                       Filter, sort, manage tags, and create journals.
                     </Text>
                   </Box>
-                  <Group gap="sm">
-                    <Button
-                      variant="default"
-                      leftSection={<IconTags size={18} />}
-                      onClick={() => openTagsModal()}
-                    >
-                      Manage Journal Tags
-                    </Button>
-                    <Button
-                      leftSection={<IconPlus size={18} />}
-                      onClick={() => openNewJournal()}
-                    >
-                      Add Journal
-                    </Button>
-                  </Group>
+                 <Group gap="sm">
+                     <Button
+                       variant="default"
+                       leftSection={<IconTags size={18} />}
+                       onClick={() => openTagsModal()}
+                     >
+                       Manage Tags
+                     </Button>
+                     <Button
+                       leftSection={<IconPlus size={18} />}
+                       onClick={() => openNewJournal()}
+                     >
+                       Create
+                     </Button>
+                     <ActionIcon size="lg" variant="light" onClick={toggleFilters}>
+                       <IconFilter size={16} />
+                     </ActionIcon>
+                     <Menu withinPortal={false} position="bottom-end">
+                       <Menu.Target>
+                         <ActionIcon size="lg" variant="light">
+                           {sortDir === "asc" ? (
+                             <IconSortAscending size={16} />
+                           ) : (
+                             <IconSortDescending size={16} />
+                           )}
+                         </ActionIcon>
+                       </Menu.Target>
+                       <Menu.Dropdown>
+                         <Menu.Item
+                           onClick={() => {
+                             if (sortBy === "name")
+                               setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                             else {
+                               setSortBy("name");
+                               setSortDir("asc");
+                             }
+                           }}
+                         >
+                           Name{" "}
+                           {sortBy === "name"
+                             ? sortDir === "asc"
+                               ? " ↑"
+                               : " ↓"
+                             : null}
+                         </Menu.Item>
+                         <Menu.Item
+                           onClick={() => {
+                             if (sortBy === "editedAt")
+                               setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                             else {
+                               setSortBy("editedAt");
+                               setSortDir("asc");
+                             }
+                           }}
+                         >
+                           Edited{" "}
+                           {sortBy === "editedAt"
+                             ? sortDir === "asc"
+                               ? " ↑"
+                               : " ↓"
+                             : null}
+                         </Menu.Item>
+                         <Menu.Item
+                           onClick={() => {
+                             if (sortBy === "archivedAt")
+                               setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                             else {
+                               setSortBy("archivedAt");
+                               setSortDir("asc");
+                             }
+                           }}
+                         >
+                           Archived{" "}
+                           {sortBy === "archivedAt"
+                             ? sortDir === "asc"
+                               ? " ↑"
+                               : " ↓"
+                             : null}
+                         </Menu.Item>
+                       </Menu.Dropdown>
+                     </Menu>
+                   </Group>
                 </Group>
 
-                <Group justify="space-between" align="center" gap="md" wrap="wrap">
-                  <Box style={{ flex: 1, minWidth: 280 }}>
-                    <TagsPillsCombo
-                      allTags={[
-                        { id: -1, name: "Archived", color: "#868e96" },
-                        ...allTags,
-                      ]}
-                      value={filters}
-                      onChange={(newFilters) => {
-                        setFilters(newFilters);
-                        try {
-                          localStorage.setItem(
-                            journalsFiltersKey(),
-                            JSON.stringify(newFilters),
-                          );
-                        } catch (error) {
-                          console.error("Failed to save journal filters:", error);
-                        }
-                      }}
-                      placeholder="Filter by tags"
-                    />
-                  </Box>
-
-                  <Menu withinPortal={false} position="bottom-end">
-                    <Menu.Target>
-                      <ActionIcon size="lg" variant="light">
-                        {sortDir === "asc" ? (
-                          <IconSortAscending size={16} />
-                        ) : (
-                          <IconSortDescending size={16} />
-                        )}
-                      </ActionIcon>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <Menu.Item
-                        onClick={() => {
-                          if (sortBy === "name")
-                            setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                          else {
-                            setSortBy("name");
-                            setSortDir("asc");
-                          }
-                        }}
-                      >
-                        Name{" "}
-                        {sortBy === "name"
-                          ? sortDir === "asc"
-                            ? " ↑"
-                            : " ↓"
-                          : null}
-                      </Menu.Item>
-                      <Menu.Item
-                        onClick={() => {
-                          if (sortBy === "editedAt")
-                            setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                          else {
-                            setSortBy("editedAt");
-                            setSortDir("asc");
-                          }
-                        }}
-                      >
-                        Edited{" "}
-                        {sortBy === "editedAt"
-                          ? sortDir === "asc"
-                            ? " ↑"
-                            : " ↓"
-                          : null}
-                      </Menu.Item>
-                      <Menu.Item
-                        onClick={() => {
-                          if (sortBy === "archivedAt")
-                            setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                          else {
-                            setSortBy("archivedAt");
-                            setSortDir("asc");
-                          }
-                        }}
-                      >
-                        Archived{" "}
-                        {sortBy === "archivedAt"
-                          ? sortDir === "asc"
-                            ? " ↑"
-                            : " ↓"
-                          : null}
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                </Group>
+                <Collapse expanded={filtersOpened}>
+                 <Group justify="space-between" align="center" gap="md" wrap="wrap">
+                   <Box style={{ flex: 1, minWidth: 280 }}>
+                     <TagsPillsCombo
+                       allTags={[
+                         { id: -1, name: "Archived", color: "#868e96" },
+                         ...allTags,
+                       ]}
+                       value={filters}
+                       onChange={(newFilters) => {
+                         setFilters(newFilters);
+                         try {
+                           localStorage.setItem(
+                             journalsFiltersKey(),
+                             JSON.stringify(newFilters),
+                           );
+                         } catch (error) {
+                           console.error("Failed to save journal filters:", error);
+                         }
+                       }}
+                       placeholder="Filter by tags"
+                     />
+                   </Box>
+                 </Group>
+               </Collapse>
               </Stack>
             </Paper>
 

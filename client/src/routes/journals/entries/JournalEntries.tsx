@@ -16,11 +16,13 @@ import {
   LoadingOverlay,
   Switch,
   Paper,
+  Collapse,
 } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
 import EditJournalModal from "../EditJournalModal";
 import {
   IconArrowLeft,
+  IconFilter,
   IconPlus,
   IconSortAscending,
   IconSortDescending,
@@ -60,10 +62,135 @@ export default function JournalEntries() {
     { open: openEntryTagsModal, close: closeEntryTagsModal },
   ] = useDisclosure(false);
 
+  const [filtersOpened, { toggle: toggleFilters }] = useDisclosure(false);
+
+  const [filters, setFilters] = useState<string[]>([]);
+  const [dateRangeExact, setDateRangeExact] = useState<
+    [Date | null, Date | null]
+  >([null, null]);
+  const [ignoreYear, setIgnoreYear] = useState(false);
+  const [sortBy, setSortBy] = useState<string>(() => {
+    try {
+      const s = localStorage.getItem(journalEntriesSortKey());
+      if (s) {
+        const o = JSON.parse(s);
+        return o?.sortBy ?? "createdAt";
+      }
+    } catch {
+      /* ignore */
+    }
+    return "createdAt";
+  });
+  const [sortDir, setSortDir] = useState<"asc" | "desc">(() => {
+    try {
+      const s = localStorage.getItem(journalEntriesSortKey());
+      if (s) {
+        const o = JSON.parse(s);
+        return o?.sortDir ?? "desc";
+      }
+    } catch {
+      /* ignore */
+    }
+    return "desc";
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        journalEntriesSortKey(),
+        JSON.stringify({ sortBy, sortDir }),
+      );
+    } catch {
+      /* ignore */
+    }
+  }, [sortBy, sortDir]);
+
   const journalsQuery = useQuery({
     queryKey: ["journals"],
     queryFn: () => getJournalsAsync(),
   });
+
+  const journalIdParam = useParams();
+  const entriesJournalId = Number(journalIdParam['journalId'] ?? 0);
+
+  const entriesQuery = useQuery({
+    queryKey: ["journal-entries", entriesJournalId],
+    queryFn: () => getJournalEntriesAsync(entriesJournalId, false),
+  });
+
+  // build tag list from entries
+  const tagMap = new Map<
+    number,
+    { id: number; name?: string | null; color?: string | null }
+  >();
+  (entriesQuery.data ?? []).forEach((r) => {
+    (r.tags ?? []).forEach((t) => {
+      if (t && typeof t.id === "number")
+        tagMap.set(t.id, { id: t.id, name: t.name, color: t.color });
+    });
+  });
+  const allTags = Array.from(tagMap.values()).sort((a, b) =>
+    (a.name || "").localeCompare(b.name || "", undefined, {
+      sensitivity: "base",
+    }),
+  );
+
+  useEffect(() => {
+    if ((entriesQuery.data ?? []).length > 0 && filters.length === 0) {
+      const stored = localStorage.getItem(journalEntriesFiltersKey());
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as string[];
+          const allTagIds = (entriesQuery.data ?? [])
+            .flatMap((r) => r.tags ?? [])
+            .map((t) => t.id)
+            .filter((v, i, a) => a.indexOf(v) === i);
+          const allowed = new Set(allTagIds.map((id) => `tag:${id}`));
+          const sanitized = parsed.filter((f) => {
+            if (!f.startsWith("tag:")) return false;
+            return allowed.has(f);
+          });
+          if (sanitized.length !== parsed.length) {
+            try {
+              localStorage.setItem(
+                journalEntriesFiltersKey(),
+                JSON.stringify(sanitized),
+              );
+            } catch {
+              // ignore
+            }
+          }
+          setFilters(sanitized);
+        } catch {
+          setFilters([]);
+        }
+      } else {
+        setFilters([]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entriesQuery.data]);
+
+  useEffect(() => {
+    if (filters.length === 0) return;
+    const allowed = new Set(allTags.map((t) => `tag:${t.id}`));
+    const sanitized = filters.filter((f) => {
+      if (!f.startsWith("tag:")) return false;
+      return allowed.has(f);
+    });
+    if (sanitized.length !== filters.length) {
+      setFilters(sanitized);
+      try {
+        localStorage.setItem(
+          journalEntriesFiltersKey(),
+          JSON.stringify(sanitized),
+        );
+      } catch {
+        // ignore
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allTags]);
 
   const journal = (journalsQuery.data ?? []).find(
     (j) => String(j.journal.id) === String(journalId),
@@ -182,40 +309,151 @@ export default function JournalEntries() {
           <div style={{ clear: "both" }} />
         </div>
 
-        <div>
-          <Paper withBorder shadow="xs" radius="lg" p="md" mb="md">
+        <Paper withBorder shadow="xs" radius="lg" p="lg">
+          <Stack gap="md">
             <Group justify="space-between" align="center" gap="md" wrap="wrap">
               <Box>
                 <Text fw={600}>Entries</Text>
                 <Text size="sm" c="dimmed">
-                  Create new entries and manage entry tags without scrolling past the list.
+                  Add new entries to this journal and manage entry tags.
                 </Text>
               </Box>
-              <Group gap="sm">
+              <Group w={"100%"} gap="0.5rem" wrap="wrap" justify="space-between">
                 <Button
                   variant="default"
                   leftSection={<IconTags size={18} />}
                   onClick={() => openEntryTagsModal()}
                 >
-                  Manage Entry Tags
+                  Manage Tags
                 </Button>
                 <Button
                   leftSection={<IconPlus size={18} />}
                   onClick={() => openEntryModal()}
                 >
-                  Add Entry
+                  Add
                 </Button>
+                <ActionIcon size="lg" variant="light" onClick={toggleFilters}>
+                  <IconFilter size={16} />
+                </ActionIcon>
+                <Menu withinPortal={false} position="bottom-end">
+                  <Menu.Target>
+                    <ActionIcon size="lg" variant="light">
+                      {sortDir === "asc" ? (
+                        <IconSortAscending size={16} />
+                      ) : (
+                        <IconSortDescending size={16} />
+                      )}
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      onClick={() => {
+                        if (sortBy === "name")
+                          setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                        else {
+                          setSortBy("name");
+                          setSortDir("asc");
+                        }
+                      }}
+                    >
+                      Name{" "}
+                      {sortBy === "name"
+                        ? sortDir === "asc"
+                          ? " ↑"
+                          : " ↓"
+                        : null}
+                    </Menu.Item>
+                    <Menu.Item
+                      onClick={() => {
+                        if (sortBy === "createdAt")
+                          setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                        else {
+                          setSortBy("createdAt");
+                          setSortDir("desc");
+                        }
+                      }}
+                    >
+                      Created{" "}
+                      {sortBy === "createdAt"
+                        ? sortDir === "asc"
+                          ? " ↑"
+                          : " ↓"
+                        : null}
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
               </Group>
             </Group>
-          </Paper>
-          {journal ? (
-            <JournalEntriesList journalId={Number(journalId ?? 0)} />
-          ) : (
-            <Text size="sm" color="dimmed">
-              No journal selected
-            </Text>
-          )}
-        </div>
+
+            <Collapse expanded={filtersOpened}>
+              <Stack gap="sm">
+                <Group>
+                  <Box style={{ flex: 1, minWidth: 280 }}>
+                    <TagsPillsCombo
+                      allTags={[
+                        { id: -1, name: "Archived", color: "#868e96" },
+                        ...allTags,
+                      ]}
+                      value={filters}
+                      onChange={(newFilters: string[]) => {
+                        setFilters(newFilters);
+                        try {
+                          localStorage.setItem(
+                            journalEntriesFiltersKey(),
+                            JSON.stringify(newFilters),
+                          );
+                        } catch {
+                          // Ignore storage errors
+                        }
+                      }}
+                      placeholder="Filter by tags"
+                    />
+                  </Box>
+                </Group>
+                <Group>
+                  <div style={{ flex: 1 }}>
+                    <PopoverDatePickerInput
+                      size="sm"
+                      type="range"
+                      allowSingleDateInRange
+                      value={dateRangeExact}
+                      ignoreYear={ignoreYear}
+                      onChange={(v: [Date | null, Date | null]) =>
+                        setDateRangeExact(v ?? [null, null])
+                      }
+                      placeholder="Filter by date range"
+                      clearable
+                      dropdownContent={
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Switch
+                            label="Ignore Year"
+                            checked={ignoreYear}
+                            withThumbIndicator={false}
+                            onChange={(e) => setIgnoreYear(e.currentTarget.checked)}
+                            size="sm"
+                          />
+                        </div>
+                      }
+                    />
+                  </div>
+                </Group>
+              </Stack>
+            </Collapse>
+          </Stack>
+        </Paper>
+        {journal ? (
+          <JournalEntriesList journalId={entriesJournalId} filters={filters} dateRangeExact={dateRangeExact} ignoreYear={ignoreYear} sortBy={sortBy} sortDir={sortDir} />
+        ) : (
+          <Text size="sm" color="dimmed">
+            No journal selected
+          </Text>
+        )}
         <NewJournalEntryModal
           modalOpened={entryModalOpened}
           closeModal={() => closeEntryModal()}
@@ -265,131 +503,29 @@ export default function JournalEntries() {
   );
 }
 
-function JournalEntriesList({ journalId }: { journalId: number }) {
+function JournalEntriesList({
+  journalId,
+  filters,
+  dateRangeExact,
+  ignoreYear,
+  sortBy,
+  sortDir,
+}: {
+  journalId: number;
+  filters: string[];
+  dateRangeExact: [Date | null, Date | null];
+  ignoreYear: boolean;
+  sortBy: string;
+  sortDir: "asc" | "desc";
+}) {
   const navigate = useNavigate();
   const entriesQuery = useQuery({
     queryKey: ["journal-entries", journalId],
     queryFn: () => getJournalEntriesAsync(journalId, false),
   });
 
-  const [filters, setFilters] = useState<string[]>([]);
-  const [dateRangeExact, setDateRangeExact] = useState<
-    [Date | null, Date | null]
-  >([null, null]);
-  const [ignoreYear, setIgnoreYear] = useState(false);
-  const [sortBy, setSortBy] = useState<string>(() => {
-    try {
-      const s = localStorage.getItem(journalEntriesSortKey());
-      if (s) {
-        const o = JSON.parse(s);
-        return o?.sortBy ?? "createdAt";
-      }
-    } catch {
-      /* ignore */
-    }
-    return "createdAt";
-  });
-  const [sortDir, setSortDir] = useState<"asc" | "desc">(() => {
-    try {
-      const s = localStorage.getItem(journalEntriesSortKey());
-      if (s) {
-        const o = JSON.parse(s);
-        return o?.sortDir ?? "desc";
-      }
-    } catch {
-      /* ignore */
-    }
-    return "desc";
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        journalEntriesSortKey(),
-        JSON.stringify({ sortBy, sortDir }),
-      );
-    } catch {
-      /* ignore */
-    }
-  }, [sortBy, sortDir]);
   const [isSorting, setIsSorting] = useState(false);
   const firstRenderRef = useRef(true);
-
-  useEffect(() => {
-    if ((entriesQuery.data ?? []).length > 0 && filters.length === 0) {
-      const stored = localStorage.getItem(journalEntriesFiltersKey());
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored) as string[];
-          // Build allowed tag strings from current entries (only real tags)
-          const allTagIds = (entriesQuery.data ?? [])
-            .flatMap((r) => r.tags ?? [])
-            .map((t) => t.id)
-            .filter((v, i, a) => a.indexOf(v) === i);
-          const allowed = new Set(allTagIds.map((id) => `tag:${id}`));
-          const sanitized = parsed.filter((f) => {
-            if (!f.startsWith("tag:")) return false;
-            return allowed.has(f);
-          });
-          if (sanitized.length !== parsed.length) {
-            try {
-              localStorage.setItem(
-                journalEntriesFiltersKey(),
-                JSON.stringify(sanitized),
-              );
-            } catch {
-              // ignore localStorage errors
-            }
-          }
-          setFilters(sanitized);
-        } catch {
-          setFilters([]);
-        }
-      } else {
-        setFilters([]);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entriesQuery.data]);
-
-  // build tag list from entries
-  const tagMap = new Map<
-    number,
-    { id: number; name?: string | null; color?: string | null }
-  >();
-  (entriesQuery.data ?? []).forEach((r) => {
-    (r.tags ?? []).forEach((t) => {
-      if (t && typeof t.id === "number")
-        tagMap.set(t.id, { id: t.id, name: t.name, color: t.color });
-    });
-  });
-  const allTags = Array.from(tagMap.values()).sort((a, b) =>
-    (a.name || "").localeCompare(b.name || "", undefined, {
-      sensitivity: "base",
-    }),
-  );
-
-  // Keep filters in sync when tags are removed elsewhere (e.g. deleted)
-  useEffect(() => {
-    if (filters.length === 0) return;
-    const allowed = new Set(allTags.map((t) => `tag:${t.id}`));
-    const sanitized = filters.filter((f) => {
-      if (!f.startsWith("tag:")) return false;
-      return allowed.has(f);
-    });
-    if (sanitized.length !== filters.length) {
-      setFilters(sanitized);
-      try {
-        localStorage.setItem(
-          journalEntriesFiltersKey(),
-          JSON.stringify(sanitized),
-        );
-      } catch {
-        // ignore
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allTags]);
 
   const selectedTagIds = filters
     .filter((f) => f.startsWith("tag:"))
@@ -590,169 +726,38 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
         />
       </Box>
     );
-  // show filter/sort bar even when there are no entries; display
-  // a centered empty-state message below the controls instead of
-  // returning early.
 
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 12,
-          marginBottom: 12,
-        }}
-      >
-        <div style={{ flex: 1 }}>
-          <Stack>
-            <Group>
-              <div style={{ flex: 1 }}>
-                <TagsPillsCombo
-                  allTags={[...allTags]}
-                  value={filters}
-                  onChange={(newFilters: string[]) => {
-                    setFilters(newFilters);
-                    try {
-                      localStorage.setItem(
-                        journalEntriesFiltersKey(),
-                        JSON.stringify(newFilters),
-                      );
-                    } catch {
-                      // Ignore storage errors (e.g., disabled storage, quota exceeded)
-                    }
-                  }}
-                  placeholder="Filter by tags"
-                />
-              </div>
-              <Menu withinPortal={false} position="bottom-end">
-                <Menu.Target>
-                  <ActionIcon size="lg">
-                    {sortDir === "asc" ? (
-                      <IconSortAscending size={16} />
-                    ) : (
-                      <IconSortDescending size={16} />
-                    )}
-                  </ActionIcon>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Item
-                    onClick={() => {
-                      if (sortBy === "name")
-                        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                      else {
-                        setSortBy("name");
-                        setSortDir("asc");
-                      }
-                    }}
-                  >
-                    Name{" "}
-                    {sortBy === "name"
-                      ? sortDir === "asc"
-                        ? " ↑"
-                        : " ↓"
-                      : null}
-                  </Menu.Item>
-                  <Menu.Item
-                    onClick={() => {
-                      if (sortBy === "createdAt")
-                        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                      else {
-                        setSortBy("createdAt");
-                        setSortDir("desc");
-                      }
-                    }}
-                  >
-                    Created{" "}
-                    {sortBy === "createdAt"
-                      ? sortDir === "asc"
-                        ? " ↑"
-                        : " ↓"
-                      : null}
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            </Group>
+    <ScrollArea.Autosize
+      mah="calc(80vh - 176px)"
+      style={{ width: "100%" }}
+      scrollbarSize={8}
+      offsetScrollbars
+    >
+      <div style={{ width: "100%", paddingRight: 12, paddingLeft: 12 }}>
+        {visibleRows.map((r, idx) => {
+          const delay = idx * staggerMs;
+          const isHidden = r.leaving || r.appearing || isSorting;
+          const cardStyle = {
+            transition: `transform 300ms cubic-bezier(.2,.8,.2,1) ${delay}ms, opacity 300ms ease ${delay}ms`,
+            opacity: isHidden ? 0 : 1,
+            transform: isHidden ? "translateY(-8px)" : "translateY(0)",
+          } as React.CSSProperties;
 
-            <Group>
-              <div style={{ flex: 1 }}>
-                <PopoverDatePickerInput
-                  size="sm"
-                  type="range"
-                  allowSingleDateInRange
-                  value={dateRangeExact}
-                  ignoreYear={ignoreYear}
-                  onChange={(v: [Date | null, Date | null]) =>
-                    setDateRangeExact(v ?? [null, null])
-                  }
-                  placeholder="Filter by date range"
-                  clearable
-                  dropdownContent={
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Switch
-                        label="Ignore Year"
-                        checked={ignoreYear}
-                        withThumbIndicator={false}
-                        onChange={(e) => setIgnoreYear(e.currentTarget.checked)}
-                        size="sm"
-                      />
-                    </div>
-                  }
-                />
-              </div>
-            </Group>
-          </Stack>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}></div>
+          return (
+            <div key={r.key} style={{ ...cardStyle, marginBottom: 12 }}>
+              <JournalEntryCard
+                key={String(r.entry.id)}
+                entry={r.entry}
+                tags={r.tags ?? []}
+                onClick={() =>
+                  navigate(`/journals/${journalId}/entries/${r.entry.id}`)
+                }
+              />
+            </div>
+          );
+        })}
       </div>
-
-      <ScrollArea.Autosize
-        mah="calc(80vh - 176px)"
-        style={{ width: "100%" }}
-        scrollbarSize={8}
-        offsetScrollbars
-      >
-        <div style={{ width: "100%", paddingRight: 12, paddingLeft: 12 }}>
-          {visibleRows.map((r, idx) => {
-            const delay = idx * staggerMs;
-            const isHidden = r.leaving || r.appearing || isSorting;
-            const cardStyle = {
-              transition: `transform 300ms cubic-bezier(.2,.8,.2,1) ${delay}ms, opacity 300ms ease ${delay}ms`,
-              opacity: isHidden ? 0 : 1,
-              transform: isHidden ? "translateY(-8px)" : "translateY(0)",
-            } as React.CSSProperties;
-
-            return (
-              <div key={r.key} style={{ ...cardStyle, marginBottom: 12 }}>
-                <JournalEntryCard
-                  key={String(r.entry.id)}
-                  entry={r.entry}
-                  tags={r.tags ?? []}
-                  onClick={() =>
-                    navigate(`/journals/${journalId}/entries/${r.entry.id}`)
-                  }
-                />
-              </div>
-            );
-          })}
-        </div>
-      </ScrollArea.Autosize>
-      {visibleRows.length === 0 && (
-        <div
-          style={{ display: "flex", justifyContent: "center", marginTop: 12 }}
-        >
-          <Text size="sm" color="dimmed">
-            No entries yet
-          </Text>
-        </div>
-      )}
-    </div>
+    </ScrollArea.Autosize>
   );
 }
