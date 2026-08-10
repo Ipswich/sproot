@@ -8,6 +8,7 @@ import { SETTINGS } from "../../database/settings/SettingsSchema";
 
 const TIME_REGEX = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
 const SEARCH_DAY_OFFSETS = [0, -1, -2, -3, -4, -5, -6, -7];
+const SEARCH_FORWARD_DAY_OFFSETS = [0, 1, 2, 3, 4, 5, 6, 7];
 
 type Coordinates = {
   latitude: number;
@@ -45,12 +46,36 @@ export class TimeExpressionResolver {
     this.#unsubscribeLongitude = () => {};
 
     if (eventBus != null) {
-      this.#unsubscribeLatitude = eventBus.subscribe(Events.SYSTEM_LATITUDE_UPDATED, () => {
-        void this.refreshCoordinatesAsync();
+      this.#unsubscribeLatitude = eventBus.subscribe(Events.SYSTEM_LATITUDE_UPDATED, (event) => {
+        this.#handleCoordinateUpdate("latitude", event.payload.value);
       });
-      this.#unsubscribeLongitude = eventBus.subscribe(Events.SYSTEM_LONGITUDE_UPDATED, () => {
-        void this.refreshCoordinatesAsync();
+      this.#unsubscribeLongitude = eventBus.subscribe(Events.SYSTEM_LONGITUDE_UPDATED, (event) => {
+        this.#handleCoordinateUpdate("longitude", event.payload.value);
       });
+    }
+  }
+
+  #handleCoordinateUpdate(coordinate: "latitude" | "longitude", value: string | null): void {
+    const parsed = parseCoordinate(
+      value,
+      coordinate === "latitude" ? -90 : -180,
+      coordinate === "latitude" ? 90 : 180,
+    );
+
+    if (parsed == null) {
+      this.#coordinates = null;
+      return;
+    }
+
+    if (this.#coordinates == null) {
+      void this.refreshCoordinatesAsync();
+      return;
+    }
+
+    if (coordinate === "latitude") {
+      this.#coordinates = { ...this.#coordinates, latitude: parsed };
+    } else {
+      this.#coordinates = { ...this.#coordinates, longitude: parsed };
     }
   }
 
@@ -125,6 +150,40 @@ export class TimeExpressionResolver {
     return null;
   }
 
+  resolveNextOccurrence(expression: string | null | undefined, after: Date): Date | null {
+    if (expression == null) {
+      return null;
+    }
+
+    if (TIME_REGEX.test(expression)) {
+      const candidate = resolveClockTime(expression, after);
+      if (candidate == null) {
+        return null;
+      }
+
+      if (candidate.getTime() <= after.getTime()) {
+        candidate.setDate(candidate.getDate() + 1);
+      }
+
+      return candidate;
+    }
+
+    if (!isDynamicTimePoint(expression) || this.#coordinates == null) {
+      return null;
+    }
+
+    for (const dayOffset of SEARCH_FORWARD_DAY_OFFSETS) {
+      const candidateDate = new Date(after);
+      candidateDate.setDate(candidateDate.getDate() + dayOffset);
+      const candidate = resolveDynamicTimePoint(expression, candidateDate, this.#coordinates);
+      if (candidate != null && candidate.getTime() > after.getTime()) {
+        return candidate;
+      }
+    }
+
+    return null;
+  }
+
   [Symbol.dispose](): void {
     this.#unsubscribeLatitude();
     this.#unsubscribeLongitude();
@@ -147,9 +206,11 @@ function resolveDynamicTimePoint(
   referenceDate: Date,
   coordinates: Coordinates,
 ): Date | null {
+  const astronomicalReferenceDate = resolveAstronomicalReferenceDate(referenceDate);
+
   if (expression === "moonrise" || expression === "moonset") {
     const moonTimes = SunCalc.getMoonTimes(
-      referenceDate,
+      astronomicalReferenceDate,
       coordinates.latitude,
       coordinates.longitude,
     ) as { rise?: Date; set?: Date; alwaysUp?: boolean; alwaysDown?: boolean };
@@ -162,12 +223,29 @@ function resolveDynamicTimePoint(
   }
 
   const solarTimes = SunCalc.getTimes(
-    referenceDate,
+    astronomicalReferenceDate,
     coordinates.latitude,
     coordinates.longitude,
   ) as Record<string, Date | undefined>;
 
   return solarTimes[expression] ?? null;
+}
+
+function resolveAstronomicalReferenceDate(referenceDate: Date): Date {
+  // SunCalc resolves events from the UTC date portion of the input Date.
+  // Anchor to a UTC-stable instant derived from the local calendar date so
+  // dynamic events follow the same local-day semantics as resolveClockTime().
+  return new Date(
+    Date.UTC(
+      referenceDate.getFullYear(),
+      referenceDate.getMonth(),
+      referenceDate.getDate(),
+      12,
+      0,
+      0,
+      0,
+    ),
+  );
 }
 
 function parseCoordinate(

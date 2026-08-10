@@ -2,6 +2,7 @@ import {
   Alert,
   Button,
   Collapse,
+  Divider,
   Group,
   NumberInput,
   Select,
@@ -292,6 +293,9 @@ export default function TimeCondition({
               }}
               timeSuffixes={solarLunarTimes}
             />
+            <Space h="12px" />
+            <Divider variant="dashed" />
+            <Space h="12px" />
             <TimeExpressionField
               label="End time"
               required
@@ -504,7 +508,7 @@ function TimeExpressionField({
   }, []);
 
   return (
-    <Stack gap="xs">
+    <Stack gap="2px">
       <SegmentedControl
         fullWidth
         value={mode}
