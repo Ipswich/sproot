@@ -1,7 +1,8 @@
 import { Fragment, useState } from "react";
-import { Button, Stack, Switch, rem } from "@mantine/core";
+import { Box, Button, Group, Paper, Stack, Switch, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { IconPlus } from "@tabler/icons-react";
 
 import {
   getAutomationsAsync,
@@ -50,7 +51,7 @@ export default function Automations() {
 
   return (
     <Fragment>
-      <Stack h="600" justify="center" align="center">
+      <Stack gap="lg">
         <EditAutomationModal
           modalOpened={viewAutomationModalOpened}
           closeModal={viewAutomationModalClose}
@@ -64,10 +65,29 @@ export default function Automations() {
           editAutomation={editAutomation}
           setTargetAutomation={setEditAutomation}
         />
+        <Paper withBorder shadow="xs" radius="lg" p="lg">
+          <Group justify="space-between" align="center" gap="md" wrap="wrap">
+            <Box>
+              <Text fw={600}>Automation Library</Text>
+              <Text size="sm" c="dimmed">
+                Review automations, toggle them live, and add new conditions and actions.
+              </Text>
+            </Box>
+            <Button
+              leftSection={<IconPlus size={18} />}
+              onClick={() => {
+                setEditAutomation(null);
+                editAutomationModal();
+              }}
+            >
+              Add Automation
+            </Button>
+          </Group>
+        </Paper>
         {getAutomationsQuery.isLoading ? (
           <div>Loading...</div>
         ) : (
-          <Fragment>
+          <Paper withBorder shadow="xs" radius="lg" p="md">
             <EditablesTable
               editables={getAutomationsQuery.data ?? []}
               onEditClick={(item) => {
@@ -85,6 +105,7 @@ export default function Automations() {
                   return (
                     <Switch
                       checked={automation.enabled}
+                      withThumbIndicator={false}
                       onChange={(
                         event: React.ChangeEvent<HTMLInputElement>,
                       ) => {
@@ -98,17 +119,7 @@ export default function Automations() {
                 },
               }}
             />
-            <Button
-              size="xl"
-              w={rem(300)}
-              onClick={() => {
-                setEditAutomation(null);
-                editAutomationModal();
-              }}
-            >
-              Add New
-            </Button>
-          </Fragment>
+          </Paper>
         )}
       </Stack>
     </Fragment>

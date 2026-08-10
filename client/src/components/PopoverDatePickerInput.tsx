@@ -5,6 +5,32 @@ import {
 } from "@mantine/dates";
 import { useEffect, useRef, useState } from "react";
 
+function normalizeDateValue(value: Date | string | null | undefined) {
+  if (value == null || value === "") {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  const normalized = new Date(value);
+  return Number.isNaN(normalized.getTime()) ? null : normalized;
+}
+
+function normalizeRangeValue(
+  value:
+    | [Date | string | null, Date | string | null]
+    | null
+    | undefined,
+): [Date | null, Date | null] {
+  if (!value) {
+    return [null, null];
+  }
+
+  return [normalizeDateValue(value[0]), normalizeDateValue(value[1])];
+}
+
 type Props = {
   value: [Date | null, Date | null] | null;
   onChange: (v: [Date | null, Date | null]) => void;
@@ -14,7 +40,7 @@ type Props = {
   allowSingleDateInRange?: boolean;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   clearable?: boolean;
-  type?: "default" | "multiple" | "range";
+  type?: "range";
   dropdownContent?: React.ReactNode;
   withTime?: boolean;
 };
@@ -31,23 +57,35 @@ export default function PopoverDatePickerInput({
   type = "range",
   withTime,
 }: Props) {
-  const dpType: NonNullable<DatePickerInputProps["type"]> = type ?? "range";
+  const dpType: Extract<DatePickerInputProps["type"], "range"> =
+    type ?? "range";
   const [internalValue, setInternalValue] = useState<
     [Date | null, Date | null]
-  >([null, null]);
+  >(normalizeRangeValue(value));
   const hasClearedRef = useRef(false);
 
   useEffect(() => {
     if (value === null && hasClearedRef.current) {
       setInternalValue([null, null]);
+      return;
     }
+
+    setInternalValue(normalizeRangeValue(value));
     hasClearedRef.current = value === null;
   }, [value]);
 
   const displayValue: [Date | null, Date | null] =
     internalValue[0] !== null && internalValue[1] === null
       ? internalValue
-      : (value ?? [null, null]);
+      : normalizeRangeValue(value);
+
+  const handleChange = (
+    nextValue: [Date | string | null, Date | string | null],
+  ) => {
+    const normalizedValue = normalizeRangeValue(nextValue);
+    setInternalValue(normalizedValue);
+    onChange(normalizedValue);
+  };
 
   return (
     <>
@@ -55,10 +93,7 @@ export default function PopoverDatePickerInput({
         <DateTimePicker
           type={dpType}
           value={displayValue}
-          onChange={(nextValue) => {
-            setInternalValue(nextValue as [Date | null, Date | null]);
-            onChange(nextValue as [Date | null, Date | null]);
-          }}
+          onChange={(nextValue) => handleChange(nextValue)}
           valueFormat={
             valueFormat ??
             (ignoreYear ? "MMMM D h:mm A" : "MMMM D, YYYY h:mm A")
@@ -78,10 +113,7 @@ export default function PopoverDatePickerInput({
         <DatePickerInput
           type={dpType}
           value={displayValue}
-          onChange={(nextValue) => {
-            setInternalValue(nextValue as [Date | null, Date | null]);
-            onChange(nextValue as [Date | null, Date | null]);
-          }}
+          onChange={(nextValue) => handleChange(nextValue)}
           valueFormat={valueFormat ?? (ignoreYear ? "MMMM D" : "MMMM D, YYYY")}
           size={size}
           dropdownType="popover"

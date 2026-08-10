@@ -77,6 +77,7 @@ export default function SensorData() {
                 size="md"
                 offLabel={Units[readingTypeString as ReadingType]}
                 onLabel="°F"
+                withThumbIndicator={false}
                 checked={useAlternateUnits}
                 onChange={(event) => {
                   localStorage.setItem(

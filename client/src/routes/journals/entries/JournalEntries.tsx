@@ -13,16 +13,18 @@ import {
   Menu,
   ScrollArea,
   Box,
-  rem,
   LoadingOverlay,
   Switch,
+  Paper,
 } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
 import EditJournalModal from "../EditJournalModal";
 import {
   IconArrowLeft,
+  IconPlus,
   IconSortAscending,
   IconSortDescending,
+  IconTags,
 } from "@tabler/icons-react";
 import { getIcon } from "../utils/getIcon";
 import { readableTextColor } from "../utils/readableTextColor";
@@ -181,6 +183,31 @@ export default function JournalEntries() {
         </div>
 
         <div>
+          <Paper withBorder shadow="xs" radius="lg" p="md" mb="md">
+            <Group justify="space-between" align="center" gap="md" wrap="wrap">
+              <Box>
+                <Text fw={600}>Entries</Text>
+                <Text size="sm" c="dimmed">
+                  Create new entries and manage entry tags without scrolling past the list.
+                </Text>
+              </Box>
+              <Group gap="sm">
+                <Button
+                  variant="default"
+                  leftSection={<IconTags size={18} />}
+                  onClick={() => openEntryTagsModal()}
+                >
+                  Manage Entry Tags
+                </Button>
+                <Button
+                  leftSection={<IconPlus size={18} />}
+                  onClick={() => openEntryModal()}
+                >
+                  Add Entry
+                </Button>
+              </Group>
+            </Group>
+          </Paper>
           {journal ? (
             <JournalEntriesList journalId={Number(journalId ?? 0)} />
           ) : (
@@ -189,16 +216,6 @@ export default function JournalEntries() {
             </Text>
           )}
         </div>
-        <Group justify="center" mt="md">
-          <Button size="xl" w={rem(300)} onClick={() => openEntryModal()}>
-            Add New
-          </Button>
-        </Group>
-        <Group justify="center" mt="sm">
-          <Button size="sm" w={rem(200)} onClick={() => openEntryTagsModal()}>
-            Manage Entry Tags
-          </Button>
-        </Group>
         <NewJournalEntryModal
           modalOpened={entryModalOpened}
           closeModal={() => closeEntryModal()}
@@ -682,6 +699,7 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
                       <Switch
                         label="Ignore Year"
                         checked={ignoreYear}
+                        withThumbIndicator={false}
                         onChange={(e) => setIgnoreYear(e.currentTarget.checked)}
                         size="sm"
                       />

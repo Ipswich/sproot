@@ -44,10 +44,11 @@ export default function SortableTableRow({
         <IconGripVertical color={"lightgray"} />
       </Table.Td>
       <Table.Td style={{ verticalAlign: "middle" }}>
-        <Flex style={{ alignContent: "center" }}>
+        <Flex justify="center" align="center">
           <Switch
             checked={!sensorToggleStates.includes(sensor.name)}
             color={sensor.color}
+            withThumbIndicator={false}
             onChange={() => {
               startTransition(() => {
                 if (sensorToggleStates.includes(sensor.name)) {
@@ -68,8 +69,10 @@ export default function SortableTableRow({
           />
         </Flex>
       </Table.Td>
-      <Table.Td>{sensor.name}</Table.Td>
-      <Table.Td>
+      <Table.Td style={{ whiteSpace: "normal", overflowWrap: "anywhere" }}>
+        {sensor.name}
+      </Table.Td>
+      <Table.Td style={{ whiteSpace: "nowrap", textAlign: "center" }}>
         {useAlternateUnits && readingType == ReadingType.temperature
           ? `${convertCelsiusToFahrenheit(sensor.lastReading[readingType])} °F`
           : `${sensor.lastReading[readingType]} ${sensor.units[readingType]}`}

@@ -3,13 +3,14 @@ import {
   getOutputsAsync,
   getSupportedOutputModelsAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
-import { Button, Stack, rem } from "@mantine/core";
+import { Box, Button, Group, Paper, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import EditTable from "@sproot/sproot-client/src/routes/settings/outputs/EditTable";
 import NewOutputModal from "@sproot/sproot-client/src/routes/settings/outputs/NewOutputModal";
 import { useQuery } from "@tanstack/react-query";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { Models } from "@sproot/outputs/Models";
+import { IconMapPin, IconPlus } from "@tabler/icons-react";
 import DeviceZonesModal from "../shared/DeviceZonesModal";
 
 export interface OutputFormValues {
@@ -73,7 +74,7 @@ export default function OutputSettings() {
 
   return (
     <Fragment>
-      <Stack h="600" justify="center" align="center">
+      <Stack gap="lg">
         <DeviceZonesModal
           modalOpened={deviceZonesModalOpened}
           closeModal={deviceZonesModalClose}
@@ -84,17 +85,38 @@ export default function OutputSettings() {
           closeModal={newOutputModalClose}
           setIsStale={setIsStale}
         />
-        <EditTable
-          outputs={outputs}
-          supportedModels={supportedModels}
-          setIsStale={setIsStale}
-        />
-        <Button size="xl" w={rem(300)} onClick={newOutputModalOpen}>
-          Add New
-        </Button>
-        <Button size="sm" w={rem(200)} onClick={deviceZonesModalOpen}>
-          Manage Device Zones
-        </Button>
+        <Paper withBorder shadow="xs" radius="lg" p="lg">
+          <Group justify="space-between" align="center" gap="md" wrap="wrap">
+            <Box>
+              <Text fw={600}>Output Configuration</Text>
+              <Text size="sm" c="dimmed">
+                Manage your output hardware configuration and zone organization.
+              </Text>
+            </Box>
+            <Group gap="sm">
+              <Button
+                variant="default"
+                leftSection={<IconMapPin size={18} />}
+                onClick={deviceZonesModalOpen}
+              >
+                Manage Device Zones
+              </Button>
+              <Button
+                leftSection={<IconPlus size={18} />}
+                onClick={newOutputModalOpen}
+              >
+                Add Output
+              </Button>
+            </Group>
+          </Group>
+        </Paper>
+        <Paper withBorder shadow="xs" radius="lg" p="md">
+          <EditTable
+            outputs={outputs}
+            supportedModels={supportedModels}
+            setIsStale={setIsStale}
+          />
+        </Paper>
       </Stack>
     </Fragment>
   );

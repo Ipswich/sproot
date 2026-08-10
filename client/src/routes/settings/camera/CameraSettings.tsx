@@ -158,6 +158,7 @@ export default function CameraSettings() {
             <Switch
               label="Enable Camera"
               type="checkbox"
+              withThumbIndicator={false}
               {...newCameraForm.getInputProps("enabled", {
                 type: "checkbox",
               })}
@@ -171,6 +172,7 @@ export default function CameraSettings() {
               disabled={!newCameraForm.values.enabled}
               label="Timelapse"
               type="checkbox"
+              withThumbIndicator={false}
               {...newCameraForm.getInputProps("timelapseEnabled", {
                 type: "checkbox",
               })}

@@ -78,17 +78,23 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
             <Stack gap="sm">
               <Group justify="space-between" h="80">
                 <SegmentedControl
-                  w={"96px"}
+                  miw={rem(140)}
                   styles={
                     controlMode === ControlMode.manual
                       ? {
                           root: {
                             outline: "1px solid var(--mantine-color-blue-3)",
                           },
+                          label: {
+                            whiteSpace: "nowrap",
+                          },
                         }
                       : {
                           root: {
                             outline: "1px solid var(--mantine-color-teal-3)",
+                          },
+                          label: {
+                            whiteSpace: "nowrap",
                           },
                         }
                   }
@@ -149,6 +155,7 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                           size="xl"
                           onLabel="On"
                           offLabel="Off"
+                          withThumbIndicator={false}
                           disabled={controlMode !== ControlMode.manual}
                           checked={manualValue === 100}
                           onChange={async (event) => {

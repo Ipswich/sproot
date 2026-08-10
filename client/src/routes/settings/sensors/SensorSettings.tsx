@@ -4,11 +4,12 @@ import {
   getSupportedSensorModelsAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
-import { Button, Stack, rem } from "@mantine/core";
+import { Box, Button, Group, Paper, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import EditTable from "@sproot/sproot-client/src/routes/settings/sensors/EditTable";
 import NewSensorModal from "@sproot/sproot-client/src/routes/settings/sensors/NewSensorModal";
 import { useQuery } from "@tanstack/react-query";
+import { IconMapPin, IconPlus } from "@tabler/icons-react";
 import DeviceZonesModal from "../shared/DeviceZonesModal";
 
 export default function SensorSettings() {
@@ -55,7 +56,7 @@ export default function SensorSettings() {
 
   return (
     <Fragment>
-      <Stack h="600" justify="center" align="center">
+      <Stack gap="lg">
         <DeviceZonesModal
           modalOpened={deviceZonesModalOpened}
           closeModal={deviceZonesModalClose}
@@ -66,17 +67,38 @@ export default function SensorSettings() {
           closeModal={newSensorModalClose}
           setIsStale={setIsStale}
         />
-        <EditTable
-          sensors={sensors}
-          supportedModels={supportedModels}
-          setIsStale={setIsStale}
-        />
-        <Button size="xl" w={rem(300)} onClick={newSensorModalOpen}>
-          Add New
-        </Button>
-        <Button size="sm" w={rem(200)} onClick={deviceZonesModalOpen}>
-          Manage Device Zones
-        </Button>
+        <Paper withBorder shadow="xs" radius="lg" p="lg">
+          <Group justify="space-between" align="center" gap="md" wrap="wrap">
+            <Box>
+              <Text fw={600}>Sensor Configuration</Text>
+              <Text size="sm" c="dimmed">
+                Manage your sensor hardware configuration and zone organization.
+              </Text>
+            </Box>
+            <Group gap="sm">
+              <Button
+                variant="default"
+                leftSection={<IconMapPin size={18} />}
+                onClick={deviceZonesModalOpen}
+              >
+                Manage Device Zones
+              </Button>
+              <Button
+                leftSection={<IconPlus size={18} />}
+                onClick={newSensorModalOpen}
+              >
+                Add Sensor
+              </Button>
+            </Group>
+          </Group>
+        </Paper>
+        <Paper withBorder shadow="xs" radius="lg" p="md">
+          <EditTable
+            sensors={sensors}
+            supportedModels={supportedModels}
+            setIsStale={setIsStale}
+          />
+        </Paper>
       </Stack>
     </Fragment>
   );
