@@ -9,6 +9,8 @@ export class SettingsService {
     "sensors.data_retention": Events.SENSOR_RETENTION_UPDATED,
     "outputs.data_retention": Events.OUTPUT_RETENTION_UPDATED,
     "system.backup_retention": Events.BACKUP_RETENTION_UPDATED,
+    "system.latitude": Events.SYSTEM_LATITUDE_UPDATED,
+    "system.longitude": Events.SYSTEM_LONGITUDE_UPDATED,
   };
 
   readonly #settingsRepo: ISettingsRepository;
@@ -39,7 +41,7 @@ export class SettingsService {
     if (eventType) {
       await this.#eventBus.publishAsync({
         type: eventType,
-        payload: { key: key as string, value: value as string },
+        payload: { key: key as string, value: value ?? null },
         eventId: crypto.randomUUID(),
         occurredAt: new Date(),
       } as AnySprootEvent);

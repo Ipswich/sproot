@@ -5,7 +5,7 @@
  */
 export interface SettingDefault {
   key: string;
-  value: string;
+  value: string | null;
 }
 
 export const DEFAULTS: SettingDefault[] = [
@@ -20,5 +20,13 @@ export const DEFAULTS: SettingDefault[] = [
   {
     key: "system.backup_retention",
     value: "30 days",
+  },
+  {
+    key: "system.latitude",
+    value: null,
+  },
+  {
+    key: "system.longitude",
+    value: null,
   },
 ];

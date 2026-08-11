@@ -8,6 +8,7 @@ import {
   deleteMonthConditionAsync,
   deleteDateRangeConditionAsync,
   getConditionsAsync,
+  getApplicationSettingsAsync,
 } from "../../../requests/requests_v2";
 import {
   Button,
@@ -28,6 +29,7 @@ import { ConditionOperator } from "@sproot/automation/ConditionTypes";
 import { ReadingType, Units } from "@sproot/common/sensors/ReadingType";
 import { ReactNode, useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
+import type { SolarLunarTimesMap } from "./ConditionTypes/useSolarLunarTimes";
 import DeletablesTable from "../../common/DeletablesTable";
 import NewConditionWidget from "./NewConditionWidget";
 import { convertCelsiusToFahrenheit } from "@sproot/common/utility/DisplayFormats";
@@ -35,6 +37,8 @@ import {
   formatMilitaryTime,
   formatDateTime,
 } from "@sproot/common/utility/TimeMethods";
+import { getDynamicTimePointLabel } from "@sproot/common/automation/TimeConditionTimePoints";
+import { useSolarLunarTimes } from "./ConditionTypes/useSolarLunarTimes";
 
 export interface ConditionsTableProps {
   automationId: number;
@@ -47,6 +51,14 @@ export default function ConditionsTable({
 }: ConditionsTableProps) {
   const [addNewConditionOpened, { toggle: toggleAddNewCondition }] =
     useDisclosure(false);
+  const settingsQuery = useQuery({
+    queryKey: ["applicationSettings"],
+    queryFn: () => getApplicationSettingsAsync(),
+  });
+  const solarLunarTimes = useSolarLunarTimes(
+    settingsQuery.data?.["system.latitude"] ?? null,
+    settingsQuery.data?.["system.longitude"] ?? null,
+  );
   const conditionsQueryFn = useQuery({
     queryKey: ["conditions", automationId],
     queryFn: async () => {
@@ -179,7 +191,7 @@ export default function ConditionsTable({
                   .sort((a, b) => sortTypes(a, b))
                   .map((condition) => {
                     return {
-                      displayLabel: mapToType(condition),
+                      displayLabel: mapToType(condition, solarLunarTimes),
                       id: condition.id,
                       deleteFn: mapToDeleteConditionMutationAsync(condition),
                     };
@@ -196,7 +208,7 @@ export default function ConditionsTable({
                   .sort((a, b) => sortTypes(a, b))
                   .map((condition) => {
                     return {
-                      displayLabel: mapToType(condition),
+                      displayLabel: mapToType(condition, solarLunarTimes),
                       id: condition.id,
                       deleteFn: mapToDeleteConditionMutationAsync(condition),
                     };
@@ -213,7 +225,7 @@ export default function ConditionsTable({
                   .sort((a, b) => sortTypes(a, b))
                   .map((condition) => {
                     return {
-                      displayLabel: mapToType(condition),
+                      displayLabel: mapToType(condition, solarLunarTimes),
                       id: condition.id,
                       deleteFn: mapToDeleteConditionMutationAsync(condition),
                     };
@@ -330,13 +342,19 @@ function mapToType(
     | SDBWeekdayCondition
     | SDBMonthCondition
     | SDBDateRangeCondition,
+  solarLunarTimes: SolarLunarTimesMap | null,
 ): ReactNode {
   if ("sensorId" in condition && "readingType" in condition) {
     return <SensorConditionRow {...(condition as SDBSensorCondition)} />;
   } else if ("outputId" in condition) {
     return <OutputConditionRow {...(condition as SDBOutputCondition)} />;
   } else if ("startTime" in condition && "endTime" in condition) {
-    return <TimeConditionRow {...(condition as SDBTimeCondition)} />;
+    return (
+      <TimeConditionRow
+        solarLunarTimes={solarLunarTimes}
+        {...(condition as SDBTimeCondition)}
+      />
+    );
   } else if ("weekdays" in condition) {
     return <WeekdayConditionRow {...(condition as SDBWeekdayCondition)} />;
   } else if ("months" in condition) {
@@ -350,6 +368,152 @@ function mapToType(
     return <DateRangeConditionRow {...(condition as SDBDateRangeCondition)} />;
   }
   return <></>;
+}
+
+function TimeConditionRow({
+  solarLunarTimes,
+  ...timeCondition
+}: SDBTimeCondition & {
+  solarLunarTimes: SolarLunarTimesMap | null;
+}): ReactNode {
+  const labelStart = formatTimeLabel(timeCondition.startTime);
+  const labelEnd = formatTimeLabel(timeCondition.endTime);
+  const timeStart = formatTimeDisplay(timeCondition.startTime, solarLunarTimes);
+  const timeEnd = formatTimeDisplay(timeCondition.endTime, solarLunarTimes);
+
+  const windowSummary =
+    !labelStart && !labelEnd
+      ? "Always"
+      : labelStart && !labelEnd
+        ? `At ${labelStart}`
+        : `Between ${labelStart} and ${labelEnd}`;
+
+  const timeSummary =
+    timeStart && timeEnd
+      ? `${timeStart} and ${timeEnd}`
+      : (timeStart ?? timeEnd ?? null);
+
+  const repeatSummary = formatRepeatSummary(timeCondition, solarLunarTimes);
+
+  return (
+    <Group gap={0}>
+      <div>
+        <Text ta="left">{windowSummary}</Text>
+        {timeSummary && (
+          <Text ta="left" size="sm" c="dimmed">
+            ↳ {timeSummary}
+          </Text>
+        )}
+        {repeatSummary && (
+          <Text ta="left" size="sm" c="dimmed">
+            ↳ {repeatSummary}
+          </Text>
+        )}
+      </div>
+    </Group>
+  );
+}
+
+function formatTimeLabel(value: string | null): string | undefined {
+  const dynamicLabel = getDynamicTimePointLabel(value);
+  if (dynamicLabel) {
+    return dynamicLabel;
+  }
+  return formatMilitaryTime(value);
+}
+
+function formatTimeDisplay(
+  value: string | null,
+  solarLunarTimes: SolarLunarTimesMap | null,
+): string | null {
+  const dynamicLabel = getDynamicTimePointLabel(value);
+  if (dynamicLabel && solarLunarTimes) {
+    const time = solarLunarTimes[value as keyof SolarLunarTimesMap] as
+      Date | null | undefined;
+    if (time) {
+      return formatTime(time);
+    }
+  }
+  return null;
+}
+
+function formatTime(date: Date): string {
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+  return formatMilitaryTime(`${hh}:${mm}`) ?? "";
+}
+
+function formatRepeatSummary(
+  timeCondition: SDBTimeCondition,
+  solarLunarTimes: SolarLunarTimesMap | null,
+): ReactNode {
+  if (
+    timeCondition.repeatInterval == null ||
+    timeCondition.repeatDuration == null
+  ) {
+    return null;
+  }
+
+  const anchorSummary = formatAnchorSummary(timeCondition, solarLunarTimes);
+
+  return (
+    <>
+      {`Every ${timeCondition.repeatInterval} min • Active first ${timeCondition.repeatDuration} min${timeCondition.repeatDuration === 1 ? "" : "s"}`}
+      {anchorSummary && (
+        <Text ta="left" size="sm" c="dimmed">
+          ↳ {anchorSummary}
+        </Text>
+      )}
+    </>
+  );
+}
+
+function formatAnchorSummary(
+  timeCondition: SDBTimeCondition,
+  solarLunarTimes: SolarLunarTimesMap | null,
+): ReactNode {
+  switch (timeCondition.phaseAnchorType) {
+    case "epoch":
+      return "Global reference";
+
+    case "window":
+      return "Period anchor: Window start";
+
+    case "clock": {
+      const dynamicLabel = getDynamicTimePointLabel(
+        timeCondition.phaseAnchorValue,
+      );
+      if (dynamicLabel) {
+        const time = solarLunarTimes?.[
+          timeCondition.phaseAnchorValue as keyof SolarLunarTimesMap
+        ] as Date | null | undefined;
+        const timeStr = time ? formatTime(time) : null;
+        if (timeStr) {
+          return (
+            <>
+              Period anchor: {dynamicLabel}
+              <Text span color="dimmed" size="sm">
+                {" "}
+                ({timeStr})
+              </Text>
+            </>
+          );
+        }
+        return `Period anchor: ${dynamicLabel}`;
+      }
+
+      const formatted = formatMilitaryTime(timeCondition.phaseAnchorValue);
+      return formatted ? `Period anchor: Daily at ${formatted}` : "";
+    }
+
+    case "fixed": {
+      const formatted = formatDateTime(timeCondition.phaseAnchorValue);
+      return formatted ? `Period anchor: ${formatted}` : "";
+    }
+
+    default:
+      return "";
+  }
 }
 
 function mapOperatorToText(operator: ConditionOperator) {
@@ -443,78 +607,6 @@ function OutputConditionRow(outputCondition: SDBOutputCondition): ReactNode {
       )}
     </Group>
   );
-}
-
-function TimeConditionRow(timeCondition: SDBTimeCondition): ReactNode {
-  const formattedStart = formatMilitaryTime(timeCondition.startTime);
-  const formattedEnd = formatMilitaryTime(timeCondition.endTime);
-
-  const windowSummary =
-    !formattedStart && !formattedEnd
-      ? "Always"
-      : formattedStart && !formattedEnd
-        ? `At ${formattedStart}`
-        : `Between ${formattedStart} and ${formattedEnd}`;
-
-  const repeatSummary = formatRepeatSummary(timeCondition);
-
-  return (
-    <Group gap={0}>
-      <div>
-        <Text ta="left">{windowSummary}</Text>
-        {repeatSummary && (
-          <Text ta="left" size="sm" c="dimmed">
-            ↳ {repeatSummary}
-          </Text>
-        )}
-      </div>
-    </Group>
-  );
-}
-
-function formatRepeatSummary(timeCondition: SDBTimeCondition): string | null {
-  if (
-    timeCondition.repeatInterval == null ||
-    timeCondition.repeatDuration == null
-  ) {
-    return null;
-  }
-
-  const anchorSummary = formatAnchorSummary(timeCondition);
-
-  return (
-    <>
-      {`Every ${timeCondition.repeatInterval} min • Active first ${timeCondition.repeatDuration} min${timeCondition.repeatDuration === 1 ? "" : "s"}`}
-      {anchorSummary && (
-        <Text ta="left" size="sm" c="dimmed">
-          ↳ {anchorSummary}
-        </Text>
-      )}
-    </>
-  );
-}
-
-function formatAnchorSummary(timeCondition: SDBTimeCondition): string {
-  switch (timeCondition.phaseAnchorType) {
-    case "epoch":
-      return "Global reference";
-
-    case "window":
-      return "Period anchor: Window start";
-
-    case "clock": {
-      const formatted = formatMilitaryTime(timeCondition.phaseAnchorValue);
-      return formatted ? `Period anchor: Daily at ${formatted}` : "";
-    }
-
-    case "fixed": {
-      const formatted = formatDateTime(timeCondition.phaseAnchorValue);
-      return formatted ? `Period anchor: ${formatted}` : "";
-    }
-
-    default:
-      return "";
-  }
 }
 
 function WeekdayConditionRow(weekdayCondition: SDBWeekdayCondition): ReactNode {

@@ -8,13 +8,14 @@ import {
   Button,
   Group,
   LoadingOverlay,
+  NumberInput,
   Paper,
   SegmentedControl,
   Select,
   SimpleGrid,
   Stack,
   Text,
-  NumberInput,
+  TextInput,
   Title,
 } from "@mantine/core";
 import {
@@ -29,7 +30,6 @@ import {
 } from "../../../requests/requests_v2";
 
 type RetentionUnit = "days" | "weeks" | "months" | "years";
-
 type RetentionMode = "forever" | "finite";
 
 type RetentionControlValue = {
@@ -43,6 +43,8 @@ type SettingsFormValues = {
   outputs: RetentionControlValue;
   system: {
     backup_retention: RetentionControlValue;
+    latitude: string;
+    longitude: string;
   };
 };
 
@@ -50,9 +52,6 @@ type SettingsSection = {
   title: string;
   description: string;
   path: "sensors" | "outputs" | "system.backup_retention";
-  label: string;
-  helperText: string;
-  emptyText: string;
 };
 
 const retentionUnits: Array<{ value: RetentionUnit; label: string }> = [
@@ -67,26 +66,12 @@ const sections: SettingsSection[] = [
     title: "Sensor Data",
     description: "Duration to store sensor reading history before deletion.",
     path: "sensors",
-    label: "Sensor history",
-    helperText: "Applies to stored sensor data across the retention pipeline.",
-    emptyText: "Sensor history is kept forever.",
   },
   {
     title: "Output Data",
     description: "Duration to store output state history before deletion.",
     path: "outputs",
-    label: "Output history",
-    helperText: "Applies to retained output state data.",
-    emptyText: "Output history is kept forever.",
   },
-  // {
-  //   title: "Backup Retention",
-  //   description: "Duration to retain system backups before deletion.",
-  //   path: "system.backup_retention",
-  //   label: "Backup archives",
-  //   helperText: "Applies to archived system backup files.",
-  //   emptyText: "Backups are kept forever.",
-  // },
 ];
 
 function createDefaultRetentionValue(): RetentionControlValue {
@@ -141,6 +126,11 @@ function serializeRetentionValue(value: RetentionControlValue): string | null {
   return `${amount} ${value.unit}`;
 }
 
+function serializeCoordinateValue(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed === "" ? null : trimmed;
+}
+
 function toFormValues(settings: ApplicationSettings): SettingsFormValues {
   return {
     sensors: parseRetentionValue(settings["sensors.data_retention"]),
@@ -149,6 +139,8 @@ function toFormValues(settings: ApplicationSettings): SettingsFormValues {
       backup_retention: parseRetentionValue(
         settings["system.backup_retention"],
       ),
+      latitude: settings["system.latitude"] ?? "",
+      longitude: settings["system.longitude"] ?? "",
     },
   };
 }
@@ -160,6 +152,8 @@ function toRequestBody(values: SettingsFormValues): ApplicationSettings {
     "system.backup_retention": serializeRetentionValue(
       values.system.backup_retention,
     ),
+    "system.latitude": serializeCoordinateValue(values.system.latitude),
+    "system.longitude": serializeCoordinateValue(values.system.longitude),
   };
 }
 
@@ -207,6 +201,8 @@ export default function ApplicationSettingsAccordionItem() {
       outputs: createDefaultRetentionValue(),
       system: {
         backup_retention: createDefaultRetentionValue(),
+        latitude: "",
+        longitude: "",
       },
     },
     validate: (values) => {
@@ -227,6 +223,25 @@ export default function ApplicationSettingsAccordionItem() {
         }
       });
 
+      if (values.system.latitude.trim() !== "") {
+        const latitude = Number(values.system.latitude);
+        if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
+          errors["system.latitude"] = "Enter a latitude between -90 and 90.";
+        }
+      }
+
+      if (values.system.longitude.trim() !== "") {
+        const longitude = Number(values.system.longitude);
+        if (
+          !Number.isFinite(longitude) ||
+          longitude < -180 ||
+          longitude > 180
+        ) {
+          errors["system.longitude"] =
+            "Enter a longitude between -180 and 180.";
+        }
+      }
+
       return errors;
     },
   });
@@ -238,7 +253,6 @@ export default function ApplicationSettingsAccordionItem() {
       }
 
       const changedSettings = getChangedSettings(values, baselineValues);
-
       if (Object.keys(changedSettings).length === 0) {
         return null;
       }
@@ -252,14 +266,14 @@ export default function ApplicationSettingsAccordionItem() {
       setBaselineValues(nextValues);
       form.setValues(nextValues);
       setSaveError(null);
-      setSaveMessage("System retention settings updated.");
+      setSaveMessage("Application settings updated.");
     },
     onError: (error) => {
       setSaveMessage(null);
       setSaveError(
         error instanceof Error
           ? error.message
-          : "Failed to update system retention settings.",
+          : "Failed to update application settings.",
       );
     },
   });
@@ -270,7 +284,6 @@ export default function ApplicationSettingsAccordionItem() {
     }
 
     const nextValues = toFormValues(settingsQuery.data);
-
     setBaselineValues(nextValues);
     form.setValues(nextValues);
     setSaveError(null);
@@ -358,7 +371,7 @@ export default function ApplicationSettingsAccordionItem() {
         <Group pl={"xl"}>
           <IconClockCancel />
           <Title order={3} fw={450}>
-            Data Retention
+            Application Settings
           </Title>
         </Group>
       </Accordion.Control>
@@ -422,15 +435,6 @@ export default function ApplicationSettingsAccordionItem() {
                           }
                         }}
                       />
-
-                      {/* <div>
-                        <Text size="sm" fw={500}>
-                          {section.label}
-                        </Text>
-                        <Text size="sm" c="dimmed">
-                          {section.helperText}
-                        </Text>
-                      </div> */}
 
                       <div
                         style={{
@@ -503,16 +507,53 @@ export default function ApplicationSettingsAccordionItem() {
                           />
                         </SimpleGrid>
                       </div>
-
-                      {/* {getRetentionValue(form.values, section.path).mode === "forever" && (
-                        <Text size="sm" c="dimmed">
-                          {section.emptyText}
-                        </Text>
-                      )} */}
                     </Stack>
                   </Paper>
                 ))}
               </SimpleGrid>
+
+              <Paper withBorder radius="md" p="lg" shadow="xs">
+                <Stack gap="md">
+                  <div>
+                    <Text fw={600}>Solar And Lunar Timing</Text>
+                    <Text size="sm" c="dimmed">
+                      Latitude and longitude are used to calculate dynamic
+                      sunrise, sunset, moonrise, moonset, and related automation
+                      time points.
+                    </Text>
+                  </div>
+                  <SimpleGrid cols={{ base: 1, md: 2 }} spacing="sm">
+                    <TextInput
+                      label="Latitude"
+                      placeholder="40.7128"
+                      value={form.values.system.latitude}
+                      error={form.errors["system.latitude"]}
+                      onChange={(event) =>
+                        form.setFieldValue(
+                          "system.latitude",
+                          event.currentTarget.value,
+                        )
+                      }
+                    />
+                    <TextInput
+                      label="Longitude"
+                      placeholder="-74.0060"
+                      value={form.values.system.longitude}
+                      error={form.errors["system.longitude"]}
+                      onChange={(event) =>
+                        form.setFieldValue(
+                          "system.longitude",
+                          event.currentTarget.value,
+                        )
+                      }
+                    />
+                  </SimpleGrid>
+                  <Text size="sm" c="dimmed">
+                    Leave either field blank to disable solar and lunar
+                    automation time points.
+                  </Text>
+                </Stack>
+              </Paper>
 
               {saveError && (
                 <Alert color="red" title="Save failed">

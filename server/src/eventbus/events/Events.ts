@@ -9,4 +9,6 @@ export const Events = {
   SENSOR_RETENTION_UPDATED: "sensor.retention.updated",
   OUTPUT_RETENTION_UPDATED: "output.retention.updated",
   BACKUP_RETENTION_UPDATED: "backup.retention.updated",
+  SYSTEM_LATITUDE_UPDATED: "system.latitude.updated",
+  SYSTEM_LONGITUDE_UPDATED: "system.longitude.updated",
 } as const;

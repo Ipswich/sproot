@@ -21,6 +21,28 @@ const RETENTION_DURATION_KEYS = new Set<SettingsKey>([
   "outputs.data_retention",
 ]);
 
+function validateCoordinate(
+  value: string,
+  key: SettingsKey,
+  min: number,
+  max: number,
+): string | null {
+  if (value.trim() === "") {
+    return `${key} cannot be empty. Use null to clear it.`;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return `${key} must be a valid number.`;
+  }
+
+  if (parsed < min || parsed > max) {
+    return `${key} must be between ${min} and ${max}.`;
+  }
+
+  return null;
+}
+
 function getActualType(value: unknown): string {
   if (value === null) return "null";
   if (Array.isArray(value)) return "array";
@@ -91,6 +113,20 @@ export async function updateSettingsAsync(
       const durationResult = validateDuration(value as string, key);
       if (!durationResult.valid) {
         errors.push(...durationResult.errors);
+      }
+    }
+
+    if (key === SETTINGS.system.latitude && value !== null) {
+      const error = validateCoordinate(value as string, key, -90, 90);
+      if (error) {
+        errors.push(error);
+      }
+    }
+
+    if (key === SETTINGS.system.longitude && value !== null) {
+      const error = validateCoordinate(value as string, key, -180, 180);
+      if (error) {
+        errors.push(error);
       }
     }
   }

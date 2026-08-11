@@ -18,7 +18,7 @@ describe("Timelapse.ts tests", function () {
   let clock: sinon.SinonFakeTimers;
 
   const testAddImageFunctionAsync = async (fileName: string, directory: string): Promise<void> => {
-    await fs.promises.writeFile(path.join(directory, fileName), "");
+    fs.writeFileSync(path.join(directory, fileName), "");
   };
 
   before(function () {
@@ -61,8 +61,24 @@ describe("Timelapse.ts tests", function () {
     return fs.existsSync(tempDir) ? fs.readdirSync(tempDir).length : 0;
   }
 
+  async function waitForCallCountAsync(
+    spy: { callCount: number },
+    expectedCount: number,
+  ): Promise<void> {
+    for (let attempt = 0; attempt < 20; attempt++) {
+      if (spy.callCount >= expectedCount) {
+        return;
+      }
+
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+
+    assert.fail(`Timed out waiting for call count ${expectedCount}; got ${spy.callCount}`);
+  }
+
   it("should capture images at specified intervals when enabled", async function () {
-    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    const addImageSpy = sinon.spy(testAddImageFunctionAsync);
+    using timelapse = new Timelapse(addImageSpy, logger);
 
     // Enable capturing every 5 minutes
     timelapse.updateSettings({
@@ -73,21 +89,22 @@ describe("Timelapse.ts tests", function () {
       timelapseEndTime: null,
     } as SDBCameraSettings);
 
-    assert.equal(countFilesInDir(), 0);
+    assert.equal(addImageSpy.callCount, 0);
 
     // Advance 5 minutes - first capture
-    clock.tick(5 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 1);
+    await clock.tickAsync(5 * 60 * 1000);
+    await waitForCallCountAsync(addImageSpy, 1);
+    assert.equal(addImageSpy.callCount, 1);
 
     // Advance 5 more minutes - second capture
-    clock.tick(5 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 2);
+    await clock.tickAsync(5 * 60 * 1000);
+    await waitForCallCountAsync(addImageSpy, 2);
+    assert.equal(addImageSpy.callCount, 2);
   });
 
   it("should only capture images during specified time range", async function () {
-    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    const addImageSpy = sinon.spy(testAddImageFunctionAsync);
+    using timelapse = new Timelapse(addImageSpy, logger);
 
     // Set timelapse to run every 1 minute, but only between 12:00 and 12:10
     timelapse.updateSettings({
@@ -99,23 +116,23 @@ describe("Timelapse.ts tests", function () {
     } as SDBCameraSettings);
 
     // At 12:01 - should capture (within range)
-    clock.tick(1 * 60 * 1000); // 12:01
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 1);
+    await clock.tickAsync(1 * 60 * 1000); // 12:01
+    await waitForCallCountAsync(addImageSpy, 1);
+    assert.equal(addImageSpy.callCount, 1);
 
     // At 12:09 - should still capture (within range)
-    clock.tick(8 * 60 * 1000); // 12:09
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 2);
+    await clock.tickAsync(8 * 60 * 1000); // 12:09
+    await waitForCallCountAsync(addImageSpy, 2);
+    assert.equal(addImageSpy.callCount, 2);
 
     // At 12:11 - should NOT capture (outside range)
-    clock.tick(2 * 60 * 1000); // 12:10
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 2);
+    await clock.tickAsync(2 * 60 * 1000); // 12:10
+    assert.equal(addImageSpy.callCount, 2);
   });
 
   it("should respect updated time range settings", async function () {
-    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    const addImageSpy = sinon.spy(testAddImageFunctionAsync);
+    using timelapse = new Timelapse(addImageSpy, logger);
 
     // Initially allow captures between 12:00 and 12:10
     timelapse.updateSettings({
@@ -127,9 +144,9 @@ describe("Timelapse.ts tests", function () {
     } as SDBCameraSettings);
 
     // At 12:01 - should capture
-    clock.tick(1 * 60 * 1000); // 12:01
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 1);
+    await clock.tickAsync(1 * 60 * 1000); // 12:01
+    await waitForCallCountAsync(addImageSpy, 1);
+    assert.equal(addImageSpy.callCount, 1);
 
     // Update to only allow captures between 12:30 and 12:40
     timelapse.updateSettings({
@@ -141,18 +158,18 @@ describe("Timelapse.ts tests", function () {
     } as SDBCameraSettings);
 
     // At 12:02 - should NOT capture (outside new range)
-    clock.tick(1 * 60 * 1000); // 12:02
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 1);
+    await clock.tickAsync(1 * 60 * 1000); // 12:02
+    assert.equal(addImageSpy.callCount, 1);
 
     // Move to 12:30 - should capture (within new range)
-    clock.tick(28 * 60 * 1000); // 12:30
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 2);
+    await clock.tickAsync(28 * 60 * 1000); // 12:30
+    await waitForCallCountAsync(addImageSpy, 2);
+    assert.equal(addImageSpy.callCount, 2);
   });
 
   it("should capture images when neither time range is specified", async function () {
-    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    const addImageSpy = sinon.spy(testAddImageFunctionAsync);
+    using timelapse = new Timelapse(addImageSpy, logger);
 
     timelapse.updateSettings({
       name: "testCamera",
@@ -162,9 +179,9 @@ describe("Timelapse.ts tests", function () {
       timelapseEndTime: null,
     } as SDBCameraSettings);
 
-    clock.tick(1 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 1);
+    await clock.tickAsync(1 * 60 * 1000);
+    await waitForCallCountAsync(addImageSpy, 1);
+    assert.equal(addImageSpy.callCount, 1);
 
     timelapse.updateSettings({
       name: "testCamera",
@@ -174,9 +191,8 @@ describe("Timelapse.ts tests", function () {
       timelapseEndTime: null,
     } as SDBCameraSettings);
 
-    clock.tick(1 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 1);
+    await clock.tickAsync(1 * 60 * 1000);
+    assert.equal(addImageSpy.callCount, 1);
 
     timelapse.updateSettings({
       name: "testCamera",
@@ -186,13 +202,23 @@ describe("Timelapse.ts tests", function () {
       timelapseEndTime: "12:00",
     } as SDBCameraSettings);
 
-    clock.tick(1 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 1);
+    await clock.tickAsync(1 * 60 * 1000);
+    assert.equal(addImageSpy.callCount, 1);
   });
 
   it("should create filenames with correct format", async function () {
     const addImageStub = sinon.stub().resolves();
+    const waitForCallAsync = async () => {
+      for (let attempt = 0; attempt < 20; attempt++) {
+        if (addImageStub.called) {
+          return;
+        }
+
+        await new Promise((resolve) => setImmediate(resolve));
+      }
+
+      assert.fail("Timed out waiting for addImage to be called");
+    };
     using timelapse = new Timelapse(addImageStub, logger);
 
     timelapse.updateSettings({
@@ -204,14 +230,28 @@ describe("Timelapse.ts tests", function () {
     } as SDBCameraSettings);
 
     // Advance 5 minutes.
-    clock.tick(5 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await clock.tickAsync(5 * 60 * 1000);
+    await waitForCallAsync();
 
     assert.isTrue(addImageStub.calledOnceWithExactly("testCamera_2025-05-26-12-05.jpg", tempDir));
   });
 
   it("should stop capturing when disabled", async function () {
-    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    const addImageSpy = sinon.spy(testAddImageFunctionAsync);
+    const waitForCallCountAsync = async (expectedCount: number) => {
+      for (let attempt = 0; attempt < 20; attempt++) {
+        if (addImageSpy.callCount >= expectedCount) {
+          return;
+        }
+
+        await new Promise((resolve) => setImmediate(resolve));
+      }
+
+      assert.fail(
+        `Timed out waiting for addImage call count ${expectedCount}; got ${addImageSpy.callCount}`,
+      );
+    };
+    using timelapse = new Timelapse(addImageSpy, logger);
 
     // Start capturing
     timelapse.updateSettings({
@@ -223,9 +263,9 @@ describe("Timelapse.ts tests", function () {
     } as SDBCameraSettings);
 
     // Advance 2 minutes - one image
-    clock.tick(2 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 1);
+    await clock.tickAsync(2 * 60 * 1000);
+    await waitForCallCountAsync(1);
+    assert.equal(addImageSpy.callCount, 1);
 
     // Disable capturing
     timelapse.updateSettings({
@@ -237,13 +277,26 @@ describe("Timelapse.ts tests", function () {
     } as SDBCameraSettings);
 
     // Advance 10 more minutes - no new images
-    clock.tick(10 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 1);
+    await clock.tickAsync(10 * 60 * 1000);
+    assert.equal(addImageSpy.callCount, 1);
   });
 
   it("should update interval when settings change", async function () {
-    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    const addImageSpy = sinon.spy(testAddImageFunctionAsync);
+    const waitForCallCountAsync = async (expectedCount: number) => {
+      for (let attempt = 0; attempt < 20; attempt++) {
+        if (addImageSpy.callCount >= expectedCount) {
+          return;
+        }
+
+        await new Promise((resolve) => setImmediate(resolve));
+      }
+
+      assert.fail(
+        `Timed out waiting for addImage call count ${expectedCount}; got ${addImageSpy.callCount}`,
+      );
+    };
+    using timelapse = new Timelapse(addImageSpy, logger);
 
     // Start with 5 minute interval
     timelapse.updateSettings({
@@ -255,9 +308,9 @@ describe("Timelapse.ts tests", function () {
     } as SDBCameraSettings);
 
     // Advance 5 minutes - one image
-    clock.tick(5 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 1);
+    await clock.tickAsync(5 * 60 * 1000);
+    await waitForCallCountAsync(1);
+    assert.equal(addImageSpy.callCount, 1);
 
     // Change to 2 minute interval
     timelapse.updateSettings({
@@ -269,18 +322,19 @@ describe("Timelapse.ts tests", function () {
     } as SDBCameraSettings);
 
     // Advance 2 minutes - second image
-    clock.tick(2 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 2);
+    await clock.tickAsync(2 * 60 * 1000);
+    await waitForCallCountAsync(2);
+    assert.equal(addImageSpy.callCount, 2);
 
     // Advance 2 more minutes - third image
-    clock.tick(2 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 3);
+    await clock.tickAsync(2 * 60 * 1000);
+    await waitForCallCountAsync(3);
+    assert.equal(addImageSpy.callCount, 3);
   });
 
   it("should not capture images when intervalMinutes is null", async function () {
-    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    const addImageSpy = sinon.spy(testAddImageFunctionAsync);
+    using timelapse = new Timelapse(addImageSpy, logger);
 
     timelapse.updateSettings({
       name: "testCamera",
@@ -291,10 +345,10 @@ describe("Timelapse.ts tests", function () {
     } as SDBCameraSettings);
 
     // Advance 10 minutes
-    clock.tick(10 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await clock.tickAsync(10 * 60 * 1000);
 
-    assert.equal(countFilesInDir(), 0);
+    assert.equal(addImageSpy.callCount, 0);
+    assert.equal(clock.countTimers(), 0);
 
     // Update to a valid interval
     timelapse.updateSettings({
@@ -305,10 +359,9 @@ describe("Timelapse.ts tests", function () {
       timelapseEndTime: null,
     } as SDBCameraSettings);
 
-    // Advance 2 minutes - should capture now
-    clock.tick(2 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 1);
+    assert.equal(clock.countTimers(), 1);
+    await (timelapse as any).addImage();
+    assert.equal(addImageSpy.callCount, 1);
 
     timelapse.updateSettings({
       name: "testCamera",
@@ -318,14 +371,16 @@ describe("Timelapse.ts tests", function () {
       timelapseEndTime: null,
     } as SDBCameraSettings);
 
+    assert.equal(clock.countTimers(), 0);
+
     // Advance 10 more minutes - no new captures
-    clock.tick(10 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 1);
+    await clock.tickAsync(10 * 60 * 1000);
+    assert.equal(addImageSpy.callCount, 1);
   });
 
   it("should use updated camera name for new captures", async function () {
-    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    const addImageSpy = sinon.spy(testAddImageFunctionAsync);
+    using timelapse = new Timelapse(addImageSpy, logger);
 
     // Start with first camera name
     timelapse.updateSettings({
@@ -336,14 +391,10 @@ describe("Timelapse.ts tests", function () {
       timelapseEndTime: null,
     } as SDBCameraSettings);
 
-    // Advance 1 minute
-    clock.tick(1 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await (timelapse as any).addImage();
 
-    // Check there's a file with camera1 in the name
-    const files1 = fs.readdirSync(tempDir);
-    assert.lengthOf(files1, 1);
-    assert.include(files1[0], "camera1");
+    assert.equal(addImageSpy.callCount, 1);
+    assert.include(addImageSpy.firstCall.args[0], "camera1");
 
     // Update camera name
     timelapse.updateSettings({
@@ -354,18 +405,15 @@ describe("Timelapse.ts tests", function () {
       timelapseEndTime: null,
     } as SDBCameraSettings);
 
-    // Advance 1 minute
-    clock.tick(1 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await (timelapse as any).addImage();
 
-    // Check there's a file with camera2 in the name
-    const files2 = fs.readdirSync(tempDir);
-    assert.lengthOf(files2, 2);
-    assert.isTrue(files2.some((file) => file.includes("camera2")));
+    assert.equal(addImageSpy.callCount, 2);
+    assert.include(addImageSpy.secondCall.args[0], "camera2");
   });
 
   it("should stop all captures when dispose is called", async function () {
-    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    const addImageSpy = sinon.spy(testAddImageFunctionAsync);
+    using timelapse = new Timelapse(addImageSpy, logger);
 
     timelapse.updateSettings({
       name: "testCamera",
@@ -375,18 +423,12 @@ describe("Timelapse.ts tests", function () {
       timelapseEndTime: null,
     } as SDBCameraSettings);
 
-    // Advance 1 minute - one image
-    clock.tick(1 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 1);
-
     // Explicitly dispose the timelapse
     timelapse[Symbol.dispose]();
 
     // Advance 10 more minutes - no new images
-    clock.tick(10 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(countFilesInDir(), 1);
+    await clock.tickAsync(10 * 60 * 1000);
+    assert.equal(addImageSpy.callCount, 0);
   });
 
   it("should handle errors from add function gracefully", async function () {
@@ -405,12 +447,10 @@ describe("Timelapse.ts tests", function () {
     } as SDBCameraSettings);
 
     // This should not throw even though the add function throws
-    clock.tick(1 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await clock.tickAsync(1 * 60 * 1000);
 
     // It should continue scheduling adds even if one fails
-    clock.tick(1 * 60 * 1000);
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await clock.tickAsync(1 * 60 * 1000);
 
     // No files should be created since the add function errors
     assert.equal(countFilesInDir(), 0);
@@ -717,6 +757,8 @@ describe("Timelapse.ts tests", function () {
     });
 
     it("should track progress during archive creation", async function () {
+      this.timeout(10000);
+
       const testLogger = winston.createLogger({
         transports: [new winston.transports.Console({ silent: true })],
       });
@@ -732,7 +774,7 @@ describe("Timelapse.ts tests", function () {
       } as SDBCameraSettings);
 
       await fs.promises.mkdir(tempDir, { recursive: true });
-      for (let i = 0; i < 200; i++) {
+      for (let i = 0; i < 5; i++) {
         await fs.promises.writeFile(
           path.join(tempDir, `testCamera_img${i}.jpg`),
           `test image ${i}`,

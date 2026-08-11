@@ -3,6 +3,7 @@ import { IConditionProperties } from "@sproot/automation/IConditionProperties";
 import { OutputList } from "../outputs/list/OutputList";
 import { SensorList } from "../sensors/list/SensorList";
 import { Conditions } from "./conditions/Conditions";
+import { TimeExpressionResolver } from "./conditions/TimeExpressionResolver";
 import type { IConditionsRepository } from "../database/repositories/automations/conditions/IConditionsRepository";
 
 export class Automation {
@@ -18,12 +19,13 @@ export class Automation {
     operator: AutomationOperator,
     enabled: boolean,
     conditionsRepository: IConditionsRepository,
+    timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
   ) {
     this.id = id;
     this.name = name;
     this.operator = operator;
     this.enabled = enabled;
-    this.conditions = new Conditions(this.id, conditionsRepository);
+    this.conditions = new Conditions(this.id, conditionsRepository, timeExpressionResolver);
   }
 
   static async createInstanceAsync(
@@ -32,8 +34,16 @@ export class Automation {
     operator: AutomationOperator,
     enabled: boolean,
     conditionsRepository: IConditionsRepository,
+    timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
   ): Promise<Automation> {
-    const automation = new Automation(id, name, operator, enabled, conditionsRepository);
+    const automation = new Automation(
+      id,
+      name,
+      operator,
+      enabled,
+      conditionsRepository,
+      timeExpressionResolver,
+    );
     await automation.conditions.loadAsync();
     return automation;
   }

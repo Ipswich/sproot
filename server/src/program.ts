@@ -33,6 +33,7 @@ import { LogHistoryService } from "./system/LogHistoryService";
 import { SettingsService } from "./settings/SettingsService";
 import { RetentionService } from "./retention/RetentionService";
 import { addLogStreamingTransport } from "./logger";
+import { TimeExpressionResolver } from "./automation/conditions/TimeExpressionResolver";
 
 export default async function setupAsync(): Promise<Express> {
   const app = express();
@@ -66,6 +67,11 @@ export default async function setupAsync(): Promise<Express> {
 
   await settingsService.syncDefaultsAsync();
 
+  const timeExpressionResolver = await TimeExpressionResolver.createInstanceAsync(
+    sprootDB.settings,
+    eventBus,
+  );
+
   const retentionService = new RetentionService(
     sprootDB.settings,
     sprootDB.retention,
@@ -78,6 +84,7 @@ export default async function setupAsync(): Promise<Express> {
     sprootDB.automations,
     eventBus,
     logger,
+    timeExpressionResolver,
   );
   app.set(DI_KEYS.AutomationService, automationService);
 

@@ -10,6 +10,7 @@ import { TimeCondition } from "./TimeCondition";
 import { WeekdayCondition } from "./WeekdayCondition";
 import { DateRangeCondition } from "./DateRangeCondition";
 import { MonthCondition } from "./MonthCondition";
+import { TimeExpressionResolver } from "./TimeExpressionResolver";
 
 type EnabledConditionTypes =
   | SensorCondition
@@ -28,8 +29,13 @@ export class Conditions {
   #monthConditions: Record<string, MonthCondition>;
   #dateRangeConditions: Record<string, DateRangeCondition>;
   #conditionsRepository: IConditionsRepository;
+  #timeExpressionResolver: TimeExpressionResolver;
 
-  constructor(automationId: number, conditionsRepository: IConditionsRepository) {
+  constructor(
+    automationId: number,
+    conditionsRepository: IConditionsRepository,
+    timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
+  ) {
     this.#automationId = automationId;
     this.#sensorConditions = {};
     this.#outputConditions = {};
@@ -38,6 +44,7 @@ export class Conditions {
     this.#monthConditions = {};
     this.#dateRangeConditions = {};
     this.#conditionsRepository = conditionsRepository;
+    this.#timeExpressionResolver = timeExpressionResolver;
   }
 
   get groupedConditions(): {
@@ -330,6 +337,7 @@ export class Conditions {
             timeCondition.repeatDuration,
             timeCondition.phaseAnchorType,
             timeCondition.phaseAnchorValue,
+            this.#timeExpressionResolver,
           );
         });
       }),

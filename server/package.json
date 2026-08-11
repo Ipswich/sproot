@@ -74,6 +74,7 @@
     "pca9685": "^5.0.0",
     "pg": "^8.20.0",
     "serialport": "^13.0.0",
+    "suncalc": "^2.0.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "tplink-smarthome-api": "^5.0.0",

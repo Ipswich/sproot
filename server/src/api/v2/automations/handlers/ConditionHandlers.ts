@@ -17,7 +17,10 @@ import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 import { DateRangeCondition } from "../../../../automation/conditions/DateRangeCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
-import { TimeConditionPhaseAnchorType } from "@sproot/automation/ITimeCondition";
+import { TimeConditionPhaseAnchorType } from "@sproot/common/automation/ITimeCondition";
+import { isDynamicTimePoint } from "@sproot/common/automation/TimeConditionTimePoints";
+import { SettingsService } from "../../../../settings/SettingsService";
+import { SETTINGS } from "../../../../database/settings/SettingsSchema";
 
 const TIME_REGEX = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
 const TIME_CONDITION_PHASE_ANCHOR_TYPES: TimeConditionPhaseAnchorType[] = [
@@ -38,10 +41,10 @@ type TimeConditionConfig = {
 };
 
 function validateTimeConditionConfig(config: TimeConditionConfig, invalidFields: string[]): void {
-  if (config.startTime != null && !TIME_REGEX.test(config.startTime)) {
+  if (config.startTime != null && !isValidTimeExpression(config.startTime)) {
     invalidFields.push("Invalid or missing start time.");
   }
-  if (config.endTime != null && !TIME_REGEX.test(config.endTime)) {
+  if (config.endTime != null && !isValidTimeExpression(config.endTime)) {
     invalidFields.push("Invalid or missing end time.");
   }
   if (config.startTime == null && config.endTime != null) {
@@ -90,8 +93,10 @@ function validateTimeConditionConfig(config: TimeConditionConfig, invalidFields:
 
   switch (config.phaseAnchorType) {
     case "clock":
-      if (config.phaseAnchorValue == null || !TIME_REGEX.test(config.phaseAnchorValue)) {
-        invalidFields.push("Clock phase anchors require an HH:MM phase anchor value.");
+      if (config.phaseAnchorValue == null || !isValidTimeExpression(config.phaseAnchorValue)) {
+        invalidFields.push(
+          "Time-point phase anchors require either an HH:MM value or a supported solar/lunar point.",
+        );
       }
       return;
     case "fixed":
@@ -117,6 +122,37 @@ function validateTimeConditionConfig(config: TimeConditionConfig, invalidFields:
         invalidFields.push("This phase anchor type does not accept a phase anchor value.");
       }
       return;
+  }
+}
+
+function isValidTimeExpression(value: string): boolean {
+  return TIME_REGEX.test(value) || isDynamicTimePoint(value);
+}
+
+async function validateDynamicTimeDependenciesAsync(
+  settingsService: SettingsService,
+  config: TimeConditionConfig,
+  invalidFields: string[],
+): Promise<void> {
+  const usesDynamicPoint = [config.startTime, config.endTime, config.phaseAnchorValue].some(
+    (value): value is string => value != null && isDynamicTimePoint(value),
+  );
+  if (!usesDynamicPoint) {
+    return;
+  }
+
+  const settings = await settingsService.getManyAsync([
+    SETTINGS.system.latitude,
+    SETTINGS.system.longitude,
+  ]);
+
+  if (typeof settings[SETTINGS.system.latitude] !== "string") {
+    invalidFields.push("Dynamic solar/lunar time points require system.latitude to be configured.");
+  }
+  if (typeof settings[SETTINGS.system.longitude] !== "string") {
+    invalidFields.push(
+      "Dynamic solar/lunar time points require system.longitude to be configured.",
+    );
   }
 }
 
@@ -486,6 +522,7 @@ export async function addAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
+  const settingsService = request.app.get(DI_KEYS.SettingsService) as SettingsService;
   let addConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -632,6 +669,7 @@ export async function addAsync(
           phaseAnchorValue: request.body.phaseAnchorValue,
         });
         validateTimeConditionConfig(config, invalidFields);
+        await validateDynamicTimeDependenciesAsync(settingsService, config, invalidFields);
         if (invalidFields.length > 0) {
           break;
         }
@@ -654,6 +692,7 @@ export async function addAsync(
           config.repeatDuration,
           config.phaseAnchorType,
           config.phaseAnchorValue,
+          automationService.timeExpressionResolver,
         );
         break;
       }
@@ -798,6 +837,7 @@ export async function updateAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
+  const settingsService = request.app.get(DI_KEYS.SettingsService) as SettingsService;
   let updateConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -1020,8 +1060,10 @@ export async function updateAsync(
           config.repeatDuration,
           config.phaseAnchorType,
           config.phaseAnchorValue,
+          automationService.timeExpressionResolver,
         );
         validateTimeConditionConfig(config, invalidDetails);
+        await validateDynamicTimeDependenciesAsync(settingsService, config, invalidDetails);
         if (invalidDetails.length > 0) {
           break;
         }

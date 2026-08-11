@@ -9,6 +9,8 @@ import { LogEventPayload } from "./logging/LogEvent";
 import { SensorRetentionUpdatedPayload } from "./retention/SensorRetentionUpdatedEvent";
 import { OutputRetentionUpdatedPayload } from "./retention/OutputRetentionUpdatedEvent";
 import { BackupRetentionUpdatedPayload } from "./retention/BackupRetentionUpdatedEvent";
+import { SystemLatitudeUpdatedPayload } from "./settings/SystemLatitudeUpdatedEvent";
+import { SystemLongitudeUpdatedPayload } from "./settings/SystemLongitudeUpdatedEvent";
 
 export interface EventMap {
   [Events.AUTOMATIONS_TRIGGERED_EVENT]: AutomationsTriggeredPayload;
@@ -21,4 +23,6 @@ export interface EventMap {
   [Events.SENSOR_RETENTION_UPDATED]: SensorRetentionUpdatedPayload;
   [Events.OUTPUT_RETENTION_UPDATED]: OutputRetentionUpdatedPayload;
   [Events.BACKUP_RETENTION_UPDATED]: BackupRetentionUpdatedPayload;
+  [Events.SYSTEM_LATITUDE_UPDATED]: SystemLatitudeUpdatedPayload;
+  [Events.SYSTEM_LONGITUDE_UPDATED]: SystemLongitudeUpdatedPayload;
 }
