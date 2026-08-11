@@ -32,7 +32,7 @@ export default function JournalCard({ journal, tags }: JournalCardProps) {
     <Fragment>
       <CardWrapper onClick={() => navigate(`/journals/${journal.id}`)}>
         <Stack style={{ gap: 6 }}>
-          <Group style={{ alignItems: "center", gap: 10, minWidth: 0 }}>
+          <Group wrap="nowrap" style={{ alignItems: "center", gap: 10, minWidth: 0 }}>
             {journal.icon ? (
               <div
                 style={{
@@ -76,8 +76,14 @@ export default function JournalCard({ journal, tags }: JournalCardProps) {
               <Text
                 fz="sm"
                 c="dimmed"
-                truncate="end"
-                style={{ marginTop: 0 }}
+                style={{
+                  marginTop: 0,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  display: "block",
+                  width: "100%",
+                }}
               >
                 {journal.description ?? ""}
               </Text>

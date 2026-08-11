@@ -83,6 +83,10 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     return this.#actionManager?.activeConflict ?? null;
   }
 
+  get triggeredBy(): IOutputBase["triggeredBy"] {
+    return this.#actionManager?.triggeredBy ?? [];
+  }
+
   get outputData(): IOutputBase {
     const {
       id,
@@ -116,6 +120,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       automationTimeout,
       actionWarnings: this.actionWarnings,
       activeConflict: this.activeConflict,
+      triggeredBy: this.triggeredBy,
     };
   }
 

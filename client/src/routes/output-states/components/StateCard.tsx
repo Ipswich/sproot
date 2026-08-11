@@ -6,6 +6,7 @@ import {
 import { Fragment, useEffect, useState } from "react";
 import {
   Alert,
+  Badge,
   Group,
   Paper,
   SegmentedControl,
@@ -69,6 +70,11 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
   const conflictAutomationNames = output.activeConflict?.actions.map(
     (action) => action.automationName,
   );
+  const showTriggeredBy =
+    controlMode === ControlMode.automatic &&
+    !output.activeConflict &&
+    output.state.automatic.value > 0 &&
+    output.triggeredBy.length > 0;
 
   return (
     <Fragment>
@@ -212,6 +218,25 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                     </Text>
                   </Stack>
                 </Alert>
+              ) : null}
+              {showTriggeredBy ? (
+                <Stack gap={6}>
+                  <Text size="sm" fw={500} c="dimmed">
+                    Triggered by
+                  </Text>
+                  <Group gap="xs" wrap="wrap">
+                    {output.triggeredBy.map((automation) => (
+                      <Badge
+                        key={`${output.id}-${automation.automationId}`}
+                        variant="light"
+                        color="green"
+                        radius="sm"
+                      >
+                        {automation.automationName}
+                      </Badge>
+                    ))}
+                  </Group>
+                </Stack>
               ) : null}
             </Stack>
           </Paper>

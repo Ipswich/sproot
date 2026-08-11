@@ -1,15 +1,24 @@
-import { useState, useTransition } from "react";
-import { Box, Button, Flex, Group, Paper, Switch } from "@mantine/core";
+import { Suspense, lazy, useState, useTransition } from "react";
+import { Box, Button, Center, Flex, Group, Loader, Paper, Switch } from "@mantine/core";
 import { ReadingType, Units } from "@sproot/common/sensors/ReadingType";
 import type { Aggregate } from "../../requests/queryTypes";
 import { useLoaderData } from "react-router-dom";
-import ReadingsChartContainer from "./components/ReadingsChartContainer";
 import SensorTableAccordion from "./components/SensorTableAccordion";
-import ChartQueryControls from "../common/ChartQueryControls";
 import {
   sensorsToggledKey,
   sensorToggledDeviceZonesKey,
 } from "../utility/LocalStorageKeys";
+
+const ReadingsChartContainer = lazy(() => import("./components/ReadingsChartContainer"));
+const ChartQueryControls = lazy(() => import("../common/ChartQueryControls"));
+
+function RouteSectionLoader() {
+  return (
+    <Center mih={120}>
+      <Loader color="teal" type="bars" size="md" />
+    </Center>
+  );
+}
 
 export default function SensorData() {
   const readingTypeString = useLoaderData() as string;
@@ -106,66 +115,70 @@ export default function SensorData() {
             </Button>
           </Flex>
         </Group>
-        <ReadingsChartContainer
-          readingType={readingTypeString}
-          chartInterval={chartInterval}
-          toggledSensors={sensorToggleStates}
-          toggledDeviceZones={deviceZoneToggleStates}
-          useAlternateUnits={useAlternateUnits}
-          customTimeRange={useCustomRange ? customRange : null}
-          aggregate={aggregate}
-          downsampleSelection={downsample}
-          percentile={percentile}
-          showReferenceLines={showReferenceLines}
-          onToggleReferenceLines={(value: boolean) => {
-            startTransition(() => {
-              localStorage.setItem(
-                `${readingTypeString}-showReferenceLines`,
-                value.toString(),
-              );
-              setShowReferenceLines(value);
-            });
-          }}
-        />
-        <ChartQueryControls
-          chartInterval={segmentedControlValue}
-          onChartIntervalChange={(value) => {
-            startTransition(() => {
-              localStorage.setItem("sensorChartInterval", value);
-              setSegmentedControlValue(value);
-              setChartInterval(value);
-            });
-          }}
-          useCustomRange={useCustomRange}
-          onUseCustomRangeChange={(value) => {
-            startTransition(() => {
-              setUseCustomRange(value);
-            });
-          }}
-          customRange={customRange}
-          onCustomRangeChange={(value) => {
-            setCustomRange(value);
-          }}
-          aggregate={aggregate}
-          onAggregateChange={(value) => {
-            startTransition(() => {
-              localStorage.setItem("sensorChartAggregate", value);
-              setAggregate(value);
-            });
-          }}
-          downsample={downsample}
-          onDownsampleChange={(value) => {
-            startTransition(() => {
-              localStorage.setItem("sensorChartDownsample", value);
-              setDownsample(value);
-            });
-          }}
-          percentile={percentile}
-          onPercentileChange={(value) => {
-            localStorage.setItem("sensorChartPercentile", value.toString());
-            setPercentile(value);
-          }}
-        />
+        <Suspense fallback={<RouteSectionLoader />}>
+          <ReadingsChartContainer
+            readingType={readingTypeString}
+            chartInterval={chartInterval}
+            toggledSensors={sensorToggleStates}
+            toggledDeviceZones={deviceZoneToggleStates}
+            useAlternateUnits={useAlternateUnits}
+            customTimeRange={useCustomRange ? customRange : null}
+            aggregate={aggregate}
+            downsampleSelection={downsample}
+            percentile={percentile}
+            showReferenceLines={showReferenceLines}
+            onToggleReferenceLines={(value: boolean) => {
+              startTransition(() => {
+                localStorage.setItem(
+                  `${readingTypeString}-showReferenceLines`,
+                  value.toString(),
+                );
+                setShowReferenceLines(value);
+              });
+            }}
+          />
+        </Suspense>
+        <Suspense fallback={<RouteSectionLoader />}>
+          <ChartQueryControls
+            chartInterval={segmentedControlValue}
+            onChartIntervalChange={(value) => {
+              startTransition(() => {
+                localStorage.setItem("sensorChartInterval", value);
+                setSegmentedControlValue(value);
+                setChartInterval(value);
+              });
+            }}
+            useCustomRange={useCustomRange}
+            onUseCustomRangeChange={(value) => {
+              startTransition(() => {
+                setUseCustomRange(value);
+              });
+            }}
+            customRange={customRange}
+            onCustomRangeChange={(value) => {
+              setCustomRange(value);
+            }}
+            aggregate={aggregate}
+            onAggregateChange={(value) => {
+              startTransition(() => {
+                localStorage.setItem("sensorChartAggregate", value);
+                setAggregate(value);
+              });
+            }}
+            downsample={downsample}
+            onDownsampleChange={(value) => {
+              startTransition(() => {
+                localStorage.setItem("sensorChartDownsample", value);
+                setDownsample(value);
+              });
+            }}
+            percentile={percentile}
+            onPercentileChange={(value) => {
+              localStorage.setItem("sensorChartPercentile", value.toString());
+              setPercentile(value);
+            }}
+          />
+        </Suspense>
         <SensorTableAccordion
           readingType={readingTypeString as ReadingType}
           sensorToggleStates={sensorToggleStates}

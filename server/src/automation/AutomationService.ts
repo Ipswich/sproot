@@ -65,11 +65,16 @@ class AutomationService {
     return this.#timeExpressionResolver;
   }
 
+  getAutomations(): Automation[] {
+    return Array.from(this.#automations.values());
+  }
+
   /**
    * Load all automations from the database.
    */
   async loadAllAutomationsAsync(): Promise<void> {
     try {
+      const previousAutomations = this.#automations;
       const rawAutomations = await this.#automationsRepository.getAllAsync();
       this.#automations = new Map();
 
@@ -82,6 +87,12 @@ class AutomationService {
           this.#automationsRepository.conditions,
           this.#timeExpressionResolver,
         );
+
+        const previousAutomation = previousAutomations.get(automation.id);
+        if (previousAutomation != null) {
+          automationInstance.setTriggered(previousAutomation.isTriggered);
+        }
+
         return [automation.id, automationInstance] as [number, Automation];
       });
 

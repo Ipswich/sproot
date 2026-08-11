@@ -1,9 +1,9 @@
 import "./index.css";
 
-import { lazy } from "react";
 import ReactDOM from "react-dom/client";
 import {
   createBrowserRouter,
+  type LazyRouteFunction,
   RouterProvider,
   redirect,
   LoaderFunctionArgs,
@@ -17,34 +17,35 @@ import { rootLoader } from "./routes/utility/Loaders";
 
 import HomeRouter from "./routes/HomeRouter";
 
-const LiveView = lazy(() => import("./routes/live-view/LiveView"));
-const SensorData = lazy(() => import("./routes/sensor-data/SensorData"));
-const OutputStates = lazy(() => import("./routes/output-states/OutputStates"));
-const Automations = lazy(() => import("./routes/automations/Automations"));
-const Journals = lazy(() => import("./routes/journals/Journals"));
-const JournalEntries = lazy(
-  () => import("./routes/journals/entries/JournalEntries"),
-);
-const JournalEntryView = lazy(
-  () => import("./routes/journals/entries/JournalEntryView"),
-);
-const OutputSettings = lazy(
-  () => import("./routes/settings/outputs/OutputSettings"),
-);
-const SensorSettings = lazy(
-  () => import("./routes/settings/sensors/SensorSettings"),
-);
-const SystemSettings = lazy(
-  () => import("./routes/settings/system/SystemSettings"),
-);
-const CameraSettings = lazy(
-  () => import("./routes/settings/camera/CameraSettings"),
-);
-const SubcontrollerSettings = lazy(
-  () => import("./routes/settings/subcontrollers/SubcontrollerSettings"),
-);
-
 const queryClient = new QueryClient();
+
+function RouteHydrateFallback() {
+  return (
+    <div
+      style={{
+        minHeight: 240,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#0f766e",
+        fontSize: "0.95rem",
+        fontWeight: 600,
+        letterSpacing: "0.02em",
+      }}
+    >
+      Loading view...
+    </div>
+  );
+}
+
+function lazyRoute<TModule extends { default: React.ComponentType<any> }>(
+  importer: () => Promise<TModule>,
+): LazyRouteFunction<any> {
+  return async () => {
+    const module = await importer();
+    return { Component: module.default };
+  };
+}
 
 // Create loader functions with fallback logic
 const liveViewLoader = async () => {
@@ -87,65 +88,79 @@ const outputStatesLoader = async () => {
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Root />,
+    Component: Root,
     errorElement: <ErrorPage />,
+    HydrateFallback: RouteHydrateFallback,
     loader: rootLoader,
     children: [
       {
         path: "/",
-        element: <HomeRouter />,
+        Component: HomeRouter,
+        HydrateFallback: RouteHydrateFallback,
         loader: rootLoader,
       },
       {
         path: "/live-view",
-        element: <LiveView />,
+        HydrateFallback: RouteHydrateFallback,
         loader: liveViewLoader,
+        lazy: lazyRoute(() => import("./routes/live-view/LiveView")),
       },
       {
         path: "/sensor-data/:readingType",
-        element: <SensorData />,
+        HydrateFallback: RouteHydrateFallback,
         loader: sensorDataPageLoader,
+        lazy: lazyRoute(() => import("./routes/sensor-data/SensorData")),
       },
       {
         path: "/output-states",
-        element: <OutputStates />,
+        HydrateFallback: RouteHydrateFallback,
         loader: outputStatesLoader,
+        lazy: lazyRoute(() => import("./routes/output-states/OutputStates")),
       },
       {
         path: "/automations",
-        element: <Automations />,
+        HydrateFallback: RouteHydrateFallback,
+        lazy: lazyRoute(() => import("./routes/automations/Automations")),
       },
       {
         path: "/journals",
-        element: <Journals />,
+        HydrateFallback: RouteHydrateFallback,
+        lazy: lazyRoute(() => import("./routes/journals/Journals")),
       },
       {
         path: "/journals/:journalId",
-        element: <JournalEntries />,
+        HydrateFallback: RouteHydrateFallback,
+        lazy: lazyRoute(() => import("./routes/journals/entries/JournalEntries")),
       },
       {
         path: "/journals/:journalId/entries/:entryId",
-        element: <JournalEntryView />,
+        HydrateFallback: RouteHydrateFallback,
+        lazy: lazyRoute(() => import("./routes/journals/entries/JournalEntryView")),
       },
       {
         path: "/settings/outputs",
-        element: <OutputSettings />,
+        HydrateFallback: RouteHydrateFallback,
+        lazy: lazyRoute(() => import("./routes/settings/outputs/OutputSettings")),
       },
       {
         path: "/settings/sensors",
-        element: <SensorSettings />,
+        HydrateFallback: RouteHydrateFallback,
+        lazy: lazyRoute(() => import("./routes/settings/sensors/SensorSettings")),
       },
       {
         path: "/settings/camera",
-        element: <CameraSettings />,
+        HydrateFallback: RouteHydrateFallback,
+        lazy: lazyRoute(() => import("./routes/settings/camera/CameraSettings")),
       },
       {
         path: "/settings/subcontrollers",
-        element: <SubcontrollerSettings />,
+        HydrateFallback: RouteHydrateFallback,
+        lazy: lazyRoute(() => import("./routes/settings/subcontrollers/SubcontrollerSettings")),
       },
       {
         path: "/settings/system",
-        element: <SystemSettings />,
+        HydrateFallback: RouteHydrateFallback,
+        lazy: lazyRoute(() => import("./routes/settings/system/SystemSettings")),
       },
     ],
   },

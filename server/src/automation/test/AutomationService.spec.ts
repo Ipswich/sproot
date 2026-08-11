@@ -146,6 +146,39 @@ describe("AutomationService", () => {
       assert.equal(payload!.automationId, 1);
       assert.equal(payload!.automationName, "Time Alert");
       assert.equal(payload!.operator, "or");
+      assert.isTrue(service.getAutomations()[0]?.isTriggered);
+    });
+
+    it("should mark automations as not triggered when conditions are not met", async () => {
+      const automations = createStubAutomationsRepository() as any;
+      automations.conditions.sensor.getAsync.resolves([]);
+      automations.conditions.output.getAsync.resolves([]);
+      automations.conditions.time.getAsync.resolves([]);
+      automations.conditions.weekday.getAsync.resolves([]);
+      automations.conditions.weekday.getAsync.resolves([]);
+      automations.conditions.month.getAsync.resolves([]);
+      automations.conditions.dateRange.getAsync.resolves([]);
+      automations.getAllAsync.resolves([
+        {
+          id: 1,
+          name: "Time Alert",
+          operator: "or",
+          enabled: true,
+        },
+      ]);
+
+      const service = await AutomationService.createInstanceAsync(
+        automations,
+        eventBus,
+        mockLogger,
+      );
+
+      const sensorListMock = sinon.createStubInstance(SensorList);
+      const outputListMock = sinon.createStubInstance(OutputList);
+
+      await service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, new Date());
+
+      assert.isFalse(service.getAutomations()[0]?.isTriggered);
     });
 
     it("should emit event with timestamp matching the input 'now' parameter", async () => {

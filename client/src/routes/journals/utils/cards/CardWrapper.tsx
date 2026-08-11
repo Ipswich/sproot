@@ -26,6 +26,10 @@ export function CardWrapper({
         transition: "transform 150ms, box-shadow 150ms",
         background: "var(--mantine-color-white, #fff)",
         borderColor: "rgba(15, 23, 42, 0.06)",
+        width: "100%",
+        maxWidth: "100%",
+        minWidth: 0,
+        overflow: "hidden",
         ...style,
       }}
       onClick={onClick}

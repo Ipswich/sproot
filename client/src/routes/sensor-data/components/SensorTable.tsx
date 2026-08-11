@@ -77,19 +77,21 @@ export default function SensorTable({
         style={{
           marginLeft: "auto",
           marginRight: "auto",
-          tableLayout: "fixed",
+          tableLayout: "auto",
           width: "100%",
         }}
       >
         <Table.Thead>
           <Table.Tr>
-            <Table.Th w={44} />
-            <Table.Th w={64} style={{ textAlign: "center" }}>
+            <Table.Th w={36} style={{ textAlign: "center" }} />
+            <Table.Th w={56} style={{ textAlign: "center" }}>
               <IconEyeOff />
             </Table.Th>
-            <Table.Th style={{ whiteSpace: "normal" }}>Sensor</Table.Th>
+            <Table.Th style={{ whiteSpace: "normal", textAlign: "center" }}>
+              Sensor
+            </Table.Th>
             <Table.Th
-              w={140}
+              w={116}
               style={{ textAlign: "center", whiteSpace: "nowrap" }}
             >
               {readingType.charAt(0).toUpperCase() + readingType.slice(1)}

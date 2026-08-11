@@ -9,7 +9,11 @@ import winston from "winston";
 import { IEventBus } from "../../eventbus/IEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
-import { OutputActionConflict, OutputActionWarning } from "@sproot/outputs/IOutputBase";
+import {
+  OutputActionConflict,
+  OutputActionParticipant,
+  OutputActionWarning,
+} from "@sproot/outputs/IOutputBase";
 
 export class OutputActionManager implements Disposable {
   #outputId: number;
@@ -21,6 +25,7 @@ export class OutputActionManager implements Disposable {
   #actionMap: Map<number, OutputAction> = new Map();
   #actionWarnings: OutputActionWarning[] = [];
   #activeConflict: OutputActionConflict | null = null;
+  #triggeredBy: OutputActionParticipant[] = [];
   #automationTimeout: number; // Per-output timeout
   #triggeredActionFunction: (result: number | undefined) => Promise<void>;
   #listenerCleanupFunction: () => void;
@@ -115,6 +120,10 @@ export class OutputActionManager implements Disposable {
 
   get activeConflict(): OutputActionConflict | null {
     return this.#activeConflict;
+  }
+
+  get triggeredBy(): OutputActionParticipant[] {
+    return this.#triggeredBy;
   }
 
   /**
@@ -222,6 +231,7 @@ export class OutputActionManager implements Disposable {
     }
 
     if (triggeredActions.length === 0) {
+      this.#triggeredBy = [];
       this.#activeConflict = null;
       resolvedValue = 0;
       if (resolvedValue !== this.#lastActionValue) {
@@ -242,6 +252,11 @@ export class OutputActionManager implements Disposable {
     const highestPriorityActions = triggeredActions.filter(
       (action) => OUTPUT_ACTION_PRECEDENCE_PRIORITY[action.precedence] === highestPriority,
     );
+
+    this.#triggeredBy = triggeredActions.map((action) => ({
+      automationId: action.payload.automationId,
+      automationName: action.payload.automationName,
+    }));
 
     const valueCounts = new Map<number, number>();
     for (const { value } of highestPriorityActions) {

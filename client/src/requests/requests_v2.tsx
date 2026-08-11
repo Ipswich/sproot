@@ -463,8 +463,20 @@ export async function addTimeConditionAsync(
       // credentials: "include",
     },
   );
-  const deserializedResponse = (await response.json()) as SuccessResponse;
-  return deserializedResponse.content?.data;
+  const deserializedResponse = (await response.json()) as
+    | SuccessResponse
+    | ErrorResponse;
+
+  if (!response.ok) {
+    throw new Error(
+      getErrorMessage(
+        deserializedResponse as ErrorResponse,
+        "Error adding time condition",
+      ),
+    );
+  }
+
+  return (deserializedResponse as SuccessResponse).content?.data;
 }
 
 export async function deleteTimeConditionAsync(
