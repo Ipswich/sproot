@@ -162,6 +162,7 @@ export default function ChartQueryControls({
           size="sm"
           clearable
           withTime
+          commitOnClose
           placeholder="Select date range"
           label="Select date range"
           value={

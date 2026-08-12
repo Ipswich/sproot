@@ -494,8 +494,6 @@ describe("API Tests", async function () {
 
       it("should expose when an automation has evaluated to true", async () => {
         const automationService = app.get(DI_KEYS.AutomationService) as AutomationService;
-        const sensorList = app.get(DI_KEYS.SensorList);
-        const outputList = app.get(DI_KEYS.OutputList);
         let automationId: number | undefined;
 
         try {
@@ -519,11 +517,7 @@ describe("API Tests", async function () {
             .expect(201);
           validateMiddlewareValues(createConditionResponse);
 
-          await automationService.evaluateAllAutomationsAsync(
-            sensorList,
-            outputList,
-            new Date("2026-08-10T10:00:00Z"),
-          );
+          await automationService.evaluateAllAutomationsAsync(new Date("2026-08-10T10:00:00Z"));
 
           const response = await request(server).get("/api/v2/automations").expect(200);
           validateMiddlewareValues(response);
@@ -913,10 +907,7 @@ describe("API Tests", async function () {
               await app.get("sprootDB").automations.conditions.time.getAsync(1)
             ).find((condition: { id: number }) => condition.id === createdTimeConditionId);
 
-            assert.equal(
-              beforeUpdate?.startTime,
-              "00:00",
-            );
+            assert.equal(beforeUpdate?.startTime, "00:00");
             await request(server)
               .patch(`/api/v2/automations/1/conditions/time/${createdTimeConditionId}`)
               .send({
@@ -928,10 +919,7 @@ describe("API Tests", async function () {
               await app.get("sprootDB").automations.conditions.time.getAsync(1)
             ).find((condition: { id: number }) => condition.id === createdTimeConditionId);
 
-            assert.equal(
-              updatedCondition?.startTime,
-              "01:00",
-            );
+            assert.equal(updatedCondition?.startTime, "01:00");
           });
 
           it("should update a time condition with repeat settings", async () => {

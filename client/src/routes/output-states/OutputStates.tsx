@@ -1,20 +1,10 @@
 import { Box, Flex, Paper } from "@mantine/core";
-import { Center, Loader } from "@mantine/core";
-import { Suspense, lazy, startTransition, useState } from "react";
+import { startTransition, useState } from "react";
 import { outputStateToggledZonesKey } from "../utility/LocalStorageKeys";
 import ZoneAccordion from "./components/ZoneAccordion";
 import type { Aggregate } from "../../requests/queryTypes";
-
-const StatesChartContainer = lazy(() => import("./components/StatesChartContainer"));
-const ChartQueryControls = lazy(() => import("../common/ChartQueryControls"));
-
-function RouteSectionLoader() {
-  return (
-    <Center mih={120}>
-      <Loader color="teal" type="bars" size="md" />
-    </Center>
-  );
-}
+import ChartQueryControls from "../common/ChartQueryControls";
+import StatesChartContainer from "./components/StatesChartContainer";
 
 export default function OutputStates() {
   const [deviceZoneToggleStates, setDeviceZoneToggleStates] = useState(
@@ -51,62 +41,58 @@ export default function OutputStates() {
             <h2>History</h2>
             <h5>{valueSuffix}</h5>
           </Flex>
-          <Suspense fallback={<RouteSectionLoader />}>
-            <StatesChartContainer
-              chartInterval={chartInterval}
-              toggledDeviceZones={deviceZoneToggleStates}
-              customTimeRange={useCustomRange ? customRange : null}
-              aggregate={aggregate}
-              downsampleSelection={downsample}
-              percentile={percentile}
-              valueSuffix={valueSuffix}
-            />
-          </Suspense>
-          <Suspense fallback={<RouteSectionLoader />}>
-            <ChartQueryControls
-              chartInterval={segmentedControlValue}
-              onChartIntervalChange={(value) => {
-                startTransition(() => {
-                  localStorage.setItem("outputChartInterval", value);
-                  setSegmentedControlValue(value);
-                  setChartInterval(value);
-                });
-              }}
-              useCustomRange={useCustomRange}
-              onUseCustomRangeChange={(value) => {
-                startTransition(() => {
-                  setUseCustomRange(value);
-                });
-              }}
-              customRange={customRange}
-              onCustomRangeChange={(value) => {
-                startTransition(() => {
-                  setCustomRange(value);
-                });
-              }}
-              aggregate={aggregate}
-              onAggregateChange={(value) => {
-                startTransition(() => {
-                  localStorage.setItem("outputChartAggregate", value);
-                  setAggregate(value);
-                });
-              }}
-              downsample={downsample}
-              onDownsampleChange={(value) => {
-                startTransition(() => {
-                  localStorage.setItem("outputChartDownsample", value);
-                  setDownsample(value);
-                });
-              }}
-              percentile={percentile}
-              onPercentileChange={(value) => {
-                startTransition(() => {
-                  localStorage.setItem("outputChartPercentile", value.toString());
-                  setPercentile(value);
-                });
-              }}
-            />
-          </Suspense>
+          <StatesChartContainer
+            chartInterval={chartInterval}
+            toggledDeviceZones={deviceZoneToggleStates}
+            customTimeRange={useCustomRange ? customRange : null}
+            aggregate={aggregate}
+            downsampleSelection={downsample}
+            percentile={percentile}
+            valueSuffix={valueSuffix}
+          />
+          <ChartQueryControls
+            chartInterval={segmentedControlValue}
+            onChartIntervalChange={(value) => {
+              startTransition(() => {
+                localStorage.setItem("outputChartInterval", value);
+                setSegmentedControlValue(value);
+                setChartInterval(value);
+              });
+            }}
+            useCustomRange={useCustomRange}
+            onUseCustomRangeChange={(value) => {
+              startTransition(() => {
+                setUseCustomRange(value);
+              });
+            }}
+            customRange={customRange}
+            onCustomRangeChange={(value) => {
+              startTransition(() => {
+                setCustomRange(value);
+              });
+            }}
+            aggregate={aggregate}
+            onAggregateChange={(value) => {
+              startTransition(() => {
+                localStorage.setItem("outputChartAggregate", value);
+                setAggregate(value);
+              });
+            }}
+            downsample={downsample}
+            onDownsampleChange={(value) => {
+              startTransition(() => {
+                localStorage.setItem("outputChartDownsample", value);
+                setDownsample(value);
+              });
+            }}
+            percentile={percentile}
+            onPercentileChange={(value) => {
+              startTransition(() => {
+                localStorage.setItem("outputChartPercentile", value.toString());
+                setPercentile(value);
+              });
+            }}
+          />
           <ZoneAccordion
             deviceZoneToggleStates={deviceZoneToggleStates}
             setDeviceZoneToggleStates={setDeviceZoneToggleStates}

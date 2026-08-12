@@ -19,10 +19,7 @@ function normalizeDateValue(value: Date | string | null | undefined) {
 }
 
 function normalizeRangeValue(
-  value:
-    | [Date | string | null, Date | string | null]
-    | null
-    | undefined,
+  value: [Date | string | null, Date | string | null] | null | undefined,
 ): [Date | null, Date | null] {
   if (!value) {
     return [null, null];
@@ -44,6 +41,7 @@ type Props = {
   type?: "range";
   dropdownContent?: React.ReactNode;
   withTime?: boolean;
+  commitOnClose?: boolean;
 };
 
 export default function PopoverDatePickerInput({
@@ -58,6 +56,7 @@ export default function PopoverDatePickerInput({
   clearable,
   type = "range",
   withTime,
+  commitOnClose = false,
 }: Props) {
   const dpType: Extract<DatePickerInputProps["type"], "range"> =
     type ?? "range";
@@ -76,17 +75,30 @@ export default function PopoverDatePickerInput({
     hasClearedRef.current = value === null;
   }, [value]);
 
-  const displayValue: [Date | null, Date | null] =
-    internalValue[0] !== null && internalValue[1] === null
-      ? internalValue
-      : normalizeRangeValue(value);
+  const displayValue: [Date | null, Date | null] = internalValue;
+
+  const commitInternalValue = (nextValue: [Date | null, Date | null]) => {
+    onChange(nextValue);
+  };
 
   const handleChange = (
     nextValue: [Date | string | null, Date | string | null],
   ) => {
     const normalizedValue = normalizeRangeValue(nextValue);
     setInternalValue(normalizedValue);
-    onChange(normalizedValue);
+
+    if (
+      !commitOnClose ||
+      (normalizedValue[0] === null && normalizedValue[1] === null)
+    ) {
+      commitInternalValue(normalizedValue);
+    }
+  };
+
+  const handleDropdownClose = () => {
+    if (commitOnClose) {
+      commitInternalValue(internalValue);
+    }
   };
 
   return (
@@ -97,13 +109,14 @@ export default function PopoverDatePickerInput({
           value={displayValue}
           onChange={(nextValue) => handleChange(nextValue)}
           valueFormat={
-            valueFormat ??
-            (ignoreYear ? "MMM D h:mm A" : "MMM D, 'YY h:mm A")
+            valueFormat ?? (ignoreYear ? "MMM D h:mm A" : "MMM D, 'YY h:mm A")
           }
           size={size}
           dropdownType="popover"
           label={label}
+          onDropdownClose={handleDropdownClose}
           styles={{ input: { cursor: "pointer" } }}
+          // timePickerProps={{ format: "12h" }}
           maxDate={new Date()}
           {...(placeholder ? { placeholder } : {})}
           {...(allowSingleDateInRange !== undefined
@@ -120,6 +133,7 @@ export default function PopoverDatePickerInput({
           size={size}
           dropdownType="popover"
           label={label}
+          onDropdownClose={handleDropdownClose}
           styles={{ input: { cursor: "pointer" } }}
           maxDate={new Date()}
           {...(placeholder ? { placeholder } : {})}

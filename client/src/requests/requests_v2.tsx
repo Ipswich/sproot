@@ -464,8 +464,7 @@ export async function addTimeConditionAsync(
     },
   );
   const deserializedResponse = (await response.json()) as
-    | SuccessResponse
-    | ErrorResponse;
+    SuccessResponse | ErrorResponse;
 
   if (!response.ok) {
     throw new Error(

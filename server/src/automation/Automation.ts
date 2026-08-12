@@ -77,12 +77,7 @@ export class Automation {
       };
     }
 
-    const evaluation = await this.conditions.evaluate(
-      this.operator,
-      sensorList,
-      outputList,
-      now,
-    );
+    const evaluation = await this.conditions.evaluate(this.operator, sensorList, outputList, now);
     this.#isTriggered = evaluation.result;
     return evaluation;
   }

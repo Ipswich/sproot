@@ -208,9 +208,9 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                       {` precedence requests, so no automatic action was applied.`}
                     </Text>
                     {conflictAutomationNames?.map((automationName) => (
-                      <Text key={automationName} size="sm">
-                        {`- ${automationName}`}
-                      </Text>
+                      <Badge key={automationName} radius="sm" color="yellow">
+                        {`• ${automationName}`}
+                      </Badge>
                     ))}
                     <Text size="sm">
                       Verify the related automations and output actions so they
@@ -220,23 +220,29 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                 </Alert>
               ) : null}
               {showTriggeredBy ? (
-                <Stack gap={6}>
-                  <Text size="sm" fw={500} c="dimmed">
-                    Triggered by
-                  </Text>
-                  <Group gap="xs" wrap="wrap">
-                    {output.triggeredBy.map((automation) => (
-                      <Badge
-                        key={`${output.id}-${automation.automationId}`}
-                        variant="light"
-                        color="green"
-                        radius="sm"
-                      >
-                        {automation.automationName}
-                      </Badge>
-                    ))}
-                  </Group>
-                </Stack>
+                <Alert
+                  color="green"
+                  variant="light"
+                  // title="Automation active"
+                >
+                  <Stack gap={6} ta="left">
+                    <Text size="sm">
+                      {`${output.name ?? "This output"} is currently being driven by:`}
+                    </Text>
+                    <Group gap="xs" wrap="wrap">
+                      {output.triggeredBy.map((automation) => (
+                        <Badge
+                          key={`${output.id}-${automation.automationId}`}
+                          // variant=""
+                          color="green"
+                          radius="sm"
+                        >
+                          • {automation.automationName}
+                        </Badge>
+                      ))}
+                    </Group>
+                  </Stack>
+                </Alert>
               ) : null}
             </Stack>
           </Paper>

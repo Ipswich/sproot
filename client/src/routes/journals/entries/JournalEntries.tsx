@@ -111,7 +111,7 @@ export default function JournalEntries() {
   });
 
   const journalIdParam = useParams();
-  const entriesJournalId = Number(journalIdParam['journalId'] ?? 0);
+  const entriesJournalId = Number(journalIdParam["journalId"] ?? 0);
 
   const entriesQuery = useQuery({
     queryKey: ["journal-entries", entriesJournalId],
@@ -318,7 +318,7 @@ export default function JournalEntries() {
                   Add new entries to this journal and manage entry tags.
                 </Text>
               </Box>
-              <Group w={"100%"} gap="0.5rem" wrap="wrap" justify="space-between">
+              <Group w={"100%"} gap="0.5rem" wrap="wrap" justify="left">
                 <Button
                   variant="default"
                   leftSection={<IconTags size={18} />}
@@ -435,7 +435,9 @@ export default function JournalEntries() {
                             label="Ignore Year"
                             checked={ignoreYear}
                             withThumbIndicator={false}
-                            onChange={(e) => setIgnoreYear(e.currentTarget.checked)}
+                            onChange={(e) =>
+                              setIgnoreYear(e.currentTarget.checked)
+                            }
                             size="sm"
                           />
                         </div>
@@ -448,7 +450,14 @@ export default function JournalEntries() {
           </Stack>
         </Paper>
         {journal ? (
-          <JournalEntriesList journalId={entriesJournalId} filters={filters} dateRangeExact={dateRangeExact} ignoreYear={ignoreYear} sortBy={sortBy} sortDir={sortDir} />
+          <JournalEntriesList
+            journalId={entriesJournalId}
+            filters={filters}
+            dateRangeExact={dateRangeExact}
+            ignoreYear={ignoreYear}
+            sortBy={sortBy}
+            sortDir={sortDir}
+          />
         ) : (
           <Text size="sm" color="dimmed">
             No journal selected

@@ -229,7 +229,9 @@ export default function TimeCondition({
           toggleAddNewCondition();
         } catch (error) {
           setSubmitError(
-            error instanceof Error ? error.message : "Unable to save time condition.",
+            error instanceof Error
+              ? error.message
+              : "Unable to save time condition.",
           );
         }
       })}
@@ -540,7 +542,7 @@ function TimeExpressionField({
       />
       {mode === "clock" ? (
         <TimeInput
-          required={required ?? false}
+          withAsterisk={required ?? false}
           label={label}
           value={mode === resolveExpressionMode(value) ? value : ""}
           onChange={(event) => onChange(event.currentTarget.value)}
@@ -548,7 +550,7 @@ function TimeExpressionField({
         />
       ) : (
         <Select
-          required={required ?? false}
+          withAsterisk={required ?? false}
           searchable
           allowDeselect={false}
           label={label}

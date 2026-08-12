@@ -5,15 +5,20 @@ import {
   ScrollArea,
   Group,
   Modal,
+  Paper,
   SegmentedControl,
   Stack,
   Space,
+  Switch,
+  Text,
   Title,
   Accordion,
   ActionIcon,
+  Center,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   addAutomationAsync,
   deleteAutomationAsync,
@@ -41,6 +46,7 @@ interface EditAutomationModalProps {
   modalOpened: boolean;
   closeModal: () => void;
   readOnly?: boolean;
+  onClose?: () => void;
 }
 
 export default function EditAutomationModal({
@@ -49,9 +55,11 @@ export default function EditAutomationModal({
   modalOpened: modalOpened,
   closeModal: closeModal,
   readOnly = false,
+  onClose,
 }: EditAutomationModalProps) {
   const [addActionOpened, { toggle: toggleAddAction, close: closeAddAction }] =
     useDisclosure(false);
+  const [enabled, setEnabled] = useState(targetAutomation?.enabled ?? true);
   const mutateAutomationForm = useForm({
     initialValues: {
       name: targetAutomation?.name ?? "",
@@ -72,6 +80,7 @@ export default function EditAutomationModal({
   useEffect(() => {
     setTargetAutomation(targetAutomation);
     closeAddAction();
+    setEnabled(targetAutomation?.enabled ?? true);
     mutateAutomationForm.setValues({
       name: targetAutomation?.name ?? "",
       operator: targetAutomation?.operator ?? "or",
@@ -102,6 +111,16 @@ export default function EditAutomationModal({
     },
     onSettled: () => {
       getAutomationsQuery.refetch();
+    },
+  });
+
+  const updateAutomationEnabledMutation = useMutation({
+    mutationFn: ({ id, enabled }: { id: number; enabled: boolean }) => {
+      return updateAutomationAsync(id, undefined, undefined, enabled);
+    },
+    onSettled: () => {
+      getAutomationsQuery.refetch();
+      getOutputsQuery.refetch();
     },
   });
 
@@ -144,6 +163,7 @@ export default function EditAutomationModal({
             name: targetAutomation?.name ?? "",
             operator: targetAutomation?.operator ?? "or",
           });
+          onClose?.();
         }}
         title={
           readOnly ? (
@@ -191,6 +211,41 @@ export default function EditAutomationModal({
         </form>
         {targetAutomation != null ? (
           <Fragment>
+            {!readOnly ? (
+              <Paper my="sm" withBorder radius="md" px="md" py="xs">
+                <Group
+                  justify="space-between"
+                  align="center"
+                  gap="md"
+                  wrap="nowrap"
+                >
+                  <div>
+                    <Text fw={600} size="sm">
+                      Automation status
+                    </Text>
+                  </div>
+                  <Center>
+                    <Switch
+                      size="lg"
+                      checked={enabled}
+                      onLabel="On"
+                      offLabel="Off"
+                      withThumbIndicator={false}
+                      onChange={(
+                        event: React.ChangeEvent<HTMLInputElement>,
+                      ) => {
+                        const newEnabled = event.currentTarget.checked;
+                        setEnabled(newEnabled);
+                        updateAutomationEnabledMutation.mutate({
+                          id: targetAutomation.id,
+                          enabled: newEnabled,
+                        });
+                      }}
+                    />
+                  </Center>
+                </Group>
+              </Paper>
+            ) : null}
             <Group justify="space-around">
               <Accordion
                 defaultValue={readOnly ? ["Conditions", "Actions"] : []}

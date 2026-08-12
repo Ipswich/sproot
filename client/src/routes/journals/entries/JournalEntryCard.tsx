@@ -34,7 +34,7 @@ export default function JournalEntryCard({
             <div
               style={{
                 minWidth: 0,
-                width: "100%",
+                width: 0,
                 maxWidth: "100%",
                 flex: 1,
                 overflow: "hidden",
@@ -50,6 +50,7 @@ export default function JournalEntryCard({
                   whiteSpace: "nowrap",
                   display: "block",
                   width: "100%",
+                  minWidth: 0,
                   maxWidth: "100%",
                 }}
               >
@@ -65,6 +66,7 @@ export default function JournalEntryCard({
                   whiteSpace: "nowrap",
                   display: "block",
                   width: "100%",
+                  minWidth: 0,
                   maxWidth: "100%",
                   marginTop: 4,
                 }}

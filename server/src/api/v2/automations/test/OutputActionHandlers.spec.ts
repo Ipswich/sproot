@@ -7,6 +7,8 @@ import { assert } from "chai";
 import sinon from "sinon";
 import { AutomationService } from "../../../../automation/AutomationService";
 import { OutputList } from "../../../../outputs/list/OutputList";
+import { SensorList } from "../../../../sensors/list/SensorList";
+import { TimeExpressionResolver } from "../../../../automation/conditions/TimeExpressionResolver";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
 import winston from "winston";
 import { MemoryEventBus } from "../../../../eventbus/MemoryEventBus";
@@ -85,6 +87,9 @@ describe("OutputActionHandlers.ts tests", () => {
     AutomationService.createInstanceAsync(
       sprootDB.automations,
       new MemoryEventBus(mockLogger),
+      sinon.createStubInstance(SensorList),
+      sinon.createStubInstance(OutputList),
+      TimeExpressionResolver.createNoop(),
       mockLogger,
     );
 

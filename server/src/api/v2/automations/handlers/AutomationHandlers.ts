@@ -31,8 +31,7 @@ function serializeAutomation(automation: {
 export async function getAsync(request: Request, response: Response) {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as
-    | AutomationService
-    | undefined;
+    AutomationService | undefined;
   let automationResponse: SuccessResponse | ErrorResponse;
   try {
     const automations = automationService
@@ -68,8 +67,7 @@ export async function getAsync(request: Request, response: Response) {
 export async function getByIdAsync(request: Request, response: Response) {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as
-    | AutomationService
-    | undefined;
+    AutomationService | undefined;
   let automationResponse: SuccessResponse | ErrorResponse;
   if (
     request.params["automationId"] == null ||

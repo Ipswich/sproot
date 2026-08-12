@@ -9,8 +9,6 @@ import { AutomationService } from "../automation/AutomationService";
 
 export function createAutomationsCronJob(
   automationService: AutomationService,
-  sensorList: SensorList,
-  outputList: OutputList,
   logger: winston.Logger,
 ) {
   let running = false;
@@ -24,7 +22,7 @@ export function createAutomationsCronJob(
       running = true;
       const profiler = logger.startTimer();
       try {
-        await automationService.evaluateAllAutomationsAsync(sensorList, outputList, new Date());
+        await automationService.evaluateAllAutomationsAsync(new Date());
       } catch (e) {
         logger.error(`Exception in automation loop: ${e}`);
       } finally {

@@ -12,6 +12,9 @@ import {
 import { assert } from "chai";
 import sinon from "sinon";
 import { AutomationService } from "../../../../automation/AutomationService";
+import { TimeExpressionResolver } from "../../../../automation/conditions/TimeExpressionResolver";
+import { OutputList } from "../../../../outputs/list/OutputList";
+import { SensorList } from "../../../../sensors/list/SensorList";
 import winston from "winston";
 import { MemoryEventBus } from "../../../../eventbus/MemoryEventBus";
 import type { IAutomationsRepository } from "../../../../database/repositories/automations/IAutomationsRepository";
@@ -177,6 +180,9 @@ describe("AutomationHandlers", () => {
     AutomationService.createInstanceAsync(
       sprootDB.automations,
       new MemoryEventBus(mockLogger),
+      sinon.createStubInstance(SensorList),
+      sinon.createStubInstance(OutputList),
+      TimeExpressionResolver.createNoop(),
       mockLogger,
     );
 
