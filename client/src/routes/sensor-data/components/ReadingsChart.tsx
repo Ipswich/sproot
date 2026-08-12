@@ -1,5 +1,6 @@
 import { LineChart } from "@mantine/charts";
 import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import {
   formatDecimalReadingForDisplay,
   formatNumberForDisplay,
@@ -49,7 +50,7 @@ export default function ReadingsChart({
       }),
     [dataSeries],
   );
-  // const shouldRenderDots = data.length <= 200;
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   return (
     <Box pos="relative">
@@ -103,6 +104,7 @@ export default function ReadingsChart({
                 );
               },
             }}
+            accessibilityLayer={!isMobile}
             mt={12}
             ml={-28}
             curveType="linear"

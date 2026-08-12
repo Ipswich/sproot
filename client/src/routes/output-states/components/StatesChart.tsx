@@ -1,5 +1,6 @@
 import { LineChart } from "@mantine/charts";
 import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import {
   formatNumberForDisplay,
   formatDateForDisplay,
@@ -41,6 +42,7 @@ export default function StatesChart({
       }),
     [dataSeries],
   );
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   return (
     <Box pos="relative">
@@ -89,6 +91,7 @@ export default function StatesChart({
               );
             },
           }}
+          accessibilityLayer={!isMobile}
           mt={12}
           ml={-28}
           curveType="linear"
