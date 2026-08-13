@@ -583,6 +583,7 @@ export default function ApplicationSettingsAccordionItem() {
                     Reset
                   </Button>
                   <Button
+                    variant="light"
                     type="submit"
                     leftSection={<IconDeviceFloppy size={16} />}
                     loading={settingsMutation.isPending}

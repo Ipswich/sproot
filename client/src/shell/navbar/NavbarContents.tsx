@@ -4,6 +4,7 @@ import { LinksGroup } from "./NavbarLinksGroup";
 import classes from "./css/NavbarContents.module.css";
 import { Page } from "../Pages";
 import { useState } from "react";
+import ColorToggle from "../../ColorToggle";
 
 interface NavbarContentsProps {
   closeNavbar: () => void;
@@ -41,7 +42,19 @@ export default function NavbarContents({
         <div className={classes["linksInner"]}>{links}</div>
       </ScrollArea>
 
-      <div className={classes["footer"]}></div>
+      <div className={classes["footer"]}>
+        <Group justify="space-between" align="center" wrap="nowrap">
+          {/* <Stack gap={0}>
+            <Text size="sm" fw={500}>
+              Appearance
+            </Text>
+            <Text size="xs" c="dimmed">
+              Toggle light or dark theme
+            </Text>
+          </Stack> */}
+          <ColorToggle />
+        </Group>
+      </div>
     </nav>
   );
 }

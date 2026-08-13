@@ -82,10 +82,11 @@ export default function BackupsAccordionItem() {
         onClose={closeUploadWarning}
       >
         <Group mt="md" justify="space-between">
-          <Button color="red" onClick={closeUploadWarning}>
+          <Button variant="light" color="red" onClick={closeUploadWarning}>
             Cancel
           </Button>
           <Button
+            variant="light"
             color="grape"
             onClick={async () => {
               if (!uploadFile) return;
@@ -170,6 +171,7 @@ export default function BackupsAccordionItem() {
                   )}
                 </ScrollArea.Autosize>
                 <Button
+                  variant="light"
                   disabled={!downloadFile}
                   mt="md"
                   onClick={async () => {
@@ -185,6 +187,7 @@ export default function BackupsAccordionItem() {
                   Download
                 </Button>
                 <Button
+                  variant="light"
                   color="green"
                   disabled={
                     backupsCreationStatusQuery.data?.isGeneratingBackup === true

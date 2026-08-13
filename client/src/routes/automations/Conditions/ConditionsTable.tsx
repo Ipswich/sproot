@@ -11,11 +11,17 @@ import {
   getApplicationSettingsAsync,
 } from "../../../requests/requests_v2";
 import {
+  Alert,
+  Badge,
+  Box,
   Button,
   Code,
   Collapse,
   Group,
+  Paper,
   Space,
+  Stack,
+  ThemeIcon,
   Title,
   Text,
 } from "@mantine/core";
@@ -39,6 +45,13 @@ import {
 } from "@sproot/common/utility/TimeMethods";
 import { getDynamicTimePointLabel } from "@sproot/common/automation/TimeConditionTimePoints";
 import { useSolarLunarTimes } from "./ConditionTypes/useSolarLunarTimes";
+import {
+  IconLogicAnd,
+  IconLogicOr,
+  IconX,
+  IconLogicXor,
+  IconPlus,
+} from "@tabler/icons-react";
 
 export interface ConditionsTableProps {
   automationId: number;
@@ -177,98 +190,190 @@ export default function ConditionsTable({
   const oneOfConditions = Object.values(conditionsQueryFn.data ?? {})
     .map((conditionType) => conditionType.oneOf)
     .flat();
+
   return (
     <Fragment>
       {conditionsQueryFn.isLoading ? (
         <Fragment>Loading...</Fragment>
       ) : (
-        <Fragment>
-          {allOfConditions.length != 0 && (
-            <Fragment>
-              <Title order={6}>All Of</Title>
-              <DeletablesTable
-                deletables={allOfConditions
-                  .sort((a, b) => sortTypes(a, b))
-                  .map((condition) => {
-                    return {
-                      displayLabel: mapToType(condition, solarLunarTimes),
-                      id: condition.id,
-                      deleteFn: mapToDeleteConditionMutationAsync(condition),
-                    };
-                  })}
-                readOnly={readOnly ?? false}
-              />
-            </Fragment>
-          )}
-          {anyOfConditions.length != 0 && (
-            <Fragment>
-              <Title order={6}>Any Of</Title>
-              <DeletablesTable
-                deletables={anyOfConditions
-                  .sort((a, b) => sortTypes(a, b))
-                  .map((condition) => {
-                    return {
-                      displayLabel: mapToType(condition, solarLunarTimes),
-                      id: condition.id,
-                      deleteFn: mapToDeleteConditionMutationAsync(condition),
-                    };
-                  })}
-                readOnly={readOnly ?? false}
-              />
-            </Fragment>
-          )}
-          {oneOfConditions.length != 0 && (
-            <Fragment>
-              <Title order={6}>One Of</Title>
-              <DeletablesTable
-                deletables={oneOfConditions
-                  .sort((a, b) => sortTypes(a, b))
-                  .map((condition) => {
-                    return {
-                      displayLabel: mapToType(condition, solarLunarTimes),
-                      id: condition.id,
-                      deleteFn: mapToDeleteConditionMutationAsync(condition),
-                    };
-                  })}
-                readOnly={readOnly ?? false}
-              />
-            </Fragment>
-          )}
+        <Stack gap="xs">
+          {renderConditionGroup({
+            title: "All Of",
+            description: "Every condition must match.",
+            color: "cyan",
+            icon: <IconLogicAnd size={16} />,
+            conditions: allOfConditions,
+            solarLunarTimes,
+            readOnly: readOnly ?? false,
+            mapToDeleteConditionMutationAsync,
+          })}
+          {renderConditionGroup({
+            title: "Any Of",
+            description: "At least one condition must match.",
+            color: "teal",
+            icon: <IconLogicOr size={16} />,
+            conditions: anyOfConditions,
+            solarLunarTimes,
+            readOnly: readOnly ?? false,
+            mapToDeleteConditionMutationAsync,
+          })}
+          {renderConditionGroup({
+            title: "One Of",
+            description: "Exactly one condition must match.",
+            color: "grape",
+            icon: <IconLogicXor size={16} />,
+            conditions: oneOfConditions,
+            solarLunarTimes,
+            readOnly: readOnly ?? false,
+            mapToDeleteConditionMutationAsync,
+          })}
           {allOfConditions.length == 0 &&
             anyOfConditions.length == 0 &&
-            oneOfConditions.length == 0 &&
-            readOnly && <div>None</div>}
+            oneOfConditions.length == 0 && (
+              <Alert color="gray" variant="light" title="No conditions yet">
+                {readOnly
+                  ? "This automation does not have any conditions configured."
+                  : "Add a condition group below to start defining when this automation should run."}
+              </Alert>
+            )}
           {readOnly ? null : (
-            <Fragment>
-              <Group justify="center">
+            <Paper withBorder radius="md" p="md">
+              <Stack gap="sm">
                 <Button
-                  size="sm"
-                  w={"100%"}
                   color="green"
+                  variant="light"
+                  size="sm"
+                  fullWidth
+                  leftSection={
+                    <BuilderToggleIcon opened={addNewConditionOpened} />
+                  }
                   onClick={() => {
                     toggleAddNewCondition();
                   }}
                 >
-                  Add Condition
+                  {addNewConditionOpened
+                    ? "Hide Condition Builder"
+                    : "Show Condition Builder"}
                 </Button>
-              </Group>
-              <Collapse
-                expanded={addNewConditionOpened}
-                transitionDuration={300}
-              >
-                <Space h={12} />
-                <NewConditionWidget
-                  automationId={automationId}
-                  toggleAddNewCondition={toggleAddNewCondition}
-                />
-              </Collapse>
-            </Fragment>
+                <Collapse
+                  expanded={addNewConditionOpened}
+                  transitionDuration={300}
+                >
+                  <Space h={12} />
+                  <NewConditionWidget
+                    automationId={automationId}
+                    toggleAddNewCondition={toggleAddNewCondition}
+                  />
+                </Collapse>
+              </Stack>
+            </Paper>
           )}
-        </Fragment>
+        </Stack>
       )}
     </Fragment>
   );
 }
+
+function BuilderToggleIcon({ opened }: { opened: boolean }) {
+  return (
+    <Box style={{ position: "relative", width: 16, height: 16 }}>
+      <IconPlus
+        size={16}
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: opened ? 0 : 1,
+          transform: `rotate(${opened ? 90 : 0}deg) scale(${opened ? 0.7 : 1})`,
+          transition: "opacity 300ms ease, transform 300ms ease",
+        }}
+      />
+      <IconX
+        size={16}
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: opened ? 1 : 0,
+          transform: `rotate(${opened ? 0 : -90}deg) scale(${opened ? 1 : 0.7})`,
+          transition: "opacity 150ms ease, transform 150ms ease",
+        }}
+      />
+    </Box>
+  );
+}
+
+function renderConditionGroup({
+  title,
+  description,
+  color,
+  icon,
+  conditions,
+  solarLunarTimes,
+  readOnly,
+  mapToDeleteConditionMutationAsync,
+}: {
+  title: string;
+  description: string;
+  color: string;
+  icon: ReactNode;
+  conditions: (
+    | SDBSensorCondition
+    | SDBOutputCondition
+    | SDBTimeCondition
+    | SDBWeekdayCondition
+    | SDBMonthCondition
+    | SDBDateRangeCondition
+  )[];
+  solarLunarTimes: SolarLunarTimesMap | null;
+  readOnly: boolean;
+  mapToDeleteConditionMutationAsync: ConditionsTableDeleteMapper;
+}) {
+  if (conditions.length === 0) {
+    return null;
+  }
+
+  return (
+    <Paper withBorder radius="md" py="md" p="xs">
+      <Stack gap="sm">
+        <Group justify="space-between" align="center" wrap="wrap">
+          <Group gap="xs" wrap="nowrap">
+            <ThemeIcon variant="light" color={color} radius="xl">
+              {icon}
+            </ThemeIcon>
+            <div>
+              <Title order={6}>{title}</Title>
+              <Text size="sm" c="dimmed">
+                {description}
+              </Text>
+            </div>
+          </Group>
+          <Badge variant="light" color={color} radius="sm">
+            {conditions.length}
+          </Badge>
+        </Group>
+        <DeletablesTable
+          deletables={conditions
+            .sort((a, b) => sortTypes(a, b))
+            .map((condition) => ({
+              displayLabel: mapToType(condition, solarLunarTimes),
+              id: condition.id,
+              deleteFn: mapToDeleteConditionMutationAsync(condition),
+            }))}
+          readOnly={readOnly}
+        />
+      </Stack>
+    </Paper>
+  );
+}
+
+type ConditionsTableDeleteMapper = (
+  condition:
+    | SDBSensorCondition
+    | SDBOutputCondition
+    | SDBTimeCondition
+    | SDBWeekdayCondition
+    | SDBMonthCondition
+    | SDBDateRangeCondition,
+) => (id: number) => Promise<void>;
 
 function sortTypes(
   a:
@@ -574,41 +679,46 @@ function SensorConditionRow(sensorCondition: SDBSensorCondition): ReactNode {
   }
 
   return (
-    <Group>
-      {sensorCondition.sensorName} is{" "}
-      {mapOperatorToText(sensorCondition.operator)} {String(comparisonValue)}
-      {readingType}
+    <Stack gap={4}>
+      <Text fw={500} ta="left">
+        {sensorCondition.sensorName}
+      </Text>
+      <Group gap="xs">
+        <Text size="sm">is</Text>
+        {mapOperatorToText(sensorCondition.operator)}
+        <Text size="sm">
+          {String(comparisonValue)}
+          {readingType}
+        </Text>
+      </Group>
       {sensorCondition.comparisonLookback != null ? (
-        <Fragment>
-          <Code mx={"-10px"} fw={700}>
-            for
-          </Code>
-          {` ${sensorCondition.comparisonLookback} ${sensorCondition.comparisonLookback === 1 ? " minute" : " minutes"}`}
-        </Fragment>
-      ) : (
-        ""
-      )}
-    </Group>
+        <Text size="sm" c="dimmed" ta="left">
+          Held for {sensorCondition.comparisonLookback}{" "}
+          {sensorCondition.comparisonLookback === 1 ? "minute" : "minutes"}
+        </Text>
+      ) : null}
+    </Stack>
   );
 }
 
 function OutputConditionRow(outputCondition: SDBOutputCondition): ReactNode {
   return (
-    <Group>
-      {outputCondition.outputName} is{" "}
-      {mapOperatorToText(outputCondition.operator)}{" "}
-      {String(outputCondition.comparisonValue)}%
+    <Stack gap={4}>
+      <Text fw={500} ta="left">
+        {outputCondition.outputName}
+      </Text>
+      <Group gap="xs">
+        <Text size="sm">is</Text>
+        {mapOperatorToText(outputCondition.operator)}
+        <Text size="sm">{String(outputCondition.comparisonValue)}%</Text>
+      </Group>
       {outputCondition.comparisonLookback != null ? (
-        <Fragment>
-          <Code mx={"-10px"} fw={700}>
-            for
-          </Code>
-          {` ${outputCondition.comparisonLookback} ${outputCondition.comparisonLookback === 1 ? " minute" : " minutes"}`}
-        </Fragment>
-      ) : (
-        ""
-      )}
-    </Group>
+        <Text size="sm" c="dimmed" ta="left">
+          Held for {outputCondition.comparisonLookback}{" "}
+          {outputCondition.comparisonLookback === 1 ? "minute" : "minutes"}
+        </Text>
+      ) : null}
+    </Stack>
   );
 }
 
@@ -638,7 +748,7 @@ function WeekdayConditionRow(weekdayCondition: SDBWeekdayCondition): ReactNode {
   } else {
     response = days.slice(0, -1).join(", ") + ", or " + days.slice(-1);
   }
-  return <Group>{`Day is ${response}`}</Group>;
+  return <Text ta="left">{`Day is ${response}`}</Text>;
 }
 
 function MonthConditionRow(monthCondition: SDBMonthCondition): ReactNode {
@@ -672,7 +782,7 @@ function MonthConditionRow(monthCondition: SDBMonthCondition): ReactNode {
   } else {
     response = months.slice(0, -1).join(", ") + ", or " + months.slice(-1);
   }
-  return <Group>{`Month is ${response}`}</Group>;
+  return <Text ta="left">{`Month is ${response}`}</Text>;
 }
 
 function DateRangeConditionRow(dateRangeCondition: {
@@ -709,7 +819,7 @@ function DateRangeConditionRow(dateRangeCondition: {
   const startMonth = months[dateRangeCondition.startMonth - 1];
   const endMonth = months[dateRangeCondition.endMonth - 1];
   return (
-    <Group>
+    <Text ta="left">
       {startMonth == endMonth &&
       dateRangeCondition.startDate == dateRangeCondition.endDate ? (
         <Fragment>
@@ -724,6 +834,6 @@ function DateRangeConditionRow(dateRangeCondition: {
           {getOrdinalSuffix(dateRangeCondition.endDate)}
         </Fragment>
       )}
-    </Group>
+    </Text>
   );
 }

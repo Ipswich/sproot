@@ -4,9 +4,12 @@ import {
   Group,
   Button,
   ColorInput,
+  Paper,
   ScrollArea,
   ColorPicker,
   Select,
+  Stack,
+  Text,
 } from "@mantine/core";
 import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
 import { Fragment, useState } from "react";
@@ -26,20 +29,27 @@ import { Models } from "@sproot/common/sensors/Models";
 import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
 import ConfirmDeleteButton from "../../../components/ConfirmDeleteButton";
 import AvailableSensorDeviceFields from "./forms/AvailableSensorDeviceFields";
+import { useMediaQuery } from "@mantine/hooks";
 
 interface EditTableProps {
   sensors: Record<string, ISensorBase>;
   supportedModels: Record<string, string>;
   setIsStale: (isStale: boolean) => void;
+  sortBy?: "name" | "id";
+  sortDir?: "asc" | "desc";
 }
 
 export default function EditTable({
   sensors,
   supportedModels,
   setIsStale,
+  sortBy,
+  sortDir,
 }: EditTableProps) {
+  const isMobile = useMediaQuery("(max-width: 48em)");
   const revalidator = useRevalidator();
   const [selectedSensor, setSelectedSensor] = useState({} as ISensorBase);
+  const [shouldResetAfterClose, setShouldResetAfterClose] = useState(false);
   const [modalOpened, { open: openModal, close: closeModal }] =
     useDisclosure(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -147,6 +157,7 @@ export default function EditTable({
   });
 
   const editTableOnClick = function (sensor: ISensorBase) {
+    setShouldResetAfterClose(false);
     setSelectedSensor(sensor);
     updateSensorForm.setFieldValue("name", sensor.name);
     updateSensorForm.setFieldValue("color", sensor.color);
@@ -172,24 +183,31 @@ export default function EditTable({
           backgroundOpacity: 0.55,
           blur: 3,
         }}
+        fullScreen={isMobile}
         scrollAreaComponent={ScrollArea.Autosize}
         centered
-        size="xs"
+        size="lg"
+        padding={isMobile ? "md" : "lg"}
         opened={modalOpened}
-        onClose={() => {
-          closeModal();
+        onExitTransitionEnd={() => {
+          if (!shouldResetAfterClose) return;
+          setSelectedSensor({} as ISensorBase);
           updateSensorForm.reset();
+          setShouldResetAfterClose(false);
         }}
-        title="Edit"
+        onClose={() => {
+          setShouldResetAfterClose(true);
+          closeModal();
+        }}
+        title="Edit Sensor"
       >
         <form
           onSubmit={updateSensorForm.onSubmit(async (values) => {
             setIsUpdating(true);
             await updateSensorMutation.mutateAsync(values as ISensorBase);
             setIsUpdating(false);
-            setSelectedSensor({} as ISensorBase);
+            setShouldResetAfterClose(true);
             closeModal();
-            updateSensorForm.reset();
           })}
         >
           <TextInput
@@ -197,119 +215,147 @@ export default function EditTable({
             required
             {...updateSensorForm.getInputProps("id")}
           />
-          <TextInput
-            maxLength={64}
-            label="Name"
-            placeholder={selectedSensor.name}
-            {...updateSensorForm.getInputProps("name")}
-          />
-          <ColorInput
-            readOnly
-            label="Color"
-            required
-            // closeOnColorSwatchClick
-            placeholder={selectedSensor.color}
-            defaultValue={selectedSensor.color}
-            // swatches={[...DefaultColors]}
-            {...updateSensorForm.getInputProps("color")}
-          />
-          <ColorPicker
-            size="xs"
-            fullWidth
-            defaultValue={selectedSensor.color}
-            swatches={[...DefaultColors]}
-            {...updateSensorForm.getInputProps("color")}
-          />
-          <Select
-            label="Model"
-            data={Object.keys(supportedModels).map((key) => {
-              return { value: key, label: supportedModels[key]! };
-            })}
-            required
-            {...updateSensorForm.getInputProps("model")}
-          />
-          <Select
-            label="Group"
-            placeholder="Default"
-            data={Object.keys(groupQuery.data ?? {}).map((key) => {
-              const group = groupQuery.data?.[parseInt(key)];
-              return {
-                value: String(group?.id) ?? "",
-                label: group?.name ?? "",
-              };
-            })}
-            searchable
-            clearable
-            allowDeselect={true}
-            {...updateSensorForm.getInputProps("deviceZoneId")}
-            value={
-              updateSensorForm.values.deviceZoneId != null
-                ? String(updateSensorForm.values.deviceZoneId)
-                : null
-            }
-            onChange={(val) =>
-              updateSensorForm.setFieldValue(
-                "deviceZoneId",
-                val !== null ? parseInt(val, 10) : undefined,
-              )
-            }
-          />
-          {(updateSensorForm.values.model === Models.ESP32_ADS1115 ||
-            updateSensorForm.values.model ===
-              Models.ESP32_CAPACITIVE_MOISTURE_SENSOR ||
-            updateSensorForm.values.model === Models.ESP32_BME280 ||
-            updateSensorForm.values.model === Models.ESP32_DS18B20) && (
-            <Select
-              label="Host"
-              placeholder="Select Device"
-              data={
-                subcontrollersQuery.data?.recognized.map(
-                  (device: SDBSubcontroller) => ({
-                    value: String(device.id),
-                    label: device.name,
-                  }),
-                ) ?? []
-              }
-              {...updateSensorForm.getInputProps("subcontrollerId")}
-              value={
-                updateSensorForm.values.subcontrollerId != null
-                  ? String(updateSensorForm.values.subcontrollerId)
-                  : null
-              }
-              onChange={(val) =>
-                updateSensorForm.setFieldValue(
-                  "subcontrollerId",
-                  val !== null ? parseInt(val, 10) : undefined,
-                )
-              }
-              required
-            />
-          )}
-          <AvailableSensorDeviceFields
-            form={updateSensorForm}
-            selectedSensor={selectedSensor}
-          />
-          <Group justify="space-between" mt="md">
-            <ConfirmDeleteButton
-              disabled={isUpdating}
-              onConfirm={async () => {
-                setIsUpdating(true);
-                await deleteSensorMutation.mutateAsync(selectedSensor.id);
-                delete sensors[selectedSensor.id];
-                setIsUpdating(false);
-                setSelectedSensor({} as ISensorBase);
-                closeModal();
-                updateSensorForm.reset();
-              }}
-            />
-            <Button type="submit" disabled={isUpdating}>
-              Update Sensor
-            </Button>
-          </Group>
+          <Stack gap="sm">
+            <Paper withBorder radius="lg" p={isMobile ? "sm" : "md"}>
+              <Stack gap="xs">
+                <Text fw={600}>{selectedSensor.name ?? "Sensor details"}</Text>
+                <Text size="sm" c="dimmed">
+                  Update identification, zone, and hardware mapping for this
+                  sensor.
+                </Text>
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="sm">
+              <Stack gap="sm">
+                <TextInput
+                  maxLength={64}
+                  label="Name"
+                  placeholder={selectedSensor.name}
+                  {...updateSensorForm.getInputProps("name")}
+                />
+                <Select
+                  label="Model"
+                  data={Object.keys(supportedModels).map((key) => {
+                    return { value: key, label: supportedModels[key]! };
+                  })}
+                  required
+                  {...updateSensorForm.getInputProps("model")}
+                />
+                <Select
+                  label="Zone"
+                  placeholder="Default"
+                  data={Object.keys(groupQuery.data ?? {}).map((key) => {
+                    const group = groupQuery.data?.[parseInt(key)];
+                    return {
+                      value: String(group?.id) ?? "",
+                      label: group?.name ?? "",
+                    };
+                  })}
+                  searchable
+                  clearable
+                  allowDeselect={true}
+                  {...updateSensorForm.getInputProps("deviceZoneId")}
+                  value={
+                    updateSensorForm.values.deviceZoneId != null
+                      ? String(updateSensorForm.values.deviceZoneId)
+                      : null
+                  }
+                  onChange={(val) =>
+                    updateSensorForm.setFieldValue(
+                      "deviceZoneId",
+                      val !== null ? parseInt(val, 10) : undefined,
+                    )
+                  }
+                />
+                {(updateSensorForm.values.model === Models.ESP32_ADS1115 ||
+                  updateSensorForm.values.model ===
+                    Models.ESP32_CAPACITIVE_MOISTURE_SENSOR ||
+                  updateSensorForm.values.model === Models.ESP32_BME280 ||
+                  updateSensorForm.values.model === Models.ESP32_DS18B20) && (
+                  <Select
+                    label="Host"
+                    placeholder="Select device"
+                    data={
+                      subcontrollersQuery.data?.recognized.map(
+                        (device: SDBSubcontroller) => ({
+                          value: String(device.id),
+                          label: device.name,
+                        }),
+                      ) ?? []
+                    }
+                    {...updateSensorForm.getInputProps("subcontrollerId")}
+                    value={
+                      updateSensorForm.values.subcontrollerId != null
+                        ? String(updateSensorForm.values.subcontrollerId)
+                        : null
+                    }
+                    onChange={(val) =>
+                      updateSensorForm.setFieldValue(
+                        "subcontrollerId",
+                        val !== null ? parseInt(val, 10) : undefined,
+                      )
+                    }
+                    required
+                  />
+                )}
+                <AvailableSensorDeviceFields
+                  form={updateSensorForm}
+                  selectedSensor={selectedSensor}
+                />
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="sm">
+              <Stack gap="sm">
+                <Text fw={600} size="sm">
+                  Appearance
+                </Text>
+                <ColorInput
+                  readOnly
+                  label="Color"
+                  required
+                  placeholder={selectedSensor.color}
+                  defaultValue={selectedSensor.color}
+                  {...updateSensorForm.getInputProps("color")}
+                />
+                <ColorPicker
+                  size="xs"
+                  fullWidth
+                  defaultValue={selectedSensor.color}
+                  swatches={[...DefaultColors]}
+                  {...updateSensorForm.getInputProps("color")}
+                />
+              </Stack>
+            </Paper>
+            <Group justify="space-between" mt="xs" wrap="wrap">
+              <ConfirmDeleteButton
+                disabled={isUpdating}
+                buttonProps={{ variant: "light", fullWidth: isMobile }}
+                onConfirm={async () => {
+                  setIsUpdating(true);
+                  await deleteSensorMutation.mutateAsync(selectedSensor.id);
+                  delete sensors[selectedSensor.id];
+                  setIsUpdating(false);
+                  setShouldResetAfterClose(true);
+                  closeModal();
+                }}
+              />
+              <Button
+                variant="light"
+                type="submit"
+                disabled={isUpdating}
+                fullWidth={isMobile}
+              >
+                Update Sensor
+              </Button>
+            </Group>
+          </Stack>
         </form>
       </Modal>
       <EditablesTable
         editables={Object.values(sensors)}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        showSortControl={false}
         onEditClick={(item) => {
           editTableOnClick(item as ISensorBase);
         }}

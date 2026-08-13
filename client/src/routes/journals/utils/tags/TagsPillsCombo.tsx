@@ -41,7 +41,7 @@ export default function TagsPillsCombo({
   const optionsRaw = allTags.map((t) => ({
     value: `tag:${t.id}`,
     label: t.name ?? "",
-    color: t.color ?? "#dee2e6",
+    color: t.color ?? "gray",
   }));
 
   const handleValueSelect = (val: string) =>
@@ -55,7 +55,7 @@ export default function TagsPillsCombo({
   const values = value.map((item) => {
     const opt = optionsRaw.find((o) => o.value === item);
     const label = opt?.label ?? item;
-    const color = opt?.color ?? "#dee2e6";
+    const color = opt?.color ?? "gray";
     const fg = readableTextColor(color);
     return (
       <Badge
@@ -97,7 +97,13 @@ export default function TagsPillsCombo({
     ));
 
   return (
-    <Combobox store={combobox} onOptionSubmit={handleValueSelect}>
+    <Combobox
+      store={combobox}
+      onOptionSubmit={handleValueSelect}
+      withinPortal={false}
+      position="bottom-start"
+      middlewares={{ flip: true, shift: true }}
+    >
       <Combobox.DropdownTarget>
         <PillsInput onClick={() => combobox.openDropdown()} w="100%">
           <Pill.Group>
@@ -105,6 +111,7 @@ export default function TagsPillsCombo({
 
             <Combobox.EventsTarget>
               <PillsInput.Field
+                autoComplete="off"
                 onFocus={() => combobox.openDropdown()}
                 onBlur={() => combobox.closeDropdown()}
                 value={search}

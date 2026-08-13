@@ -1,4 +1,4 @@
-import { Stack, Text } from "@mantine/core";
+import { Badge, Stack, Text } from "@mantine/core";
 import { SDBNotificationAction } from "@sproot/database/SDBNotificationAction";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Fragment } from "react/jsx-runtime";
@@ -66,6 +66,9 @@ export default function NotificationActionsTable({
 function NotificationActionRow(notificationAction: SDBNotificationAction) {
   return (
     <Stack gap={2} align="flex-start">
+      <Badge variant="light" color="grape" radius="sm">
+        Notification
+      </Badge>
       <Text fw={500}>{notificationAction.subject}</Text>
       <Text size="sm" c="dimmed" lineClamp={2} ta="left">
         {notificationAction.content}

@@ -193,12 +193,13 @@ export default function FlashSubcontroller(): JSX.Element {
   }
 
   return (
-    <Paper withBorder p="md" radius="md" w={"90%"}>
+    <Paper withBorder p="md" radius="md" w={"100%"}>
       <Stack>
         <Group justify="space-between">
           <Text fw={600}>ESP32 Flasher</Text>
         </Group>
         <Button
+          variant="light"
           onClick={async () => {
             await connectPort();
             await flashESP32();
@@ -212,10 +213,11 @@ export default function FlashSubcontroller(): JSX.Element {
         </Button>
         <Stack>
           <Group align="center" gap="sm" style={{ width: "100%" }}>
-            <Text w={"35%"} size="sm">
+            <Text w={"25%"} size="sm">
               Progress: {progress}%
             </Text>
             <Progress
+              w="75%"
               style={{ flex: 1 }}
               value={progress}
               color={(function () {

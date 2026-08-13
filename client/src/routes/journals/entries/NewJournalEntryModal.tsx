@@ -5,8 +5,10 @@ import {
   Textarea,
   Group,
   Button,
+  Paper,
   Text,
   ScrollArea,
+  Stack,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -19,6 +21,7 @@ import {
   getJournalEntriesAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { SDBJournalEntry } from "@sproot/database/SDBJournalEntry";
+import { useMediaQuery } from "@mantine/hooks";
 
 interface NewJournalEntryModalProps {
   modalOpened: boolean;
@@ -33,6 +36,7 @@ export default function NewJournalEntryModal({
   journalId,
   onCreated,
 }: NewJournalEntryModalProps) {
+  const isMobile = useMediaQuery("(max-width: 48em)");
   const mutation = useMutation({
     mutationFn: async (payload: Partial<SDBJournalEntry>) => {
       return await addJournalEntryAsync(journalId, payload);
@@ -81,9 +85,11 @@ export default function NewJournalEntryModal({
     <Fragment>
       <Modal
         overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
+        fullScreen={isMobile}
         scrollAreaComponent={ScrollArea.Autosize}
         centered
         size="sm"
+        padding={isMobile ? "md" : "lg"}
         opened={modalOpened}
         onClose={() => {
           closeModal();
@@ -149,37 +155,54 @@ export default function NewJournalEntryModal({
             closeModal();
           })}
         >
-          <TextInput
-            label="Title"
-            placeholder="Title"
-            maxLength={64}
-            {...form.getInputProps("title")}
-          />
+          <Stack gap="sm">
+            <Paper withBorder radius="lg" p={isMobile ? "sm" : "md"}>
+              <Stack gap="xs">
+                <Text fw={600}>New entry</Text>
+                <Text size="sm" c="dimmed">
+                  Capture an entry quickly, then attach any tags that should
+                  make it easier to find later.
+                </Text>
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="sm">
+              <Stack gap="sm">
+                <TextInput
+                  label="Title"
+                  placeholder="Title"
+                  maxLength={64}
+                  {...form.getInputProps("title")}
+                />
 
-          <Textarea
-            required
-            label="Content"
-            placeholder="Write your entry..."
-            autosize
-            minRows={3}
-            {...form.getInputProps("content")}
-          />
-
-          <div style={{ marginTop: 12 }}>
-            <Text size="sm" style={{ marginBottom: 6 }}>
-              Tags
-            </Text>
-            <TagsPillsCombo
-              allTags={availableTags}
-              value={selectedTags}
-              onChange={setSelectedTags}
-              placeholder="Select tags"
-            />
-          </div>
-
-          <Group justify="right" mt="md">
-            <Button type="submit">Add Entry</Button>
-          </Group>
+                <Textarea
+                  required
+                  label="Content"
+                  placeholder="Write your entry..."
+                  autosize
+                  minRows={5}
+                  {...form.getInputProps("content")}
+                />
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="sm">
+              <Stack gap="sm">
+                <Text fw={600} size="sm">
+                  Tags
+                </Text>
+                <TagsPillsCombo
+                  allTags={availableTags}
+                  value={selectedTags}
+                  onChange={setSelectedTags}
+                  placeholder="Select tags"
+                />
+              </Stack>
+            </Paper>
+            <Group justify="flex-end" mt="xs">
+              <Button type="submit" fullWidth={isMobile}>
+                Add Entry
+              </Button>
+            </Group>
+          </Stack>
         </form>
       </Modal>
     </Fragment>

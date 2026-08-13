@@ -47,6 +47,7 @@ export default function TimelapseDetails() {
           <Card.Section mx="xs" mb="xs">
             <Stack>
               <Button
+                variant="light"
                 onClick={async () => {
                   try {
                     await getTimelapseArchiveAsync();
@@ -61,6 +62,7 @@ export default function TimelapseDetails() {
                 Download
               </Button>
               <Button
+                variant="light"
                 onClick={async () => {
                   try {
                     await regenerateTimelapseArchiveAsync();

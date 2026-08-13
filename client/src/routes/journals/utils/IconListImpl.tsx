@@ -130,6 +130,7 @@ export function IconSelect({
     <Select
       {...(props as SelectProps)}
       value={selectedValue}
+      comboboxProps={{ withinPortal: false }}
       data={SELECT_DATA}
       renderOption={({ option }) => {
         const it = option as { value: string; label: string };

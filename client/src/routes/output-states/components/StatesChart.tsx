@@ -50,6 +50,10 @@ export default function StatesChart({
         style={{ height: "100%", pointerEvents: "none" }}
         visible={chartRendering}
         zIndex={90}
+        overlayProps={{
+          backgroundOpacity: 0.92,
+          color: "var(--mantine-color-body)",
+        }}
         loaderProps={{ color: "teal", type: "bars", size: "lg" }}
       />
       {showEmptyState ? (
@@ -59,7 +63,6 @@ export default function StatesChart({
             alignItems: "center",
             justifyContent: "center",
             height: 300,
-            backgroundColor: "#f5f5f5",
             borderRadius: 8,
           }}
         >

@@ -6,6 +6,7 @@ import {
   Button,
   Center,
   Group,
+  Menu,
   Paper,
   Stack,
   Table,
@@ -13,7 +14,13 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery } from "@tanstack/react-query";
-import { IconEdit, IconPlus, IconRefresh } from "@tabler/icons-react";
+import {
+  IconEdit,
+  IconPlus,
+  IconRefresh,
+  IconSortAscending,
+  IconSortDescending,
+} from "@tabler/icons-react";
 
 import {
   getAutomationsAsync,
@@ -29,6 +36,8 @@ export default function Automations() {
   const [editAutomation, setEditAutomation] = useState<IAutomation | null>(
     null,
   );
+  const [sortBy, setSortBy] = useState<"name" | "id" | "status">("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const getAutomationsQuery = useQuery({
     queryKey: ["automations"],
@@ -48,11 +57,37 @@ export default function Automations() {
         [],
     ),
   );
+  const statusOf = (automation: IAutomation) => {
+    const isConflicting =
+      Boolean(automation.triggered) &&
+      conflictingAutomationIds.has(automation.id);
+
+    if (!automation.enabled)
+      return { label: "Disabled", color: "gray", rank: 0 };
+    if (isConflicting) return { label: "Conflict", color: "yellow", rank: 3 };
+    if (automation.triggered)
+      return { label: "Triggered", color: "green", rank: 2 };
+    return { label: "Idle", color: "blue", rank: 1 };
+  };
+
   const automations = [...(getAutomationsQuery.data ?? [])].sort(
-    (left, right) =>
-      (left.name || "").localeCompare(right.name || "", undefined, {
-        sensitivity: "base",
-      }),
+    (left, right) => {
+      const dir = sortDir === "asc" ? 1 : -1;
+
+      if (sortBy === "id") {
+        return ((left.id ?? 0) - (right.id ?? 0)) * dir;
+      }
+
+      if (sortBy === "status") {
+        return (statusOf(left).rank - statusOf(right).rank) * dir;
+      }
+
+      return (
+        (left.name || "").localeCompare(right.name || "", undefined, {
+          sensitivity: "base",
+        }) * dir
+      );
+    },
   );
 
   const [
@@ -100,6 +135,7 @@ export default function Automations() {
             </Box>
             <Group gap="xs">
               <Button
+                variant="light"
                 leftSection={<IconPlus size={18} />}
                 onClick={() => {
                   setEditAutomation(null);
@@ -123,6 +159,72 @@ export default function Automations() {
               >
                 <IconRefresh size={16} />
               </ActionIcon>
+              <Menu withinPortal={false} position="bottom-end">
+                <Menu.Target>
+                  <ActionIcon size="lg" variant="light">
+                    {sortDir === "asc" ? (
+                      <IconSortAscending size={16} />
+                    ) : (
+                      <IconSortDescending size={16} />
+                    )}
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item
+                    onClick={() => {
+                      if (sortBy === "name") {
+                        setSortDir((current) =>
+                          current === "asc" ? "desc" : "asc",
+                        );
+                      } else {
+                        setSortBy("name");
+                        setSortDir("asc");
+                      }
+                    }}
+                  >
+                    Name{" "}
+                    {sortBy === "name"
+                      ? sortDir === "asc"
+                        ? " ↑"
+                        : " ↓"
+                      : null}
+                  </Menu.Item>
+                  <Menu.Item
+                    onClick={() => {
+                      if (sortBy === "id") {
+                        setSortDir((current) =>
+                          current === "asc" ? "desc" : "asc",
+                        );
+                      } else {
+                        setSortBy("id");
+                        setSortDir("desc");
+                      }
+                    }}
+                  >
+                    Create Date{" "}
+                    {sortBy === "id" ? (sortDir === "asc" ? " ↑" : " ↓") : null}
+                  </Menu.Item>
+                  <Menu.Item
+                    onClick={() => {
+                      if (sortBy === "status") {
+                        setSortDir((current) =>
+                          current === "asc" ? "desc" : "asc",
+                        );
+                      } else {
+                        setSortBy("status");
+                        setSortDir("desc");
+                      }
+                    }}
+                  >
+                    Status{" "}
+                    {sortBy === "status"
+                      ? sortDir === "asc"
+                        ? " ↑"
+                        : " ↓"
+                      : null}
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
             </Group>
           </Group>
         </Paper>
@@ -146,16 +248,7 @@ export default function Automations() {
               </Table.Thead>
               <Table.Tbody>
                 {automations.map((automation) => {
-                  const isConflicting =
-                    Boolean(automation.triggered) &&
-                    conflictingAutomationIds.has(automation.id);
-                  const status = !automation.enabled
-                    ? { label: "Disabled", color: "gray" }
-                    : isConflicting
-                      ? { label: "Conflict", color: "yellow" }
-                      : automation.triggered
-                        ? { label: "Triggered", color: "green" }
-                        : { label: "Idle", color: "blue" };
+                  const status = statusOf(automation);
 
                   return (
                     <Table.Tr key={automation.id}>
@@ -180,6 +273,7 @@ export default function Automations() {
                       <Table.Td ta="center">
                         <Center>
                           <ActionIcon
+                            variant="light"
                             onClick={() => {
                               setEditAutomation(automation);
                               editAutomationModal();

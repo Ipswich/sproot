@@ -7,8 +7,10 @@ import {
   Button,
   ColorInput,
   ActionIcon,
+  Paper,
   Text,
   ScrollArea,
+  Stack,
 } from "@mantine/core";
 import TagsPillsCombo from "./utils/tags/TagsPillsCombo";
 import IconSelect from "./utils/IconListImpl";
@@ -28,6 +30,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/common/utility/Constants";
 import { computeTagPillDiffs } from "./utils/tags/tagPillHelpers";
 import ConfirmDeleteButton from "../../components/ConfirmDeleteButton";
+import { useMediaQuery } from "@mantine/hooks";
 
 export interface EditJournalModalProps {
   modalOpened: boolean;
@@ -46,6 +49,7 @@ export default function EditJournalModal({
   onDeleted,
   tags,
 }: EditJournalModalProps) {
+  const isMobile = useMediaQuery("(max-width: 48em)");
   type JournalForm = {
     title: string;
     description: string;
@@ -201,137 +205,171 @@ export default function EditJournalModal({
           backgroundOpacity: 0.55,
           blur: 3,
         }}
+        fullScreen={isMobile}
         scrollAreaComponent={ScrollArea.Autosize}
         centered
-        size="xs"
+        size="lg"
+        padding={isMobile ? "md" : "lg"}
         opened={modalOpened}
         onClose={() => {
           closeModal();
           form.reset();
         }}
-        title={`Edit`}
+        title={`Edit Journal`}
       >
         <form
           onSubmit={form.onSubmit(async () => {
             await save();
           })}
         >
-          <TextInput
-            required
-            label="Title"
-            {...form.getInputProps("title")}
-            disabled={journal.archived && form.values.archived}
-          />
-          <Textarea
-            label="Description"
-            {...form.getInputProps("description")}
-            minRows={3}
-            disabled={journal.archived && form.values.archived}
-          />
-          <IconSelect
-            required
-            label="Icon"
-            iconColor={
-              form.values.color ??
-              DefaultColors[Math.floor(Math.random() * DefaultColors.length)]!
-            }
-            value={form.values.icon}
-            onChange={(v) =>
-              form.setFieldValue("icon", String(v ?? "NullIcon"))
-            }
-            disabled={journal.archived && form.values.archived}
-          />
-          <ColorInput
-            required
-            label="Color"
-            swatches={[...DefaultColors]}
-            {...form.getInputProps("color")}
-            disabled={journal.archived && form.values.archived}
-          />
-
-          <div style={{ marginTop: 12 }}>
-            <Text fw={600} style={{ marginBottom: 8 }}>
-              Tags
-            </Text>
-            <div style={{ marginBottom: 8 }}>
-              <TagsPillsCombo
-                allTags={
-                  // ensure availableTags includes any currently selected localTags
-                  Array.from(
+          <Stack gap="sm">
+            <Paper withBorder radius="lg" p={isMobile ? "sm" : "md"}>
+              <Stack gap="xs">
+                <Text fw={600}>{journal.title}</Text>
+                <Text size="sm" c="dimmed">
+                  Update this journal's content, appearance, tags, and archived
+                  state.
+                </Text>
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="sm">
+              <Stack gap="sm">
+                <TextInput
+                  required
+                  label="Title"
+                  {...form.getInputProps("title")}
+                  disabled={journal.archived && form.values.archived}
+                />
+                <Textarea
+                  label="Description"
+                  {...form.getInputProps("description")}
+                  minRows={6}
+                  disabled={journal.archived && form.values.archived}
+                />
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="sm">
+              <Stack gap="sm">
+                <Text fw={600} size="sm">
+                  Appearance
+                </Text>
+                <IconSelect
+                  required
+                  label="Icon"
+                  iconColor={
+                    form.values.color ??
+                    DefaultColors[
+                      Math.floor(Math.random() * DefaultColors.length)
+                    ]!
+                  }
+                  value={form.values.icon}
+                  onChange={(v) =>
+                    form.setFieldValue("icon", String(v ?? "NullIcon"))
+                  }
+                  disabled={journal.archived && form.values.archived}
+                />
+                <ColorInput
+                  required
+                  label="Color"
+                  swatches={[...DefaultColors]}
+                  {...form.getInputProps("color")}
+                  disabled={journal.archived && form.values.archived}
+                />
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="sm">
+              <Stack gap="sm">
+                <Text fw={600} size="sm">
+                  Tags
+                </Text>
+                <TagsPillsCombo
+                  allTags={Array.from(
                     new Map(
                       [...availableTags, ...(localTags ?? [])].map((t) => [
                         t.id,
                         t,
                       ]),
                     ).values(),
-                  )
-                }
-                value={(localTags ?? []).map((t) => `tag:${t.id}`)}
-                onChange={handlePillsChange}
-                placeholder="Search tags"
-              />
-            </div>
-          </div>
-
-          <Group py="md" justify="space-between" align="center">
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <ActionIcon
-                variant={form.values.archived ? "filled" : "outline"}
-                color={form.values.archived ? "gray" : "teal"}
-                onClick={() =>
-                  form.setFieldValue("archived", !form.values.archived)
-                }
-                title={form.values.archived ? "Unarchive" : "Archive"}
+                  )}
+                  value={(localTags ?? []).map((t) => `tag:${t.id}`)}
+                  onChange={handlePillsChange}
+                  placeholder="Search tags"
+                />
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="sm">
+              <Group
+                py="xs"
+                justify="space-between"
+                align="center"
+                wrap="nowrap"
               >
-                {form.values.archived ? (
-                  <IconArchive size={16} />
-                ) : (
-                  <IconInbox size={16} />
-                )}
-              </ActionIcon>
-              <div>
-                <Text fw={600}>
-                  {form.values.archived ? "Archived" : "Active"}
-                </Text>
-                <Text size="xs" color="dimmed">
-                  {form.values.archived
-                    ? journal.archivedAt
-                      ? (() => {
-                          try {
-                            return `Archived ${new Date(journal.archivedAt).toLocaleString()}`;
-                          } catch {
-                            return "Archived";
-                          }
-                        })()
-                      : "Will be archived on save"
-                    : journal.archived
-                      ? "Will be unarchived on save"
-                      : "Currently active"}
-                </Text>
-              </div>
-            </div>
-          </Group>
-          {journal.archived && form.values.archived ? (
-            <Text size="sm" color="red">
-              This journal is archived — unarchive it to make changes.
-            </Text>
-          ) : null}
-
-          <Group justify="space-between" mt="md">
-            <ConfirmDeleteButton
-              disabled={isUpdating}
-              loading={isUpdating}
-              onConfirm={doDelete}
-            />
-            <Button
-              type="submit"
-              disabled={
-                isUpdating || (journal.archived && form.values.archived)
-              }
-            >
-              Update Journal
-            </Button>
-          </Group>
+                <Group gap="sm" wrap="nowrap">
+                  <ActionIcon
+                    variant={form.values.archived ? "filled" : "light"}
+                    {...(form.values.archived
+                      ? ({ color: "gray" as const } as const)
+                      : {})}
+                    radius="xl"
+                    size="lg"
+                    onClick={() =>
+                      form.setFieldValue("archived", !form.values.archived)
+                    }
+                    title={form.values.archived ? "Unarchive" : "Archive"}
+                  >
+                    {form.values.archived ? (
+                      <IconArchive size={16} />
+                    ) : (
+                      <IconInbox size={16} />
+                    )}
+                  </ActionIcon>
+                  <div>
+                    <Text fw={600}>
+                      {form.values.archived ? "Archived" : "Active"}
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {form.values.archived
+                        ? journal.archivedAt
+                          ? (() => {
+                              try {
+                                return `Archived ${new Date(journal.archivedAt).toLocaleString()}`;
+                              } catch {
+                                return "Archived";
+                              }
+                            })()
+                          : "Will be archived on save"
+                        : journal.archived
+                          ? "Will be unarchived on save"
+                          : "Currently active"}
+                    </Text>
+                  </div>
+                </Group>
+              </Group>
+            </Paper>
+            {journal.archived && form.values.archived ? (
+              <Text size="sm" c="red">
+                This journal is archived — unarchive it to make changes.
+              </Text>
+            ) : null}
+            <Group justify="space-between" mt="xs" wrap="wrap">
+              <ConfirmDeleteButton
+                disabled={isUpdating}
+                loading={isUpdating}
+                buttonProps={{ variant: "light", fullWidth: isMobile }}
+                onConfirm={doDelete}
+              />
+              <Button
+                variant="light"
+                type="submit"
+                fullWidth={isMobile}
+                disabled={
+                  isUpdating || (journal.archived && form.values.archived)
+                }
+              >
+                Update Journal
+              </Button>
+            </Group>
+          </Stack>
         </form>
       </Modal>
     </Fragment>

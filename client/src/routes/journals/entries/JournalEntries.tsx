@@ -318,7 +318,7 @@ export default function JournalEntries() {
                   Add new entries to this journal and manage entry tags.
                 </Text>
               </Box>
-              <Group w={"100%"} gap="0.5rem" wrap="wrap" justify="left">
+              <Group w={"100%"} gap="0.5rem" wrap="wrap" justify="flex-start">
                 <Button
                   variant="default"
                   leftSection={<IconTags size={18} />}
@@ -327,6 +327,7 @@ export default function JournalEntries() {
                   Manage Tags
                 </Button>
                 <Button
+                  variant="light"
                   leftSection={<IconPlus size={18} />}
                   onClick={() => openEntryModal()}
                 >
@@ -391,7 +392,7 @@ export default function JournalEntries() {
                   <Box style={{ flex: 1, minWidth: 280 }}>
                     <TagsPillsCombo
                       allTags={[
-                        { id: -1, name: "Archived", color: "#868e96" },
+                        { id: -1, name: "Archived", color: "gray" },
                         ...allTags,
                       ]}
                       value={filters}
