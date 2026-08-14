@@ -418,7 +418,7 @@ export default function EditAutomationModal({
                             </Group>
                           </Group>
                           <Divider />
-                          {getOutputsQuery.isLoading == null ? (
+                          {getOutputsQuery.isLoading ? (
                             <LoadingOverlay
                               style={{ height: "100%", pointerEvents: "none" }}
                               visible={getOutputsQuery.isLoading}
