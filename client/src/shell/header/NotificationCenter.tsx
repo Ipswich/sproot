@@ -5,6 +5,7 @@ import {
   Divider,
   Group,
   Modal,
+  LoadingOverlay,
   Popover,
   ScrollArea,
   Stack,
@@ -171,7 +172,16 @@ export default function NotificationCenter() {
             <Divider />
             <ScrollArea.Autosize mah={360} type="scroll">
               {activeNotificationsQuery.isLoading ? (
-                <Text p="sm">Loading...</Text>
+                <LoadingOverlay
+                  style={{ height: "100%", pointerEvents: "none" }}
+                  visible={activeNotificationsQuery.isLoading}
+                  zIndex={90}
+                  overlayProps={{
+                    backgroundOpacity: 0.92,
+                    color: "var(--mantine-color-body)",
+                  }}
+                  loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+                />
               ) : activeNotificationsQuery.isError ? (
                 <Text p="sm" c="red">
                   Unable to load notifications.

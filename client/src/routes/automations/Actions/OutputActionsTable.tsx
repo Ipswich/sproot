@@ -4,7 +4,14 @@ import {
   getOutputActionsByAutomationIdAsync,
   deleteOutputActionAsync,
 } from "../../../requests/requests_v2";
-import { Alert, Badge, Group, Stack, Text } from "@mantine/core";
+import {
+  Alert,
+  Badge,
+  Group,
+  Stack,
+  Text,
+  LoadingOverlay,
+} from "@mantine/core";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { Fragment } from "react/jsx-runtime";
 import DeletablesTable from "../../common/DeletablesTable";
@@ -118,7 +125,16 @@ export default function OutputActionsTable({
   return (
     <Fragment>
       {outputActionsQueryFn.isLoading ? (
-        <div>Loading...</div>
+        <LoadingOverlay
+          style={{ height: "100%", pointerEvents: "none" }}
+          visible={outputActionsQueryFn.isLoading}
+          zIndex={90}
+          overlayProps={{
+            backgroundOpacity: 0.92,
+            color: "var(--mantine-color-body)",
+          }}
+          loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+        />
       ) : (
         <Fragment>
           {outputActionRows.length === 0 ? (

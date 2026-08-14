@@ -11,6 +11,7 @@ import {
   Stack,
   Table,
   Text,
+  LoadingOverlay,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery } from "@tanstack/react-query";
@@ -229,7 +230,16 @@ export default function Automations() {
           </Group>
         </Paper>
         {getAutomationsQuery.isLoading ? (
-          <div>Loading...</div>
+          <LoadingOverlay
+            style={{ height: "100%", pointerEvents: "none" }}
+            visible={getAutomationsQuery.isLoading}
+            zIndex={90}
+            overlayProps={{
+              backgroundOpacity: 0.92,
+              color: "var(--mantine-color-body)",
+            }}
+            loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+          />
         ) : (
           <Paper withBorder shadow="xs" radius="lg" p="md">
             <Table highlightOnHover style={{ tableLayout: "auto" }}>

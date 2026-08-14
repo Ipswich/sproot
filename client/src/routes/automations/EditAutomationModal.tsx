@@ -18,6 +18,7 @@ import {
   Divider,
   Box,
   ThemeIcon,
+  LoadingOverlay,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -417,8 +418,21 @@ export default function EditAutomationModal({
                             </Group>
                           </Group>
                           <Divider />
-                          {getOutputsQuery.data == null ? (
-                            <div>Loading...</div>
+                          {getOutputsQuery.isLoading == null ? (
+                            <LoadingOverlay
+                              style={{ height: "100%", pointerEvents: "none" }}
+                              visible={getOutputsQuery.isLoading}
+                              zIndex={90}
+                              overlayProps={{
+                                backgroundOpacity: 0.92,
+                                color: "var(--mantine-color-body)",
+                              }}
+                              loaderProps={{
+                                color: "teal",
+                                type: "bars",
+                                size: "lg",
+                              }}
+                            />
                           ) : (
                             <OutputActionsTable
                               automationId={targetAutomation.id}

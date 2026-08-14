@@ -198,7 +198,7 @@ export default function NewJournalEntryModal({
               </Stack>
             </Paper>
             <Group justify="flex-end" mt="xs">
-              <Button type="submit" fullWidth={isMobile}>
+              <Button variant="light" type="submit" fullWidth={isMobile}>
                 Add Entry
               </Button>
             </Group>

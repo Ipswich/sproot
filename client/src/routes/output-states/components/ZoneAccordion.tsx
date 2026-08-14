@@ -13,7 +13,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Accordion, Center } from "@mantine/core";
+import { Accordion, Center, LoadingOverlay } from "@mantine/core";
 import { Fragment, memo, startTransition, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -155,7 +155,16 @@ function ZoneAccordion({
     <Fragment>
       {getDeviceZonesQuery.isLoading || getOutputsQuery.isLoading ? (
         <Center>
-          <h3>Loading...</h3>
+          <LoadingOverlay
+            style={{ height: "100%", pointerEvents: "none" }}
+            visible={getDeviceZonesQuery.isLoading || getOutputsQuery.isLoading}
+            zIndex={90}
+            overlayProps={{
+              backgroundOpacity: 0.92,
+              color: "var(--mantine-color-body)",
+            }}
+            loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+          />
         </Center>
       ) : sortableItems.length === 1 ? (
         <StatesAccordion

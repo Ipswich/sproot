@@ -24,6 +24,7 @@ import {
   ThemeIcon,
   Title,
   Text,
+  LoadingOverlay,
 } from "@mantine/core";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
@@ -194,7 +195,16 @@ export default function ConditionsTable({
   return (
     <Fragment>
       {conditionsQueryFn.isLoading ? (
-        <Fragment>Loading...</Fragment>
+        <LoadingOverlay
+          style={{ height: "100%", pointerEvents: "none" }}
+          visible={conditionsQueryFn.isLoading}
+          zIndex={90}
+          overlayProps={{
+            backgroundOpacity: 0.92,
+            color: "var(--mantine-color-body)",
+          }}
+          loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+        />
       ) : (
         <Stack gap="xs">
           {renderConditionGroup({

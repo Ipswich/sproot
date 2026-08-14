@@ -1,4 +1,4 @@
-import { Badge, Stack, Text } from "@mantine/core";
+import { Badge, Stack, Text, LoadingOverlay } from "@mantine/core";
 import { SDBNotificationAction } from "@sproot/database/SDBNotificationAction";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Fragment } from "react/jsx-runtime";
@@ -46,7 +46,16 @@ export default function NotificationActionsTable({
   return (
     <Fragment>
       {notificationActionsQuery.isLoading ? (
-        <div>Loading...</div>
+        <LoadingOverlay
+          style={{ height: "100%", pointerEvents: "none" }}
+          visible={notificationActionsQuery.isLoading}
+          zIndex={90}
+          overlayProps={{
+            backgroundOpacity: 0.92,
+            color: "var(--mantine-color-body)",
+          }}
+          loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+        />
       ) : (
         <Fragment>
           {notificationActionRows.length === 0 ? (

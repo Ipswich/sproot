@@ -19,6 +19,7 @@ import {
   Accordion,
   Group,
   Modal,
+  LoadingOverlay,
 } from "@mantine/core";
 import { useState, Fragment, useEffect } from "react";
 import { IconDatabaseExport } from "@tabler/icons-react";
@@ -119,7 +120,18 @@ export default function BackupsAccordionItem() {
         </Accordion.Control>
         <Accordion.Panel>
           <Group justify="center">
-            {backupsListQuery.isLoading && <p>Loading...</p>}
+            {backupsListQuery.isLoading && (
+              <LoadingOverlay
+                style={{ height: "100%", pointerEvents: "none" }}
+                visible={backupsListQuery.isLoading}
+                zIndex={90}
+                overlayProps={{
+                  backgroundOpacity: 0.92,
+                  color: "var(--mantine-color-body)",
+                }}
+                loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+              />
+            )}
             {backupsListQuery.isError && <p>Error loading backups list.</p>}
             <Paper
               radius="sm"

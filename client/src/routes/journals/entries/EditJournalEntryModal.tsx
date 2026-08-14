@@ -248,7 +248,7 @@ export default function EditJournalEntryModal({
               buttonProps={{ variant: "light", fullWidth: isMobile }}
               onConfirm={doDelete}
             />
-            <Button type="submit" fullWidth={isMobile}>
+            <Button variant="light" type="submit" fullWidth={isMobile}>
               Update Entry
             </Button>
           </Group>
