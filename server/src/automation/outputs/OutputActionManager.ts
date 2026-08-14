@@ -10,6 +10,10 @@ import { IEventBus } from "../../eventbus/IEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
 import {
+  OutputActionDeletedEvent,
+  OutputActionUpdatedEvent,
+} from "../../eventbus/events/actions/OutputActionEvents";
+import {
   OutputActionConflict,
   OutputActionParticipant,
   OutputActionWarning,
@@ -66,7 +70,22 @@ export class OutputActionManager implements Disposable {
     this.#logger = logger;
     this.#automationTimeout = automationTimeout;
 
-    const actionReloadListener = async () => {
+    const actionUpdatedListener = async (event: OutputActionUpdatedEvent) => {
+      if (
+        event.payload.action.outputId !== this.#outputId &&
+        event.payload.previousOutputId !== this.#outputId
+      ) {
+        return;
+      }
+
+      await this.#reloadActionsAsync();
+    };
+
+    const actionDeletedListener = async (event: OutputActionDeletedEvent) => {
+      if (event.payload.outputId !== this.#outputId) {
+        return;
+      }
+
       await this.#reloadActionsAsync();
     };
 
@@ -86,9 +105,13 @@ export class OutputActionManager implements Disposable {
         });
     };
 
-    const outputActionUnsubscribe = this.#eventBus.subscribe(
-      Events.OUTPUT_ACTION_MODIFIED_EVENT,
-      actionReloadListener,
+    const outputActionUpdatedUnsubscribe = this.#eventBus.subscribe(
+      Events.OUTPUT_ACTION_UPDATED_EVENT,
+      actionUpdatedListener,
+    );
+    const outputActionDeletedUnsubscribe = this.#eventBus.subscribe(
+      Events.OUTPUT_ACTION_DELETED_EVENT,
+      actionDeletedListener,
     );
     const automationUnsubscribe = this.#eventBus.subscribe(
       Events.AUTOMATIONS_TRIGGERED_EVENT,
@@ -96,7 +119,8 @@ export class OutputActionManager implements Disposable {
     );
 
     this.#listenerCleanupFunction = () => {
-      outputActionUnsubscribe();
+      outputActionUpdatedUnsubscribe();
+      outputActionDeletedUnsubscribe();
       automationUnsubscribe();
     };
   }

@@ -21,6 +21,9 @@ describe("SettingsService", () => {
         [SETTINGS.sensors.data_retention]: undefined,
         [SETTINGS.outputs.data_retention]: undefined,
         [SETTINGS.system.backup_retention]: undefined,
+        [SETTINGS.system.log_debug]: false,
+        [SETTINGS.system.latitude]: undefined,
+        [SETTINGS.system.longitude]: undefined,
       }),
       getAsync: sinon.stub().callsFake(async (_key) => undefined),
       getManyAsync: sinon.stub().resolves({}),
@@ -122,6 +125,18 @@ describe("SettingsService", () => {
       assert.isTrue(handler.calledOnce);
       assert.strictEqual(handler.firstCall.args[0].type, Events.BACKUP_RETENTION_UPDATED);
       assert.strictEqual(handler.firstCall.args[0].payload.key, SETTINGS.system.backup_retention);
+    });
+
+    it("publishes system.log_debug.updated for system.log_debug", async () => {
+      const handler = sinon.stub().resolves();
+      eventBus.subscribe(Events.SYSTEM_LOG_DEBUG_UPDATED, handler);
+
+      await service.setAsync(SETTINGS.system.log_debug, true);
+
+      assert.isTrue(handler.calledOnce);
+      assert.strictEqual(handler.firstCall.args[0].type, Events.SYSTEM_LOG_DEBUG_UPDATED);
+      assert.strictEqual(handler.firstCall.args[0].payload.key, SETTINGS.system.log_debug);
+      assert.strictEqual(handler.firstCall.args[0].payload.value, true);
     });
 
     it("publishes after repo.setAsync succeeds", async () => {

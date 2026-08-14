@@ -295,11 +295,13 @@ export class Conditions {
     this.#monthConditions = {};
     this.#dateRangeConditions = {};
 
+    const now = new Date();
     const promises = [];
     promises.push(
-      this.#conditionsRepository.sensor.getAsync(this.#automationId).then((sensorConditions) => {
-        sensorConditions.map((sensorCondition) => {
-          this.#sensorConditions[sensorCondition.id] = new SensorCondition(
+      this.#conditionsRepository.sensor.getAsync(this.#automationId).then(async (sensorConditions) => {
+        await Promise.all(
+          sensorConditions.map(async (sensorCondition) => {
+            const nextCondition = new SensorCondition(
             sensorCondition.id,
             sensorCondition.groupType,
             sensorCondition.sensorId,
@@ -307,22 +309,29 @@ export class Conditions {
             sensorCondition.operator,
             sensorCondition.comparisonValue,
             sensorCondition.comparisonLookback,
-          );
-        });
+            );
+            await nextCondition.initializeLookbackStateAsync(this.#conditionsRepository.sensor, now);
+            this.#sensorConditions[sensorCondition.id] = nextCondition;
+          }),
+        );
       }),
     );
     promises.push(
-      this.#conditionsRepository.output.getAsync(this.#automationId).then((outputConditions) => {
-        outputConditions.map((outputCondition) => {
-          this.#outputConditions[outputCondition.id] = new OutputCondition(
+      this.#conditionsRepository.output.getAsync(this.#automationId).then(async (outputConditions) => {
+        await Promise.all(
+          outputConditions.map(async (outputCondition) => {
+            const nextCondition = new OutputCondition(
             outputCondition.id,
             outputCondition.groupType,
             outputCondition.outputId,
             outputCondition.operator,
             outputCondition.comparisonValue,
             outputCondition.comparisonLookback,
-          );
-        });
+            );
+            await nextCondition.initializeLookbackStateAsync(this.#conditionsRepository.output, now);
+            this.#outputConditions[outputCondition.id] = nextCondition;
+          }),
+        );
       }),
     );
     promises.push(

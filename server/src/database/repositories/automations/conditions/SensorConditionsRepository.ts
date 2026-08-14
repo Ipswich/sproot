@@ -5,6 +5,7 @@ import { SDBSensorCondition } from "@sproot/common/database/SDBSensorCondition";
 import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../../utils/BaseKnexRepository";
+import { getLookbackDate } from "../../../databaseQueryUtils";
 
 export class SensorConditionsRepository
   extends BaseKnexRepository
@@ -66,7 +67,45 @@ export class SensorConditionsRepository
       });
   }
 
+  async getMostRecentViolationAsync(
+    sensorId: number,
+    readingType: ReadingType,
+    operator: ConditionOperator,
+    comparisonValue: number,
+    comparisonLookback: number,
+    now: Date = new Date(),
+  ): Promise<Date | null> {
+    const violationPredicate = buildViolationPredicate("CAST(d.data AS DOUBLE PRECISION)", operator);
+    const row = await this.connection("sensor_data as d")
+      .select("d.logTime")
+      .where("d.sensor_id", sensorId)
+      .andWhere("d.metric", readingType)
+      .andWhere("d.logTime", ">", getLookbackDate(now, comparisonLookback))
+      .andWhereRaw(violationPredicate, [comparisonValue])
+      .orderBy("d.logTime", "desc")
+      .first();
+
+    return row?.logTime != null ? new Date(row.logTime) : null;
+  }
+
   async deleteAsync(conditionId: number): Promise<void> {
     return this.connection("sensor_conditions").where("id", conditionId).delete();
+  }
+}
+
+function buildViolationPredicate(valueExpression: string, operator: ConditionOperator): string {
+  switch (operator) {
+    case "equal":
+      return `${valueExpression} <> ?`;
+    case "notEqual":
+      return `${valueExpression} = ?`;
+    case "greater":
+      return `${valueExpression} <= ?`;
+    case "greaterOrEqual":
+      return `${valueExpression} < ?`;
+    case "less":
+      return `${valueExpression} >= ?`;
+    case "lessOrEqual":
+      return `${valueExpression} > ?`;
   }
 }

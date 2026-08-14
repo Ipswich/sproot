@@ -5,6 +5,10 @@ import { IActiveNotification } from "@sproot/automation/IActiveNotification";
 import { IEventBus } from "../../eventbus/IEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
+import {
+  NotificationActionDeletedEvent,
+  NotificationActionUpdatedEvent,
+} from "../../eventbus/events/actions/NotificationActionEvents";
 import type { INotificationActionsRepository } from "../../database/repositories/automations/actions/INotificationActionsRepository";
 
 export class NotificationActionManager implements Disposable {
@@ -35,8 +39,12 @@ export class NotificationActionManager implements Disposable {
     this.#eventBus = eventBus;
     this.#logger = logger;
 
-    const actionReloadListener = async () => {
-      await this.#reloadActionsAsync();
+    const actionUpdatedListener = (event: NotificationActionUpdatedEvent) => {
+      this.#upsertAction(new NotificationAction(event.payload.action));
+    };
+
+    const actionDeletedListener = (event: NotificationActionDeletedEvent) => {
+      this.#actions = this.#actions.filter((action) => action.id !== event.payload.actionId);
     };
 
     const automationListener = (event: AutomationsTriggeredEvent) => {
@@ -47,9 +55,13 @@ export class NotificationActionManager implements Disposable {
       }
     };
 
-    const actionReloadUnsubscribe = this.#eventBus.subscribe(
-      Events.NOTIFICATION_ACTION_MODIFIED_EVENT,
-      actionReloadListener,
+    const actionUpdatedUnsubscribe = this.#eventBus.subscribe(
+      Events.NOTIFICATION_ACTION_UPDATED_EVENT,
+      actionUpdatedListener,
+    );
+    const actionDeletedUnsubscribe = this.#eventBus.subscribe(
+      Events.NOTIFICATION_ACTION_DELETED_EVENT,
+      actionDeletedListener,
     );
     const automationUnsubscribe = this.#eventBus.subscribe(
       Events.AUTOMATIONS_TRIGGERED_EVENT,
@@ -57,7 +69,8 @@ export class NotificationActionManager implements Disposable {
     );
 
     this.#listenerCleanupFunction = () => {
-      actionReloadUnsubscribe();
+      actionUpdatedUnsubscribe();
+      actionDeletedUnsubscribe();
       automationUnsubscribe();
     };
   }
@@ -79,6 +92,12 @@ export class NotificationActionManager implements Disposable {
     } catch (error) {
       this.#logger.error(`Error reloading actions for notifications - ${error}`);
     }
+  }
+
+  #upsertAction(nextAction: NotificationAction): void {
+    const nextActions = this.#actions.filter((action) => action.id !== nextAction.id);
+    nextActions.push(nextAction);
+    this.#actions = nextActions.sort((left, right) => left.id - right.id);
   }
 
   /**

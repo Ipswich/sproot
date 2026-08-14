@@ -9,8 +9,9 @@ export const CRON = {
 };
 
 // Cache Constants
-export const INITIAL_CACHE_LOOKBACK = 10080;
-export const MAX_CACHE_SIZE = 10080;
+export const INITIAL_CACHE_LOOKBACK = 30;
+export const MAX_CACHE_SIZE = 30;
+export const CACHE_BUCKET_MINUTES = 1;
 
 // Static Resources
 export const STATIC_RESOURCES_DIRECTORY = "./static";
@@ -28,12 +29,6 @@ export const ESP32_BOOTLOADER_PATH = `${FIRMWARE_DIRECTORY}/esp32/bootloader.bin
 export const ESP32_PARTITIONS_PATH = `${FIRMWARE_DIRECTORY}/esp32/partitions.bin`;
 export const ESP32_BOOTAPP0_PATH = `${FIRMWARE_DIRECTORY}/esp32/boot_app0.bin`;
 export const ESP32_FIRMWARE_PATH = `${FIRMWARE_DIRECTORY}/esp32/firmware.bin`;
-
-// Certificates Constants
-// export const CERTS_DIRECTORY = "./certs";
-// export const CA_DIR = `${CERTS_DIRECTORY}/ca`;
-// export const CA_KEY_PATH = `${CA_DIR}/ca.key.pem`;
-// export const CA_CERT_PATH = `${CA_DIR}/ca.crt.pem`;
 
 // Backup Constants
 export const BACKUP_DIRECTORY = "./backups";

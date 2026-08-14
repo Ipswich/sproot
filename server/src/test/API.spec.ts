@@ -1956,15 +1956,16 @@ describe("API Tests", async function () {
 
   describe("Settings Routes", async () => {
     describe("GET", async () => {
-      it("should return 200 with all 5 settings", async () => {
+      it("should return 200 with all 6 settings", async () => {
         const response = await request(server).get("/api/v2/settings").expect(200);
         const content = response.body["content"];
         validateMiddlewareValues(response);
         assert.isObject(content.data);
-        assert.equal(Object.keys(content.data).length, 5);
+        assert.equal(Object.keys(content.data).length, 6);
         assert.exists(content.data["sensors.data_retention"]);
         assert.exists(content.data["outputs.data_retention"]);
         assert.exists(content.data["system.backup_retention"]);
+        assert.strictEqual(content.data["system.log_debug"], false);
         assert.containsAllKeys(content.data, ["system.latitude", "system.longitude"]);
       });
     });
@@ -2010,6 +2011,16 @@ describe("API Tests", async function () {
         validateMiddlewareValues(response);
         assert.include(response.body.error.details[0], "expected string or null");
         assert.include(response.body.error.details[0], "got number");
+      });
+
+      it("should accept boolean updates for system.log_debug", async () => {
+        const response = await request(server)
+          .patch("/api/v2/settings")
+          .send({ "system.log_debug": true })
+          .expect(200);
+
+        validateMiddlewareValues(response);
+        assert.strictEqual(response.body.content.data["system.log_debug"], true);
       });
 
       it("should return 200 for null value", async () => {

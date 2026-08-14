@@ -1303,22 +1303,22 @@ export async function deleteAsync(
     }
 
     if (conditionType === "sensor") {
-      await automationService.deleteSensorConditionAsync(conditionId);
+      await automationService.deleteSensorConditionAsync(automationId, conditionId);
     }
     if (conditionType === "output") {
-      await automationService.deleteOutputConditionAsync(conditionId);
+      await automationService.deleteOutputConditionAsync(automationId, conditionId);
     }
     if (conditionType === "time") {
-      await automationService.deleteTimeConditionAsync(conditionId);
+      await automationService.deleteTimeConditionAsync(automationId, conditionId);
     }
     if (conditionType === "weekday") {
-      await automationService.deleteWeekdayConditionAsync(conditionId);
+      await automationService.deleteWeekdayConditionAsync(automationId, conditionId);
     }
     if (conditionType === "month") {
-      await automationService.deleteMonthConditionAsync(conditionId);
+      await automationService.deleteMonthConditionAsync(automationId, conditionId);
     }
     if (conditionType === "date-range") {
-      await automationService.deleteDateRangeConditionAsync(conditionId);
+      await automationService.deleteDateRangeConditionAsync(automationId, conditionId);
     }
 
     deleteConditionResponse = {

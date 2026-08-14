@@ -22,12 +22,14 @@ const createStubConditionsRepository = () => {
       getAsync: sinon.stub().resolves([]),
       addAsync: stub(),
       updateAsync: stub(),
+      getMostRecentViolationAsync: sinon.stub().resolves(null),
       deleteAsync: stub(),
     },
     output: {
       getAsync: sinon.stub().resolves([]),
       addAsync: stub(),
       updateAsync: stub(),
+      getMostRecentViolationAsync: sinon.stub().resolves(null),
       deleteAsync: stub(),
     },
     time: {

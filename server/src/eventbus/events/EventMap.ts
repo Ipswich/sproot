@@ -1,28 +1,31 @@
 import { Events } from "./Events";
-import { NotificationActionsModifiedPayload } from "./actions/NotificationActionsModifiedEvent";
-import { OutputActionsModifiedPayload } from "./actions/OutputActionsModifiedEvent";
+import {
+  NotificationActionDeletedPayload,
+  NotificationActionUpdatedPayload,
+} from "./actions/NotificationActionEvents";
+import { OutputActionDeletedPayload, OutputActionUpdatedPayload } from "./actions/OutputActionEvents";
 import { AutomationsTriggeredPayload } from "./automations/AutomationsTriggeredEvent";
 import { CameraSettingsModifiedPayload } from "./camera/CameraSettingsModifiedEvent";
 import { OutputModifiedPayload } from "./outputs/OutputModifiedEvent";
 import { SensorModifiedPayload } from "./sensors/SensorModifiedEvent";
 import { LogEventPayload } from "./logging/LogEvent";
-import { SensorRetentionUpdatedPayload } from "./retention/SensorRetentionUpdatedEvent";
-import { OutputRetentionUpdatedPayload } from "./retention/OutputRetentionUpdatedEvent";
-import { BackupRetentionUpdatedPayload } from "./retention/BackupRetentionUpdatedEvent";
-import { SystemLatitudeUpdatedPayload } from "./settings/SystemLatitudeUpdatedEvent";
-import { SystemLongitudeUpdatedPayload } from "./settings/SystemLongitudeUpdatedEvent";
+import { SettingUpdatedPayload } from "./settings/SettingUpdatedPayload";
+import { SETTINGS } from "../../database/settings/SettingsSchema";
 
 export interface EventMap {
   [Events.AUTOMATIONS_TRIGGERED_EVENT]: AutomationsTriggeredPayload;
-  [Events.OUTPUT_ACTION_MODIFIED_EVENT]: OutputActionsModifiedPayload;
-  [Events.NOTIFICATION_ACTION_MODIFIED_EVENT]: NotificationActionsModifiedPayload;
+  [Events.OUTPUT_ACTION_UPDATED_EVENT]: OutputActionUpdatedPayload;
+  [Events.OUTPUT_ACTION_DELETED_EVENT]: OutputActionDeletedPayload;
+  [Events.NOTIFICATION_ACTION_UPDATED_EVENT]: NotificationActionUpdatedPayload;
+  [Events.NOTIFICATION_ACTION_DELETED_EVENT]: NotificationActionDeletedPayload;
   [Events.SENSOR_MODIFIED_EVENT]: SensorModifiedPayload;
   [Events.OUTPUT_MODIFIED_EVENT]: OutputModifiedPayload;
   [Events.CAMERA_SETTINGS_MODIFIED_EVENT]: CameraSettingsModifiedPayload;
   [Events.LOG_EVENT]: LogEventPayload;
-  [Events.SENSOR_RETENTION_UPDATED]: SensorRetentionUpdatedPayload;
-  [Events.OUTPUT_RETENTION_UPDATED]: OutputRetentionUpdatedPayload;
-  [Events.BACKUP_RETENTION_UPDATED]: BackupRetentionUpdatedPayload;
-  [Events.SYSTEM_LATITUDE_UPDATED]: SystemLatitudeUpdatedPayload;
-  [Events.SYSTEM_LONGITUDE_UPDATED]: SystemLongitudeUpdatedPayload;
+  [Events.SENSOR_RETENTION_UPDATED]: SettingUpdatedPayload<typeof SETTINGS.sensors.data_retention>;
+  [Events.OUTPUT_RETENTION_UPDATED]: SettingUpdatedPayload<typeof SETTINGS.outputs.data_retention>;
+  [Events.BACKUP_RETENTION_UPDATED]: SettingUpdatedPayload<typeof SETTINGS.system.backup_retention>;
+  [Events.SYSTEM_LOG_DEBUG_UPDATED]: SettingUpdatedPayload<typeof SETTINGS.system.log_debug>;
+  [Events.SYSTEM_LATITUDE_UPDATED]: SettingUpdatedPayload<typeof SETTINGS.system.latitude>;
+  [Events.SYSTEM_LONGITUDE_UPDATED]: SettingUpdatedPayload<typeof SETTINGS.system.longitude>;
 }

@@ -7,6 +7,7 @@ export interface SettingsSchema {
   "sensors.data_retention": string | null;
   "outputs.data_retention": string | null;
   "system.backup_retention": string | null;
+  "system.log_debug": boolean;
   "system.latitude": string | null;
   "system.longitude": string | null;
 }
@@ -29,6 +30,7 @@ export const SETTINGS = {
   },
   system: {
     backup_retention: "system.backup_retention",
+    log_debug: "system.log_debug",
     latitude: "system.latitude",
     longitude: "system.longitude",
   },
@@ -43,6 +45,7 @@ type _AllSettingsValuesAreKeys =
   | (typeof SETTINGS)["sensors"]["data_retention"]
   | (typeof SETTINGS)["outputs"]["data_retention"]
   | (typeof SETTINGS)["system"]["backup_retention"]
+  | (typeof SETTINGS)["system"]["log_debug"]
   | (typeof SETTINGS)["system"]["latitude"]
   | (typeof SETTINGS)["system"]["longitude"];
 

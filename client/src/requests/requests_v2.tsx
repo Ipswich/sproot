@@ -49,16 +49,14 @@ export type SystemLogEvent = {
   metadata?: Record<string, unknown>;
 };
 
-export type ApplicationSettingsKey =
-  | "sensors.data_retention"
-  | "outputs.data_retention"
-  | "system.backup_retention"
-  | "system.latitude"
-  | "system.longitude";
-
-export type ApplicationSettings = Partial<
-  Record<ApplicationSettingsKey, string | null>
->;
+export type ApplicationSettings = Partial<{
+  "sensors.data_retention": string | null;
+  "outputs.data_retention": string | null;
+  "system.backup_retention": string | null;
+  "system.log_debug": boolean;
+  "system.latitude": string | null;
+  "system.longitude": string | null;
+}>;
 
 function getErrorMessage(
   response: ErrorResponse,

@@ -51,6 +51,7 @@ const createMockSensorConditionsRepo = (): ISensorConditionsRepository => ({
   getAsync: async () => [],
   addAsync: async () => 0,
   updateAsync: async () => {},
+  getMostRecentViolationAsync: async () => null,
   deleteAsync: async () => {},
 });
 
@@ -58,6 +59,7 @@ const createMockOutputConditionsRepo = (): IOutputConditionsRepository => ({
   getAsync: async () => [],
   addAsync: async () => 0,
   updateAsync: async () => {},
+  getMostRecentViolationAsync: async () => null,
   deleteAsync: async () => {},
 });
 

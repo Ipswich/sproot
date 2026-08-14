@@ -94,8 +94,19 @@ export class TimeExpressionResolver {
       SETTINGS.system.longitude,
     ]);
 
-    const latitude = parseCoordinate(settings[SETTINGS.system.latitude], -90, 90);
-    const longitude = parseCoordinate(settings[SETTINGS.system.longitude], -180, 180);
+    const latitudeSetting = settings[SETTINGS.system.latitude];
+    const longitudeSetting = settings[SETTINGS.system.longitude];
+
+    const latitude = parseCoordinate(
+      typeof latitudeSetting === "string" || latitudeSetting == null ? latitudeSetting : null,
+      -90,
+      90,
+    );
+    const longitude = parseCoordinate(
+      typeof longitudeSetting === "string" || longitudeSetting == null ? longitudeSetting : null,
+      -180,
+      180,
+    );
 
     this.#coordinates = latitude == null || longitude == null ? null : { latitude, longitude };
   }

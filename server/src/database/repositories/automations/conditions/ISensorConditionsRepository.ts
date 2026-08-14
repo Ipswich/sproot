@@ -14,4 +14,12 @@ export interface ISensorConditionsRepository extends IBaseConditionsRepository<S
     readingType: string,
   ): Promise<number>;
   updateAsync(automationId: number, condition: ISensorCondition): Promise<void>;
+  getMostRecentViolationAsync(
+    sensorId: number,
+    readingType: string,
+    operator: ConditionOperator,
+    comparisonValue: number,
+    comparisonLookback: number,
+    now?: Date,
+  ): Promise<Date | null>;
 }

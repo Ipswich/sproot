@@ -5,6 +5,7 @@ import { createReadStream, promises as fsPromises } from "fs";
 import winston from "winston";
 import path from "node:path";
 import { ReadStream } from "node:fs";
+import { validateDuration } from "../utils/DurationValidation";
 
 export class Backups {
   static #generationStartTime: number | null = null;
@@ -111,20 +112,26 @@ export class Backups {
   static async runRetentionPolicyAsync(
     logger: winston.Logger,
     retentionDirectory: string,
-    retentionDays: string,
+    retentionDuration: string | null | undefined,
   ): Promise<void> {
+    if (retentionDuration == null) {
+      return;
+    }
+
+    const cutoff = resolveRetentionCutoff(retentionDuration, new Date());
+    if (cutoff == null) {
+      logger.warn(`Skipping backup retention policy due to invalid duration: ${retentionDuration}`);
+      return;
+    }
+
     try {
       const files = await fsPromises.readdir(retentionDirectory);
-
-      const retentionCount = parseInt(retentionDays || "30", 10);
-      const now = new Date();
 
       for (const file of files) {
         const filePath = path.join(retentionDirectory, file);
         const stats = await fsPromises.stat(filePath);
-        const ageInDays = (now.getTime() - stats.mtime.getTime()) / (1000 * 60 * 60 * 24);
 
-        if (ageInDays > retentionCount) {
+        if (stats.mtime.getTime() < cutoff.getTime()) {
           await fsPromises.unlink(filePath);
           logger.info(`Deleted old backup file: ${file}`);
         }
@@ -132,5 +139,59 @@ export class Backups {
     } catch (error) {
       logger.error(`Failed to run backup retention policy: ${(error as Error).message}`);
     }
+  }
+}
+
+function resolveRetentionCutoff(duration: string, referenceDate: Date): Date | null {
+  const validation = validateDuration(duration);
+  if (!validation.valid) {
+    return null;
+  }
+
+  const match = String(duration)
+    .trim()
+    .toLowerCase()
+    .match(/^(\d+)\s+([a-zA-Z]+)$/);
+  if (!match) {
+    return null;
+  }
+
+  const amount = Number.parseInt(match[1]!, 10);
+  const unit = match[2];
+  const cutoff = new Date(referenceDate);
+
+  switch (unit) {
+    case "second":
+    case "seconds":
+      cutoff.setSeconds(cutoff.getSeconds() - amount);
+      return cutoff;
+    case "min":
+    case "mins":
+    case "minute":
+    case "minutes":
+      cutoff.setMinutes(cutoff.getMinutes() - amount);
+      return cutoff;
+    case "hour":
+    case "hours":
+      cutoff.setHours(cutoff.getHours() - amount);
+      return cutoff;
+    case "day":
+    case "days":
+      cutoff.setDate(cutoff.getDate() - amount);
+      return cutoff;
+    case "week":
+    case "weeks":
+      cutoff.setDate(cutoff.getDate() - amount * 7);
+      return cutoff;
+    case "month":
+    case "months":
+      cutoff.setMonth(cutoff.getMonth() - amount);
+      return cutoff;
+    case "year":
+    case "years":
+      cutoff.setFullYear(cutoff.getFullYear() - amount);
+      return cutoff;
+    default:
+      return null;
   }
 }
