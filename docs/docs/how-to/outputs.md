@@ -35,7 +35,7 @@ You'll need to go through setting up your TP-Link Smart Plug through the Kasa Ho
   <img src="/docs/img/OutputSettingsNew.png" alt="New Output" style={{ width: '30%', maxWidth: '100%', height: 'auto' }} />
 </p>
 Once you've got your outputs integrated, navigate to `Settings -> Outputs`. 
-* To add a new device, click the big `Add New` button, and a pop up will appear that you can configure your output in. Once you've configured it, click `Add Output` to save your changes.
+* To add a new device, click the big `Add Output` button, and a pop up will appear that you can configure your output in. Once you've configured it, click `Add Output` to save your changes.
 * To edit an existing device, click the `Edit` icon next to the device's name.
 
 #### Name
@@ -58,7 +58,7 @@ This value determines how frequently automations should be triggered. Think of i
 
 This organizes zoned devices into a common display category. Think "Zone". If you've got two shelves with different conditions, you might want them zoned together to keep things organized.
 
-- You can manage zones by clicking the big `Manage Device Zones` button under the `Add New` button. These zones are also shared with Sensors.
+- You can manage zones by clicking the big `Manage Zones` button by the `Add Output` button. These zones are also shared with Sensors.
 
 #### Model Specific Settings
 

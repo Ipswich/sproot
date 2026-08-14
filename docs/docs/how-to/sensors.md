@@ -38,7 +38,7 @@ Since these are discoverable, you'll only need to wire the relevant pins between
 </p>
 Once you've got your sensors integrated, navigate to `Settings -> Sensors`
 
-- To add a new device, click the big `Add New` button, and a pop up will appear that you can configure your sensor in. Once you've configured it, click `Add Sensor` to save your changes.
+- To add a new device, click the big `Add Sensor` button, and a pop up will appear that you can configure your sensor in. Once you've configured it, click `Add Sensor` to save your changes.
 - To edit an existing device, click the `Edit` icon next to the device's name.
 
 #### Name
@@ -57,7 +57,7 @@ This determines some of the other settings of the sensor, but ultimately tells S
 
 This organizes zoned devices into a common display category. Think "Zone". If you've got two shelves with different conditions, you might want them zoned together to keep things organized.
 
-- You can manage zones by clicking the big `Manage Device Zones` button under the `Add New` button. These zones are also shared with Outputs.
+- You can manage zones by clicking the big `Manage Zones` button by the `Add Sensor` button. These zones are also shared with Outputs.
 
 #### Model Specific Settings
 
