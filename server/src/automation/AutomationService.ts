@@ -16,11 +16,11 @@ import { IEventBus } from "../eventbus/IEventBus";
 import { AutomationsTriggeredEvent } from "../eventbus/events/automations/AutomationsTriggeredEvent";
 import {
   NotificationActionDeletedEvent,
-  NotificationActionUpdatedEvent,
+  NotificationActionAddedEvent,
 } from "../eventbus/events/actions/NotificationActionEvents";
 import {
   OutputActionDeletedEvent,
-  OutputActionUpdatedEvent,
+  OutputActionAddedEvent,
 } from "../eventbus/events/actions/OutputActionEvents";
 import type { IAutomationsRepository } from "../database/repositories/automations/IAutomationsRepository";
 import { OutputActionPrecedence } from "@sproot/common/automation/OutputActionPrecedence";
@@ -387,7 +387,7 @@ class AutomationService {
       await this.#automationsRepository.actions.notification.getNotificationActionByIdAsync(result)
     )[0];
     if (action != null) {
-      await this.#eventBus.publishAsync(new NotificationActionUpdatedEvent({ action }));
+      await this.#eventBus.publishAsync(new NotificationActionAddedEvent({ action }));
     }
     return result;
   }
@@ -426,7 +426,7 @@ class AutomationService {
       await this.#automationsRepository.actions.output.getOutputActionAsync(result)
     )[0];
     if (action != null) {
-      await this.#eventBus.publishAsync(new OutputActionUpdatedEvent({ action }));
+      await this.#eventBus.publishAsync(new OutputActionAddedEvent({ action }));
     }
     return result;
   }

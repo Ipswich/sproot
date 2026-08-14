@@ -5,7 +5,7 @@ import sinon from "sinon";
 import winston from "winston";
 import { MemoryEventBus } from "../../../eventbus/MemoryEventBus";
 import { AutomationsTriggeredEvent } from "../../../eventbus/events/automations/AutomationsTriggeredEvent";
-import { OutputActionUpdatedEvent } from "../../../eventbus/events/actions/OutputActionEvents";
+import { OutputActionAddedEvent } from "../../../eventbus/events/actions/OutputActionEvents";
 import { IOutputActionsRepository } from "../../../database/repositories/automations/actions/IOutputActionsRepository";
 
 const mockOutputActionsRepo: IOutputActionsRepository = {
@@ -764,7 +764,7 @@ describe("OutputActionManager.ts tests", () => {
 
       // Second call should see updated value
       await eventBus.publishAsync(
-        new OutputActionUpdatedEvent({
+        new OutputActionAddedEvent({
           action: {
             id: 1,
             automationId: 1,

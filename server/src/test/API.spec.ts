@@ -3,7 +3,7 @@ import { get as httpGet } from "http";
 import sinon from "sinon";
 import request from "supertest";
 import { validateMiddlewareValues } from "./utils";
-import { app, server } from "./setup";
+import { app, server, baseUrl } from "./setup";
 import fs from "fs";
 import { CameraManager } from "../camera/CameraManager";
 import { FrameBuffer } from "../camera/FrameBuffer";
@@ -1676,7 +1676,7 @@ describe("API Tests", async function () {
           try {
             await new Promise<void>((resolve, reject) => {
               let settled = false;
-              const req = httpGet("http://127.0.0.1:3000/api/v2/camera/stream", (res) => {
+              const req = httpGet(`${baseUrl}/api/v2/camera/stream`, (res) => {
                 try {
                   assert.equal(res.statusCode, 200);
                   assert.equal(
@@ -2082,7 +2082,7 @@ describe("API Tests", async function () {
       it("should return 200 with SSE headers", async () => {
         await new Promise<void>((resolve, reject) => {
           let settled = false;
-          const req = httpGet("http://127.0.0.1:3000/api/v2/system/logs/stream", (res) => {
+          const req = httpGet(`${baseUrl}/api/v2/system/logs/stream`, (res) => {
             try {
               assert.equal(res.statusCode, 200);
               assert.equal(res.headers["content-type"], "text/event-stream; charset=utf-8");
@@ -2130,7 +2130,7 @@ describe("API Tests", async function () {
         const received: string[] = [];
         await new Promise<void>((resolve, reject) => {
           let settled = false;
-          const req = httpGet("http://127.0.0.1:3000/api/v2/system/logs/stream", (res) => {
+          const req = httpGet(`${baseUrl}/api/v2/system/logs/stream`, (res) => {
             try {
               assert.equal(res.statusCode, 200);
             } catch (error) {

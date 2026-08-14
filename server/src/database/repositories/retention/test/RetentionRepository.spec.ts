@@ -105,15 +105,13 @@ describe("RetentionRepository", () => {
 
   describe("runPolicyJobAsync", () => {
     it("calls CALL run_job with the job ID", async () => {
-      const execStub = sinon.stub().resolves();
-      const rawStub = sinon.stub().returns({ exec: execStub });
+      const rawStub = sinon.stub().resolves();
       const mockKnex = {
         raw: rawStub,
       } as unknown as Knex;
       const testRepo = new RetentionRepository(mockKnex);
       await testRepo.runPolicyJobAsync(5001);
       assert.isTrue(rawStub.calledWith("CALL run_job(?)", [5001]));
-      assert.isTrue(execStub.calledOnce);
     });
   });
 

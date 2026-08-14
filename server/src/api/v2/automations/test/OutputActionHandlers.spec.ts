@@ -27,12 +27,14 @@ const createStubSprootDB = () => {
         getAsync: sinon.stub().resolves([]),
         addAsync: sinon.stub(),
         updateAsync: sinon.stub(),
+        getMostRecentViolationAsync: sinon.stub().resolves(null),
         deleteAsync: sinon.stub(),
       },
       output: {
         getAsync: sinon.stub().resolves([]),
         addAsync: sinon.stub(),
         updateAsync: sinon.stub(),
+        getMostRecentViolationAsync: sinon.stub().resolves(null),
         deleteAsync: sinon.stub(),
       },
       time: {
@@ -64,7 +66,7 @@ const createStubSprootDB = () => {
       output: {
         getAllAsync: sinon.stub(),
         getAsync: sinon.stub(),
-        getOutputActionAsync: sinon.stub(),
+        getOutputActionAsync: sinon.stub().resolves([]),
         addAsync: sinon.stub(),
         deleteAsync: sinon.stub(),
       },
@@ -420,6 +422,15 @@ describe("OutputActionHandlers.ts tests", () => {
       });
       sprootDB.automations.getAllAsync.resolves([]);
       sprootDB.automations.actions.output.addAsync.resolves(1);
+      sprootDB.automations.actions.output.getOutputActionAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 100,
+          precedence: "High",
+        } as SDBOutputAction,
+      ]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {

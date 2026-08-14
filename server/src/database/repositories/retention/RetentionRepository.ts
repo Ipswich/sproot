@@ -2,10 +2,6 @@ import type { IRetentionRepository } from "./IRetentionRepository";
 import { BaseKnexRepository } from "../utils/BaseKnexRepository";
 import { Knex } from "knex";
 
-interface RawWithExec {
-  exec(): Promise<void>;
-}
-
 const TABLE_NAME_REGEX = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 
 function validateTableName(tableName: string): string {
@@ -55,6 +51,6 @@ export class RetentionRepository extends BaseKnexRepository implements IRetentio
   }
 
   async runPolicyJobAsync(jobId: number): Promise<void> {
-    await (this.connection.raw("CALL run_job(?)", [jobId]) as unknown as RawWithExec).exec();
+    await this.connection.raw("CALL run_job(?)", [jobId]);
   }
 }

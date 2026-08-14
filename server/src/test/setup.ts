@@ -1,12 +1,14 @@
 import fs from "fs";
 import { Express } from "express";
 import { Server } from "http";
+import { AddressInfo } from "net";
 import { Pca9685Driver } from "pca9685";
 import * as sinon from "sinon";
 import mainAsync, { gracefulHaltAsync } from "../program";
 
 let server: Server;
 let app: Express;
+let baseUrl: string;
 before(async function () {
   this.timeout(0);
   process.env["NODE_ENV"] = "test";
@@ -45,8 +47,11 @@ before(async function () {
   await fs.promises.writeFile("backups/test-backup.sproot", "This is a test backup file.");
 
   app = await mainAsync();
-  server = app.listen(3000);
-  console.log("Listening on port 3000");
+  server = app.listen(0);
+  await new Promise<void>((resolve) => server.once("listening", () => resolve()));
+  const address = server.address() as AddressInfo;
+  baseUrl = `http://127.0.0.1:${address.port}`;
+  console.log(`Listening on port ${address.port}`);
 });
 
 after(async () => {
@@ -55,4 +60,4 @@ after(async () => {
   console.log("Server closed!");
 });
 
-export { app, server };
+export { app, server, baseUrl };

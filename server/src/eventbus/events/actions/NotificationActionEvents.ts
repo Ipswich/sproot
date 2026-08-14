@@ -2,13 +2,13 @@ import { SDBNotificationAction } from "@sproot/common/database/SDBNotificationAc
 import { SprootEvent } from "../../IEventBus";
 import { Events } from "../Events";
 
-export class NotificationActionUpdatedEvent implements SprootEvent<
-  typeof Events.NOTIFICATION_ACTION_UPDATED_EVENT
+export class NotificationActionAddedEvent implements SprootEvent<
+  typeof Events.NOTIFICATION_ACTION_ADDED_EVENT
 > {
-  readonly type = Events.NOTIFICATION_ACTION_UPDATED_EVENT;
+  readonly type = Events.NOTIFICATION_ACTION_ADDED_EVENT;
 
   constructor(
-    public readonly payload: NotificationActionUpdatedPayload,
+    public readonly payload: NotificationActionAddedPayload,
     public readonly eventId = crypto.randomUUID() as string,
     public readonly occurredAt = new Date(),
   ) {}
@@ -26,7 +26,7 @@ export class NotificationActionDeletedEvent implements SprootEvent<
   ) {}
 }
 
-export type NotificationActionUpdatedPayload = {
+export type NotificationActionAddedPayload = {
   action: SDBNotificationAction;
 };
 

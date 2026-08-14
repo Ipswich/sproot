@@ -7,7 +7,7 @@ import { Events } from "../../eventbus/events/Events";
 import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
 import {
   NotificationActionDeletedEvent,
-  NotificationActionUpdatedEvent,
+  NotificationActionAddedEvent,
 } from "../../eventbus/events/actions/NotificationActionEvents";
 import type { INotificationActionsRepository } from "../../database/repositories/automations/actions/INotificationActionsRepository";
 
@@ -39,7 +39,7 @@ export class NotificationActionManager implements Disposable {
     this.#eventBus = eventBus;
     this.#logger = logger;
 
-    const actionUpdatedListener = (event: NotificationActionUpdatedEvent) => {
+    const actionAddedListener = (event: NotificationActionAddedEvent) => {
       this.#upsertAction(new NotificationAction(event.payload.action));
     };
 
@@ -55,9 +55,9 @@ export class NotificationActionManager implements Disposable {
       }
     };
 
-    const actionUpdatedUnsubscribe = this.#eventBus.subscribe(
-      Events.NOTIFICATION_ACTION_UPDATED_EVENT,
-      actionUpdatedListener,
+    const actionAddedUnsubscribe = this.#eventBus.subscribe(
+      Events.NOTIFICATION_ACTION_ADDED_EVENT,
+      actionAddedListener,
     );
     const actionDeletedUnsubscribe = this.#eventBus.subscribe(
       Events.NOTIFICATION_ACTION_DELETED_EVENT,
@@ -69,7 +69,7 @@ export class NotificationActionManager implements Disposable {
     );
 
     this.#listenerCleanupFunction = () => {
-      actionUpdatedUnsubscribe();
+      actionAddedUnsubscribe();
       actionDeletedUnsubscribe();
       automationUnsubscribe();
     };

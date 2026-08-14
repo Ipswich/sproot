@@ -11,7 +11,7 @@ import { Events } from "../../eventbus/events/Events";
 import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
 import {
   OutputActionDeletedEvent,
-  OutputActionUpdatedEvent,
+  OutputActionAddedEvent,
 } from "../../eventbus/events/actions/OutputActionEvents";
 import {
   OutputActionConflict,
@@ -70,7 +70,7 @@ export class OutputActionManager implements Disposable {
     this.#logger = logger;
     this.#automationTimeout = automationTimeout;
 
-    const actionUpdatedListener = async (event: OutputActionUpdatedEvent) => {
+    const actionAddedListener = async (event: OutputActionAddedEvent) => {
       if (
         event.payload.action.outputId !== this.#outputId &&
         event.payload.previousOutputId !== this.#outputId
@@ -105,9 +105,9 @@ export class OutputActionManager implements Disposable {
         });
     };
 
-    const outputActionUpdatedUnsubscribe = this.#eventBus.subscribe(
-      Events.OUTPUT_ACTION_UPDATED_EVENT,
-      actionUpdatedListener,
+    const outputActionAddedUnsubscribe = this.#eventBus.subscribe(
+      Events.OUTPUT_ACTION_ADDED_EVENT,
+      actionAddedListener,
     );
     const outputActionDeletedUnsubscribe = this.#eventBus.subscribe(
       Events.OUTPUT_ACTION_DELETED_EVENT,
@@ -119,7 +119,7 @@ export class OutputActionManager implements Disposable {
     );
 
     this.#listenerCleanupFunction = () => {
-      outputActionUpdatedUnsubscribe();
+      outputActionAddedUnsubscribe();
       outputActionDeletedUnsubscribe();
       automationUnsubscribe();
     };

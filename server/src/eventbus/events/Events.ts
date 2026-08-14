@@ -1,8 +1,8 @@
 export const Events = {
   AUTOMATIONS_TRIGGERED_EVENT: "automations.triggered",
-  OUTPUT_ACTION_UPDATED_EVENT: "output.action.updated",
+  OUTPUT_ACTION_ADDED_EVENT: "output.action.added",
   OUTPUT_ACTION_DELETED_EVENT: "output.action.deleted",
-  NOTIFICATION_ACTION_UPDATED_EVENT: "notification.action.updated",
+  NOTIFICATION_ACTION_ADDED_EVENT: "notification.action.added",
   NOTIFICATION_ACTION_DELETED_EVENT: "notification.action.deleted",
   SENSOR_MODIFIED_EVENT: "sensor.modified",
   OUTPUT_MODIFIED_EVENT: "output.modified",

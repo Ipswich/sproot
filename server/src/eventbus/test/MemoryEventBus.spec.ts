@@ -4,8 +4,8 @@ import winston from "winston";
 import { MemoryEventBus } from "../MemoryEventBus";
 import { Events } from "../events/Events";
 import { AutomationsTriggeredEvent } from "../events/automations/AutomationsTriggeredEvent";
-import { NotificationActionUpdatedEvent } from "../events/actions/NotificationActionEvents";
-import { OutputActionUpdatedEvent } from "../events/actions/OutputActionEvents";
+import { NotificationActionAddedEvent } from "../events/actions/NotificationActionEvents";
+import { OutputActionAddedEvent } from "../events/actions/OutputActionEvents";
 
 describe("MemoryEventBus", () => {
   let logger: winston.Logger;
@@ -46,11 +46,11 @@ describe("MemoryEventBus", () => {
     const outputHandler = sinon.stub().resolves();
     const notificationHandler = sinon.stub().resolves();
 
-    eventBus.subscribe(Events.OUTPUT_ACTION_UPDATED_EVENT, outputHandler);
-    eventBus.subscribe(Events.NOTIFICATION_ACTION_UPDATED_EVENT, notificationHandler);
+    eventBus.subscribe(Events.OUTPUT_ACTION_ADDED_EVENT, outputHandler);
+    eventBus.subscribe(Events.NOTIFICATION_ACTION_ADDED_EVENT, notificationHandler);
 
     await eventBus.publishAsync(
-      new OutputActionUpdatedEvent({
+      new OutputActionAddedEvent({
         action: { id: 1, automationId: 1, outputId: 1, value: 10, precedence: "Normal" },
       }),
     );
@@ -61,7 +61,7 @@ describe("MemoryEventBus", () => {
 
   it("resolves immediately when no subscribers exist", async () => {
     await eventBus.publishAsync(
-      new OutputActionUpdatedEvent({
+      new OutputActionAddedEvent({
         action: { id: 1, automationId: 1, outputId: 1, value: 10, precedence: "Normal" },
       }),
     );
@@ -71,19 +71,19 @@ describe("MemoryEventBus", () => {
     let resolveHandler: (() => void) | undefined;
     const completedHandlers: string[] = [];
 
-    eventBus.subscribe(Events.OUTPUT_ACTION_UPDATED_EVENT, async () => {
+    eventBus.subscribe(Events.OUTPUT_ACTION_ADDED_EVENT, async () => {
       await new Promise<void>((resolve) => {
         resolveHandler = resolve;
       });
       completedHandlers.push("slow");
     });
 
-    eventBus.subscribe(Events.OUTPUT_ACTION_UPDATED_EVENT, async () => {
+    eventBus.subscribe(Events.OUTPUT_ACTION_ADDED_EVENT, async () => {
       completedHandlers.push("fast");
     });
 
     const publishPromise = eventBus.publishAsync(
-      new OutputActionUpdatedEvent({
+      new OutputActionAddedEvent({
         action: { id: 1, automationId: 1, outputId: 1, value: 10, precedence: "Normal" },
       }),
     );
@@ -101,14 +101,14 @@ describe("MemoryEventBus", () => {
     const retainedHandler = sinon.stub().resolves();
     const removedHandler = sinon.stub().resolves();
 
-    const unsubscribe = eventBus.subscribe(Events.OUTPUT_ACTION_UPDATED_EVENT, removedHandler);
-    eventBus.subscribe(Events.OUTPUT_ACTION_UPDATED_EVENT, retainedHandler);
+    const unsubscribe = eventBus.subscribe(Events.OUTPUT_ACTION_ADDED_EVENT, removedHandler);
+    eventBus.subscribe(Events.OUTPUT_ACTION_ADDED_EVENT, retainedHandler);
 
     unsubscribe();
     unsubscribe();
 
     await eventBus.publishAsync(
-      new OutputActionUpdatedEvent({
+      new OutputActionAddedEvent({
         action: { id: 1, automationId: 1, outputId: 1, value: 10, precedence: "Normal" },
       }),
     );
@@ -124,16 +124,16 @@ describe("MemoryEventBus", () => {
       unsubscribe!();
     });
 
-    unsubscribe = eventBus.subscribe(Events.OUTPUT_ACTION_UPDATED_EVENT, selfRemovingHandler);
-    eventBus.subscribe(Events.OUTPUT_ACTION_UPDATED_EVENT, persistentHandler);
+    unsubscribe = eventBus.subscribe(Events.OUTPUT_ACTION_ADDED_EVENT, selfRemovingHandler);
+    eventBus.subscribe(Events.OUTPUT_ACTION_ADDED_EVENT, persistentHandler);
 
     await eventBus.publishAsync(
-      new OutputActionUpdatedEvent({
+      new OutputActionAddedEvent({
         action: { id: 1, automationId: 1, outputId: 1, value: 10, precedence: "Normal" },
       }),
     );
     await eventBus.publishAsync(
-      new OutputActionUpdatedEvent({
+      new OutputActionAddedEvent({
         action: { id: 1, automationId: 1, outputId: 1, value: 10, precedence: "Normal" },
       }),
     );
@@ -147,20 +147,20 @@ describe("MemoryEventBus", () => {
     const successfulHandler = sinon.stub().resolves();
     const failure = new Error("boom");
 
-    eventBus.subscribe(Events.NOTIFICATION_ACTION_UPDATED_EVENT, async () => {
+    eventBus.subscribe(Events.NOTIFICATION_ACTION_ADDED_EVENT, async () => {
       throw failure;
     });
-    eventBus.subscribe(Events.NOTIFICATION_ACTION_UPDATED_EVENT, successfulHandler);
+    eventBus.subscribe(Events.NOTIFICATION_ACTION_ADDED_EVENT, successfulHandler);
 
     await eventBus.publishAsync(
-      new NotificationActionUpdatedEvent({
+      new NotificationActionAddedEvent({
         action: { id: 1, automationId: 1, subject: "s", content: "c" },
       }),
     );
 
     assert.isTrue(successfulHandler.calledOnce);
     assert.isTrue(errorStub.calledOnce);
-    assert.include(String(errorStub.firstCall.args[0]), Events.NOTIFICATION_ACTION_UPDATED_EVENT);
+    assert.include(String(errorStub.firstCall.args[0]), Events.NOTIFICATION_ACTION_ADDED_EVENT);
     assert.include(String(errorStub.firstCall.args[0]), "boom");
   });
 
@@ -168,13 +168,13 @@ describe("MemoryEventBus", () => {
     const lateSubscriber = sinon.stub().resolves();
 
     await eventBus.publishAsync(
-      new OutputActionUpdatedEvent({
+      new OutputActionAddedEvent({
         action: { id: 1, automationId: 1, outputId: 1, value: 10, precedence: "Normal" },
       }),
     );
-    eventBus.subscribe(Events.OUTPUT_ACTION_UPDATED_EVENT, lateSubscriber);
+    eventBus.subscribe(Events.OUTPUT_ACTION_ADDED_EVENT, lateSubscriber);
     await eventBus.publishAsync(
-      new OutputActionUpdatedEvent({
+      new OutputActionAddedEvent({
         action: { id: 1, automationId: 1, outputId: 1, value: 10, precedence: "Normal" },
       }),
     );

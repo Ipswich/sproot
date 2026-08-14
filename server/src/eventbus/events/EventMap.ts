@@ -1,12 +1,9 @@
 import { Events } from "./Events";
 import {
   NotificationActionDeletedPayload,
-  NotificationActionUpdatedPayload,
+  NotificationActionAddedPayload,
 } from "./actions/NotificationActionEvents";
-import {
-  OutputActionDeletedPayload,
-  OutputActionUpdatedPayload,
-} from "./actions/OutputActionEvents";
+import { OutputActionDeletedPayload, OutputActionAddedPayload } from "./actions/OutputActionEvents";
 import { AutomationsTriggeredPayload } from "./automations/AutomationsTriggeredEvent";
 import { CameraSettingsModifiedPayload } from "./camera/CameraSettingsModifiedEvent";
 import { OutputModifiedPayload } from "./outputs/OutputModifiedEvent";
@@ -17,9 +14,9 @@ import { SETTINGS } from "../../database/settings/SettingsSchema";
 
 export interface EventMap {
   [Events.AUTOMATIONS_TRIGGERED_EVENT]: AutomationsTriggeredPayload;
-  [Events.OUTPUT_ACTION_UPDATED_EVENT]: OutputActionUpdatedPayload;
+  [Events.OUTPUT_ACTION_ADDED_EVENT]: OutputActionAddedPayload;
   [Events.OUTPUT_ACTION_DELETED_EVENT]: OutputActionDeletedPayload;
-  [Events.NOTIFICATION_ACTION_UPDATED_EVENT]: NotificationActionUpdatedPayload;
+  [Events.NOTIFICATION_ACTION_ADDED_EVENT]: NotificationActionAddedPayload;
   [Events.NOTIFICATION_ACTION_DELETED_EVENT]: NotificationActionDeletedPayload;
   [Events.SENSOR_MODIFIED_EVENT]: SensorModifiedPayload;
   [Events.OUTPUT_MODIFIED_EVENT]: OutputModifiedPayload;

@@ -2,13 +2,13 @@ import { SDBOutputAction } from "@sproot/common/database/SDBOutputAction";
 import { SprootEvent } from "../../IEventBus";
 import { Events } from "../Events";
 
-export class OutputActionUpdatedEvent implements SprootEvent<
-  typeof Events.OUTPUT_ACTION_UPDATED_EVENT
+export class OutputActionAddedEvent implements SprootEvent<
+  typeof Events.OUTPUT_ACTION_ADDED_EVENT
 > {
-  readonly type = Events.OUTPUT_ACTION_UPDATED_EVENT;
+  readonly type = Events.OUTPUT_ACTION_ADDED_EVENT;
 
   constructor(
-    public readonly payload: OutputActionUpdatedPayload,
+    public readonly payload: OutputActionAddedPayload,
     public readonly eventId = crypto.randomUUID() as string,
     public readonly occurredAt = new Date(),
   ) {}
@@ -26,7 +26,7 @@ export class OutputActionDeletedEvent implements SprootEvent<
   ) {}
 }
 
-export type OutputActionUpdatedPayload = {
+export type OutputActionAddedPayload = {
   action: SDBOutputAction;
   previousOutputId?: number;
 };
