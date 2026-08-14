@@ -172,7 +172,7 @@ export default function OutputCondition({
               <NumberInput
                 required
                 label="Hold time"
-                description="Use 0 to trigger immediately."
+                description="Triggers if target value is held for the specified time. Use 0 to trigger immediately."
                 step={1}
                 min={0}
                 max={1440}
