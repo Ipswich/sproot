@@ -2,9 +2,9 @@ import { SDBNotificationAction } from "@sproot/common/database/SDBNotificationAc
 import { SprootEvent } from "../../IEventBus";
 import { Events } from "../Events";
 
-export class NotificationActionUpdatedEvent
-  implements SprootEvent<typeof Events.NOTIFICATION_ACTION_UPDATED_EVENT>
-{
+export class NotificationActionUpdatedEvent implements SprootEvent<
+  typeof Events.NOTIFICATION_ACTION_UPDATED_EVENT
+> {
   readonly type = Events.NOTIFICATION_ACTION_UPDATED_EVENT;
 
   constructor(
@@ -14,9 +14,9 @@ export class NotificationActionUpdatedEvent
   ) {}
 }
 
-export class NotificationActionDeletedEvent
-  implements SprootEvent<typeof Events.NOTIFICATION_ACTION_DELETED_EVENT>
-{
+export class NotificationActionDeletedEvent implements SprootEvent<
+  typeof Events.NOTIFICATION_ACTION_DELETED_EVENT
+> {
   readonly type = Events.NOTIFICATION_ACTION_DELETED_EVENT;
 
   constructor(

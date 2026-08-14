@@ -414,9 +414,9 @@ describe("AutomationService", () => {
         { id: 1, name: "Automation 1", operator: "or", enabled: true },
         { id: 2, name: "Automation 2", operator: "or", enabled: true },
       ]);
-      automations.getByIdAsync.withArgs(1).resolves([
-        { id: 1, name: "Automation 1", operator: "or", enabled: true },
-      ]);
+      automations.getByIdAsync
+        .withArgs(1)
+        .resolves([{ id: 1, name: "Automation 1", operator: "or", enabled: true }]);
       automations.conditions.sensor.addAsync.resolves(10);
 
       const sensorListMock = sinon.createStubInstance(SensorList);

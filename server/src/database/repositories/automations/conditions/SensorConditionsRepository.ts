@@ -75,7 +75,10 @@ export class SensorConditionsRepository
     comparisonLookback: number,
     now: Date = new Date(),
   ): Promise<Date | null> {
-    const violationPredicate = buildViolationPredicate("CAST(d.data AS DOUBLE PRECISION)", operator);
+    const violationPredicate = buildViolationPredicate(
+      "CAST(d.data AS DOUBLE PRECISION)",
+      operator,
+    );
     const row = await this.connection("sensor_data as d")
       .select("d.logTime")
       .where("d.sensor_id", sensorId)

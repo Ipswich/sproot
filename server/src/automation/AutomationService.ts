@@ -422,7 +422,9 @@ class AutomationService {
       value,
       precedence,
     );
-    const action = (await this.#automationsRepository.actions.output.getOutputActionAsync(result))[0];
+    const action = (
+      await this.#automationsRepository.actions.output.getOutputActionAsync(result)
+    )[0];
     if (action != null) {
       await this.#eventBus.publishAsync(new OutputActionUpdatedEvent({ action }));
     }

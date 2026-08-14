@@ -76,7 +76,11 @@ export class SensorCondition implements ISensorCondition {
   }
 
   #expireViolationIfNeeded(now: Date): void {
-    if (this.#latestViolationAt == null || this.comparisonLookback == null || this.comparisonLookback <= 0) {
+    if (
+      this.#latestViolationAt == null ||
+      this.comparisonLookback == null ||
+      this.comparisonLookback <= 0
+    ) {
       return;
     }
 

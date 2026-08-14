@@ -2,7 +2,9 @@ import { SDBOutputAction } from "@sproot/common/database/SDBOutputAction";
 import { SprootEvent } from "../../IEventBus";
 import { Events } from "../Events";
 
-export class OutputActionUpdatedEvent implements SprootEvent<typeof Events.OUTPUT_ACTION_UPDATED_EVENT> {
+export class OutputActionUpdatedEvent implements SprootEvent<
+  typeof Events.OUTPUT_ACTION_UPDATED_EVENT
+> {
   readonly type = Events.OUTPUT_ACTION_UPDATED_EVENT;
 
   constructor(
@@ -12,7 +14,9 @@ export class OutputActionUpdatedEvent implements SprootEvent<typeof Events.OUTPU
   ) {}
 }
 
-export class OutputActionDeletedEvent implements SprootEvent<typeof Events.OUTPUT_ACTION_DELETED_EVENT> {
+export class OutputActionDeletedEvent implements SprootEvent<
+  typeof Events.OUTPUT_ACTION_DELETED_EVENT
+> {
   readonly type = Events.OUTPUT_ACTION_DELETED_EVENT;
 
   constructor(

@@ -1,7 +1,11 @@
 import { AnySprootEvent, createEvent, IEventBus } from "../eventbus/IEventBus";
 import { Events } from "../eventbus/events/Events";
 import { ISettingsRepository } from "../database/settings/ISettingsRepository";
-import { SETTINGS, type SettingsKey, type SettingsSchema } from "../database/settings/SettingsSchema";
+import {
+  SETTINGS,
+  type SettingsKey,
+  type SettingsSchema,
+} from "../database/settings/SettingsSchema";
 
 export class SettingsService {
   readonly #settingsRepo: ISettingsRepository;

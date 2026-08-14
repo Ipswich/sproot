@@ -38,7 +38,10 @@ export class OutputCondition implements IOutputCondition {
     }
 
     const lastOutputValue = outputList.outputs[this.outputId]?.value;
-    if (lastOutputValue != null && !evaluateNumber(lastOutputValue, this.operator, this.comparisonValue)) {
+    if (
+      lastOutputValue != null &&
+      !evaluateNumber(lastOutputValue, this.operator, this.comparisonValue)
+    ) {
       this.#latestViolationAt = now.getTime();
     }
 
@@ -68,7 +71,11 @@ export class OutputCondition implements IOutputCondition {
   }
 
   #expireViolationIfNeeded(now: Date): void {
-    if (this.#latestViolationAt == null || this.comparisonLookback == null || this.comparisonLookback <= 0) {
+    if (
+      this.#latestViolationAt == null ||
+      this.comparisonLookback == null ||
+      this.comparisonLookback <= 0
+    ) {
       return;
     }
 

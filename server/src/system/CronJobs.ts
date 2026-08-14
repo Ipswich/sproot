@@ -101,12 +101,10 @@ export function createBackupCronJob(
       try {
         logger.info("Starting scheduled backup...");
         await Backups.createAsync(systemRepository, logger);
-        const retentionSetting = await settingsRepository.getAsync(SETTINGS.system.backup_retention);
-        await Backups.runRetentionPolicyAsync(
-          logger,
-          Constants.BACKUP_DIRECTORY,
-          retentionSetting,
+        const retentionSetting = await settingsRepository.getAsync(
+          SETTINGS.system.backup_retention,
         );
+        await Backups.runRetentionPolicyAsync(logger, Constants.BACKUP_DIRECTORY, retentionSetting);
       } catch (e) {
         logger.error(`Exception in backup loop: ${e}`);
       } finally {

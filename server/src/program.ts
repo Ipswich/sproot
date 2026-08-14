@@ -66,7 +66,7 @@ export default async function setupAsync(): Promise<Express> {
 
   const settingsService = new SettingsService(sprootDB.settings, eventBus);
   app.set(DI_KEYS.SettingsService, settingsService);
-  
+
   await settingsService.syncDefaultsAsync();
   const debugLoggingService = await DebugLoggingService.createInstanceAsync(
     sprootDB.settings,

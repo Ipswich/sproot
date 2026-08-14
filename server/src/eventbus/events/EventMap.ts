@@ -3,7 +3,10 @@ import {
   NotificationActionDeletedPayload,
   NotificationActionUpdatedPayload,
 } from "./actions/NotificationActionEvents";
-import { OutputActionDeletedPayload, OutputActionUpdatedPayload } from "./actions/OutputActionEvents";
+import {
+  OutputActionDeletedPayload,
+  OutputActionUpdatedPayload,
+} from "./actions/OutputActionEvents";
 import { AutomationsTriggeredPayload } from "./automations/AutomationsTriggeredEvent";
 import { CameraSettingsModifiedPayload } from "./camera/CameraSettingsModifiedEvent";
 import { OutputModifiedPayload } from "./outputs/OutputModifiedEvent";
