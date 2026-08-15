@@ -9,19 +9,21 @@ export class CameraRepository extends BaseKnexRepository implements ICameraRepos
   }
 
   async getAllAsync(): Promise<SDBCameraSettings[]> {
-    return this.connection("camera_settings").select("*");
+    return this.connection("camera_settings").select("*").orderBy("id", "asc");
   }
 
-  async updateAsync(cameraSettings: SDBCameraSettings): Promise<void> {
-    return this.connection("camera_settings").where("id", cameraSettings.id).update({
-      id: cameraSettings.id,
+  async getByIdAsync(id: number): Promise<SDBCameraSettings | null> {
+    const camera = await this.connection("camera_settings").where("id", id).first();
+    return camera ?? null;
+  }
+
+  async addAsync(cameraSettings: Omit<SDBCameraSettings, "id">): Promise<number> {
+    return this.insertAndGetIdAsync("camera_settings", {
       enabled: cameraSettings.enabled,
       name: cameraSettings.name,
-      xVideoResolution: cameraSettings.xVideoResolution,
-      yVideoResolution: cameraSettings.yVideoResolution,
-      videoFps: cameraSettings.videoFps,
-      xImageResolution: cameraSettings.xImageResolution,
-      yImageResolution: cameraSettings.yImageResolution,
+      captureUrl: cameraSettings.captureUrl,
+      streamUrl: cameraSettings.streamUrl,
+      healthUrl: cameraSettings.healthUrl,
       timelapseEnabled: cameraSettings.timelapseEnabled,
       imageRetentionDays: cameraSettings.imageRetentionDays,
       imageRetentionSize: cameraSettings.imageRetentionSize,
@@ -29,5 +31,26 @@ export class CameraRepository extends BaseKnexRepository implements ICameraRepos
       timelapseStartTime: cameraSettings.timelapseStartTime,
       timelapseEndTime: cameraSettings.timelapseEndTime,
     });
+  }
+
+  async updateAsync(cameraSettings: SDBCameraSettings): Promise<void> {
+    return this.connection("camera_settings").where("id", cameraSettings.id).update({
+      id: cameraSettings.id,
+      enabled: cameraSettings.enabled,
+      name: cameraSettings.name,
+      captureUrl: cameraSettings.captureUrl,
+      streamUrl: cameraSettings.streamUrl,
+      healthUrl: cameraSettings.healthUrl,
+      timelapseEnabled: cameraSettings.timelapseEnabled,
+      imageRetentionDays: cameraSettings.imageRetentionDays,
+      imageRetentionSize: cameraSettings.imageRetentionSize,
+      timelapseInterval: cameraSettings.timelapseInterval,
+      timelapseStartTime: cameraSettings.timelapseStartTime,
+      timelapseEndTime: cameraSettings.timelapseEndTime,
+    });
+  }
+
+  async deleteAsync(cameraId: number): Promise<void> {
+    await this.connection("camera_settings").where("id", cameraId).delete();
   }
 }

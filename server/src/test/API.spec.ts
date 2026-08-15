@@ -1592,11 +1592,9 @@ describe("API Tests", async function () {
       "id",
       "enabled",
       "name",
-      "xVideoResolution",
-      "yVideoResolution",
-      "videoFps",
-      "xImageResolution",
-      "yImageResolution",
+      "captureUrl",
+      "streamUrl",
+      "healthUrl",
       "timelapseEnabled",
       "imageRetentionDays",
       "imageRetentionSize",
@@ -1607,18 +1605,16 @@ describe("API Tests", async function () {
     describe("Settings", () => {
       describe("GET", () => {
         it("should return 200 and camera settings data", async () => {
-          const response = await request(server).get("/api/v2/camera/settings").expect(200);
+          const response = await request(server).get("/api/v2/camera/1/settings").expect(200);
           const content = response.body["content"];
           validateMiddlewareValues(response);
           assert.deepEqual(content.data, {
             id: 1,
             enabled: false,
             name: "Pi Camera",
-            xVideoResolution: null,
-            yVideoResolution: null,
-            videoFps: null,
-            xImageResolution: null,
-            yImageResolution: null,
+            captureUrl: "http://camera:3002/capture",
+            streamUrl: "http://camera:3002/stream.mjpg",
+            healthUrl: "http://camera:3002/health",
             imageRetentionDays: 90,
             imageRetentionSize: 5000,
             timelapseEnabled: false,
@@ -1632,16 +1628,14 @@ describe("API Tests", async function () {
       describe("PATCH", () => {
         it("should return 200 and the updated settings", async function () {
           this.timeout(15000);
-          assert.equal(app.get("cameraManager").cameraSettings.name, "Pi Camera");
+          assert.equal(app.get("cameraManager").cameraSettings[0].name, "Pi Camera");
 
           const updatedSettings = {
             enabled: true,
             name: "Updated Camera Name",
-            xVideoResolution: 1280,
-            yVideoResolution: 720,
-            videoFps: 30,
-            xImageResolution: 1920,
-            yImageResolution: 1080,
+            captureUrl: "http://camera:3002/capture",
+            streamUrl: "http://camera:3002/stream.mjpg",
+            healthUrl: "http://camera:3002/health",
             timelapseEnabled: true,
             imageRetentionDays: 7,
             imageRetentionSize: 1024,
@@ -1651,7 +1645,7 @@ describe("API Tests", async function () {
           };
 
           const response = await request(server)
-            .patch("/api/v2/camera/settings")
+            .patch("/api/v2/camera/1/settings")
             .send(updatedSettings)
             .expect(200);
 
@@ -1659,7 +1653,7 @@ describe("API Tests", async function () {
           validateMiddlewareValues(response);
 
           assert.containsAllKeys(content.data, cameraSettingsKeys);
-          assert.equal(app.get("cameraManager").cameraSettings.name, "Updated Camera Name");
+          assert.equal(app.get("cameraManager").cameraSettings[0].name, "Updated Camera Name");
         });
       });
     });
@@ -1668,15 +1662,20 @@ describe("API Tests", async function () {
       describe("GET", () => {
         it("should return 200 and a stream", async () => {
           const cameraManager = app.get("cameraManager") as CameraManager;
-          const frameBuffer = new FrameBuffer({ logger: app.get("logger") });
-          const getFrameBufferStub = sinon
-            .stub(cameraManager, "getFrameBuffer")
-            .returns(frameBuffer);
+          const upstreamStream = new PassThrough();
+          const fetchStreamStub = sinon.stub(cameraManager, "fetchStreamAsync").resolves(
+            new Response(Readable.toWeb(upstreamStream) as ReadableStream, {
+              status: 200,
+              headers: {
+                "content-type": "multipart/x-mixed-replace; boundary=FRAME",
+              },
+            }),
+          );
 
           try {
             await new Promise<void>((resolve, reject) => {
               let settled = false;
-              const req = httpGet(`${baseUrl}/api/v2/camera/stream`, (res) => {
+              const req = httpGet(`${baseUrl}/api/v2/camera/1/stream`, (res) => {
                 try {
                   assert.equal(res.statusCode, 200);
                   assert.equal(
@@ -1716,17 +1715,17 @@ describe("API Tests", async function () {
                   return;
                 }
                 settled = true;
-                clearInterval(waitForSubscriberInterval);
+                clearInterval(waitForUpstreamInterval);
                 req.destroy();
                 reject(new Error("Stream did not send data within timeout period"));
               }, 300);
-              const waitForSubscriberInterval = setInterval(() => {
-                if (settled || frameBuffer.getSubscriberCount() === 0) {
+              const waitForUpstreamInterval = setInterval(() => {
+                if (settled) {
                   return;
                 }
 
-                clearInterval(waitForSubscriberInterval);
-                frameBuffer.getStream().write(Buffer.from("test-stream-chunk"));
+                clearInterval(waitForUpstreamInterval);
+                upstreamStream.write(Buffer.from("test-stream-chunk"));
               }, 5);
 
               req.on("error", (err) => {
@@ -1739,31 +1738,14 @@ describe("API Tests", async function () {
                 if (!settled) {
                   settled = true;
                   clearTimeout(timeout);
-                  clearInterval(waitForSubscriberInterval);
+                  clearInterval(waitForUpstreamInterval);
                   reject(err);
                 }
               });
             });
           } finally {
-            getFrameBufferStub.restore();
-          }
-        });
-
-        // This test doesn't _really_ test the reconnect endpoint, but it at least ensures that the endpoint is hit and returns a 200
-        it("should return a 200 after reconnecting to the livestream server", async () => {
-          const cameraManager = app.get("cameraManager") as CameraManager;
-          const reconnectStub = sinon
-            .stub(cameraManager, "reconnectLivestreamAsync")
-            .resolves(true);
-
-          try {
-            const response = await request(server).post("/api/v2/camera/reconnect").expect(200);
-
-            validateMiddlewareValues(response);
-            assert.isTrue(reconnectStub.calledOnce);
-            assert.equal(response.body.content.data, "Livestream successfully reconnected");
-          } finally {
-            reconnectStub.restore();
+            fetchStreamStub.restore();
+            upstreamStream.destroy();
           }
         });
       });
@@ -1773,7 +1755,7 @@ describe("API Tests", async function () {
   describe("Latest Image", () => {
     describe("GET", () => {
       it("should return 200 and the latest image", async () => {
-        const response = await request(server).get("/api/v2/camera/latest-image").expect(200);
+        const response = await request(server).get("/api/v2/camera/1/latest-image").expect(200);
         validateMiddlewareValues(response);
         assert.equal(response.headers["content-type"], "image/jpeg");
         assert.isNotNull(response.body);
@@ -1786,7 +1768,7 @@ describe("API Tests", async function () {
       describe("GET", () => {
         it("should return 200 and the archive file", async () => {
           const response = await request(server)
-            .get("/api/v2/camera/timelapse/archive")
+            .get("/api/v2/camera/1/timelapse/archive")
             .expect(200);
           validateMiddlewareValues(response);
           assert.equal(response.headers["content-type"], "application/x-tar");
@@ -1799,7 +1781,7 @@ describe("API Tests", async function () {
       describe("POST", () => {
         it("should return 202 and queue archive regeneration", async () => {
           const response = await request(server)
-            .post("/api/v2/camera/timelapse/archive/regenerate")
+            .post("/api/v2/camera/1/timelapse/archive/regenerate")
             .expect(202);
           validateMiddlewareValues(response);
           assert.equal(response.body["content"].data, "Timelapse archive regeneration queued.");
@@ -1811,7 +1793,7 @@ describe("API Tests", async function () {
       describe("GET", async () => {
         it("should return 200 and the timelapse generation status", async () => {
           const response = await request(server)
-            .get("/api/v2/camera/timelapse/archive/status")
+            .get("/api/v2/camera/1/timelapse/archive/status")
             .expect(200);
           validateMiddlewareValues(response);
           assert.isBoolean(response.body["content"].data.isGenerating);
@@ -1825,20 +1807,20 @@ describe("API Tests", async function () {
         it("should return 200 and clear all timelapse images", async () => {
           let attempts = 0;
           while (
-            (app.get("cameraManager") as CameraManager).getTimelapseArchiveProgress()
+            (app.get("cameraManager") as CameraManager).getTimelapseArchiveProgress(1)
               .isGenerating &&
             attempts < 5
           ) {
             attempts++;
             await new Promise((resolve) => setTimeout(resolve, 100));
           }
-          let imageCount = await fs.promises.readdir("images/timelapse");
+          let imageCount = await fs.promises.readdir("images/1/timelapse");
           assert.isAbove(imageCount.length, 0, "There should be images to clear for this test");
           const response = await request(server)
-            .delete("/api/v2/camera/timelapse/images")
+            .delete("/api/v2/camera/1/timelapse/images")
             .expect(200);
           validateMiddlewareValues(response);
-          imageCount = await fs.promises.readdir("images/timelapse");
+          imageCount = await fs.promises.readdir("images/1/timelapse");
           assert.equal(imageCount.length, 0, "All images should be cleared");
           assert.equal(response.body["content"].data, "All images cleared successfully");
         });
@@ -1854,13 +1836,13 @@ describe("API Tests", async function () {
           // request to actuall generate a timelapse, causing this test to fail.
           let retryCount = 0;
           let timelapseCompletion = await request(server).get(
-            "/api/v2/camera/timelapse/archive/status",
+            "/api/v2/camera/1/timelapse/archive/status",
           );
           while (timelapseCompletion.body["content"].data.isGenerating && retryCount < 5) {
             try {
               await new Promise((resolve) => setTimeout(resolve, 100));
               timelapseCompletion = await request(server).get(
-                "/api/v2/camera/timelapse/archive/status",
+                "/api/v2/camera/1/timelapse/archive/status",
               );
             } catch (err) {
               // If the request fails, log the error and break the loop to avoid an infinite retry

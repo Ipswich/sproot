@@ -2,11 +2,9 @@ type SDBCameraSettings = {
   id: number;
   enabled: boolean;
   name: string;
-  xVideoResolution: number | null;
-  yVideoResolution: number | null;
-  videoFps: number | null;
-  xImageResolution: number | null;
-  yImageResolution: number | null;
+  captureUrl: string;
+  streamUrl: string;
+  healthUrl: string;
   timelapseEnabled: boolean;
   imageRetentionDays: number;
   imageRetentionSize: number;

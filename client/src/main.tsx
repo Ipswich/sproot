@@ -24,9 +24,9 @@ import JournalEntries from "./routes/journals/entries/JournalEntries";
 import JournalEntryView from "./routes/journals/entries/JournalEntryView";
 import OutputSettings from "./routes/settings/outputs/OutputSettings";
 import SensorSettings from "./routes/settings/sensors/SensorSettings";
-import CameraSettings from "./routes/settings/camera/CameraSettings";
 import SubcontrollerSettings from "./routes/settings/subcontrollers/SubcontrollerSettings";
 import SystemSettings from "./routes/settings/system/SystemSettings";
+import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 
 const queryClient = new QueryClient();
 
@@ -85,11 +85,11 @@ const queryClient = new QueryClient();
 // Create loader functions with fallback logic
 const liveViewLoader = async () => {
   const { cameraSettings } = await rootLoader();
-  // If the camera isn't enabled, redirect to the temperature sensor data page
-  if (!cameraSettings?.enabled) {
+  const enabledCameras = cameraSettings.filter((camera) => camera.enabled);
+  if (enabledCameras.length === 0) {
     return redirect("/sensor-data/temperature");
   }
-  return { cameraSettings };
+  return { cameraSettings: enabledCameras as SDBCameraSettings[] };
 };
 
 const sensorDataPageLoader = async ({ params }: LoaderFunctionArgs) => {
@@ -170,10 +170,6 @@ const router = createBrowserRouter([
       {
         path: "/settings/sensors",
         element: <SensorSettings />,
-      },
-      {
-        path: "/settings/camera",
-        element: <CameraSettings />,
       },
       {
         path: "/settings/subcontrollers",

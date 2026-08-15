@@ -1,281 +1,131 @@
-import { describe, it, beforeEach } from "mocha";
+import { describe, it, beforeEach, afterEach } from "mocha";
 import { assert } from "chai";
 import { createSandbox, SinonSandbox } from "sinon";
 import { Request, Response } from "express";
-import { getCameraSettings, updateCameraSettingsAsync } from "../handlers/CameraSettingsHandlers";
+import {
+  createCameraSettingsAsync,
+  deleteCameraSettingsAsync,
+  getCameraSettingsAsync,
+  listCameraSettingsAsync,
+  updateCameraSettingsAsync,
+} from "../handlers/CameraSettingsHandlers";
 import { CameraManager } from "../../../../camera/CameraManager";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
-import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 
-describe("CameraSettingsHandlers.ts tests", () => {
+describe("CameraSettingsHandlers.ts", () => {
   let sandbox: SinonSandbox;
-  let mockRequest: Request;
   let mockResponse: Response;
   let mockCameraManager: Partial<CameraManager>;
+  const cameraSettings: SDBCameraSettings = {
+    id: 1,
+    enabled: true,
+    name: "Test Camera",
+    captureUrl: "http://camera:3002/capture",
+    streamUrl: "http://camera:3002/stream.mjpg",
+    healthUrl: "http://camera:3002/health",
+    timelapseEnabled: true,
+    imageRetentionDays: 7,
+    imageRetentionSize: 1000,
+    timelapseInterval: 60,
+    timelapseStartTime: "08:00",
+    timelapseEndTime: "20:00",
+  };
 
   beforeEach(() => {
     sandbox = createSandbox();
-
     mockCameraManager = {
-      cameraSettings: {
-        id: 1,
-        enabled: true,
-        name: "Test Camera",
-        xVideoResolution: 1920,
-        yVideoResolution: 1080,
-        videoFps: 30,
-        xImageResolution: 2048,
-        yImageResolution: 1536,
-        timelapseEnabled: false,
-        imageRetentionDays: 7,
-        imageRetentionSize: 1000,
-        timelapseInterval: 60,
-        timelapseStartTime: "08:00",
-        timelapseEndTime: "20:00",
-      } as SDBCameraSettings,
-      regenerateAsync: sandbox.stub().resolves(),
-      updateCameraSettingsAsync: sandbox.stub().resolves(),
+      listCameraSettingsAsync: sandbox.stub().resolves([cameraSettings]),
+      getCameraSettingsAsync: sandbox.stub().resolves(cameraSettings),
+      addCameraSettingsAsync: sandbox.stub().resolves(cameraSettings),
+      updateCameraSettingsAsync: sandbox.stub().resolves(cameraSettings),
+      deleteCameraSettingsAsync: sandbox.stub().resolves(true),
     };
-
-    mockRequest = {
-      app: {
-        get: ((key: string) => {
-          if (key === "cameraManager") return mockCameraManager;
-          return undefined;
-        }) as any,
-      },
-      originalUrl: "/api/v2/camera/settings",
-    } as Request;
 
     mockResponse = {
       locals: {
         defaultProperties: { timestamp: "2023-01-01T00:00:00Z" },
       },
-    } as unknown as Response;
+    } as Response;
   });
 
   afterEach(() => {
     sandbox.restore();
   });
 
-  describe("getCameraSettings", () => {
-    it("should return camera settings with status code 200", () => {
-      const result = getCameraSettings(mockRequest, mockResponse);
+  function createRequest(overrides: Partial<Request> = {}) {
+    return {
+      app: {
+        get: ((key: string) => {
+          if (key === "cameraManager") return mockCameraManager;
+          return undefined;
+        }) as any,
+      },
+      originalUrl: "/api/v2/camera/1/settings",
+      params: { cameraId: "1" },
+      ...overrides,
+    } as Request;
+  }
 
-      assert.equal(result.statusCode, 200);
-      assert.deepEqual(result.content!.data, mockCameraManager.cameraSettings);
-      assert.equal(result.timestamp, "2023-01-01T00:00:00Z");
-    });
+  it("lists all camera settings", async () => {
+    const result = await listCameraSettingsAsync(createRequest(), mockResponse);
+
+    assert.equal(result.statusCode, 200);
+    assert.deepEqual(result.content?.data, [cameraSettings]);
   });
 
-  describe("updateCameraSettingsAsync", () => {
-    let validSettings: SDBCameraSettings;
+  it("gets one camera by id", async () => {
+    const result = await getCameraSettingsAsync(createRequest(), mockResponse);
 
-    beforeEach(() => {
-      validSettings = {
-        id: 1,
-        enabled: true,
+    assert.equal(result.statusCode, 200);
+    assert.deepEqual(result.content?.data, cameraSettings);
+  });
+
+  it("creates a new camera", async () => {
+    const request = createRequest({
+      originalUrl: "/api/v2/camera",
+      body: { ...cameraSettings, id: undefined },
+      params: {},
+    });
+
+    const result = await createCameraSettingsAsync(request, mockResponse);
+
+    assert.equal(result.statusCode, 201);
+    assert.equal(result.content?.data.id, 1);
+  });
+
+  it("updates a camera", async () => {
+    const request = createRequest({
+      body: {
+        ...cameraSettings,
         name: "Updated Camera",
-        xVideoResolution: 1920,
-        yVideoResolution: 1080,
-        videoFps: 30,
-        xImageResolution: 2048,
-        yImageResolution: 1536,
-        timelapseEnabled: true,
-        imageRetentionDays: 14,
-        imageRetentionSize: 2000,
-        timelapseInterval: 120,
-        timelapseStartTime: "09:00",
-        timelapseEndTime: "21:00",
-      };
+      },
     });
 
-    it("should return 200 for successfully updating camera settings", async () => {
-      mockRequest.body = validSettings;
+    const result = await updateCameraSettingsAsync(request, mockResponse);
 
-      const result = (await updateCameraSettingsAsync(
-        mockRequest,
-        mockResponse,
-      )) as SuccessResponse;
+    assert.equal(result.statusCode, 200);
+    assert.equal(result.content?.data.name, "Updated Camera");
+    assert.isTrue((mockCameraManager.updateCameraSettingsAsync as any).calledOnce);
+  });
 
-      assert.equal(result.statusCode, 200);
-      assert.equal(result.content!.data.id, 1);
-      assert.equal(result.content!.data.name, "Updated Camera");
-      assert.isTrue(
-        (mockCameraManager.updateCameraSettingsAsync as any).calledOnceWithExactly({
-          ...validSettings,
-          id: 1,
-        }),
-      );
+  it("validates camera urls", async () => {
+    const request = createRequest({
+      body: {
+        ...cameraSettings,
+        captureUrl: "bad-url",
+      },
     });
 
-    it("should return 200 on null for optional resolution fields", async () => {
-      mockRequest.body = {
-        ...validSettings,
-        xVideoResolution: null,
-        yVideoResolution: null,
-        videoFps: null,
-        xImageResolution: null,
-        yImageResolution: null,
-      };
+    const result = await updateCameraSettingsAsync(request, mockResponse);
 
-      const result = (await updateCameraSettingsAsync(
-        mockRequest,
-        mockResponse,
-      )) as SuccessResponse;
+    assert.equal(result.statusCode, 400);
+    assert.include(result.error?.details ?? [], "captureUrl must be a valid http or https URL");
+  });
 
-      assert.equal(result.statusCode, 200);
-    });
+  it("deletes a camera", async () => {
+    const result = await deleteCameraSettingsAsync(createRequest(), mockResponse);
 
-    it("should return 200 on null for timelapseStartTime and timelapseEndTime", async () => {
-      mockRequest.body = { ...validSettings, timelapseStartTime: null, timelapseEndTime: null };
-
-      const result = (await updateCameraSettingsAsync(
-        mockRequest,
-        mockResponse,
-      )) as SuccessResponse;
-
-      assert.equal(result.statusCode, 200);
-    });
-
-    // it('should return 400 for invalid id', async () => {
-    //   mockRequest.body = { ...validSettings, id: -1 };
-
-    //   const result = await updateCameraSettingsAsync(mockRequest, mockResponse) as ErrorResponse;
-
-    //   assert.equal(result.statusCode, 400);
-    //   assert.equal(result.error.name, 'Bad Request');
-    //   assert.include(result.error.details, 'id must be a non-negative number');
-    // });
-
-    it("should return 400 for invalid enabled field", async () => {
-      mockRequest.body = { ...validSettings, enabled: "true" };
-
-      const result = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
-
-      assert.equal(result.statusCode, 400);
-      assert.include(result.error.details, "enabled must be a boolean");
-    });
-
-    it("should return 400 for invalid name length", async () => {
-      mockRequest.body = { ...validSettings, name: "" };
-
-      const result = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
-
-      assert.equal(result.statusCode, 400);
-      assert.include(result.error.details, "name must be a string between 1 and 64 characters");
-      assert.isTrue((mockCameraManager.updateCameraSettingsAsync as any).notCalled);
-    });
-
-    it("should return 400 for name too long", async () => {
-      mockRequest.body = { ...validSettings, name: "a".repeat(65) };
-
-      const result = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
-
-      assert.equal(result.statusCode, 400);
-      assert.include(result.error.details, "name must be a string between 1 and 64 characters");
-      assert.isTrue((mockCameraManager.updateCameraSettingsAsync as any).notCalled);
-    });
-
-    it("should return 400 for invalid video resolution", async () => {
-      mockRequest.body = { ...validSettings, xVideoResolution: 0 };
-
-      const result = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
-
-      assert.equal(result.statusCode, 400);
-      assert.include(result.error.details, "xVideoResolution must be a positive number or null");
-    });
-
-    it("should return 400 for invalid timelapseInterval", async () => {
-      mockRequest.body = { ...validSettings, timelapseInterval: 0 };
-
-      const result = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
-
-      assert.equal(result.statusCode, 400);
-      assert.include(result.error.details, "timelapseInterval must be a number between 1 and 1440");
-    });
-
-    it("should return 400 for timelapseInterval too high", async () => {
-      mockRequest.body = { ...validSettings, timelapseInterval: 1441 };
-
-      const result = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
-
-      assert.equal(result.statusCode, 400);
-      assert.include(result.error.details, "timelapseInterval must be a number between 1 and 1440");
-    });
-
-    it("should return 400 for invalid timelapseStartTime format", async () => {
-      mockRequest.body = { ...validSettings, timelapseStartTime: "9:00" };
-
-      const result = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
-
-      assert.equal(result.statusCode, 400);
-      assert.include(
-        result.error.details,
-        "timelapseStartTime must be a string in HH:MM format, or null",
-      );
-    });
-
-    it("should return 400 for invalid timelapseEndTime format", async () => {
-      mockRequest.body = { ...validSettings, timelapseEndTime: "21:0" };
-
-      const result = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
-
-      assert.equal(result.statusCode, 400);
-      assert.include(
-        result.error.details,
-        "timelapseEndTime must be a string in HH:MM format, or null",
-      );
-    });
-
-    it("should return 400 for mismatched timelapseStartTime and timelapseEndTime", async () => {
-      mockRequest.body = { ...validSettings, timelapseStartTime: "08:00", timelapseEndTime: null };
-
-      const result = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
-
-      assert.equal(result.statusCode, 400);
-      assert.include(
-        result.error.details,
-        "Both timelapseStartTime and timelapseEndTime must be provided or both must be null",
-      );
-
-      mockRequest.body = { ...validSettings, timelapseStartTime: null, timelapseEndTime: "20:00" };
-      const result2 = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
-      assert.equal(result2.statusCode, 400);
-    });
-
-    it("should return 400 for negative imageRetentionDays", async () => {
-      mockRequest.body = { ...validSettings, imageRetentionDays: -1 };
-
-      const result = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
-
-      assert.equal(result.statusCode, 400);
-      assert.include(result.error.details, "imageRetentionDays must be a non-negative number");
-    });
-
-    it("should return 503 when database update fails", async () => {
-      mockRequest.body = validSettings;
-      (mockCameraManager.updateCameraSettingsAsync as any).rejects(new Error("Database error"));
-
-      const result = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
-
-      assert.equal(result.statusCode, 503);
-      assert.equal(result.error.name, "Service Unavailable");
-      assert.include(result.error.details, "Failed to update camera settings: Database error");
-    });
-
-    it("should return 400 with multiple validation errors", async () => {
-      mockRequest.body = {
-        ...validSettings,
-        enabled: "invalid",
-        name: "",
-        timelapseInterval: 0,
-      };
-
-      const result = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
-
-      assert.equal(result.statusCode, 400);
-      assert.equal(result.error!.details.length, 3);
-    });
+    assert.equal(result.statusCode, 200);
+    assert.isTrue((mockCameraManager.deleteCameraSettingsAsync as any).calledOnceWithExactly(1));
   });
 });

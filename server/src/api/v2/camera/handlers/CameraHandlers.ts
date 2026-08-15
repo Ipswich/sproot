@@ -2,156 +2,80 @@ import { Request, Response } from "express";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { CameraManager } from "../../../../camera/CameraManager";
 import winston from "winston";
-import { Subscriber } from "../../../../camera/FrameBuffer";
+import { Readable } from "stream";
 
-/**
- * Possible statusCodes: 200, 502
- * Streams MJPEG from the camera to the client.
- * @param request
- * @param response
- */
+function getCameraId(request: Request): number | null {
+  const parsed = Number.parseInt(request.params["cameraId"] ?? "", 10);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    return null;
+  }
+
+  return parsed;
+}
+
 export async function streamHandlerAsync(request: Request, response: Response): Promise<void> {
+  const cameraId = getCameraId(request);
+  if (cameraId === null) {
+    response.status(400).json({
+      statusCode: 400,
+      error: {
+        name: "Bad Request",
+        url: request.originalUrl,
+        details: ["cameraId must be a positive integer"],
+      },
+      ...response.locals["defaultProperties"],
+    });
+    return;
+  }
+
   const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
   const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
+  const upstreamResponse = await cameraManager.fetchStreamAsync(cameraId);
 
-  // Get the frame buffer for direct streaming
-  const frameBuffer = cameraManager.getFrameBuffer();
-
-  if (!frameBuffer) {
-    logger.error("StreamHandler: frame buffer not available");
-    if (!response.headersSent) {
-      response.status(502).json({
-        statusCode: 502,
-        error: {
-          name: "Bad Gateway",
-          url: request.originalUrl,
-          details: [`Camera stream not available`],
-        },
-        ...response.locals["defaultProperties"],
-      });
-    }
+  if (!upstreamResponse || !upstreamResponse.ok || !upstreamResponse.body) {
+    logger.error(`StreamHandler: upstream stream not available for camera ${cameraId}`);
+    response.status(502).json({
+      statusCode: 502,
+      error: {
+        name: "Bad Gateway",
+        url: request.originalUrl,
+        details: [`Camera stream not available for camera ${cameraId}`],
+      },
+      ...response.locals["defaultProperties"],
+    });
     return;
   }
 
   try {
-    response.setHeader("Age", "0");
-    response.setHeader("Cache-Control", "no-cache");
-    response.setHeader("Pragma", "no-cache");
-    response.setHeader("Content-Type", "multipart/x-mixed-replace; boundary=FRAME");
-    // Don't set Content-Length for streaming responses
-    response.removeHeader("Content-Length");
+    response.status(upstreamResponse.status);
 
-    const clientId = `client_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-    const frameBufferStream = frameBuffer.getStream();
-    const maxPendingBytes = Math.max(response.writableHighWaterMark ?? 0, 128 * 1024);
-    const pendingChunks: Buffer[] = [];
-    let pendingBytes = 0;
-    let waitingForDrain = false;
-    let disconnected = false;
+    const contentType = upstreamResponse.headers.get("content-type");
+    if (contentType) {
+      response.setHeader("Content-Type", contentType);
+    }
 
-    const queueChunk = (chunk: Buffer): boolean => {
-      pendingChunks.push(chunk);
-      pendingBytes += chunk.length;
+    const cacheControl = upstreamResponse.headers.get("cache-control");
+    if (cacheControl) {
+      response.setHeader("Cache-Control", cacheControl);
+    }
 
-      if (pendingBytes <= maxPendingBytes) {
-        return true;
-      }
+    const pragma = upstreamResponse.headers.get("pragma");
+    if (pragma) {
+      response.setHeader("Pragma", pragma);
+    }
 
-      logger.warn(
-        `StreamHandler: client ${clientId} exceeded pending buffer limit (${pendingBytes} bytes), disconnecting`,
-      );
-      onClientDisconnect();
-      return false;
-    };
+    const upstreamStream = Readable.fromWeb(upstreamResponse.body);
+    upstreamStream.on("error", (error) => {
+      logger.error(`StreamHandler: upstream stream error for camera ${cameraId}: ${error}`);
+      response.destroy(error instanceof Error ? error : undefined);
+    });
 
-    const onDrain = () => {
-      waitingForDrain = false;
+    response.once("close", () => {
+      upstreamStream.destroy();
+      void upstreamResponse.body?.cancel();
+    });
 
-      while (!disconnected && pendingChunks.length > 0) {
-        const chunk = pendingChunks.shift();
-        if (!chunk) {
-          continue;
-        }
-
-        pendingBytes -= chunk.length;
-
-        try {
-          if (!response.write(chunk)) {
-            waitingForDrain = true;
-            response.once("drain", onDrain);
-            return;
-          }
-        } catch (e) {
-          logger.error(`StreamHandler: failed to flush buffered chunk to client ${clientId}: ${e}`);
-          onClientDisconnect();
-          return;
-        }
-      }
-    };
-
-    const onClientDisconnect = () => {
-      if (disconnected) {
-        return;
-      }
-
-      disconnected = true;
-      waitingForDrain = false;
-      pendingChunks.length = 0;
-      pendingBytes = 0;
-      response.off("close", onClientDisconnect);
-      response.off("drain", onDrain);
-      response.off("finish", onClientDisconnect);
-      response.off("error", onClientDisconnect);
-      frameBufferStream.off("error", onFrameBufferError);
-      frameBuffer.removeSubscriber(response);
-
-      if (!response.writableEnded && response.writable) {
-        response.end();
-      }
-    };
-
-    const onFrameBufferError = (err: Error) => {
-      logger.error(`StreamHandler: frame buffer stream error: ${err.message}`);
-      onClientDisconnect();
-    };
-
-    // Create a subscriber for this client that writes chunks directly
-    const subscriber: Subscriber = {
-      onChunk: (chunk: Buffer) => {
-        if (disconnected) {
-          return;
-        }
-
-        if (waitingForDrain) {
-          queueChunk(chunk);
-          return;
-        }
-
-        try {
-          if (!response.write(chunk)) {
-            waitingForDrain = true;
-            response.once("drain", onDrain);
-          }
-        } catch (e) {
-          logger.error(`StreamHandler: failed to write chunk to client ${clientId}: ${e}`);
-          onClientDisconnect();
-        }
-      },
-      onDestroy: () => {
-        logger.debug(`StreamHandler: client ${clientId} destroyed`);
-        onClientDisconnect();
-      },
-    };
-
-    // Add subscriber to frame buffer
-    frameBuffer.addSubscriber(response, subscriber);
-
-    response.once("close", onClientDisconnect);
-    response.once("finish", onClientDisconnect);
-    response.once("error", onClientDisconnect);
-
-    // Handle errors on the pass-through stream
-    frameBufferStream.on("error", onFrameBufferError);
+    upstreamStream.pipe(response);
   } catch (e) {
     logger.error(`StreamHandler: error handling stream: ${e}`);
     if (!response.headersSent) {
@@ -168,19 +92,28 @@ export async function streamHandlerAsync(request: Request, response: Response): 
   }
 }
 
-/**
- * Possible statusCodes: 200, 409, 500
- * @param request
- * @param response
- */
 export async function clearAllImagesHandlerAsync(
   request: Request,
   response: Response,
 ): Promise<void> {
+  const cameraId = getCameraId(request);
+  if (cameraId === null) {
+    response.status(400).json({
+      statusCode: 400,
+      error: {
+        name: "Bad Request",
+        url: request.originalUrl,
+        details: ["cameraId must be a positive integer"],
+      },
+      ...response.locals["defaultProperties"],
+    });
+    return;
+  }
+
   const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
   const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
   try {
-    const result = await cameraManager.clearAllImagesAsync();
+    const result = await cameraManager.clearAllImagesAsync(cameraId);
     if (result) {
       response.status(200).json({
         statusCode: 200,
@@ -214,14 +147,23 @@ export async function clearAllImagesHandlerAsync(
   }
 }
 
-/**
- * Possible statusCodes: 200, 404
- * @param request
- * @param response
- */
 export async function getLatestImageAsync(request: Request, response: Response): Promise<void> {
+  const cameraId = getCameraId(request);
+  if (cameraId === null) {
+    response.status(400).json({
+      statusCode: 400,
+      error: {
+        name: "Bad Request",
+        url: request.originalUrl,
+        details: ["cameraId must be a positive integer"],
+      },
+      ...response.locals["defaultProperties"],
+    });
+    return;
+  }
+
   const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
-  const imageBuffer = await cameraManager.getLatestImageAsync();
+  const imageBuffer = await cameraManager.getLatestImageAsync(cameraId);
   if (imageBuffer === null) {
     response.status(404).json({
       statusCode: 404,
@@ -237,41 +179,4 @@ export async function getLatestImageAsync(request: Request, response: Response):
 
   response.setHeader("Content-Type", "image/jpeg");
   response.status(200).send(imageBuffer);
-}
-
-/**
- * Possible statusCodes: 200, 502
- * @param request
- * @param response
- */
-export async function reconnectLivestreamAsync(
-  request: Request,
-  response: Response,
-): Promise<void> {
-  const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
-  const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
-  try {
-    const result = await cameraManager.reconnectLivestreamAsync();
-    if (!result) {
-      throw new Error("Failed to reconnect livestream");
-    }
-    response.status(200).json({
-      statusCode: 200,
-      content: {
-        data: "Livestream successfully reconnected",
-      },
-      ...response.locals["defaultProperties"],
-    });
-  } catch (e) {
-    logger.error(`Error reconnecting livestream: ${e}`);
-    response.status(502).json({
-      statusCode: 502,
-      error: {
-        name: "Bad Gateway",
-        url: request.originalUrl,
-        details: [`Could not connect to camera server`],
-      },
-      ...response.locals["defaultProperties"],
-    });
-  }
 }

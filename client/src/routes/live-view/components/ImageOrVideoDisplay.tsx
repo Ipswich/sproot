@@ -7,20 +7,26 @@ import { Fragment } from "react/jsx-runtime";
 import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 
-export default function ImageOrVideoDisplay() {
+export default function ImageOrVideoDisplay({
+  cameraId,
+  cameraName,
+}: {
+  cameraId: number;
+  cameraName: string;
+}) {
   const [showStream, setShowStream] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const latestImageObjectUrlRef = useRef<string | null>(null);
 
   const imageQuery = useQuery({
-    queryKey: ["latest-image"],
-    queryFn: () => getLatestImageAsync(),
+    queryKey: ["latest-image", cameraId],
+    queryFn: () => getLatestImageAsync(cameraId),
     refetchInterval: showStream ? false : 60000,
   });
 
   const streamQuery = useQuery({
-    queryKey: ["livestream"],
-    queryFn: () => getLivestreamAsync(),
+    queryKey: ["livestream", cameraId],
+    queryFn: () => getLivestreamAsync(cameraId),
     enabled: showStream,
   });
 
@@ -69,7 +75,7 @@ export default function ImageOrVideoDisplay() {
         <img
           ref={imgRef}
           src={displaySource}
-          alt="Camera stream"
+          alt={`${cameraName} stream`}
           style={{
             display: "block",
             width: "100%",

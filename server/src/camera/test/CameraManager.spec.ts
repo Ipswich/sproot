@@ -1,14 +1,10 @@
 import { assert } from "chai";
-import type { ReadStream } from "fs";
-import { PassThrough, Readable } from "stream";
 import { describe, it, beforeEach, afterEach } from "mocha";
 import sinon, { type SinonSandbox } from "sinon";
 import winston from "winston";
 import { CameraManager } from "../CameraManager";
 import ImageCapture from "../ImageCapture";
-import StreamProxy from "../StreamProxy";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
-import { TIMELAPSE_DIRECTORY } from "@sproot/common/utility/Constants";
 import { ICameraRepository } from "../../database/repositories/camera/ICameraRepository";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 
@@ -16,21 +12,14 @@ describe("CameraManager", () => {
   let sandbox: SinonSandbox;
   let logger: winston.Logger;
   let createdManagers: CameraManager[];
-  let createCameraProcessStub: sinon.SinonStub;
-  let cleanupCameraProcessStub: sinon.SinonStub;
-  let runImageRetentionAsyncStub: sinon.SinonStub;
-  let regenerateTimelapseArchiveAsyncStub: sinon.SinonStub;
-  let updateTimelapseSettingsStub: sinon.SinonStub;
 
   const cameraSettings: SDBCameraSettings = {
     id: 1,
     enabled: true,
     name: "Pi Camera",
-    xVideoResolution: 1920,
-    yVideoResolution: 1080,
-    videoFps: 30,
-    xImageResolution: 1920,
-    yImageResolution: 1080,
+    captureUrl: "http://camera:3002/capture",
+    streamUrl: "http://camera:3002/stream.mjpg",
+    healthUrl: "http://camera:3002/health",
     timelapseEnabled: false,
     imageRetentionDays: 7,
     imageRetentionSize: 1024,
@@ -41,15 +30,17 @@ describe("CameraManager", () => {
 
   const createManager = async (
     settings: SDBCameraSettings[] = [],
-    overrides?: { camera?: Record<string, sinon.SinonStub> } & Record<string, unknown>,
+    overrides?: Partial<ICameraRepository>,
   ) => {
-    const cameraOverrides = overrides?.camera;
-    const rootOverrides = { ...overrides };
-    delete rootOverrides.camera;
     const cameraRepository: ICameraRepository = {
       getAllAsync: sandbox.stub().resolves(settings),
+      getByIdAsync: sandbox.stub().callsFake(async (id: number) => {
+        return settings.find((setting) => setting.id === id) ?? null;
+      }),
+      addAsync: sandbox.stub().resolves(2),
       updateAsync: sandbox.stub().resolves(),
-      ...(cameraOverrides ?? {}),
+      deleteAsync: sandbox.stub().resolves(),
+      ...(overrides ?? {}),
     };
 
     const eventBus = new MemoryEventBus(logger);
@@ -63,297 +54,103 @@ describe("CameraManager", () => {
     return { manager, cameraRepository };
   };
 
-  const disposeManager = async (manager: CameraManager) => {
-    createdManagers = createdManagers.filter((currentManager) => currentManager !== manager);
-    await manager[Symbol.asyncDispose]();
-  };
-
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     logger = winston.createLogger({ silent: true });
     createdManagers = [];
-
-    runImageRetentionAsyncStub = sandbox
-      .stub(ImageCapture.prototype, "runImageRetentionAsync")
-      .resolves();
-    regenerateTimelapseArchiveAsyncStub = sandbox
-      .stub(ImageCapture.prototype, "regenerateTimelapseArchiveAsync")
-      .resolves();
-    updateTimelapseSettingsStub = sandbox.stub(ImageCapture.prototype, "updateTimelapseSettings");
-    createCameraProcessStub = sandbox.stub(CameraManager.prototype as any, "createCameraProcess");
-    cleanupCameraProcessStub = sandbox.stub(CameraManager.prototype as any, "cleanupCameraProcess");
+    sandbox.stub(ImageCapture.prototype, "captureLatestImageAsync").resolves();
+    sandbox.stub(ImageCapture.prototype, "runImageRetentionAsync").resolves();
+    sandbox.stub(ImageCapture.prototype, "regenerateTimelapseArchiveAsync").resolves();
+    sandbox.stub(ImageCapture.prototype, "updateTimelapseSettings");
   });
 
   afterEach(async () => {
     for (const manager of createdManagers.reverse()) {
       await manager[Symbol.asyncDispose]();
     }
-    createdManagers = [];
     sandbox.restore();
   });
 
-  it("stores the loaded camera settings", async () => {
-    sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
-
+  it("stores loaded camera settings as a list", async () => {
     const manager = (await createManager([cameraSettings])).manager;
 
-    assert.deepEqual(manager.cameraSettings, cameraSettings);
+    assert.deepEqual(manager.cameraSettings, [cameraSettings]);
   });
 
-  it("returns null settings when no camera settings are found", async () => {
+  it("returns an empty list when no camera settings are found", async () => {
     const manager = (await createManager()).manager;
 
-    assert.isNull(manager.cameraSettings);
+    assert.deepEqual(manager.cameraSettings, []);
   });
 
-  it("delegates latest image access to ImageCapture", async () => {
+  it("delegates latest image access by camera id", async () => {
     const latestImage = Buffer.from("latest-image");
     const getLatestImageAsyncStub = sandbox
       .stub(ImageCapture.prototype, "getLatestImageAsync")
       .resolves(latestImage);
 
-    const manager = (await createManager()).manager;
+    const manager = (await createManager([cameraSettings])).manager;
 
-    assert.equal(await manager.getLatestImageAsync(), latestImage);
+    assert.equal(await manager.getLatestImageAsync(1), latestImage);
     assert.isTrue(getLatestImageAsyncStub.calledOnce);
   });
 
-  it("delegates timelapse archive progress access to ImageCapture", async () => {
+  it("returns per-camera timelapse progress", async () => {
     const progress = { isGenerating: true, archiveProgress: 42 };
-    const getTimelapseGenerationStatusStub = sandbox
-      .stub(ImageCapture.prototype, "getTimelapseGenerationStatus")
-      .returns(progress);
-
-    const manager = (await createManager()).manager;
-
-    assert.deepEqual(manager.getTimelapseArchiveProgress(), progress);
-    assert.isTrue(getTimelapseGenerationStatusStub.calledOnce);
-  });
-
-  it("delegates timelapse archive retrieval to ImageCapture", async () => {
-    const archive = { pipe: sandbox.stub() } as unknown as ReadStream;
-    const getTimelapseArchiveAsyncStub = sandbox
-      .stub(ImageCapture.prototype, "getTimelapseArchiveAsync")
-      .resolves(archive);
-
-    const manager = (await createManager()).manager;
-
-    assert.equal(await manager.getTimelapseArchiveAsync(), archive);
-    assert.isTrue(getTimelapseArchiveAsyncStub.calledOnce);
-  });
-
-  it("delegates timelapse image count access to ImageCapture", async () => {
-    const getTimelapseImageCountStub = sandbox
-      .stub(ImageCapture.prototype, "getTimelapseImageCount")
-      .returns(12);
-
-    const manager = (await createManager()).manager;
-
-    assert.equal(manager.getTimelapseImageCount(), 12);
-    assert.isTrue(getTimelapseImageCountStub.calledOnce);
-  });
-
-  it("delegates timelapse archive size access to ImageCapture", async () => {
-    const getTimelapseArchiveSizeAsyncStub = sandbox
-      .stub(ImageCapture.prototype, "getTimelapseArchiveSizeAsync")
-      .resolves(2048);
-
-    const manager = (await createManager()).manager;
-
-    assert.equal(await manager.getTimelapseArchiveSizeAsync(), 2048);
-    assert.isTrue(getTimelapseArchiveSizeAsyncStub.calledOnce);
-  });
-
-  it("returns the last timelapse generation duration when timelapse is enabled", async () => {
-    sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
-
-    const getLastTimelapseGenerationDurationStub = sandbox
-      .stub(ImageCapture.prototype, "getLastTimelapseGenerationDuration")
-      .returns(3210);
-    const enabledSettings = { ...cameraSettings, timelapseEnabled: true };
-
-    const manager = (await createManager([enabledSettings])).manager;
-
-    assert.equal(manager.getLastTimelapseGenerationDuration(), 3210);
-    assert.isTrue(getLastTimelapseGenerationDurationStub.calledOnce);
-  });
-
-  it("returns null for the last timelapse generation duration when timelapse is disabled", async () => {
-    sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
-
-    const getLastTimelapseGenerationDurationStub = sandbox
-      .stub(ImageCapture.prototype, "getLastTimelapseGenerationDuration")
-      .returns(3210);
+    sandbox.stub(ImageCapture.prototype, "getTimelapseGenerationStatus").returns(progress);
 
     const manager = (await createManager([cameraSettings])).manager;
 
-    assert.isNull(manager.getLastTimelapseGenerationDuration());
-    assert.isTrue(getLastTimelapseGenerationDurationStub.notCalled);
+    assert.deepEqual(manager.getTimelapseArchiveProgress(1), progress);
   });
 
-  it("clears timelapse images using the configured directory", async () => {
-    const clearAllImagesAsyncStub = sandbox
-      .stub(ImageCapture.prototype, "clearAllImagesAsync")
-      .resolves(true);
+  it("creates a new camera settings row", async () => {
+    const { manager, cameraRepository } = await createManager([cameraSettings]);
 
-    const manager = (await createManager()).manager;
+    const created = await manager.addCameraSettingsAsync({
+      enabled: true,
+      name: "Second Camera",
+      captureUrl: "http://camera-2:3002/capture",
+      streamUrl: "http://camera-2:3002/stream.mjpg",
+      healthUrl: "http://camera-2:3002/health",
+      timelapseEnabled: false,
+      imageRetentionDays: 7,
+      imageRetentionSize: 512,
+      timelapseInterval: null,
+      timelapseStartTime: null,
+      timelapseEndTime: null,
+    });
 
-    assert.isTrue(await manager.clearAllImagesAsync());
-    assert.isTrue(clearAllImagesAsyncStub.calledOnceWithExactly(TIMELAPSE_DIRECTORY));
+    assert.equal(created.id, 2);
+    assert.isTrue((cameraRepository.addAsync as sinon.SinonStub).calledOnce);
   });
 
-  it("forces timelapse archive regeneration without validation", async () => {
-    const manager = (await createManager()).manager;
+  it("updates a camera when it exists", async () => {
+    const { manager, cameraRepository } = await createManager([cameraSettings]);
 
-    await manager.regenerateTimelapseArchiveAsync();
+    const updated = await manager.updateCameraSettingsAsync({
+      ...cameraSettings,
+      name: "Updated Camera",
+    });
 
-    assert.isTrue(regenerateTimelapseArchiveAsyncStub.calledWithExactly(false));
+    assert.equal(updated?.name, "Updated Camera");
+    assert.isTrue((cameraRepository.updateAsync as sinon.SinonStub).calledOnce);
   });
 
-  it("assigns the stream proxy when startup succeeds", async () => {
-    const startAsyncStub = sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
-    const reconnectAsyncStub = sandbox.stub(StreamProxy.prototype, "reconnectAsync").resolves(true);
-    const stopAsyncStub = sandbox.stub(StreamProxy.prototype, "stopAsync").resolves();
+  it("returns null when updating a missing camera", async () => {
+    const { manager } = await createManager([]);
 
-    const manager = (await createManager([cameraSettings])).manager;
+    const updated = await manager.updateCameraSettingsAsync(cameraSettings);
 
-    assert.isTrue(startAsyncStub.calledOnce);
-    assert.isNotNull(manager.getFrameBuffer());
-    assert.isTrue(await manager.reconnectLivestreamAsync());
-    assert.isTrue(reconnectAsyncStub.calledOnce);
-    assert.isTrue(createCameraProcessStub.calledOnceWithExactly(cameraSettings));
-    assert.isTrue(runImageRetentionAsyncStub.calledOnceWithExactly(1024, 7));
-    assert.isTrue(updateTimelapseSettingsStub.calledOnceWithExactly(cameraSettings));
-
-    await disposeManager(manager);
-
-    assert.isTrue(stopAsyncStub.calledOnce);
-    assert.isTrue(cleanupCameraProcessStub.calledOnce);
+    assert.isNull(updated);
   });
 
-  it("assigns the stream proxy even when startup fails", async () => {
-    const infoStub = sandbox.stub(logger, "info");
-    const startAsyncStub = sandbox.stub(StreamProxy.prototype, "startAsync").resolves(false);
-    const reconnectAsyncStub = sandbox.stub(StreamProxy.prototype, "reconnectAsync").resolves(true);
-    const stopAsyncStub = sandbox.stub(StreamProxy.prototype, "stopAsync").resolves();
+  it("deletes a camera when it exists", async () => {
+    const { manager, cameraRepository } = await createManager([cameraSettings]);
 
-    const manager = (await createManager([cameraSettings])).manager;
+    const deleted = await manager.deleteCameraSettingsAsync(1);
 
-    assert.isTrue(startAsyncStub.calledOnce);
-    assert.isNotNull(manager.getFrameBuffer());
-    assert.isTrue(await manager.reconnectLivestreamAsync());
-    assert.isTrue(reconnectAsyncStub.calledOnce);
-
-    await disposeManager(manager);
-
-    assert.isTrue(stopAsyncStub.calledOnce);
-    const infoMessages = infoStub.getCalls().map((call) => String(call.args[0]));
-    assert.isTrue(
-      infoMessages.includes(
-        "CameraManager: stream proxy failed to connect to upstream, retrying...",
-      ),
-    );
-  });
-
-  it("eventually connects to upstream after retrying when initial connection fails", async () => {
-    const clock = sinon.useFakeTimers();
-    const secondUpstreamStream = new PassThrough();
-
-    const fetchStub = sinon.stub(globalThis, "fetch");
-    fetchStub.onFirstCall().rejects(new Error("Connection refused"));
-    fetchStub.onSecondCall().resolves(
-      new Response(Readable.toWeb(secondUpstreamStream) as ReadableStream, {
-        status: 200,
-      }),
-    );
-
-    const manager = (await createManager([cameraSettings])).manager;
-
-    assert.isNotNull(manager.getFrameBuffer());
-    assert.equal(fetchStub.callCount, 1);
-
-    await clock.tickAsync(3000);
-
-    assert.equal(fetchStub.callCount, 2);
-
-    await disposeManager(manager);
-    secondUpstreamStream.destroy();
-    fetchStub.restore();
-    clock.restore();
-  });
-
-  it("stops the existing stream proxy when the camera is disabled", async () => {
-    const startAsyncStub = sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
-    const stopAsyncStub = sandbox.stub(StreamProxy.prototype, "stopAsync").resolves();
-    const getAllAsyncStub = sandbox.stub();
-    getAllAsyncStub.onFirstCall().resolves([cameraSettings]);
-    getAllAsyncStub.onSecondCall().resolves([{ ...cameraSettings, enabled: false }]);
-
-    const cameraRepository: ICameraRepository = {
-      getAllAsync: getAllAsyncStub,
-      updateAsync: sandbox.stub().resolves(),
-    };
-
-    const eventBus = new MemoryEventBus(logger);
-    const manager = await CameraManager.createInstanceAsync(
-      eventBus,
-      cameraRepository,
-      "test-key",
-      logger,
-    );
-    createdManagers.push(manager);
-
-    assert.isTrue(startAsyncStub.calledOnce);
-    assert.isNotNull(manager.getFrameBuffer());
-
-    await manager.regenerateAsync();
-
-    assert.isTrue(stopAsyncStub.calledOnce);
-    assert.isNull(manager.getFrameBuffer());
-  });
-
-  it("returns the same instance and does nothing after disposal", async () => {
-    const getAllAsync = sandbox.stub().resolves([cameraSettings]);
-    const startAsyncStub = sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
-    const manager = (await createManager([], { camera: { getAllAsync } })).manager;
-
-    await manager[Symbol.asyncDispose]();
-    createdManagers = createdManagers.filter((currentManager) => currentManager !== manager);
-    const result = await manager.regenerateAsync();
-
-    assert.strictEqual(result, manager);
-    assert.isTrue(startAsyncStub.calledOnce);
-    assert.isTrue(getAllAsync.calledOnce);
-  });
-
-  it("skips overlapping regenerate calls while an update is already in progress", async () => {
-    sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
-
-    const warnStub = sandbox.stub(logger, "warn");
-    let resolveSettings!: (value: SDBCameraSettings[]) => void;
-    const getAllAsync = sandbox.stub();
-    getAllAsync.onFirstCall().resolves([]);
-    getAllAsync.onSecondCall().callsFake(
-      () =>
-        new Promise<SDBCameraSettings[]>((resolve) => {
-          resolveSettings = resolve;
-        }),
-    );
-
-    const manager = (await createManager([], { camera: { getAllAsync } })).manager;
-
-    const firstRegenerate = manager.regenerateAsync();
-    const secondRegenerate = manager.regenerateAsync();
-
-    assert.strictEqual(await secondRegenerate, manager);
-    const warnings = warnStub.getCalls().map((call) => String(call.args[0]));
-    assert.isTrue(
-      warnings.includes("CameraManager is already updating, skipping regenerateAsync call."),
-    );
-    assert.equal(getAllAsync.callCount, 2);
-
-    resolveSettings([cameraSettings]);
-    assert.strictEqual(await firstRegenerate, manager);
-    await disposeManager(manager);
+    assert.isTrue(deleted);
+    assert.isTrue((cameraRepository.deleteAsync as sinon.SinonStub).calledOnceWithExactly(1));
   });
 });

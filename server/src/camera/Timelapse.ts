@@ -1,24 +1,28 @@
 import fs from "fs";
+import path from "path";
+import { spawn } from "child_process";
+import { PassThrough, pipeline } from "stream";
 import winston from "winston";
-import {
-  ARCHIVE_DIRECTORY,
-  TIMELAPSE_DIRECTORY,
-  TIMELAPSE_RESOURCES,
-} from "@sproot/common/utility/Constants";
+import { TIMELAPSE_RESOURCES } from "@sproot/common/utility/Constants";
+import { createTimeStampSuffix } from "@sproot/common/utility/Files";
 import { SDBCameraSettings } from "@sproot/common/database/SDBCameraSettings";
 import { isBetweenTimeStamp } from "@sproot/common/utility/TimeMethods";
-import path from "path";
-import { PassThrough, pipeline } from "stream";
-import { spawn } from "child_process";
-import { createTimeStampSuffix } from "@sproot/common/utility/Files";
+import {
+  getCameraArchiveDirectory,
+  getCameraArchivePath,
+  getCameraTimelapseDirectory,
+} from "./CameraPaths";
 
 type AddImageToTimelapseFunction = (file: string, directory: string) => Promise<void>;
+type EnqueueArchiveGenerationFunction = <T>(task: () => Promise<T>) => Promise<T>;
 
 class Timelapse implements Disposable {
+  #cameraId: number;
   #logger: winston.Logger;
   #intervalMinutes: number | null = null;
   #timer: NodeJS.Timeout | null = null;
-  addImageToTimelapseFunction: AddImageToTimelapseFunction;
+  #addImageToTimelapseFunction: AddImageToTimelapseFunction;
+  #enqueueArchiveGeneration: EnqueueArchiveGenerationFunction;
   #cameraName: string | null = null;
   #enabled: boolean = false;
   #startTime: string | null = null;
@@ -28,9 +32,28 @@ class Timelapse implements Disposable {
   #lastArchiveGenerationDuration: number | null = null;
   #archiveImageCount: number = 0;
 
-  constructor(addImageToTimelapseFunction: AddImageToTimelapseFunction, logger: winston.Logger) {
-    this.addImageToTimelapseFunction = addImageToTimelapseFunction;
-    this.#logger = logger;
+  constructor(
+    cameraIdOrAddImageToTimelapseFunction: number | AddImageToTimelapseFunction,
+    addImageToTimelapseFunctionOrLogger:
+      | AddImageToTimelapseFunction
+      | winston.Logger,
+    enqueueArchiveGeneration?: EnqueueArchiveGenerationFunction,
+    logger?: winston.Logger,
+  ) {
+    if (typeof cameraIdOrAddImageToTimelapseFunction === "number") {
+      this.#cameraId = cameraIdOrAddImageToTimelapseFunction;
+      this.#addImageToTimelapseFunction =
+        addImageToTimelapseFunctionOrLogger as AddImageToTimelapseFunction;
+      this.#enqueueArchiveGeneration =
+        enqueueArchiveGeneration ?? (async (task) => task());
+      this.#logger = logger!;
+      return;
+    }
+
+    this.#cameraId = 1;
+    this.#addImageToTimelapseFunction = cameraIdOrAddImageToTimelapseFunction;
+    this.#enqueueArchiveGeneration = async (task) => task();
+    this.#logger = addImageToTimelapseFunctionOrLogger as winston.Logger;
   }
 
   updateSettings(settings: SDBCameraSettings): void {
@@ -74,22 +97,12 @@ class Timelapse implements Disposable {
 
   async getTimelapseArchiveAsync(): Promise<fs.ReadStream | null> {
     try {
-      if (!fs.existsSync(ARCHIVE_DIRECTORY)) {
+      const archiveFile = getCameraArchivePath(this.#cameraId);
+      if (!fs.existsSync(archiveFile)) {
         return null;
       }
 
-      const files = await fs.promises.readdir(ARCHIVE_DIRECTORY);
-      if (!files.length) return null;
-
-      const matchingFiles = files.filter((file) => file.match(/^timelapse\.tar$/));
-
-      if (!matchingFiles.length) {
-        return null;
-      }
-
-      const latestFile = path.join(ARCHIVE_DIRECTORY, matchingFiles[0]!);
-
-      return fs.createReadStream(latestFile);
+      return fs.createReadStream(archiveFile);
     } catch (error) {
       this.#logger.error(
         `Failed to get latest timelapse archive: ${error instanceof Error ? error.message : String(error)}`,
@@ -98,27 +111,21 @@ class Timelapse implements Disposable {
     }
   }
 
-  /**
-   * @returns The size of the timelapse archive in MB, or null if timelapse is disabled.
-   */
   async getTimelapseArchiveSizeAsync(): Promise<number | null> {
     try {
-      await fs.promises.mkdir(ARCHIVE_DIRECTORY, { recursive: true });
-      const files = await fs.promises.readdir(ARCHIVE_DIRECTORY);
-      const archiveFile = files.filter((file) => file.match("timelapse.tar"))[0];
-      if (archiveFile === undefined) {
+      const archiveFile = getCameraArchivePath(this.#cameraId);
+      if (!fs.existsSync(archiveFile)) {
         return 0;
       }
-      const timelapseFile = path.join(ARCHIVE_DIRECTORY, archiveFile);
-      const stats = await fs.promises.stat(timelapseFile);
+
+      const stats = await fs.promises.stat(archiveFile);
       return stats.size / (1024 * 1024);
-    } catch (error) {
+    } catch {
       return 0;
     }
   }
 
   async generateTimelapseArchiveAsync(validateShouldRun: boolean): Promise<void> {
-    // Reset duration if timelapses are disabled
     if (!this.#enabled) {
       this.#lastArchiveGenerationDuration = null;
     }
@@ -133,8 +140,9 @@ class Timelapse implements Disposable {
     const startTime = Date.now();
     const profiler = this.#logger.startTimer();
     try {
-      await fs.promises.mkdir(ARCHIVE_DIRECTORY, { recursive: true });
-      const archiveFile = path.join(ARCHIVE_DIRECTORY, "timelapse.tar");
+      const archiveDirectory = getCameraArchiveDirectory(this.#cameraId);
+      await fs.promises.mkdir(archiveDirectory, { recursive: true });
+      const archiveFile = getCameraArchivePath(this.#cameraId);
 
       this.#logger.info(`Creating timelapse archive: ${archiveFile}`);
       this.#archiveProgressPercentage = 0;
@@ -146,7 +154,7 @@ class Timelapse implements Disposable {
         return;
       }
 
-      await this.createArchiveAsync(imageData, archiveFile);
+      await this.#enqueueArchiveGeneration(() => this.createArchiveAsync(imageData, archiveFile));
       this.#logger.info(`Successfully created timelapse archive with ${imageData.length} images`);
     } catch (error) {
       this.#logger.error(
@@ -154,8 +162,7 @@ class Timelapse implements Disposable {
       );
       this.#archiveProgressPercentage = -1;
     } finally {
-      this.#lastArchiveGenerationDuration = (Date.now() - startTime) / 1000; // seconds
-      // The setTimeout should force cleanup of resources before actually calling things "done."
+      this.#lastArchiveGenerationDuration = (Date.now() - startTime) / 1000;
       setTimeout(() => {
         profiler.done({
           message: `Timelapse archive process completed`,
@@ -167,22 +174,21 @@ class Timelapse implements Disposable {
   }
 
   shouldGenerateTimelapseArchive(): boolean {
-    // Obviously, only generate timelapse archives if enabled
     if (!this.#enabled) {
       return false;
     }
+
     const now = new Date();
     const nowHours = now.getHours();
     const nowMinutes = now.getMinutes();
 
-    // If start and end times are set and valid, run if current time is equal to end time
     if (this.#startTime?.match(/^\d{2}:\d{2}$/) && this.#endTime?.match(/^\d{2}:\d{2}$/)) {
       const [endHours, endMinutes] = this.#endTime.split(":").map(Number);
       if (nowHours === endHours && nowMinutes === endMinutes) {
         return true;
       }
     }
-    // If no start or end times, run if current time is midnight (00:00)
+
     if (this.#startTime === null && this.#endTime === null && nowHours === 0 && nowMinutes === 0) {
       return true;
     }
@@ -200,46 +206,33 @@ class Timelapse implements Disposable {
       let archivedBytes = 0;
       const output = fs.createWriteStream(archiveFile);
 
-      const niceArgs = ["-n", "19"];
-      const ioniceArgs = ["-c", "3"];
-      const tarArgs = [
-        "-c", // create
+      const tarProcess = spawn("nice", [
+        "-n",
+        "19",
+        "ionice",
+        "-c",
+        "3",
+        "tar",
+        "-c",
         "-f",
-        "-", // output to stdout
+        "-",
         "-C",
-        TIMELAPSE_RESOURCES, // change to resources directory
+        path.resolve(TIMELAPSE_RESOURCES),
         ".",
         "-C",
-        "../../", // Return to the root directory
-        "-C",
-        TIMELAPSE_DIRECTORY, // set directory
+        path.resolve(getCameraTimelapseDirectory(this.#cameraId)),
         ".",
-      ];
-
-      // Use nice and ionice to give the tar process lower priority - fast causes problems for low end devices
-      const tarProcess = spawn("nice", [...niceArgs, "ionice", ...ioniceArgs, "tar", ...tarArgs]);
+      ]);
       const passThrough = new PassThrough();
 
-      passThrough.on("data", (_chunk: Buffer) => {
-        const chunkSize = _chunk.byteLength;
-        archivedBytes += chunkSize;
+      passThrough.on("data", (chunk: Buffer) => {
+        archivedBytes += chunk.byteLength;
         this.#archiveProgressPercentage = Math.min(
           Math.round((archivedBytes / unarchivedBytes) * 100),
           100,
         );
-
-        const MB = 1024 * 1024;
-        const logInterval = 100 * MB;
-        const lastLoggedMB = Math.floor(archivedBytes / logInterval);
-        const currentMB = Math.floor((archivedBytes + chunkSize) / logInterval);
-        if (currentMB > lastLoggedMB || unarchivedBytes <= archivedBytes) {
-          this.#logger.info(
-            `Processed ${archivedBytes} of ${unarchivedBytes} bytes (${this.#archiveProgressPercentage}%)`,
-          );
-        }
       });
 
-      // Pipe tar to pass through for logging, and then ultimately to the output stream
       pipeline(tarProcess.stdout, passThrough, output, (err) => {
         if (err) {
           this.#logger.error(`Pipeline error: ${err.message}`);
@@ -253,15 +246,20 @@ class Timelapse implements Disposable {
   }
 
   private async getTimelapseFileDataAsync(): Promise<{ name: string; size: number }[]> {
-    const files = await fs.promises.readdir(TIMELAPSE_DIRECTORY);
+    const timelapseDirectory = getCameraTimelapseDirectory(this.#cameraId);
+    if (!fs.existsSync(timelapseDirectory)) {
+      return [];
+    }
+
+    const files = await fs.promises.readdir(timelapseDirectory);
     const fileStatsPromises = files
       .filter((file) => file.endsWith(".jpg"))
       .map(async (file) => {
-        const filePath = path.join(TIMELAPSE_DIRECTORY, file);
+        const filePath = path.join(timelapseDirectory, file);
         try {
           const stats = await fs.promises.stat(filePath);
           return { file, size: stats.size, isFile: stats.isFile() };
-        } catch (err) {
+        } catch {
           return { file, isFile: false };
         }
       });
@@ -313,14 +311,14 @@ class Timelapse implements Disposable {
 
   private async addImage(): Promise<void> {
     try {
-      // Create timestamp for unique filenames
       const now = new Date();
-      const fileName = `${this.#cameraName}_${createTimeStampSuffix(now)}.jpg`;
+      const cameraName = (this.#cameraName ?? `camera-${this.#cameraId}`).replace(/\s+/g, "-");
+      const fileName = `${cameraName}_${createTimeStampSuffix(now)}.jpg`;
+      const timelapseDirectory = getCameraTimelapseDirectory(this.#cameraId);
 
-      await fs.promises.mkdir(TIMELAPSE_DIRECTORY, { recursive: true });
-
-      await this.addImageToTimelapseFunction(fileName, TIMELAPSE_DIRECTORY);
-      this.#logger.info(`Added timelapse image ${fileName} to ${TIMELAPSE_DIRECTORY}`);
+      await fs.promises.mkdir(timelapseDirectory, { recursive: true });
+      await this.#addImageToTimelapseFunction(fileName, timelapseDirectory);
+      this.#logger.info(`Added timelapse image ${fileName} to ${timelapseDirectory}`);
     } catch (error) {
       this.#logger.error(
         `Failed to add timelapse image: ${error instanceof Error ? error.message : String(error)}`,

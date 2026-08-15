@@ -29,7 +29,7 @@ export default function Root() {
   const loaderData = useLoaderData() as {
     readingTypes: Partial<Record<ReadingType, string>>;
     outputs: Record<string, IOutputBase>;
-    cameraSettings: SDBCameraSettings;
+    cameraSettings: SDBCameraSettings[];
   };
 
   const readingTypes = Object.keys(

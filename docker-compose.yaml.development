@@ -1,4 +1,26 @@
 services:
+  camera:
+    profiles:
+      - camera
+    build:
+      context: ./
+      dockerfile: ./camera/Dockerfile
+    restart: unless-stopped
+    environment:
+      TZ: America/Los_Angeles
+      INTERSERVICE_AUTHENTICATION_KEY: CHANGE ME #Change this to something long and unique
+      CAMERA_PORT: 3002
+      CAMERA_VIDEO_RESOLUTION: 1280x960
+      CAMERA_FPS: 30
+      CAMERA_GRACEFUL_SHUTDOWN_TIMEOUT: 10
+    volumes:
+      - /run/udev:/run/udev:ro
+      - /sys:/sys
+    network_mode: "host"
+    privileged: true
+    expose:
+      - "3002"
+
   server:
     depends_on:
       postgres:
@@ -21,7 +43,6 @@ services:
       DATABASE_PASSWORD: root
       INTERSERVICE_AUTHENTICATION_KEY: CHANGE ME #Change this to something long and unique
     volumes:
-      - /run/udev:/run/udev:ro
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
       - ./docker_volumes/sproot/server/images:/sproot/server/images
@@ -59,7 +80,6 @@ services:
       - "443"
 
   postgres:
-    image: sproot-postgres:pg18-ts2.26.4-toolkit1.22.0
     build:
       context: ./
       dockerfile: ./postgres/Dockerfile
