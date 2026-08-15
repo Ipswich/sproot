@@ -34,9 +34,17 @@ type CameraDraft = NewCameraSettings & {
   key: string;
 };
 
+function createDraftKey() {
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `camera-draft-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function createDefaultDraft(index: number): CameraDraft {
   return {
-    key: crypto.randomUUID(),
+    key: createDraftKey(),
     enabled: false,
     name: `Camera ${index}`,
     captureUrl: "http://camera:3002/capture",
@@ -53,7 +61,7 @@ function createDefaultDraft(index: number): CameraDraft {
 
 function toDraft(camera: SDBCameraSettings): CameraDraft {
   return {
-    key: crypto.randomUUID(),
+    key: createDraftKey(),
     ...camera,
   };
 }
@@ -104,20 +112,37 @@ function validateDraft(draft: CameraDraft): string[] {
     errors.push("Image retention size must be zero or greater.");
   }
   if (draft.timelapseEnabled) {
-    if (draft.timelapseInterval == null || draft.timelapseInterval < 1 || draft.timelapseInterval > 1440) {
-      errors.push("Timelapse interval must be between 1 and 1440 minutes when timelapse is enabled.");
+    if (
+      draft.timelapseInterval == null ||
+      draft.timelapseInterval < 1 ||
+      draft.timelapseInterval > 1440
+    ) {
+      errors.push(
+        "Timelapse interval must be between 1 and 1440 minutes when timelapse is enabled.",
+      );
     }
   }
 
   const timeRegex = /^\d{2}:\d{2}$/;
-  if (draft.timelapseStartTime !== null && !timeRegex.test(draft.timelapseStartTime)) {
+  if (
+    draft.timelapseStartTime !== null &&
+    !timeRegex.test(draft.timelapseStartTime)
+  ) {
     errors.push("Timelapse start time must use HH:MM.");
   }
-  if (draft.timelapseEndTime !== null && !timeRegex.test(draft.timelapseEndTime)) {
+  if (
+    draft.timelapseEndTime !== null &&
+    !timeRegex.test(draft.timelapseEndTime)
+  ) {
     errors.push("Timelapse end time must use HH:MM.");
   }
-  if ((draft.timelapseStartTime === null) !== (draft.timelapseEndTime === null)) {
-    errors.push("Timelapse start and end time must both be set or both be empty.");
+  if (
+    (draft.timelapseStartTime === null) !==
+    (draft.timelapseEndTime === null)
+  ) {
+    errors.push(
+      "Timelapse start and end time must both be set or both be empty.",
+    );
   }
 
   return errors;
@@ -138,11 +163,15 @@ export default function CameraSettingsAccordionItem() {
   });
 
   useEffect(() => {
-    setDrafts((cameraSettingsQuery.data ?? []).map((camera) => toDraft(camera)));
+    setDrafts(
+      (cameraSettingsQuery.data ?? []).map((camera) => toDraft(camera)),
+    );
   }, [cameraSettingsQuery.data]);
 
   const draftErrors = useMemo(() => {
-    return Object.fromEntries(drafts.map((draft) => [draft.key, validateDraft(draft)]));
+    return Object.fromEntries(
+      drafts.map((draft) => [draft.key, validateDraft(draft)]),
+    );
   }, [drafts]);
 
   const refreshDrafts = async () => {
@@ -170,7 +199,9 @@ export default function CameraSettingsAccordionItem() {
     },
     onError: (error) => {
       setSaveError(
-        error instanceof Error ? error.message : "Failed to update camera settings.",
+        error instanceof Error
+          ? error.message
+          : "Failed to update camera settings.",
       );
       setSaveMessage(null);
     },
@@ -196,7 +227,9 @@ export default function CameraSettingsAccordionItem() {
       setSaveMessage("Camera removed.");
     },
     onError: (error) => {
-      setSaveError(error instanceof Error ? error.message : "Failed to delete camera.");
+      setSaveError(
+        error instanceof Error ? error.message : "Failed to delete camera.",
+      );
       setSaveMessage(null);
     },
     onSettled: () => {
@@ -220,7 +253,9 @@ export default function CameraSettingsAccordionItem() {
       setSaveMessage("Timelapse images cleared.");
     },
     onError: (error) => {
-      setSaveError(error instanceof Error ? error.message : "Failed to clear images.");
+      setSaveError(
+        error instanceof Error ? error.message : "Failed to clear images.",
+      );
       setSaveMessage(null);
     },
     onSettled: () => {
@@ -268,7 +303,8 @@ export default function CameraSettingsAccordionItem() {
               <div>
                 <Text fw={600}>External Cameras</Text>
                 <Text size="sm" c="dimmed">
-                  Configure camera, stream, health, and per-camera timelapse settings.
+                  Configure camera, stream, health, and per-camera timelapse
+                  settings.
                 </Text>
               </div>
               <Button
@@ -276,7 +312,10 @@ export default function CameraSettingsAccordionItem() {
                 variant="light"
                 onClick={() => {
                   setDrafts((currentDrafts) => {
-                    return [...currentDrafts, createDefaultDraft(currentDrafts.length + 1)];
+                    return [
+                      ...currentDrafts,
+                      createDefaultDraft(currentDrafts.length + 1),
+                    ];
                   });
                 }}
               >
@@ -294,11 +333,19 @@ export default function CameraSettingsAccordionItem() {
               const isClearing = activeClearKey === draft.key;
 
               return (
-                <Paper key={draft.key} withBorder radius="md" p="lg" shadow="xs">
+                <Paper
+                  key={draft.key}
+                  withBorder
+                  radius="md"
+                  p="lg"
+                  shadow="xs"
+                >
                   <Stack gap="md">
                     <Group justify="space-between" align="flex-start">
                       <div>
-                        <Text fw={600}>{draft.name || `Camera ${index + 1}`}</Text>
+                        <Text fw={600}>
+                          {draft.name || `Camera ${index + 1}`}
+                        </Text>
                         <Text size="sm" c="dimmed">
                           {draft.id ? `Camera ID ${draft.id}` : "New camera"}
                         </Text>
@@ -316,10 +363,14 @@ export default function CameraSettingsAccordionItem() {
                           Save
                         </Button>
                         <ConfirmDeleteButton
+                          buttonProps={{ variant: "light" }}
                           onConfirm={async () => {
                             if (!draft.id) {
                               setDrafts((currentDrafts) => {
-                                return currentDrafts.filter((currentDraft) => currentDraft.key !== draft.key);
+                                return currentDrafts.filter(
+                                  (currentDraft) =>
+                                    currentDraft.key !== draft.key,
+                                );
                               });
                               return;
                             }
@@ -344,47 +395,73 @@ export default function CameraSettingsAccordionItem() {
                         label="Name"
                         value={draft.name}
                         onChange={(event) => {
-                          updateDraft(draft.key, "name", event.currentTarget.value);
+                          updateDraft(
+                            draft.key,
+                            "name",
+                            event.currentTarget.value,
+                          );
                         }}
                       />
                       <Switch
                         label="Enabled"
+                        withThumbIndicator={false}
                         checked={draft.enabled}
                         onChange={(event) => {
-                          updateDraft(draft.key, "enabled", event.currentTarget.checked);
+                          updateDraft(
+                            draft.key,
+                            "enabled",
+                            event.currentTarget.checked,
+                          );
                         }}
                       />
                       <TextInput
                         label="Capture URL"
                         value={draft.captureUrl}
                         onChange={(event) => {
-                          updateDraft(draft.key, "captureUrl", event.currentTarget.value);
+                          updateDraft(
+                            draft.key,
+                            "captureUrl",
+                            event.currentTarget.value,
+                          );
                         }}
                       />
                       <TextInput
                         label="Stream URL"
                         value={draft.streamUrl}
                         onChange={(event) => {
-                          updateDraft(draft.key, "streamUrl", event.currentTarget.value);
+                          updateDraft(
+                            draft.key,
+                            "streamUrl",
+                            event.currentTarget.value,
+                          );
                         }}
                       />
                       <TextInput
                         label="Health URL"
                         value={draft.healthUrl}
                         onChange={(event) => {
-                          updateDraft(draft.key, "healthUrl", event.currentTarget.value);
+                          updateDraft(
+                            draft.key,
+                            "healthUrl",
+                            event.currentTarget.value,
+                          );
                         }}
                       />
                       <Switch
                         label="Timelapse Enabled"
+                        withThumbIndicator={false}
                         checked={draft.timelapseEnabled}
                         onChange={(event) => {
-                          updateDraft(draft.key, "timelapseEnabled", event.currentTarget.checked);
+                          updateDraft(
+                            draft.key,
+                            "timelapseEnabled",
+                            event.currentTarget.checked,
+                          );
                         }}
                       />
                       <NumberInput
                         label="Timelapse Interval (minutes)"
-                        value={draft.timelapseInterval}
+                        value={draft.timelapseInterval ?? ""}
                         min={1}
                         max={1440}
                         onChange={(value) => {
@@ -402,7 +479,11 @@ export default function CameraSettingsAccordionItem() {
                           value={draft.timelapseStartTime ?? ""}
                           onChange={(event) => {
                             const value = event.currentTarget.value.trim();
-                            updateDraft(draft.key, "timelapseStartTime", value === "" ? null : value);
+                            updateDraft(
+                              draft.key,
+                              "timelapseStartTime",
+                              value === "" ? null : value,
+                            );
                           }}
                           disabled={!draft.timelapseEnabled}
                         />
@@ -411,7 +492,11 @@ export default function CameraSettingsAccordionItem() {
                           value={draft.timelapseEndTime ?? ""}
                           onChange={(event) => {
                             const value = event.currentTarget.value.trim();
-                            updateDraft(draft.key, "timelapseEndTime", value === "" ? null : value);
+                            updateDraft(
+                              draft.key,
+                              "timelapseEndTime",
+                              value === "" ? null : value,
+                            );
                           }}
                           disabled={!draft.timelapseEnabled}
                         />
@@ -446,10 +531,11 @@ export default function CameraSettingsAccordionItem() {
 
                     <Group justify="space-between">
                       <Text size="sm" c="dimmed">
-                        Timelapse captures are stored and archived independently per camera id.
+                        Timelapse captures are stored and archived independently
+                        per camera id.
                       </Text>
                       <Button
-                        variant="subtle"
+                        variant="light"
                         color="red"
                         disabled={!draft.id || !draft.timelapseEnabled}
                         loading={isClearing}

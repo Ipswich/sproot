@@ -9,7 +9,11 @@ import { useEffect, useState } from "react";
 import { Fragment } from "react/jsx-runtime";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 
-export default function TimelapseDetails({ camera }: { camera: SDBCameraSettings }) {
+export default function TimelapseDetails({
+  camera,
+}: {
+  camera: SDBCameraSettings;
+}) {
   const [statusRefetchInterval, setStatusRefetchInterval] = useState(60000);
 
   const timelapseArchiveStatusQuery = useQuery({

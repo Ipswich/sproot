@@ -61,7 +61,9 @@ describe("TimelapseHandlers", () => {
   it("queues timelapse regeneration and returns 202 status", () => {
     postRegenerateTimelapseArchive(req as Request, res as Response);
 
-    assert.isTrue((cameraManager.regenerateTimelapseArchiveAsync as sinon.SinonStub).calledOnceWithExactly(1));
+    assert.isTrue(
+      (cameraManager.regenerateTimelapseArchiveAsync as sinon.SinonStub).calledOnceWithExactly(1),
+    );
     assert.isTrue(statusStub.calledOnceWith(202));
   });
 
@@ -71,7 +73,9 @@ describe("TimelapseHandlers", () => {
 
     getTimelapseGenerationStatus(req as Request, res as Response);
 
-    assert.isTrue((cameraManager.getTimelapseArchiveProgress as sinon.SinonStub).calledOnceWithExactly(1));
+    assert.isTrue(
+      (cameraManager.getTimelapseArchiveProgress as sinon.SinonStub).calledOnceWithExactly(1),
+    );
     assert.isTrue(statusStub.calledOnceWith(200));
   });
 

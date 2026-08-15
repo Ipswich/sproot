@@ -44,12 +44,7 @@ describe("CameraManager", () => {
     };
 
     const eventBus = new MemoryEventBus(logger);
-    const manager = await CameraManager.createInstanceAsync(
-      eventBus,
-      cameraRepository,
-      "test-key",
-      logger,
-    );
+    const manager = await CameraManager.createInstanceAsync(eventBus, cameraRepository, logger);
     createdManagers.push(manager);
     return { manager, cameraRepository };
   };

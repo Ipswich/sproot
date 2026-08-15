@@ -5,8 +5,8 @@ import request from "supertest";
 import { validateMiddlewareValues } from "./utils";
 import { app, server, baseUrl } from "./setup";
 import fs from "fs";
+import { PassThrough, Readable } from "stream";
 import { CameraManager } from "../camera/CameraManager";
-import { FrameBuffer } from "../camera/FrameBuffer";
 import { DI_KEYS } from "../utils/DependencyInjectionConstants";
 import { AutomationsTriggeredEvent } from "../eventbus/events/automations/AutomationsTriggeredEvent";
 import { OutputList } from "../outputs/list/OutputList";
@@ -1705,7 +1705,7 @@ describe("API Tests", async function () {
                   }
                   settled = true;
                   clearTimeout(timeout);
-                  clearInterval(waitForSubscriberInterval);
+                  clearInterval(waitForUpstreamInterval);
                   req.destroy();
                   reject(streamError);
                 });

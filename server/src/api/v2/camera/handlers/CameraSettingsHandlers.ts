@@ -7,7 +7,9 @@ import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 type CameraSettingsInput = Omit<SDBCameraSettings, "id">;
 
 function getCameraId(request: Request): number | null {
-  const parsed = Number.parseInt(request.params["cameraId"] ?? "", 10);
+  const rawCameraId = request.params["cameraId"];
+  const cameraId = Array.isArray(rawCameraId) ? rawCameraId[0] : rawCameraId;
+  const parsed = Number.parseInt(cameraId ?? "", 10);
   if (!Number.isInteger(parsed) || parsed < 1) {
     return null;
   }
@@ -53,16 +55,10 @@ function validateCameraSettingsInput(newSettings: Partial<CameraSettingsInput>) 
   if (typeof newSettings.timelapseEnabled !== "boolean") {
     missingOrInvalidFields.push("timelapseEnabled must be a boolean");
   }
-  if (
-    typeof newSettings.imageRetentionDays !== "number" ||
-    newSettings.imageRetentionDays < 0
-  ) {
+  if (typeof newSettings.imageRetentionDays !== "number" || newSettings.imageRetentionDays < 0) {
     missingOrInvalidFields.push("imageRetentionDays must be a non-negative number");
   }
-  if (
-    typeof newSettings.imageRetentionSize !== "number" ||
-    newSettings.imageRetentionSize < 0
-  ) {
+  if (typeof newSettings.imageRetentionSize !== "number" || newSettings.imageRetentionSize < 0) {
     missingOrInvalidFields.push("imageRetentionSize must be a non-negative number");
   }
   if (
@@ -93,9 +89,7 @@ function validateCameraSettingsInput(newSettings: Partial<CameraSettingsInput>) 
   ) {
     missingOrInvalidFields.push("timelapseEndTime must be a string in HH:MM format, or null");
   }
-  if (
-    (newSettings.timelapseStartTime === null) !== (newSettings.timelapseEndTime === null)
-  ) {
+  if ((newSettings.timelapseStartTime === null) !== (newSettings.timelapseEndTime === null)) {
     missingOrInvalidFields.push(
       "Both timelapseStartTime and timelapseEndTime must be provided or both must be null",
     );

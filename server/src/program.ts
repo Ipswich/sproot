@@ -132,12 +132,7 @@ export default async function setupAsync(): Promise<Express> {
   app.set(DI_KEYS.NotificationActionManager, notificationActionManager);
 
   logger.info("Creating camera manager. . .");
-  const cameraManager = await CameraManager.createInstanceAsync(
-    eventBus,
-    sprootDB.camera,
-    process.env["INTERSERVICE_AUTHENTICATION_KEY"]!,
-    logger,
-  );
+  const cameraManager = await CameraManager.createInstanceAsync(eventBus, sprootDB.camera, logger);
   app.set(DI_KEYS.CameraManager, cameraManager);
 
   const systemStatusMonitor = new SystemStatusMonitor(

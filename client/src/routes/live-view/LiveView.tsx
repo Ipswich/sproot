@@ -8,13 +8,17 @@ import TimelapseDetails from "./components/TimelapseDetails";
 const CAMERA_STORAGE_KEY = "sproot-live-view-camera-id";
 
 export default function LiveView() {
-  const { cameraSettings } = useLoaderData() as { cameraSettings: SDBCameraSettings[] };
+  const { cameraSettings } = useLoaderData() as {
+    cameraSettings: SDBCameraSettings[];
+  };
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
 
   useEffect(() => {
     const storedCameraId = window.localStorage.getItem(CAMERA_STORAGE_KEY);
     const defaultCameraId = cameraSettings[0]?.id?.toString() ?? null;
-    const nextCameraId = cameraSettings.some((camera) => camera.id.toString() === storedCameraId)
+    const nextCameraId = cameraSettings.some(
+      (camera) => camera.id.toString() === storedCameraId,
+    )
       ? storedCameraId
       : defaultCameraId;
     setSelectedCameraId(nextCameraId);
@@ -45,7 +49,10 @@ export default function LiveView() {
         />
         {selectedCamera && (
           <>
-            <ImageOrVideoDisplay cameraId={selectedCamera.id} cameraName={selectedCamera.name} />
+            <ImageOrVideoDisplay
+              cameraId={selectedCamera.id}
+              cameraName={selectedCamera.name}
+            />
             <TimelapseDetails camera={selectedCamera} />
           </>
         )}

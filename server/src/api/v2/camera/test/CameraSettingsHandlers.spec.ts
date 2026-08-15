@@ -37,7 +37,9 @@ describe("CameraSettingsHandlers.ts", () => {
       listCameraSettingsAsync: sandbox.stub().resolves([cameraSettings]),
       getCameraSettingsAsync: sandbox.stub().resolves(cameraSettings),
       addCameraSettingsAsync: sandbox.stub().resolves(cameraSettings),
-      updateCameraSettingsAsync: sandbox.stub().resolves(cameraSettings),
+      updateCameraSettingsAsync: sandbox
+        .stub()
+        .callsFake(async (settings: SDBCameraSettings) => settings),
       deleteCameraSettingsAsync: sandbox.stub().resolves(true),
     };
 
@@ -45,7 +47,7 @@ describe("CameraSettingsHandlers.ts", () => {
       locals: {
         defaultProperties: { timestamp: "2023-01-01T00:00:00Z" },
       },
-    } as Response;
+    } as unknown as Response;
   });
 
   afterEach(() => {
@@ -77,6 +79,10 @@ describe("CameraSettingsHandlers.ts", () => {
     const result = await getCameraSettingsAsync(createRequest(), mockResponse);
 
     assert.equal(result.statusCode, 200);
+    assert.property(result, "content");
+    if (!("content" in result)) {
+      assert.fail("Expected success response content");
+    }
     assert.deepEqual(result.content?.data, cameraSettings);
   });
 
@@ -90,6 +96,10 @@ describe("CameraSettingsHandlers.ts", () => {
     const result = await createCameraSettingsAsync(request, mockResponse);
 
     assert.equal(result.statusCode, 201);
+    assert.property(result, "content");
+    if (!("content" in result)) {
+      assert.fail("Expected success response content");
+    }
     assert.equal(result.content?.data.id, 1);
   });
 
@@ -104,6 +114,10 @@ describe("CameraSettingsHandlers.ts", () => {
     const result = await updateCameraSettingsAsync(request, mockResponse);
 
     assert.equal(result.statusCode, 200);
+    assert.property(result, "content");
+    if (!("content" in result)) {
+      assert.fail("Expected success response content");
+    }
     assert.equal(result.content?.data.name, "Updated Camera");
     assert.isTrue((mockCameraManager.updateCameraSettingsAsync as any).calledOnce);
   });
@@ -119,6 +133,10 @@ describe("CameraSettingsHandlers.ts", () => {
     const result = await updateCameraSettingsAsync(request, mockResponse);
 
     assert.equal(result.statusCode, 400);
+    assert.property(result, "error");
+    if (!("error" in result)) {
+      assert.fail("Expected error response details");
+    }
     assert.include(result.error?.details ?? [], "captureUrl must be a valid http or https URL");
   });
 

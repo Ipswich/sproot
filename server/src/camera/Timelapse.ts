@@ -34,9 +34,7 @@ class Timelapse implements Disposable {
 
   constructor(
     cameraIdOrAddImageToTimelapseFunction: number | AddImageToTimelapseFunction,
-    addImageToTimelapseFunctionOrLogger:
-      | AddImageToTimelapseFunction
-      | winston.Logger,
+    addImageToTimelapseFunctionOrLogger: AddImageToTimelapseFunction | winston.Logger,
     enqueueArchiveGeneration?: EnqueueArchiveGenerationFunction,
     logger?: winston.Logger,
   ) {
@@ -44,8 +42,7 @@ class Timelapse implements Disposable {
       this.#cameraId = cameraIdOrAddImageToTimelapseFunction;
       this.#addImageToTimelapseFunction =
         addImageToTimelapseFunctionOrLogger as AddImageToTimelapseFunction;
-      this.#enqueueArchiveGeneration =
-        enqueueArchiveGeneration ?? (async (task) => task());
+      this.#enqueueArchiveGeneration = enqueueArchiveGeneration ?? (async (task) => task());
       this.#logger = logger!;
       return;
     }

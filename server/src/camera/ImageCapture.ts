@@ -90,7 +90,12 @@ class ImageCapture {
   }
 
   async captureLatestImageAsync(url: string, headers: Record<string, string>) {
-    return this.captureImageAsync("latest.jpg", url, headers, getCameraImageDirectory(this.#cameraId));
+    return this.captureImageAsync(
+      "latest.jpg",
+      url,
+      headers,
+      getCameraImageDirectory(this.#cameraId),
+    );
   }
 
   async getLatestImageAsync(): Promise<Buffer | null> {
@@ -132,7 +137,9 @@ class ImageCapture {
     };
   }
 
-  async clearAllImagesAsync(directory = getCameraTimelapseDirectory(this.#cameraId)): Promise<boolean> {
+  async clearAllImagesAsync(
+    directory = getCameraTimelapseDirectory(this.#cameraId),
+  ): Promise<boolean> {
     if (this.#timelapse.isGeneratingTimelapseArchive) {
       return false;
     }

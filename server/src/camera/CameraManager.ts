@@ -1,5 +1,4 @@
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
-import { generateInterserviceAuthenticationToken } from "@sproot/common/utility/InterserviceAuthentication";
 import { CRON } from "@sproot/common/utility/Constants";
 import { ICameraRepository } from "../database/repositories/camera/ICameraRepository";
 import { CronJob } from "cron";
@@ -18,7 +17,6 @@ type ManagedCamera = {
 class CameraManager {
   #eventBus: IEventBus;
   #cameraRepository: ICameraRepository;
-  #interserviceAuthenticationKey: string;
   #logger: winston.Logger;
   #managedCameras = new Map<number, ManagedCamera>();
   #archiveQueue = new PromiseQueue();
@@ -30,27 +28,19 @@ class CameraManager {
   static createInstanceAsync(
     eventBus: IEventBus,
     cameraRepository: ICameraRepository,
-    interserviceAuthenticationKey: string,
     logger: winston.Logger,
   ): Promise<CameraManager> {
-    const cameraManager = new CameraManager(
-      eventBus,
-      cameraRepository,
-      interserviceAuthenticationKey,
-      logger,
-    );
+    const cameraManager = new CameraManager(eventBus, cameraRepository, logger);
     return cameraManager.regenerateAsync();
   }
 
   private constructor(
     eventBus: IEventBus,
     cameraRepository: ICameraRepository,
-    interserviceAuthenticationKey: string,
     logger: winston.Logger,
   ) {
     this.#eventBus = eventBus;
     this.#cameraRepository = cameraRepository;
-    this.#interserviceAuthenticationKey = interserviceAuthenticationKey;
     this.#logger = logger;
     this.#imageCaptureCronJob = new CronJob(
       CRON.EVERY_MINUTE,
@@ -91,11 +81,16 @@ class CameraManager {
   }
 
   async getCameraSettingsAsync(cameraId: number) {
-    return this.#managedCameras.get(cameraId)?.settings ?? this.#cameraRepository.getByIdAsync(cameraId);
+    return (
+      this.#managedCameras.get(cameraId)?.settings ?? this.#cameraRepository.getByIdAsync(cameraId)
+    );
   }
 
   getLatestImageAsync(cameraId: number) {
-    return this.#managedCameras.get(cameraId)?.imageCapture.getLatestImageAsync() ?? Promise.resolve(null);
+    return (
+      this.#managedCameras.get(cameraId)?.imageCapture.getLatestImageAsync() ??
+      Promise.resolve(null)
+    );
   }
 
   getTimelapseArchiveProgress(cameraId: number) {
@@ -108,7 +103,10 @@ class CameraManager {
   }
 
   getTimelapseArchiveAsync(cameraId: number) {
-    return this.#managedCameras.get(cameraId)?.imageCapture.getTimelapseArchiveAsync() ?? Promise.resolve(null);
+    return (
+      this.#managedCameras.get(cameraId)?.imageCapture.getTimelapseArchiveAsync() ??
+      Promise.resolve(null)
+    );
   }
 
   getTimelapseImageCount() {
@@ -124,7 +122,7 @@ class CameraManager {
       }),
     );
 
-    return sizes.reduce((total, size) => total + (size ?? 0), 0);
+    return sizes.reduce<number>((total, size) => total + (size ?? 0), 0);
   }
 
   getLastTimelapseGenerationDuration() {
@@ -155,7 +153,6 @@ class CameraManager {
 
     return fetch(camera.settings.streamUrl, {
       method: "GET",
-      headers: this.generateRequestHeaders(),
     });
   }
 
@@ -167,11 +164,12 @@ class CameraManager {
 
     return fetch(camera.settings.healthUrl, {
       method: "GET",
-      headers: this.generateRequestHeaders(),
     });
   }
 
-  async addCameraSettingsAsync(cameraSettings: Omit<SDBCameraSettings, "id">): Promise<SDBCameraSettings> {
+  async addCameraSettingsAsync(
+    cameraSettings: Omit<SDBCameraSettings, "id">,
+  ): Promise<SDBCameraSettings> {
     const id = await this.#cameraRepository.addAsync(cameraSettings);
     await this.#eventBus.publishAsync(new CameraSettingsModifiedEvent({}));
     return {
@@ -180,7 +178,9 @@ class CameraManager {
     };
   }
 
-  async updateCameraSettingsAsync(newSettings: SDBCameraSettings): Promise<SDBCameraSettings | null> {
+  async updateCameraSettingsAsync(
+    newSettings: SDBCameraSettings,
+  ): Promise<SDBCameraSettings | null> {
     const existingSettings = await this.#cameraRepository.getByIdAsync(newSettings.id);
     if (!existingSettings) {
       return null;
@@ -232,7 +232,7 @@ class CameraManager {
               await latestImageCapture.captureImageAsync(
                 fileName,
                 latestSettings.captureUrl,
-                this.generateRequestHeaders(),
+                {},
                 directory,
               );
             },
@@ -278,21 +278,13 @@ class CameraManager {
         continue;
       }
 
-      await imageCapture.captureLatestImageAsync(settings.captureUrl, this.generateRequestHeaders());
+      await imageCapture.captureLatestImageAsync(settings.captureUrl, {});
       await imageCapture.runImageRetentionAsync(
         settings.imageRetentionSize,
         settings.imageRetentionDays,
       );
       await imageCapture.regenerateTimelapseArchiveAsync(true);
     }
-  }
-
-  private generateRequestHeaders(): Record<string, string> {
-    return {
-      "X-Interservice-Authentication-Token": generateInterserviceAuthenticationToken(
-        this.#interserviceAuthenticationKey,
-      ),
-    };
   }
 }
 

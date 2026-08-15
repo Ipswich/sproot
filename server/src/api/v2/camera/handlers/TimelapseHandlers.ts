@@ -3,7 +3,9 @@ import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { CameraManager } from "../../../../camera/CameraManager";
 
 function getCameraId(request: Request): number | null {
-  const parsed = Number.parseInt(request.params["cameraId"] ?? "", 10);
+  const rawCameraId = request.params["cameraId"];
+  const cameraId = Array.isArray(rawCameraId) ? rawCameraId[0] : rawCameraId;
+  const parsed = Number.parseInt(cameraId ?? "", 10);
   if (!Number.isInteger(parsed) || parsed < 1) {
     return null;
   }

@@ -1278,12 +1278,15 @@ export type NewCameraSettings = Omit<SDBCameraSettings, "id">;
 
 export async function getLatestImageAsync(cameraId: number) {
   try {
-    const response = await fetch(`${SERVER_URL}/api/v2/camera/${cameraId}/latest-image`, {
-      method: "GET",
-      headers: {},
-      mode: "cors",
-      // credentials: "include",
-    });
+    const response = await fetch(
+      `${SERVER_URL}/api/v2/camera/${cameraId}/latest-image`,
+      {
+        method: "GET",
+        headers: {},
+        mode: "cors",
+        // credentials: "include",
+      },
+    );
     if (response.ok) {
       const blob = await response.blob();
       return URL.createObjectURL(blob);
@@ -1313,7 +1316,9 @@ export async function getTimelapseArchiveAsync(cameraId: number) {
   }
 }
 
-export async function getTimelapseArchiveStatusAsync(cameraId: number): Promise<{
+export async function getTimelapseArchiveStatusAsync(
+  cameraId: number,
+): Promise<{
   isGenerating: boolean;
   archiveProgress: number;
 }> {
@@ -1333,7 +1338,9 @@ export async function getTimelapseArchiveStatusAsync(cameraId: number): Promise<
   return deserializedResponse.content?.data;
 }
 
-export async function regenerateTimelapseArchiveAsync(cameraId: number): Promise<void> {
+export async function regenerateTimelapseArchiveAsync(
+  cameraId: number,
+): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/camera/${cameraId}/timelapse/archive/regenerate`,
     {
@@ -1354,7 +1361,9 @@ export async function getLivestreamAsync(cameraId: number) {
   return `${SERVER_URL}/api/v2/camera/${cameraId}/stream`;
 }
 
-export async function getCameraSettingsListAsync(): Promise<SDBCameraSettings[]> {
+export async function getCameraSettingsListAsync(): Promise<
+  SDBCameraSettings[]
+> {
   const response = await fetch(`${SERVER_URL}/api/v2/camera`, {
     method: "GET",
     headers: {},
@@ -1368,12 +1377,17 @@ export async function getCameraSettingsListAsync(): Promise<SDBCameraSettings[]>
   return deserializedResponse.content?.data;
 }
 
-export async function getCameraSettingsAsync(cameraId: number): Promise<SDBCameraSettings> {
-  const response = await fetch(`${SERVER_URL}/api/v2/camera/${cameraId}/settings`, {
-    method: "GET",
-    headers: {},
-    mode: "cors",
-  });
+export async function getCameraSettingsAsync(
+  cameraId: number,
+): Promise<SDBCameraSettings> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/camera/${cameraId}/settings`,
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+    },
+  );
   if (!response.ok) {
     console.error(`Error fetching camera settings: ${response}`);
   }
@@ -1401,19 +1415,24 @@ export async function updateCameraSettingsAsync(
   cameraId: number,
   settings: NewCameraSettings,
 ): Promise<void> {
-  const response = await fetch(`${SERVER_URL}/api/v2/camera/${cameraId}/settings`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(settings),
-    mode: "cors",
-    // credentials: "include",
-  });
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/camera/${cameraId}/settings`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settings),
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
   if (!response.ok) {
     console.error(`Error updating camera settings: ${response}`);
   }
 }
 
-export async function deleteCameraSettingsAsync(cameraId: number): Promise<void> {
+export async function deleteCameraSettingsAsync(
+  cameraId: number,
+): Promise<void> {
   const response = await fetch(`${SERVER_URL}/api/v2/camera/${cameraId}`, {
     method: "DELETE",
     headers: {},
@@ -1425,12 +1444,15 @@ export async function deleteCameraSettingsAsync(cameraId: number): Promise<void>
 }
 
 export async function clearAllImagesAsync(cameraId: number): Promise<void> {
-  const response = await fetch(`${SERVER_URL}/api/v2/camera/${cameraId}/timelapse/images`, {
-    method: "DELETE",
-    headers: {},
-    mode: "cors",
-    // credentials: "include",
-  });
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/camera/${cameraId}/timelapse/images`,
+    {
+      method: "DELETE",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
   if (!response.ok) {
     console.error(`Error clearing all images: ${response}`);
   }

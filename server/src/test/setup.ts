@@ -21,26 +21,26 @@ before(async function () {
     }
   });
 
-  await fs.promises.mkdir("images/timelapse", { recursive: true });
-  await fs.promises.mkdir("images/archive", { recursive: true });
+  await fs.promises.mkdir("images/1/timelapse", { recursive: true });
+  await fs.promises.mkdir("images/1/archive", { recursive: true });
   await fs.promises.mkdir("backups", { recursive: true });
 
   await fs.promises.writeFile(
-    "images/latest.jpg",
+    "images/1/latest.jpg",
     "This is a test image file for the latest image endpoint.",
   );
 
   await fs.promises.writeFile(
-    "images/timelapse/test-1.jpg",
+    "images/1/timelapse/test-1.jpg",
     "This is a test image file for the archive regeneration endpoint.",
   );
   await fs.promises.writeFile(
-    "images/timelapse/test-2.jpg",
+    "images/1/timelapse/test-2.jpg",
     "This is a test image file for the archive regeneration endpoint.",
   );
 
   await fs.promises.writeFile(
-    "images/archive/timelapse.tar",
+    "images/1/archive/timelapse.tar",
     "This is a test tar file for the timelapse archive endpoint.",
   );
 

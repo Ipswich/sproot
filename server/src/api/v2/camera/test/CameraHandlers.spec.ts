@@ -38,7 +38,7 @@ describe("CameraHandlers.ts", () => {
       },
       params: { cameraId: "1" },
       originalUrl: "/api/v2/camera/1/latest-image",
-    } as Request;
+    } as unknown as Request;
 
     res = {
       status: statusStub as any,

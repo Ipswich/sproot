@@ -5,7 +5,9 @@ import winston from "winston";
 import { Readable } from "stream";
 
 function getCameraId(request: Request): number | null {
-  const parsed = Number.parseInt(request.params["cameraId"] ?? "", 10);
+  const rawCameraId = request.params["cameraId"];
+  const cameraId = Array.isArray(rawCameraId) ? rawCameraId[0] : rawCameraId;
+  const parsed = Number.parseInt(cameraId ?? "", 10);
   if (!Number.isInteger(parsed) || parsed < 1) {
     return null;
   }
@@ -30,7 +32,23 @@ export async function streamHandlerAsync(request: Request, response: Response): 
 
   const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
   const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
-  const upstreamResponse = await cameraManager.fetchStreamAsync(cameraId);
+  let upstreamResponse: globalThis.Response | null;
+
+  try {
+    upstreamResponse = await cameraManager.fetchStreamAsync(cameraId);
+  } catch (error) {
+    logger.error(`StreamHandler: failed to fetch upstream stream for camera ${cameraId}: ${error}`);
+    response.status(502).json({
+      statusCode: 502,
+      error: {
+        name: "Bad Gateway",
+        url: request.originalUrl,
+        details: [`Camera stream not available for camera ${cameraId}`],
+      },
+      ...response.locals["defaultProperties"],
+    });
+    return;
+  }
 
   if (!upstreamResponse || !upstreamResponse.ok || !upstreamResponse.body) {
     logger.error(`StreamHandler: upstream stream not available for camera ${cameraId}`);
@@ -72,7 +90,15 @@ export async function streamHandlerAsync(request: Request, response: Response): 
 
     response.once("close", () => {
       upstreamStream.destroy();
-      void upstreamResponse.body?.cancel();
+
+      try {
+        const cancelPromise = upstreamResponse.body?.cancel();
+        void cancelPromise?.catch((error) => {
+          logger.debug(`StreamHandler: upstream cancel ignored for camera ${cameraId}: ${error}`);
+        });
+      } catch (error) {
+        logger.debug(`StreamHandler: upstream cancel ignored for camera ${cameraId}: ${error}`);
+      }
     });
 
     upstreamStream.pipe(response);

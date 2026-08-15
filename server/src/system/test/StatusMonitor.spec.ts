@@ -48,7 +48,6 @@ describe("ServerStatsManager", () => {
     await using manager = await CameraManager.createInstanceAsync(
       eventBus,
       sprootDBMock.camera,
-      "test_key",
       winston.createLogger({
         transports: [new winston.transports.Console({ silent: true })],
       }),
@@ -77,7 +76,6 @@ describe("ServerStatsManager", () => {
     await using manager = await CameraManager.createInstanceAsync(
       eventBus,
       sprootDBMock.camera,
-      "test_key",
       winston.createLogger({
         transports: [new winston.transports.Console({ silent: true })],
       }),
