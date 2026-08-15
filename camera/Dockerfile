@@ -8,11 +8,11 @@ RUN set -eux; \
   echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom; \
   echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom; \
   echo "Acquire::BrokenProxy true;" >> /etc/apt/apt.conf.d/99custom; \
-  apt-get update; \
-  apt-get install -y --no-install-recommends ca-certificates curl gnupg python3-pip udev wget; \
   curl -fsSL https://archive.raspberrypi.org/debian/raspberrypi.gpg.key \
     | gpg --dearmor -o /usr/share/keyrings/raspberrypi-archive-keyring.gpg; \
   echo "deb [signed-by=/usr/share/keyrings/raspberrypi-archive-keyring.gpg] https://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends ca-certificates curl gnupg python3-picamera2 udev wget; \
   rm -rf /var/lib/apt/lists/*
 
 WORKDIR /srv/camera
