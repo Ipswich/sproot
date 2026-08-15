@@ -7,7 +7,7 @@ title: Camera
 
 Sometimes sensors and raw metrics can only get you so far. Maybe you're just curious about your plants and want to sneak a peak to see if your microgreens have greened up a bit since coming out of the dark. Maybe you want to see watch your strawberry leaves bob in the breeze of the fans. Or maybe you're worried your cat has parked itself in the middle of your shelf under the warm artificial sun.
 
-Sproot can integrate with a Raspberry Pi Camera Module for capturing images, livestreaming video, and archiving images together for timelapse generation. To get started, you'll need to have the module connected to and enabled on your Raspberry Pi.
+Sproot can integrate with a Raspberry Pi Camera Module (and other web cameras) for capturing images, livestreaming video, and archiving images together for timelapse generation. To get started, you'll need to have a web camera with endpoints for capturing and returning an image, and for streaming mjpeg. There's one built into Sproot - just uncomment out the camera service inside of the docker-compose.yaml file. You can connect to from Sproot with your device's IP address.
 
 ## Camera Settings
 
@@ -17,11 +17,11 @@ Sproot can integrate with a Raspberry Pi Camera Module for capturing images, liv
 
 ### Enabling the camera
 
-First, you'll need to make sure you have a Raspberry Pi Camera Module working on your Raspberry Pi. Once that's working, navigate to `Settings -> Camera` and turn the `Enable Camera` slider to on. You can also change the name of the camera if you want. Once this is done, click `Update` at the bottom and you should see `Live View` appear in the nav bar.
+First, you'll need to make sure you have a Raspberry Pi Camera Module working on your Raspberry Pi. Once that's working, navigate to `Settings -> System` and look for the `Camera Settings` accordion. Update the endpoints with your configuration, turn the `Enable Camera` slider to on, and save your settings. You can also change the name of the camera if you want. Once this is done, click `Save` at the top and you should see `Live View` appear in the nav bar. You can configure additional cameras if you want.
 
-- To disable the camera, just turn move the `Enable Camera` slider to off and click `Update`.
+- To disable the camera, just turn move the `Enable Camera` slider to off and click `Save`. To fully remove a camera, click `Delete`.
 
-Sproot takes an image once a minute at the highest resolution reported by the camera. However, the video quality is set to `1280x960 @ 30fps` to limit bandwidth and processor usage.
+Sproot takes an image once a minute. The default service uses a video quality of `1280x960 @ 30fps` to limit bandwidth and processor usage.
 
 ### Timelapses
 
@@ -52,6 +52,6 @@ There's also a button labeled `Delete All Images` that will delete all of your e
 <p style={{ textAlign: 'center' }}>
   <img src="/docs/img/LiveView.png" alt="Live View" style={{ width: '30%', maxWidth: '100%', height: 'auto' }} />
 </p>
-Navigate to the `Live View` tab from the navbar. Below the view port of your lovely camera, you'll find a section labeled `Timelapse Archive`. You can download your archive by simply clicking `Download`. Additionally, if you want to manually regenerate the archive, click the `Regenerate` button.
+Navigate to the `Live View` tab from the navbar. There will be a dropdown where you can navigate between any cameras you've configured. Below the view port of your lovely camera, you'll find a section labeled `Timelapse Archive`. You can download your archive by simply clicking `Download`. Additionally, if you want to manually regenerate the archive, click the `Regenerate` button.
 
 - Generating archives is a slow, performance intensive operation. Things may be sluggish while this is happening. If you're curious about how long it takes, you can view stats by following the instructions [here](system-status/#timelapse).

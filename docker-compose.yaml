@@ -51,22 +51,20 @@ x-camera-environment: &camera_env
   CAMERA_GRACEFUL_SHUTDOWN_TIMEOUT: "10"
 
 services:
-  camera:
-    profiles:
-      - camera
-    restart: unless-stopped
-    image: ghcr.io/ipswich/sproot-camera:latest
-    build:
-      context: ./
-      dockerfile: ./camera/Dockerfile
-    environment: *camera_env
-    volumes:
-      - /run/udev:/run/udev:ro
-      - /sys:/sys
-    network_mode: "host"
-    expose:
-      - "3002"
-    privileged: true
+  # camera:
+  #   restart: unless-stopped
+  #   image: ghcr.io/ipswich/sproot-camera:latest
+  #   build:
+  #     context: ./
+  #     dockerfile: ./camera/Dockerfile
+  #   environment: *camera_env
+  #   volumes:
+  #     - /run/udev:/run/udev:ro
+  #     - /sys:/sys
+  #   network_mode: "host"
+  #   expose:
+  #     - "3002"
+  #   privileged: true
 
   server:
     restart: unless-stopped
