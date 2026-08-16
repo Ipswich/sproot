@@ -140,6 +140,7 @@ export default async function setupAsync(): Promise<Express> {
   );
   app.set(DI_KEYS.CameraManager, cameraManager);
 
+  console.log("Sproot server listening on port 3000!");
   const systemStatusMonitor = new SystemStatusMonitor(
     cameraManager,
     sprootDB.system,

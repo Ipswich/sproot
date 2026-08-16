@@ -1524,6 +1524,8 @@ describe("ConditionHandlers.ts", () => {
         repeatDuration: null,
         phaseAnchorType: null,
         phaseAnchorValue: null,
+        startOffsetSeconds: null,
+        endOffsetSeconds: null,
       });
     });
 
@@ -2337,6 +2339,8 @@ describe("ConditionHandlers.ts", () => {
         repeatDuration: null,
         phaseAnchorType: null,
         phaseAnchorValue: null,
+        startOffsetSeconds: null,
+        endOffsetSeconds: null,
       });
     });
 

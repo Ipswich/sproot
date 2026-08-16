@@ -1621,6 +1621,8 @@ describe("API Tests", async function () {
             timelapseInterval: 5,
             timelapseStartTime: null,
             timelapseEndTime: null,
+            timelapseStartOffsetSeconds: null,
+            timelapseEndOffsetSeconds: null,
           });
         });
       });

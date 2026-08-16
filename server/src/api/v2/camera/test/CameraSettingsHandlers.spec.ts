@@ -31,7 +31,9 @@ describe("CameraSettingsHandlers.ts", () => {
     imageRetentionSize: 1000,
     timelapseInterval: 60,
     timelapseStartTime: "08:00",
+    timelapseStartOffsetSeconds: null,
     timelapseEndTime: "20:00",
+    timelapseEndOffsetSeconds: null,
   };
 
   beforeEach(() => {
@@ -188,6 +190,43 @@ describe("CameraSettingsHandlers.ts", () => {
     assert.include(
       result.error?.details ?? [],
       "captureUrl is required when timelapseEnabled is true",
+    );
+  });
+
+  it("accepts solar/lunar offsets for timelapse windows", async () => {
+    const request = createRequest({
+      body: {
+        ...cameraSettings,
+        timelapseStartTime: "sunrise",
+        timelapseStartOffsetSeconds: -5 * 60,
+        timelapseEndTime: "sunset",
+        timelapseEndOffsetSeconds: 2 * 60 * 60,
+      },
+    });
+
+    const result = await updateCameraSettingsAsync(request, mockResponse);
+
+    assert.equal(result.statusCode, 200);
+  });
+
+  it("rejects timelapse offsets for fixed clock values", async () => {
+    const request = createRequest({
+      body: {
+        ...cameraSettings,
+        timelapseStartOffsetSeconds: -5 * 60,
+      },
+    });
+
+    const result = await updateCameraSettingsAsync(request, mockResponse);
+
+    assert.equal(result.statusCode, 400);
+    assert.property(result, "error");
+    if (!("error" in result)) {
+      assert.fail("Expected error response details");
+    }
+    assert.include(
+      result.error?.details ?? [],
+      "timelapseStartOffsetSeconds is only supported for solar/lunar time points",
     );
   });
 

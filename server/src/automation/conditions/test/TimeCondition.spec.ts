@@ -235,6 +235,32 @@ describe("TimeCondition.ts tests", () => {
       assert.isTrue(timeCondition.evaluate(midpoint));
     });
 
+    it("should apply offsets to dynamic start and end times", async () => {
+      const resolver = await createResolverAsync();
+      const referenceDate = new Date("2026-08-07T12:00:00Z");
+      const sunrise = resolver.resolveToDate("sunrise", referenceDate);
+
+      assert.isNotNull(sunrise);
+
+      const timeCondition = new TimeCondition(
+        1,
+        "allOf",
+        "sunrise",
+        "sunrise",
+        null,
+        null,
+        null,
+        null,
+        resolver,
+        -5 * 60,
+        5 * 60,
+      );
+
+      assert.isFalse(timeCondition.evaluate(new Date(sunrise!.getTime() - 6 * 60 * 1000)));
+      assert.isTrue(timeCondition.evaluate(new Date(sunrise!.getTime())));
+      assert.isFalse(timeCondition.evaluate(new Date(sunrise!.getTime() + 5 * 60 * 1000)));
+    });
+
     it("should keep a sunrise-to-sunset window active until the exact sunset instant", async () => {
       const resolver = await createResolverAsync();
       const referenceDate = new Date("2026-08-07T12:00:00Z");

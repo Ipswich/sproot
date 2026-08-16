@@ -357,6 +357,8 @@ export class Conditions {
             timeCondition.phaseAnchorType,
             timeCondition.phaseAnchorValue,
             this.#timeExpressionResolver,
+            timeCondition.startOffsetSeconds,
+            timeCondition.endOffsetSeconds,
           );
         });
       }),

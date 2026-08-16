@@ -24,7 +24,9 @@ export type IConditionProperties =
       kind: "time";
       id: number;
       startTime?: string | null | undefined;
+      startOffsetSeconds?: number | null | undefined;
       endTime?: string | null | undefined;
+      endOffsetSeconds?: number | null | undefined;
       repeatInterval?: number | null | undefined;
       repeatDuration?: number | null | undefined;
       phaseAnchorType?: TimeConditionPhaseAnchorType | null | undefined;

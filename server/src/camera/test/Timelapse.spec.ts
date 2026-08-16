@@ -574,6 +574,38 @@ describe("Timelapse.ts tests", function () {
 
       assert.isFalse(timelapse.shouldGenerateTimelapseArchive());
     });
+
+    it("should honor end offsets for dynamic timelapse windows", function () {
+      const resolver = {
+        resolveToDate: sinon.stub().returns(new Date(2025, 4, 26, 17, 32, 0)),
+      } as any;
+      using timelapse = new Timelapse(
+        testAddImageFunctionAsync,
+        logger,
+        undefined,
+        undefined,
+        resolver,
+      );
+
+      clock.restore();
+      clock = sinon.useFakeTimers({
+        now: new Date(2025, 4, 26, 17, 32, 0),
+        shouldAdvanceTime: true,
+      });
+
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: true,
+        timelapseInterval: 5,
+        timelapseStartTime: "sunrise",
+        timelapseStartOffsetSeconds: -5 * 60,
+        timelapseEndTime: "sunset",
+        timelapseEndOffsetSeconds: 2 * 60,
+      } as SDBCameraSettings);
+
+      assert.isTrue(timelapse.shouldGenerateTimelapseArchive());
+      assert.isTrue(resolver.resolveToDate.calledOnceWithExactly("sunset", sinon.match.date, 120));
+    });
   });
 
   describe("generateTimelapseArchivesAsync tests", function () {

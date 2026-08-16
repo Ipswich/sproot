@@ -27,7 +27,9 @@ class Timelapse implements Disposable {
   #cameraName: string | null = null;
   #enabled: boolean = false;
   #startTime: string | null = null;
+  #startOffsetSeconds: number | null = null;
   #endTime: string | null = null;
+  #endOffsetSeconds: number | null = null;
   #isGeneratingTimelapseArchive: boolean = false;
   #archiveProgressPercentage: number = 0;
   #lastArchiveGenerationDuration: number | null = null;
@@ -61,7 +63,9 @@ class Timelapse implements Disposable {
   updateSettings(settings: SDBCameraSettings): void {
     this.#cameraName = settings.name;
     this.#startTime = settings.timelapseStartTime;
+    this.#startOffsetSeconds = settings.timelapseStartOffsetSeconds ?? null;
     this.#endTime = settings.timelapseEndTime;
+    this.#endOffsetSeconds = settings.timelapseEndOffsetSeconds ?? null;
 
     if (this.#intervalMinutes !== settings.timelapseInterval) {
       this.#intervalMinutes = settings.timelapseInterval;
@@ -182,7 +186,11 @@ class Timelapse implements Disposable {
 
     const now = new Date();
     if (this.#startTime != null && this.#endTime != null) {
-      const endTime = this.#timeExpressionResolver.resolveToDate(this.#endTime, now);
+      const endTime = this.#timeExpressionResolver.resolveToDate(
+        this.#endTime,
+        now,
+        this.#endOffsetSeconds,
+      );
       if (
         endTime != null &&
         endTime.getHours() === now.getHours() &&
@@ -310,7 +318,14 @@ class Timelapse implements Disposable {
 
     this.#timer = setTimeout(async () => {
       if (
-        evaluateTimeWindow(new Date(), this.#timeExpressionResolver, this.#startTime, this.#endTime)
+        evaluateTimeWindow(
+          new Date(),
+          this.#timeExpressionResolver,
+          this.#startTime,
+          this.#startOffsetSeconds,
+          this.#endTime,
+          this.#endOffsetSeconds,
+        )
       ) {
         await this.addImage();
       }

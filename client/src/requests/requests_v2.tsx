@@ -444,7 +444,9 @@ export async function addTimeConditionAsync(
   groupType: ConditionGroupType,
   timeCondition: {
     startTime: string | null;
+    startOffsetSeconds: number | null;
     endTime: string | null;
+    endOffsetSeconds: number | null;
     repeatInterval: number | null;
     repeatDuration: number | null;
     phaseAnchorType: "default" | "epoch" | "window" | "clock" | "fixed" | null;

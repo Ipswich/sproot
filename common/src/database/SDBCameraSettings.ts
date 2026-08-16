@@ -10,7 +10,9 @@ type SDBCameraSettings = {
   imageRetentionSize: number;
   timelapseInterval: number | null;
   timelapseStartTime: string | null;
+  timelapseStartOffsetSeconds?: number | null;
   timelapseEndTime: string | null;
+  timelapseEndOffsetSeconds?: number | null;
 };
 
 export type { SDBCameraSettings };

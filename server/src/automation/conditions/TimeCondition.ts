@@ -7,7 +7,9 @@ export class TimeCondition implements ITimeCondition {
   id: number;
   groupType: ConditionGroupType;
   startTime?: string | null;
+  startOffsetSeconds?: number | null;
   endTime?: string | null;
+  endOffsetSeconds?: number | null;
   repeatInterval?: number | null;
   repeatDuration?: number | null;
   phaseAnchorType?: TimeConditionPhaseAnchorType | null;
@@ -23,6 +25,8 @@ export class TimeCondition implements ITimeCondition {
     phaseAnchorType?: TimeConditionPhaseAnchorType | null,
     phaseAnchorValue?: string | null,
     timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
+    startOffsetSeconds?: number | null,
+    endOffsetSeconds?: number | null,
   ) {
     this.id = id;
     this.groupType = groupType;
@@ -33,6 +37,8 @@ export class TimeCondition implements ITimeCondition {
     this.repeatDuration = repeatDuration ?? null;
     this.phaseAnchorType = phaseAnchorType ?? null;
     this.phaseAnchorValue = phaseAnchorValue ?? null;
+    this.startOffsetSeconds = startOffsetSeconds ?? null;
+    this.endOffsetSeconds = endOffsetSeconds ?? null;
   }
 
   evaluate(now: Date): boolean {
@@ -40,7 +46,9 @@ export class TimeCondition implements ITimeCondition {
       now,
       this.#timeExpressionResolver,
       this.startTime,
+      this.startOffsetSeconds,
       this.endTime,
+      this.endOffsetSeconds,
       this.repeatInterval,
       this.repeatDuration,
       this.phaseAnchorType,
