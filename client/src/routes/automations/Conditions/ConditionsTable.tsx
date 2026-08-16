@@ -496,8 +496,10 @@ function TimeConditionRow({
 }): ReactNode {
   const labelStart = formatTimeLabel(timeCondition.startTime);
   const labelEnd = formatTimeLabel(timeCondition.endTime);
-  const windowStartLabel = `${formatOffsetSummary(timeCondition.startOffsetSeconds)}${labelStart ?? ""}`.trim();
-  const windowEndLabel = `${formatOffsetSummary(timeCondition.endOffsetSeconds)}${labelEnd ?? ""}`.trim();
+  const windowStartLabel =
+    `${formatOffsetSummary(timeCondition.startOffsetSeconds)}${labelStart ?? ""}`.trim();
+  const windowEndLabel =
+    `${formatOffsetSummary(timeCondition.endOffsetSeconds)}${labelEnd ?? ""}`.trim();
   const timeStart = formatTimeDisplay(
     timeCondition.startTime,
     timeCondition.startOffsetSeconds,

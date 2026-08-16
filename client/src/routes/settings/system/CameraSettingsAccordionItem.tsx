@@ -659,7 +659,9 @@ export default function CameraSettingsAccordionItem() {
                             <CameraTimeExpressionField
                               label="Timelapse Start"
                               value={draft.timelapseStartTime}
-                              offsetSeconds={draft.timelapseStartOffsetSeconds ?? null}
+                              offsetSeconds={
+                                draft.timelapseStartOffsetSeconds ?? null
+                              }
                               disabled={!draft.timelapseEnabled}
                               dynamicEnabled={hasDynamicTimeSupport}
                               timeSuffixes={solarLunarTimes}
@@ -681,7 +683,9 @@ export default function CameraSettingsAccordionItem() {
                             <CameraTimeExpressionField
                               label="Timelapse End"
                               value={draft.timelapseEndTime}
-                              offsetSeconds={draft.timelapseEndOffsetSeconds ?? null}
+                              offsetSeconds={
+                                draft.timelapseEndOffsetSeconds ?? null
+                              }
                               disabled={!draft.timelapseEnabled}
                               dynamicEnabled={hasDynamicTimeSupport}
                               timeSuffixes={solarLunarTimes}
