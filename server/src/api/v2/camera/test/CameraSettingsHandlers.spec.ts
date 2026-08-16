@@ -11,11 +11,14 @@ import {
 } from "../handlers/CameraSettingsHandlers";
 import { CameraManager } from "../../../../camera/CameraManager";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
+import { SettingsService } from "../../../../settings/SettingsService";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 describe("CameraSettingsHandlers.ts", () => {
   let sandbox: SinonSandbox;
   let mockResponse: Response;
   let mockCameraManager: Partial<CameraManager>;
+  let mockSettingsService: Partial<SettingsService>;
   const cameraSettings: SDBCameraSettings = {
     id: 1,
     enabled: true,
@@ -42,6 +45,12 @@ describe("CameraSettingsHandlers.ts", () => {
         .callsFake(async (settings: SDBCameraSettings) => settings),
       deleteCameraSettingsAsync: sandbox.stub().resolves(true),
     };
+    mockSettingsService = {
+      getManyAsync: sandbox.stub().resolves({
+        "system.latitude": "-27.4679",
+        "system.longitude": "153.0281",
+      }),
+    };
 
     mockResponse = {
       locals: {
@@ -58,7 +67,8 @@ describe("CameraSettingsHandlers.ts", () => {
     return {
       app: {
         get: ((key: string) => {
-          if (key === "cameraManager") return mockCameraManager;
+          if (key === DI_KEYS.CameraManager) return mockCameraManager;
+          if (key === DI_KEYS.SettingsService) return mockSettingsService;
           return undefined;
         }) as any,
       },
@@ -138,6 +148,47 @@ describe("CameraSettingsHandlers.ts", () => {
       assert.fail("Expected error response details");
     }
     assert.include(result.error?.details ?? [], "captureUrl must be a valid http or https URL");
+  });
+
+  it("allows a stream-only camera", async () => {
+    const request = createRequest({
+      originalUrl: "/api/v2/camera",
+      body: {
+        ...cameraSettings,
+        id: undefined,
+        captureUrl: "",
+        streamUrl: "http://camera:3002/stream.mjpg",
+        healthUrl: "",
+        timelapseEnabled: false,
+      },
+      params: {},
+    });
+
+    const result = await createCameraSettingsAsync(request, mockResponse);
+
+    assert.equal(result.statusCode, 201);
+  });
+
+  it("requires a capture url when timelapse is enabled", async () => {
+    const request = createRequest({
+      body: {
+        ...cameraSettings,
+        captureUrl: "",
+        timelapseEnabled: true,
+      },
+    });
+
+    const result = await updateCameraSettingsAsync(request, mockResponse);
+
+    assert.equal(result.statusCode, 400);
+    assert.property(result, "error");
+    if (!("error" in result)) {
+      assert.fail("Expected error response details");
+    }
+    assert.include(
+      result.error?.details ?? [],
+      "captureUrl is required when timelapseEnabled is true",
+    );
   });
 
   it("deletes a camera", async () => {

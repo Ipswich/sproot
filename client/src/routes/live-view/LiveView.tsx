@@ -12,8 +12,14 @@ export default function LiveView() {
     cameraSettings: SDBCameraSettings[];
   };
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
+  const hasMultipleCameras = cameraSettings.length > 1;
 
   useEffect(() => {
+    if (cameraSettings.length === 1) {
+      setSelectedCameraId(cameraSettings[0]!.id.toString());
+      return;
+    }
+
     const storedCameraId = window.localStorage.getItem(CAMERA_STORAGE_KEY);
     const defaultCameraId = cameraSettings[0]?.id?.toString() ?? null;
     const nextCameraId = cameraSettings.some(
@@ -31,28 +37,27 @@ export default function LiveView() {
   return (
     <Fragment>
       <Stack>
-        <Select
-          label="Camera"
-          value={selectedCameraId}
-          data={cameraSettings.map((camera) => ({
-            value: camera.id.toString(),
-            label: camera.name,
-          }))}
-          allowDeselect={false}
-          onChange={(value) => {
-            if (!value) {
-              return;
-            }
-            setSelectedCameraId(value);
-            window.localStorage.setItem(CAMERA_STORAGE_KEY, value);
-          }}
-        />
+        {hasMultipleCameras && (
+          <Select
+            label="Camera"
+            value={selectedCameraId}
+            data={cameraSettings.map((camera) => ({
+              value: camera.id.toString(),
+              label: camera.name,
+            }))}
+            allowDeselect={false}
+            onChange={(value) => {
+              if (!value) {
+                return;
+              }
+              setSelectedCameraId(value);
+              window.localStorage.setItem(CAMERA_STORAGE_KEY, value);
+            }}
+          />
+        )}
         {selectedCamera && (
           <>
-            <ImageOrVideoDisplay
-              cameraId={selectedCamera.id}
-              cameraName={selectedCamera.name}
-            />
+            <ImageOrVideoDisplay camera={selectedCamera} />
             <TimelapseDetails camera={selectedCamera} />
           </>
         )}

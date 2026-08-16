@@ -7,6 +7,7 @@ import { pipeline } from "stream/promises";
 import winston from "winston";
 import Timelapse from "./Timelapse";
 import { SDBCameraSettings } from "@sproot/common/database/SDBCameraSettings";
+import { TimeExpressionResolver } from "../automation/conditions/TimeExpressionResolver";
 import {
   getCameraImageDirectory,
   getCameraLatestImagePath,
@@ -27,6 +28,7 @@ class ImageCapture {
     addImageToTimelapseFunction?: AddImageToTimelapseFunction,
     enqueueArchiveGeneration?: EnqueueArchiveGenerationFunction,
     logger?: winston.Logger,
+    timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
   ) {
     if (typeof cameraIdOrLogger === "number") {
       this.#cameraId = cameraIdOrLogger;
@@ -36,22 +38,29 @@ class ImageCapture {
         addImageToTimelapseFunction!,
         enqueueArchiveGeneration!,
         this.#logger,
+        timeExpressionResolver,
       );
       return;
     }
 
     this.#cameraId = 1;
     this.#logger = cameraIdOrLogger;
-    this.#timelapse = new Timelapse(async (filename: string, directory: string) => {
-      const latestImage = await this.getLatestImageAsync();
-      if (!latestImage) {
-        return;
-      }
+    this.#timelapse = new Timelapse(
+      async (filename: string, directory: string) => {
+        const latestImage = await this.getLatestImageAsync();
+        if (!latestImage) {
+          return;
+        }
 
-      await fs.promises.mkdir(directory, { recursive: true });
-      const outputPath = path.join(directory, filename);
-      await fs.promises.writeFile(outputPath, latestImage as unknown as Uint8Array);
-    }, this.#logger);
+        await fs.promises.mkdir(directory, { recursive: true });
+        const outputPath = path.join(directory, filename);
+        await fs.promises.writeFile(outputPath, latestImage as unknown as Uint8Array);
+      },
+      this.#logger,
+      undefined,
+      undefined,
+      timeExpressionResolver,
+    );
   }
 
   updateTimelapseSettings(settings: SDBCameraSettings): void {

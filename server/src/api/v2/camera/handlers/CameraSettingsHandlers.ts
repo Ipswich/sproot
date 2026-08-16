@@ -3,8 +3,12 @@ import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { CameraManager } from "../../../../camera/CameraManager";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
+import { isDynamicTimePoint } from "@sproot/common/automation/TimeConditionTimePoints";
+import { SettingsService } from "../../../../settings/SettingsService";
+import { SETTINGS } from "../../../../database/settings/SettingsSchema";
 
 type CameraSettingsInput = Omit<SDBCameraSettings, "id">;
+const TIME_REGEX = /^\d{2}:\d{2}$/;
 
 function getCameraId(request: Request): number | null {
   const rawCameraId = request.params["cameraId"];
@@ -30,8 +34,51 @@ function isValidUrl(value: unknown): value is string {
   }
 }
 
-function validateCameraSettingsInput(newSettings: Partial<CameraSettingsInput>) {
+function isConfiguredUrl(value: unknown): value is string {
+  return typeof value === "string" && value.trim() !== "";
+}
+
+function isValidTimeExpression(value: unknown): value is string {
+  return typeof value === "string" && (TIME_REGEX.test(value) || isDynamicTimePoint(value));
+}
+
+async function validateDynamicTimeDependenciesAsync(
+  settingsService: SettingsService,
+  newSettings: Partial<CameraSettingsInput>,
+  missingOrInvalidFields: string[],
+) {
+  const usesDynamicPoint = [newSettings.timelapseStartTime, newSettings.timelapseEndTime].some(
+    (value): value is string => typeof value === "string" && isDynamicTimePoint(value),
+  );
+  if (!usesDynamicPoint) {
+    return;
+  }
+
+  const settings = await settingsService.getManyAsync([
+    SETTINGS.system.latitude,
+    SETTINGS.system.longitude,
+  ]);
+
+  if (typeof settings[SETTINGS.system.latitude] !== "string") {
+    missingOrInvalidFields.push(
+      "Dynamic solar/lunar time points require system.latitude to be configured.",
+    );
+  }
+  if (typeof settings[SETTINGS.system.longitude] !== "string") {
+    missingOrInvalidFields.push(
+      "Dynamic solar/lunar time points require system.longitude to be configured.",
+    );
+  }
+}
+
+async function validateCameraSettingsInput(
+  settingsService: SettingsService,
+  newSettings: Partial<CameraSettingsInput>,
+) {
   const missingOrInvalidFields: string[] = [];
+  const hasCaptureUrl = isConfiguredUrl(newSettings.captureUrl);
+  const hasStreamUrl = isConfiguredUrl(newSettings.streamUrl);
+  const hasHealthUrl = isConfiguredUrl(newSettings.healthUrl);
 
   if (typeof newSettings.enabled !== "boolean") {
     missingOrInvalidFields.push("enabled must be a boolean");
@@ -43,14 +90,17 @@ function validateCameraSettingsInput(newSettings: Partial<CameraSettingsInput>) 
   ) {
     missingOrInvalidFields.push("name must be a string between 1 and 64 characters");
   }
-  if (!isValidUrl(newSettings.captureUrl)) {
+  if (hasCaptureUrl && !isValidUrl(newSettings.captureUrl)) {
     missingOrInvalidFields.push("captureUrl must be a valid http or https URL");
   }
-  if (!isValidUrl(newSettings.streamUrl)) {
+  if (hasStreamUrl && !isValidUrl(newSettings.streamUrl)) {
     missingOrInvalidFields.push("streamUrl must be a valid http or https URL");
   }
-  if (!isValidUrl(newSettings.healthUrl)) {
+  if (hasHealthUrl && !isValidUrl(newSettings.healthUrl)) {
     missingOrInvalidFields.push("healthUrl must be a valid http or https URL");
+  }
+  if (!hasCaptureUrl && !hasStreamUrl) {
+    missingOrInvalidFields.push("At least one of captureUrl or streamUrl must be configured");
   }
   if (typeof newSettings.timelapseEnabled !== "boolean") {
     missingOrInvalidFields.push("timelapseEnabled must be a boolean");
@@ -73,27 +123,34 @@ function validateCameraSettingsInput(newSettings: Partial<CameraSettingsInput>) 
   if (newSettings.timelapseEnabled && newSettings.timelapseInterval == null) {
     missingOrInvalidFields.push("timelapseInterval is required when timelapseEnabled is true");
   }
+  if (newSettings.timelapseEnabled && !hasCaptureUrl) {
+    missingOrInvalidFields.push("captureUrl is required when timelapseEnabled is true");
+  }
   if (
     newSettings.timelapseStartTime !== null &&
     newSettings.timelapseStartTime !== undefined &&
-    (typeof newSettings.timelapseStartTime !== "string" ||
-      !newSettings.timelapseStartTime.match(/^\d{2}:\d{2}$/))
+    !isValidTimeExpression(newSettings.timelapseStartTime)
   ) {
-    missingOrInvalidFields.push("timelapseStartTime must be a string in HH:MM format, or null");
+    missingOrInvalidFields.push(
+      "timelapseStartTime must be a string in HH:MM format or a supported solar/lunar point, or null",
+    );
   }
   if (
     newSettings.timelapseEndTime !== null &&
     newSettings.timelapseEndTime !== undefined &&
-    (typeof newSettings.timelapseEndTime !== "string" ||
-      !newSettings.timelapseEndTime.match(/^\d{2}:\d{2}$/))
+    !isValidTimeExpression(newSettings.timelapseEndTime)
   ) {
-    missingOrInvalidFields.push("timelapseEndTime must be a string in HH:MM format, or null");
+    missingOrInvalidFields.push(
+      "timelapseEndTime must be a string in HH:MM format or a supported solar/lunar point, or null",
+    );
   }
   if ((newSettings.timelapseStartTime === null) !== (newSettings.timelapseEndTime === null)) {
     missingOrInvalidFields.push(
       "Both timelapseStartTime and timelapseEndTime must be provided or both must be null",
     );
   }
+
+  await validateDynamicTimeDependenciesAsync(settingsService, newSettings, missingOrInvalidFields);
 
   return missingOrInvalidFields;
 }
@@ -158,7 +215,8 @@ export async function createCameraSettingsAsync(
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const newSettings = request.body as Partial<CameraSettingsInput>;
-  const missingOrInvalidFields = validateCameraSettingsInput(newSettings);
+  const settingsService = request.app.get(DI_KEYS.SettingsService) as SettingsService;
+  const missingOrInvalidFields = await validateCameraSettingsInput(settingsService, newSettings);
   if (missingOrInvalidFields.length > 0) {
     return {
       statusCode: 400,
@@ -214,7 +272,8 @@ export async function updateCameraSettingsAsync(
   }
 
   const newSettings = request.body as Partial<CameraSettingsInput>;
-  const missingOrInvalidFields = validateCameraSettingsInput(newSettings);
+  const settingsService = request.app.get(DI_KEYS.SettingsService) as SettingsService;
+  const missingOrInvalidFields = await validateCameraSettingsInput(settingsService, newSettings);
   if (missingOrInvalidFields.length > 0) {
     return {
       statusCode: 400,

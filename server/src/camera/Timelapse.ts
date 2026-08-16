@@ -6,7 +6,8 @@ import winston from "winston";
 import { TIMELAPSE_RESOURCES } from "@sproot/common/utility/Constants";
 import { createTimeStampSuffix } from "@sproot/common/utility/Files";
 import { SDBCameraSettings } from "@sproot/common/database/SDBCameraSettings";
-import { isBetweenTimeStamp } from "@sproot/common/utility/TimeMethods";
+import { evaluateTimeWindow } from "../automation/conditions/ConditionUtils";
+import { TimeExpressionResolver } from "../automation/conditions/TimeExpressionResolver";
 import {
   getCameraArchiveDirectory,
   getCameraArchivePath,
@@ -31,12 +32,14 @@ class Timelapse implements Disposable {
   #archiveProgressPercentage: number = 0;
   #lastArchiveGenerationDuration: number | null = null;
   #archiveImageCount: number = 0;
+  #timeExpressionResolver: TimeExpressionResolver;
 
   constructor(
     cameraIdOrAddImageToTimelapseFunction: number | AddImageToTimelapseFunction,
     addImageToTimelapseFunctionOrLogger: AddImageToTimelapseFunction | winston.Logger,
     enqueueArchiveGeneration?: EnqueueArchiveGenerationFunction,
     logger?: winston.Logger,
+    timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
   ) {
     if (typeof cameraIdOrAddImageToTimelapseFunction === "number") {
       this.#cameraId = cameraIdOrAddImageToTimelapseFunction;
@@ -44,6 +47,7 @@ class Timelapse implements Disposable {
         addImageToTimelapseFunctionOrLogger as AddImageToTimelapseFunction;
       this.#enqueueArchiveGeneration = enqueueArchiveGeneration ?? (async (task) => task());
       this.#logger = logger!;
+      this.#timeExpressionResolver = timeExpressionResolver;
       return;
     }
 
@@ -51,6 +55,7 @@ class Timelapse implements Disposable {
     this.#addImageToTimelapseFunction = cameraIdOrAddImageToTimelapseFunction;
     this.#enqueueArchiveGeneration = async (task) => task();
     this.#logger = addImageToTimelapseFunctionOrLogger as winston.Logger;
+    this.#timeExpressionResolver = timeExpressionResolver;
   }
 
   updateSettings(settings: SDBCameraSettings): void {
@@ -176,17 +181,26 @@ class Timelapse implements Disposable {
     }
 
     const now = new Date();
-    const nowHours = now.getHours();
-    const nowMinutes = now.getMinutes();
-
-    if (this.#startTime?.match(/^\d{2}:\d{2}$/) && this.#endTime?.match(/^\d{2}:\d{2}$/)) {
-      const [endHours, endMinutes] = this.#endTime.split(":").map(Number);
-      if (nowHours === endHours && nowMinutes === endMinutes) {
+    if (this.#startTime != null && this.#endTime != null) {
+      const endTime = this.#timeExpressionResolver.resolveToDate(this.#endTime, now);
+      if (
+        endTime != null &&
+        endTime.getHours() === now.getHours() &&
+        endTime.getMinutes() === now.getMinutes() &&
+        endTime.getDate() === now.getDate() &&
+        endTime.getMonth() === now.getMonth() &&
+        endTime.getFullYear() === now.getFullYear()
+      ) {
         return true;
       }
     }
 
-    if (this.#startTime === null && this.#endTime === null && nowHours === 0 && nowMinutes === 0) {
+    if (
+      this.#startTime === null &&
+      this.#endTime === null &&
+      now.getHours() === 0 &&
+      now.getMinutes() === 0
+    ) {
       return true;
     }
 
@@ -296,8 +310,7 @@ class Timelapse implements Disposable {
 
     this.#timer = setTimeout(async () => {
       if (
-        (this.#startTime === null && this.#endTime === null) ||
-        isBetweenTimeStamp(this.#startTime, this.#endTime)
+        evaluateTimeWindow(new Date(), this.#timeExpressionResolver, this.#startTime, this.#endTime)
       ) {
         await this.addImage();
       }

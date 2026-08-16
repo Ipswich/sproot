@@ -8,6 +8,7 @@ import { IEventBus } from "../eventbus/IEventBus";
 import { CameraSettingsModifiedEvent } from "../eventbus/events/camera/CameraSettingsModifiedEvent";
 import { Events } from "../eventbus/events/Events";
 import { PromiseQueue } from "./PromiseQueue";
+import { TimeExpressionResolver } from "../automation/conditions/TimeExpressionResolver";
 
 type ManagedCamera = {
   settings: SDBCameraSettings;
@@ -18,6 +19,7 @@ class CameraManager {
   #eventBus: IEventBus;
   #cameraRepository: ICameraRepository;
   #logger: winston.Logger;
+  #timeExpressionResolver: TimeExpressionResolver;
   #managedCameras = new Map<number, ManagedCamera>();
   #archiveQueue = new PromiseQueue();
   #isUpdating: boolean = false;
@@ -28,20 +30,28 @@ class CameraManager {
   static createInstanceAsync(
     eventBus: IEventBus,
     cameraRepository: ICameraRepository,
+    timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
     logger: winston.Logger,
   ): Promise<CameraManager> {
-    const cameraManager = new CameraManager(eventBus, cameraRepository, logger);
+    const cameraManager = new CameraManager(
+      eventBus,
+      cameraRepository,
+      timeExpressionResolver,
+      logger,
+    );
     return cameraManager.regenerateAsync();
   }
 
   private constructor(
     eventBus: IEventBus,
     cameraRepository: ICameraRepository,
+    timeExpressionResolver: TimeExpressionResolver,
     logger: winston.Logger,
   ) {
     this.#eventBus = eventBus;
     this.#cameraRepository = cameraRepository;
     this.#logger = logger;
+    this.#timeExpressionResolver = timeExpressionResolver;
     this.#imageCaptureCronJob = new CronJob(
       CRON.EVERY_MINUTE,
       async () => {
@@ -147,7 +157,7 @@ class CameraManager {
 
   async fetchStreamAsync(cameraId: number): Promise<Response | null> {
     const camera = this.#managedCameras.get(cameraId);
-    if (!camera?.settings.enabled) {
+    if (!camera?.settings.enabled || camera.settings.streamUrl.trim() === "") {
       return null;
     }
 
@@ -158,7 +168,7 @@ class CameraManager {
 
   async fetchHealthAsync(cameraId: number): Promise<Response | null> {
     const camera = this.#managedCameras.get(cameraId);
-    if (!camera) {
+    if (!camera || camera.settings.healthUrl.trim() === "") {
       return null;
     }
 
@@ -225,7 +235,11 @@ class CameraManager {
             async (fileName: string, directory: string) => {
               const latestSettings = this.#managedCameras.get(cameraSettings.id)?.settings;
               const latestImageCapture = this.#managedCameras.get(cameraSettings.id)?.imageCapture;
-              if (!latestSettings?.enabled || !latestImageCapture) {
+              if (
+                !latestSettings?.enabled ||
+                !latestImageCapture ||
+                latestSettings.captureUrl.trim() === ""
+              ) {
                 return;
               }
 
@@ -238,6 +252,7 @@ class CameraManager {
             },
             this.#archiveQueue.enqueue.bind(this.#archiveQueue),
             this.#logger,
+            this.#timeExpressionResolver,
           );
 
         imageCapture.updateTimelapseSettings(cameraSettings);
@@ -278,7 +293,9 @@ class CameraManager {
         continue;
       }
 
-      await imageCapture.captureLatestImageAsync(settings.captureUrl, {});
+      if (settings.captureUrl.trim() !== "") {
+        await imageCapture.captureLatestImageAsync(settings.captureUrl, {});
+      }
       await imageCapture.runImageRetentionAsync(
         settings.imageRetentionSize,
         settings.imageRetentionDays,
