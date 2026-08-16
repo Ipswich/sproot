@@ -5,6 +5,7 @@ import { CameraManager } from "../../camera/CameraManager";
 import ImageCapture from "../../camera/ImageCapture";
 import winston from "winston";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
+import { TimeExpressionResolver } from "../../automation/conditions/TimeExpressionResolver";
 
 describe("ServerStatsManager", () => {
   const eventBus = new MemoryEventBus(
@@ -48,6 +49,7 @@ describe("ServerStatsManager", () => {
     await using manager = await CameraManager.createInstanceAsync(
       eventBus,
       sprootDBMock.camera,
+      TimeExpressionResolver.createNoop(),
       winston.createLogger({
         transports: [new winston.transports.Console({ silent: true })],
       }),
@@ -76,6 +78,7 @@ describe("ServerStatsManager", () => {
     await using manager = await CameraManager.createInstanceAsync(
       eventBus,
       sprootDBMock.camera,
+      TimeExpressionResolver.createNoop(),
       winston.createLogger({
         transports: [new winston.transports.Console({ silent: true })],
       }),

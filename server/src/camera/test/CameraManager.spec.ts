@@ -7,6 +7,7 @@ import ImageCapture from "../ImageCapture";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { ICameraRepository } from "../../database/repositories/camera/ICameraRepository";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
+import { TimeExpressionResolver } from "../../automation/conditions/TimeExpressionResolver";
 
 describe("CameraManager", () => {
   let sandbox: SinonSandbox;
@@ -44,7 +45,12 @@ describe("CameraManager", () => {
     };
 
     const eventBus = new MemoryEventBus(logger);
-    const manager = await CameraManager.createInstanceAsync(eventBus, cameraRepository, logger);
+    const manager = await CameraManager.createInstanceAsync(
+      eventBus,
+      cameraRepository,
+      TimeExpressionResolver.createNoop(),
+      logger,
+    );
     createdManagers.push(manager);
     return { manager, cameraRepository };
   };

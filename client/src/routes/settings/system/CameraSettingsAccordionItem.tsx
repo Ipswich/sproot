@@ -468,11 +468,6 @@ export default function CameraSettingsAccordionItem() {
                       <Paper withBorder radius="md" p="lg" shadow="xs">
                         <Stack gap="md">
                           <Group justify="space-between" align="flex-start">
-                            <div>
-                              <Text fw={600}>
-                                {draft.name || `Camera ${index + 1}`}
-                              </Text>
-                            </div>
                             <Group>
                               <Button
                                 leftSection={<IconDeviceFloppy size={16} />}
