@@ -25,7 +25,7 @@ Sproot takes an image once a minute. The default service uses a video quality of
 
 ### Timelapses
 
-You'll need to have your camera enabled before you can enable timelapses. Navigate to `Settings -> Camera` and turn the `Enable Timelapse` slider to on. This will enable the rest of the form, which you can use to configure your timelapse options. Once you've configured those, click `Update` to save your changes.
+You'll need to have your camera enabled before you can enable timelapses. Navigate to `Settings -> Camera` and turn the `Enable Timelapse` slider to on. This will enable the rest of the form, which you can use to configure your timelapse options. Once you've configured those, click `Save` to save your changes.
 
 #### Timelapse Interval
 
