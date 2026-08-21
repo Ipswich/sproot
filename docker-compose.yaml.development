@@ -1,26 +1,28 @@
 services:
-#  camera:
-#    build:
-#      context: ./
-#      dockerfile: ./camera/Dockerfile
-#    restart: unless-stopped
-#    environment:
-#      TZ: America/Los_Angeles
-#      INTERSERVICE_AUTHENTICATION_KEY: CHANGE ME #Change this to something long and unique
-#      CAMERA_PORT: 3002
-#      CAMERA_VIDEO_RESOLUTION: 1280x960
-#      CAMERA_FPS: 30
-#      CAMERA_GRACEFUL_SHUTDOWN_TIMEOUT: 10
-#      CAMERA_STALL_TIMEOUT_SECONDS: 8
-#      CAMERA_WATCHDOG_INTERVAL_SECONDS: 1
-#      CAMERA_MAX_RECOVERY_FAILURES: 3
-#    volumes:
-#      - /run/udev:/run/udev:ro
-#      - /sys:/sys
-#    network_mode: "host"
-#    privileged: true
-#    expose:
-#      - "3002"
+  camera:
+    profiles:
+      - camera
+    build:
+      context: ./
+      dockerfile: ./camera/Dockerfile
+    restart: unless-stopped
+    environment:
+      TZ: America/Los_Angeles
+      INTERSERVICE_AUTHENTICATION_KEY: CHANGE ME #Change this to something long and unique
+      CAMERA_PORT: 3002
+      CAMERA_VIDEO_RESOLUTION: 1280x960
+      CAMERA_FPS: 30
+      CAMERA_GRACEFUL_SHUTDOWN_TIMEOUT: 10
+      CAMERA_STALL_TIMEOUT_SECONDS: 3
+      CAMERA_WATCHDOG_INTERVAL_SECONDS: 1
+      CAMERA_MAX_RECOVERY_FAILURES: 3
+    volumes:
+      - /run/udev:/run/udev:ro
+      - /sys:/sys
+    network_mode: "host"
+    privileged: true
+    expose:
+      - "3002"
 
   server:
     depends_on:
