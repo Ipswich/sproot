@@ -182,6 +182,7 @@ function ZoneAccordion({
             key={"output-states-accordion"}
             multiple={true}
             radius="md"
+            keepMounted={false}
             value={openedDeviceZoneIds}
             onChange={(values) => {
               startTransition(() => {

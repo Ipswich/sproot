@@ -14,6 +14,7 @@ import {
   getChartIntervalMs,
   getEffectiveEndDate,
   getEffectiveDisplayEndDate,
+  getLastCompleteBucketEnd,
   mergeDataIntoTimeline,
   scalePercentile,
 } from "../../../requests/chartDataTypes";
@@ -75,7 +76,25 @@ export default function StatesChartContainer({
   }, [chartInterval, customTimeRange]);
 
   const effectiveEnd = getEffectiveEndDate(timeRange[1]);
-  const durationMs = effectiveEnd.getTime() - timeRange[0].getTime();
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const selectedDayStart = new Date(
+    effectiveEnd.getFullYear(),
+    effectiveEnd.getMonth(),
+    effectiveEnd.getDate(),
+  );
+  const isEndToday = selectedDayStart.getTime() === todayStart.getTime();
+
+  const initialDurationMs = effectiveEnd.getTime() - timeRange[0].getTime();
+  const initialDownsample = resolveSelectedDownsample(
+    downsampleSelection,
+    initialDurationMs,
+  );
+  const queryEnd = isEndToday
+    ? getLastCompleteBucketEnd(now, initialDownsample)
+    : effectiveEnd;
+
+  const durationMs = queryEnd.getTime() - timeRange[0].getTime();
   const downsample = resolveSelectedDownsample(downsampleSelection, durationMs);
   const queryLimit = getQueryPointLimit(durationMs, downsample);
 
@@ -101,7 +120,7 @@ export default function StatesChartContainer({
     queryKey: [
       "outputData",
       timeRange[0].toISOString(),
-      effectiveEnd.toISOString(),
+      queryEnd.toISOString(),
       downsample,
       aggregate,
       percentile,
@@ -111,7 +130,7 @@ export default function StatesChartContainer({
       const request: OutputDataQueryRequest = {
         timeRange: {
           start: timeRange[0].toISOString(),
-          end: effectiveEnd.toISOString(),
+          end: queryEnd.toISOString(),
         },
         downsample,
         limit: queryLimit,

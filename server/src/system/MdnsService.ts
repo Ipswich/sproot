@@ -7,6 +7,7 @@ export class MdnsService implements Disposable {
   readonly #bonjour: Bonjour = new Bonjour();
   readonly #browser: Browser;
   readonly #logger: winston.Logger;
+  readonly #expireTimer: NodeJS.Timeout;
 
   constructor(logger: winston.Logger) {
     this.#logger = logger;
@@ -15,6 +16,15 @@ export class MdnsService implements Disposable {
         `Discovered MDNS service: ${service.name} at ${service.host}:${service.port}`,
       );
     });
+
+    this.#browser.on("down", (service) => {
+      this.#logger.info(`MDNS service expired: ${service.name} at ${service.host}:${service.port}`);
+    });
+
+    this.#expireTimer = setInterval(() => {
+      this.#browser.expire();
+      this.#browser.update();
+    }, 60000);
   }
 
   get services(): Service[] {
@@ -49,6 +59,7 @@ export class MdnsService implements Disposable {
   }
 
   [Symbol.dispose](): void {
+    clearInterval(this.#expireTimer);
     this.#browser.stop();
     this.#bonjour.destroy();
   }
