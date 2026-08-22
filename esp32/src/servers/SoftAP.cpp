@@ -56,6 +56,11 @@ void startSoftAPMode(AsyncWebServer& server, DNSServer& dnsServer)
     .toggle-btn{background:#eee;border:1px solid #ddd;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13px}
     .submit{width:100%;padding:12px;border:none;background:#007bff;color:#fff;border-radius:8px;font-size:16px;cursor:pointer}
     .small{font-size:12px;color:#888;margin-top:10px;text-align:center}
+    .status{display:none;text-align:center}
+    .spinner{width:36px;height:36px;margin:0 auto 16px;border:4px solid #ddd;border-top-color:#007bff;border-radius:50%;animation:spin 0.8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .status-text{font-size:14px;margin-bottom:16px}
+    .retry-btn{width:100%;padding:12px;border:none;background:#007bff;color:#fff;border-radius:8px;font-size:16px;cursor:pointer;display:none}
     @media (max-width:360px){.card{padding:16px}}
     </style>
     </head>
@@ -79,8 +84,14 @@ void startSoftAPMode(AsyncWebServer& server, DNSServer& dnsServer)
       </div>
       </div>
       <button class="submit" type="submit">Connect</button>
-      <div class="small">After saving, this device will reboot and attempt to join the network.</div>
+      <div class="small">After saving, this device will attempt to join the network.</div>
     </form>
+
+    <div id="statusView" class="status">
+      <div id="statusSpinner" class="spinner"></div>
+      <div id="statusText" class="status-text">Attempting to connect to network...</div>
+      <button id="retryBtn" class="retry-btn" type="button">Try Again</button>
+    </div>
 
     </div>
     </div>
@@ -96,9 +107,55 @@ void startSoftAPMode(AsyncWebServer& server, DNSServer& dnsServer)
       btn.setAttribute('aria-pressed', String(isHidden));
     });
 
+    var form = document.getElementById('wifiForm');
+    var statusView = document.getElementById('statusView');
+    var statusSpinner = document.getElementById('statusSpinner');
+    var statusText = document.getElementById('statusText');
+    var retryBtn = document.getElementById('retryBtn');
+    var pollTimer = null;
+    var sawConnectingOrConnected = false;
+
+    function showStatus(spinning, text, showRetry){
+      form.style.display = 'none';
+      statusView.style.display = 'block';
+      statusSpinner.style.display = spinning ? 'block' : 'none';
+      statusText.textContent = text;
+      retryBtn.style.display = showRetry ? 'block' : 'none';
+    }
+
+    function stopPolling(){
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    }
+
+    function pollStatus(){
+      fetch('/connection-status').then(function(resp){ return resp.json(); }).then(function(json){
+        if (json.state === 'connecting') {
+          sawConnectingOrConnected = true;
+          showStatus(true, 'Attempting to connect to network...', false);
+        } else if (json.state === 'connected') {
+          sawConnectingOrConnected = true;
+          stopPolling();
+          showStatus(false, 'Connected! Visit http://' + json.hostname + ' from a device on your home network.', false);
+        } else if (json.state === 'failed') {
+          stopPolling();
+          showStatus(false, "Couldn't connect. Check the password and try again.", true);
+        }
+      }).catch(function(){
+        if (sawConnectingOrConnected) {
+          stopPolling();
+          showStatus(false, 'The device appears to have joined your network and this hotspot has turned off. Visit the address above from a device on your home network.', false);
+        }
+      });
+    }
+
+    retryBtn.addEventListener('click', function(){
+      stopPolling();
+      statusView.style.display = 'none';
+      form.style.display = 'block';
+    });
+
     // Intercept form submit and POST via fetch using application/x-www-form-urlencoded.
     // This works around captive-portal webviews that sometimes block normal form POSTs.
-    var form = document.getElementById('wifiForm');
     form.addEventListener('submit', function(e){
       e.preventDefault();
       var submitBtn = form.querySelector('button[type="submit"]');
@@ -114,13 +171,20 @@ void startSoftAPMode(AsyncWebServer& server, DNSServer& dnsServer)
       }).then(function(resp){
       return resp.json().catch(function(){ return { status: 'error', message: 'No JSON response' }; });
       }).then(function(json){
-      alert(json.message || 'Saved');
-      }).catch(function(err){
-      alert('Save failed');
-      }).finally(function(){
-      // keep UI responsive; reboot is triggered server-side
       submitBtn.disabled = false;
       submitBtn.textContent = 'Connect';
+      if (json.status === 'success') {
+        sawConnectingOrConnected = false;
+        showStatus(true, 'Attempting to connect to network...', false);
+        pollTimer = setInterval(pollStatus, 1500);
+        pollStatus();
+      } else {
+        alert(json.message || 'Save failed');
+      }
+      }).catch(function(err){
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Connect';
+      alert('Save failed');
       });
     });
     })();
