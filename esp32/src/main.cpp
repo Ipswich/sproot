@@ -5,6 +5,7 @@
 
 #include "servers/Normal.h"
 #include "servers/SoftAP.h"
+#include "wifi/WifiConnectState.h"
 
 AsyncWebServer server(80);
 Preferences prefs;
@@ -22,6 +23,8 @@ String savedPASS;
 
 unsigned long lastWiFiCheck = 0;
 const unsigned long wifiCheckInterval = 10000; // 10 seconds
+const unsigned long connectTimeoutMs = 15000;
+const unsigned long connectedGraceMs = 3500;
 
 void switchToNormalMode() {
   stopSoftAPMode(server, dnsServer);
@@ -34,6 +37,7 @@ void switchToCaptivePortal() {
   stopNormalMode(server);
   startSoftAPMode(server, dnsServer);
   server_mode = MODE_SOFT_AP;
+  setWifiConnectState(WifiConnectState::Idle);
 }
 
 void setup()
@@ -62,39 +66,45 @@ void loop() {
   // --- If running captive portal ---
   if (server_mode == MODE_SOFT_AP) {
     dnsServer.processNextRequest();
-    
-    // Periodically re-check if Wi-Fi network is available
-    if (millis() - lastWiFiCheck > wifiCheckInterval) {
-      Serial.println("Updating in range Wi-Fi networks. . .");
-      lastWiFiCheck = millis();
-      prefs.begin("wifi", true);
-      savedSSID = prefs.getString("ssid", "");
-      savedPASS = prefs.getString("pass", "");
-      prefs.end();
 
-      if (savedSSID.length() > 0) {
-        WiFi.mode(WIFI_AP_STA); // allow scanning while keeping the AP
-        int n = WiFi.scanNetworks(false, true);
-        if (n < 0) {
-          Serial.printf("WiFi scan error: %d\n", n); // handle or retry later
-        } else {
-          Serial.printf("Looking for network: %s. %i networks detected.\n", savedSSID.c_str(), n);
-          for (int i = 0; i < n; i++) {
-            String networkName = WiFi.SSID(i);
-            if (networkName == savedSSID) {
-              Serial.printf("%s found in range, attempting connection.\n", networkName.c_str());
-              WiFi.begin(savedSSID.c_str(), savedPASS.c_str());
-              if (WiFi.waitForConnectResult() == WL_CONNECTED) {
-                Serial.println("Success! Switching to normal mode.\n");
-                switchToNormalMode();
-              } else {
-                Serial.println("Failed! Connection will be reattempted in 10 seconds.\n");
-              }
-              break;
-            }
-          }
+    WifiConnectState state = getWifiConnectState();
+
+    if (state == WifiConnectState::Idle) {
+      bool immediate = consumeImmediateConnectRequest();
+      bool intervalElapsed = millis() - lastWiFiCheck > wifiCheckInterval;
+
+      if (immediate || intervalElapsed) {
+        lastWiFiCheck = millis();
+        prefs.begin("wifi", true);
+        savedSSID = prefs.getString("ssid", "");
+        savedPASS = prefs.getString("pass", "");
+        prefs.end();
+
+        if (savedSSID.length() > 0) {
+          Serial.printf("Attempting to connect to %s...\n", savedSSID.c_str());
+          WiFi.mode(WIFI_AP_STA); // keep the AP up while attempting STA connection
+          WiFi.begin(savedSSID.c_str(), savedPASS.c_str());
+          setWifiStateChangedAt(millis());
+          setWifiConnectState(WifiConnectState::Connecting);
         }
       }
+    } else if (state == WifiConnectState::Connecting) {
+      if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("Connected! Switching to normal mode shortly.");
+        setWifiStateChangedAt(millis());
+        setWifiConnectState(WifiConnectState::ConnectedGrace);
+      } else if (millis() - getWifiStateChangedAt() > connectTimeoutMs) {
+        Serial.println("Connection attempt timed out.");
+        setWifiConnectState(WifiConnectState::Failed);
+      }
+    } else if (state == WifiConnectState::ConnectedGrace) {
+      if (millis() - getWifiStateChangedAt() > connectedGraceMs) {
+        switchToNormalMode();
+      }
+    } else if (state == WifiConnectState::Failed) {
+      Serial.println("Will retry on the next check interval.");
+      lastWiFiCheck = millis(); // ensure a full wifiCheckInterval passes before retrying
+      setWifiConnectState(WifiConnectState::Idle);
     }
   } else if (server_mode == MODE_NORMAL) {
     if (millis() - lastWiFiCheck > wifiCheckInterval) {
