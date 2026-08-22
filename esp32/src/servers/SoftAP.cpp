@@ -2,6 +2,7 @@
 #include <ESPAsyncWebServer.h>
 #include <Preferences.h>
 #include <WiFi.h>
+#include "wifi/WifiConnectState.h"
 
 const byte DNS_PORT = 53;
 
@@ -134,14 +135,21 @@ void startSoftAPMode(AsyncWebServer& server, DNSServer& dnsServer)
     if (request->hasParam("ssid", true)) ssid = request->getParam("ssid", true)->value();
     if (request->hasParam("pass", true)) pass = request->getParam("pass", true)->value();
 
+    if (ssid.length() == 0) {
+      request->send(400, "application/json", "{\"status\":\"error\",\"message\":\"SSID is required\"}");
+      return;
+    }
+
     Preferences prefs;
     prefs.begin("wifi", false);
     prefs.putString("ssid", ssid);
     prefs.putString("pass", pass);
     prefs.end();
 
-    request->send(200, "application/json", "{\"status\":\"success\", \"message\":\"Credentials saved. Rebooting...\"}");
-    Serial.println("Credentials saved! Swapping to normal server!");
+    requestImmediateConnect();
+
+    request->send(200, "application/json", "{\"status\":\"success\",\"message\":\"Credentials saved. Attempting to connect...\"}");
+    Serial.println("Credentials saved! Requesting immediate connection attempt.");
   });
 
   server.begin();
