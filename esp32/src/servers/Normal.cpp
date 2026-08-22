@@ -8,6 +8,7 @@
 #include "handlers/SensorHandlers.h"
 #include "handlers/OutputHandlers.h"
 #include "handlers/SystemHandlers.h"
+#include "utils/DeviceIdentity.h"
 #include "Version.h"
 
 void setupRoutes(AsyncWebServer& server);
@@ -15,12 +16,9 @@ void setupRoutes(AsyncWebServer& server);
 void startNormalMode(AsyncWebServer& server)
 {
   Serial.println("Starting Normal Mode...");
-  uint64_t chipid = ESP.getEfuseMac();
-  char hostname[32];
-  uint16_t last16 = (chipid >> 32) & 0xFFFF;
-  snprintf(hostname, sizeof(hostname), "sproot-esp32-%04X", last16); // Should give something like sensor-1A2B
+  String hostname = getDeviceHostname();
 
-  if (!MDNS.begin(hostname)) {
+  if (!MDNS.begin(hostname.c_str())) {
     Serial.println("Error starting mDNS");
     return;
   }
