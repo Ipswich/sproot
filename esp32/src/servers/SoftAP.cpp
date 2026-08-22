@@ -21,6 +21,10 @@ void startSoftAPMode(AsyncWebServer& server, DNSServer& dnsServer)
 
   dnsServer.start(DNS_PORT, "*", IPAddress(192,168,1,1));
 
+  // See the matching comment in Normal.cpp: routes are re-registered every time this mode
+  // starts, and AsyncWebServer::on() never frees previously-registered handlers, so this reset
+  // is required to avoid leaking handlers on every Normal<->Soft AP mode switch.
+  server.reset();
 
   server.on("/generate_204", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(200, "text/html", "<meta http-equiv='refresh' content='0; url=/' />");
@@ -135,7 +139,7 @@ void startSoftAPMode(AsyncWebServer& server, DNSServer& dnsServer)
         } else if (json.state === 'connected') {
           sawConnectingOrConnected = true;
           stopPolling();
-          showStatus(false, 'Connected! Visit http://' + json.hostname + ' or http://' + json.ip + ' from a device on your home network.', false);
+          showStatus(false, 'Connected! This device should now be accessible within the Sproot App. Alternatively, visit http://' + json.hostname + ' or http://' + json.ip + ' from a device on this network.', false);
         } else if (json.state === 'failed') {
           stopPolling();
           showStatus(false, "Couldn't connect. Check the password and try again.", true);

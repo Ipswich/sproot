@@ -25,6 +25,13 @@ void startNormalMode(AsyncWebServer& server)
   MDNS.addService("sproot-device", "tcp", 80);
 
   ds18b20.begin();
+
+  // Routes (and the not-found handler below) are re-registered every time this mode starts,
+  // including when bouncing back from Soft AP mode after a Wi-Fi drop. AsyncWebServer::on()
+  // always appends to its internal handler list and never frees old entries on end(), so without
+  // this reset each mode switch would permanently leak handlers until the device runs out of
+  // heap and stops responding to requests entirely.
+  server.reset();
   setupRoutes(server);
 
   server.onNotFound([](AsyncWebServerRequest *request)
