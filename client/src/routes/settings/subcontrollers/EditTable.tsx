@@ -216,6 +216,14 @@ export default function EditTable({
             <UpdateFirmwareContainer id={selectedDevice.id} />
 
             <Group justify="space-between" mt="xs" wrap="wrap">
+              <Button
+                variant="light"
+                type="submit"
+                disabled={isUpdating}
+                fullWidth={isMobile}
+              >
+                Save Changes
+              </Button>
               <ConfirmDeleteButton
                 disabled={isUpdating}
                 buttonProps={{ variant: "light", fullWidth: isMobile }}
@@ -230,9 +238,6 @@ export default function EditTable({
                   newSubcontrollerCloseModal();
                 }}
               />
-              <Button type="submit" disabled={isUpdating} fullWidth={isMobile}>
-                Save Changes
-              </Button>
             </Group>
           </Stack>
         </form>

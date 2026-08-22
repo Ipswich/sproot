@@ -243,14 +243,14 @@ export default function EditJournalEntryModal({
             </Stack>
           </Paper>
           <Group justify="space-between" mt="xs" wrap="wrap">
+            <Button variant="light" type="submit" fullWidth={isMobile}>
+              Update Entry
+            </Button>
             <ConfirmDeleteButton
               loading={deleteMutation.isPending}
               buttonProps={{ variant: "light", fullWidth: isMobile }}
               onConfirm={doDelete}
             />
-            <Button variant="light" type="submit" fullWidth={isMobile}>
-              Update Entry
-            </Button>
           </Group>
         </Stack>
       </form>

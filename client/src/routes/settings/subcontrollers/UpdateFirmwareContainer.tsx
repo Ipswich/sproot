@@ -44,6 +44,7 @@ export default function UpdateFirmwareContainer(props: { id: number }) {
               </Text>
             </div>
             <Button
+              variant="light"
               disabled={
                 isButtonDisabled ||
                 connectionStatusQuery.data == undefined ||

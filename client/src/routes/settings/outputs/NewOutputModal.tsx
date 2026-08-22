@@ -301,7 +301,7 @@ export default function NewOutputModal({
               </Stack>
             </Paper>
             <Group justify="flex-end" mt="xs">
-              <Button type="submit" fullWidth={isMobile}>
+              <Button variant="light" type="submit" fullWidth={isMobile}>
                 Add Output
               </Button>
             </Group>

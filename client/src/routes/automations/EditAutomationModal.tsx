@@ -207,7 +207,7 @@ export default function EditAutomationModal({
                       {targetAutomation?.name ?? "New automation"}
                     </Title>
                     {targetAutomation ? null : (
-                      <Badge variant="light" radius="sm">
+                      <Badge color="green" variant="light" radius="sm">
                         Draft
                       </Badge>
                     )}
@@ -297,7 +297,11 @@ export default function EditAutomationModal({
                     />
                     {targetAutomation == null ? (
                       <Group justify="flex-end" mt="xs">
-                        <Button type="submit" form="add-automation-form">
+                        <Button
+                          variant="light"
+                          type="submit"
+                          form="add-automation-form"
+                        >
                           Next
                         </Button>
                       </Group>
