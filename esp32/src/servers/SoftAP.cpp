@@ -3,6 +3,7 @@
 #include <Preferences.h>
 #include <WiFi.h>
 #include "wifi/WifiConnectState.h"
+#include "utils/DeviceIdentity.h"
 
 const byte DNS_PORT = 53;
 
@@ -150,6 +151,25 @@ void startSoftAPMode(AsyncWebServer& server, DNSServer& dnsServer)
 
     request->send(200, "application/json", "{\"status\":\"success\",\"message\":\"Credentials saved. Attempting to connect...\"}");
     Serial.println("Credentials saved! Requesting immediate connection attempt.");
+  });
+
+  server.on("/connection-status", HTTP_GET, [](AsyncWebServerRequest *request) {
+    WifiConnectState state = getWifiConnectState();
+    String stateStr;
+    switch (state) {
+      case WifiConnectState::Idle: stateStr = "idle"; break;
+      case WifiConnectState::Connecting: stateStr = "connecting"; break;
+      case WifiConnectState::ConnectedGrace: stateStr = "connected"; break;
+      case WifiConnectState::Failed: stateStr = "failed"; break;
+    }
+
+    String json = "{\"state\":\"" + stateStr + "\"";
+    if (state == WifiConnectState::ConnectedGrace) {
+      json += ",\"hostname\":\"" + getDeviceHostname() + ".local\"";
+    }
+    json += "}";
+
+    request->send(200, "application/json", json);
   });
 
   server.begin();
