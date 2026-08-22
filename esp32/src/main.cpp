@@ -94,7 +94,9 @@ void loop() {
         setWifiStateChangedAt(millis());
         setWifiConnectState(WifiConnectState::ConnectedGrace);
       } else if (millis() - getWifiStateChangedAt() > connectTimeoutMs) {
-        Serial.println("Connection attempt timed out.");
+        Serial.println("Connection attempt timed out. Will retry on the next check interval.");
+        setWifiStateChangedAt(millis());
+        lastWiFiCheck = millis(); // ensure a full wifiCheckInterval passes before retrying
         setWifiConnectState(WifiConnectState::Failed);
       }
     } else if (state == WifiConnectState::ConnectedGrace) {
@@ -102,9 +104,9 @@ void loop() {
         switchToNormalMode();
       }
     } else if (state == WifiConnectState::Failed) {
-      Serial.println("Will retry on the next check interval.");
-      lastWiFiCheck = millis(); // ensure a full wifiCheckInterval passes before retrying
-      setWifiConnectState(WifiConnectState::Idle);
+      if (millis() - getWifiStateChangedAt() > wifiCheckInterval) {
+        setWifiConnectState(WifiConnectState::Idle);
+      }
     }
   } else if (server_mode == MODE_NORMAL) {
     if (millis() - lastWiFiCheck > wifiCheckInterval) {

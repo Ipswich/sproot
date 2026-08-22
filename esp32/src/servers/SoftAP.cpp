@@ -128,15 +128,21 @@ void startSoftAPMode(AsyncWebServer& server, DNSServer& dnsServer)
     }
 
     function pollStatus(){
-      fetch('/connection-status').then(function(resp){ return resp.json(); }).then(function(json){
+      fetch('/connection-status?t=' + Date.now()).then(function(resp){ return resp.json(); }).then(function(json){
         if (json.state === 'connecting') {
           sawConnectingOrConnected = true;
           showStatus(true, 'Attempting to connect to network...', false);
         } else if (json.state === 'connected') {
           sawConnectingOrConnected = true;
           stopPolling();
-          showStatus(false, 'Connected! Visit http://' + json.hostname + ' from a device on your home network.', false);
+          showStatus(false, 'Connected! Visit http://' + json.hostname + ' or http://' + json.ip + ' from a device on your home network.', false);
         } else if (json.state === 'failed') {
+          stopPolling();
+          showStatus(false, "Couldn't connect. Check the password and try again.", true);
+        } else if (json.state === 'idle') {
+          // A fresh attempt hasn't started polling into 'connecting' yet; keep spinning.
+          showStatus(true, 'Attempting to connect to network...', false);
+        } else {
           stopPolling();
           showStatus(false, "Couldn't connect. Check the password and try again.", true);
         }
@@ -219,7 +225,7 @@ void startSoftAPMode(AsyncWebServer& server, DNSServer& dnsServer)
 
   server.on("/connection-status", HTTP_GET, [](AsyncWebServerRequest *request) {
     WifiConnectState state = getWifiConnectState();
-    String stateStr;
+    const char *stateStr;
     switch (state) {
       case WifiConnectState::Idle: stateStr = "idle"; break;
       case WifiConnectState::Connecting: stateStr = "connecting"; break;
@@ -227,11 +233,13 @@ void startSoftAPMode(AsyncWebServer& server, DNSServer& dnsServer)
       case WifiConnectState::Failed: stateStr = "failed"; break;
     }
 
-    String json = "{\"state\":\"" + stateStr + "\"";
+    char json[128];
     if (state == WifiConnectState::ConnectedGrace) {
-      json += ",\"hostname\":\"" + getDeviceHostname() + ".local\"";
+      snprintf(json, sizeof(json), "{\"state\":\"connected\",\"hostname\":\"%s.local\",\"ip\":\"%s\"}",
+               getDeviceHostname().c_str(), WiFi.localIP().toString().c_str());
+    } else {
+      snprintf(json, sizeof(json), "{\"state\":\"%s\"}", stateStr);
     }
-    json += "}";
 
     request->send(200, "application/json", json);
   });
