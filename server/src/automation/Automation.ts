@@ -12,6 +12,7 @@ export class Automation {
   operator: AutomationOperator;
   enabled: boolean;
   conditions: Conditions;
+  #isTriggered = false;
 
   private constructor(
     id: number,
@@ -48,6 +49,14 @@ export class Automation {
     return automation;
   }
 
+  get isTriggered(): boolean {
+    return this.#isTriggered;
+  }
+
+  setTriggered(isTriggered: boolean): void {
+    this.#isTriggered = isTriggered;
+  }
+
   async evaluate(
     sensorList: SensorList,
     outputList: OutputList,
@@ -61,12 +70,15 @@ export class Automation {
     };
   }> {
     if (!this.enabled) {
+      this.#isTriggered = false;
       return {
         result: false,
         conditions: { allOf: [], anyOf: [], oneOf: [] },
       };
     }
 
-    return this.conditions.evaluate(this.operator, sensorList, outputList, now);
+    const evaluation = await this.conditions.evaluate(this.operator, sensorList, outputList, now);
+    this.#isTriggered = evaluation.result;
+    return evaluation;
   }
 }

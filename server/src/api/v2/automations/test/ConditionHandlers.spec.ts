@@ -15,6 +15,7 @@ import {
 } from "../handlers/ConditionHandlers";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { AutomationService } from "../../../../automation/AutomationService";
+import { TimeExpressionResolver } from "../../../../automation/conditions/TimeExpressionResolver";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { SensorList } from "../../../../sensors/list/SensorList";
@@ -95,6 +96,9 @@ describe("ConditionHandlers.ts", () => {
     AutomationService.createInstanceAsync(
       sprootDB.automations,
       new MemoryEventBus(mockLogger),
+      sinon.createStubInstance(SensorList),
+      sinon.createStubInstance(OutputList),
+      TimeExpressionResolver.createNoop(),
       mockLogger,
     );
 

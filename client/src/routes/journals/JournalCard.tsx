@@ -31,8 +31,11 @@ export default function JournalCard({ journal, tags }: JournalCardProps) {
   return (
     <Fragment>
       <CardWrapper onClick={() => navigate(`/journals/${journal.id}`)}>
-        <Stack style={{ gap: 6 }}>
-          <Group style={{ alignItems: "center", gap: 10, minWidth: 0 }}>
+        <Stack style={{ gap: 6, width: "100%", minWidth: 0 }}>
+          <Group
+            wrap="nowrap"
+            style={{ alignItems: "center", gap: 10, minWidth: 0 }}
+          >
             {journal.icon ? (
               <div
                 style={{
@@ -53,15 +56,18 @@ export default function JournalCard({ journal, tags }: JournalCardProps) {
             <div
               style={{
                 minWidth: 0,
-                width: "100%",
+                width: 0,
                 flex: 1,
                 display: "flex",
                 flexDirection: "column",
                 gap: 6,
+                maxWidth: "100%",
+                overflow: "hidden",
               }}
             >
               <Text
                 fw={700}
+                lineClamp={1}
                 style={{
                   lineHeight: 1.15,
                   overflow: "hidden",
@@ -69,6 +75,8 @@ export default function JournalCard({ journal, tags }: JournalCardProps) {
                   whiteSpace: "nowrap",
                   display: "block",
                   width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
                 }}
               >
                 {journal.title}
@@ -76,13 +84,16 @@ export default function JournalCard({ journal, tags }: JournalCardProps) {
               <Text
                 fz="sm"
                 c="dimmed"
+                lineClamp={1}
                 style={{
+                  marginTop: 0,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
                   display: "block",
                   width: "100%",
-                  marginTop: 0,
+                  minWidth: 0,
+                  maxWidth: "100%",
                 }}
               >
                 {journal.description ?? ""}

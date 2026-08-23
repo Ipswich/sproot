@@ -126,17 +126,20 @@ describe("AutomationService", () => {
         },
       ]);
 
-      const service = await AutomationService.createInstanceAsync(
-        automations,
-        eventBus,
-        mockLogger,
-      );
-
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
 
+      const service = await AutomationService.createInstanceAsync(
+        automations,
+        eventBus,
+        sensorListMock,
+        outputListMock,
+        undefined,
+        mockLogger,
+      );
+
       const event = await captureNextTriggeredEvent(() =>
-        service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, new Date()),
+        service.evaluateAllAutomationsAsync(new Date()),
       );
 
       assert.equal(event.payload.size, 1);
@@ -146,6 +149,42 @@ describe("AutomationService", () => {
       assert.equal(payload!.automationId, 1);
       assert.equal(payload!.automationName, "Time Alert");
       assert.equal(payload!.operator, "or");
+      assert.isTrue(service.getAutomations()[0]?.isTriggered);
+    });
+
+    it("should mark automations as not triggered when conditions are not met", async () => {
+      const automations = createStubAutomationsRepository() as any;
+      automations.conditions.sensor.getAsync.resolves([]);
+      automations.conditions.output.getAsync.resolves([]);
+      automations.conditions.time.getAsync.resolves([]);
+      automations.conditions.weekday.getAsync.resolves([]);
+      automations.conditions.weekday.getAsync.resolves([]);
+      automations.conditions.month.getAsync.resolves([]);
+      automations.conditions.dateRange.getAsync.resolves([]);
+      automations.getAllAsync.resolves([
+        {
+          id: 1,
+          name: "Time Alert",
+          operator: "or",
+          enabled: true,
+        },
+      ]);
+
+      const sensorListMock = sinon.createStubInstance(SensorList);
+      const outputListMock = sinon.createStubInstance(OutputList);
+
+      const service = await AutomationService.createInstanceAsync(
+        automations,
+        eventBus,
+        sensorListMock,
+        outputListMock,
+        undefined,
+        mockLogger,
+      );
+
+      await service.evaluateAllAutomationsAsync(new Date());
+
+      assert.isFalse(service.getAutomations()[0]?.isTriggered);
     });
 
     it("should emit event with timestamp matching the input 'now' parameter", async () => {
@@ -175,19 +214,20 @@ describe("AutomationService", () => {
         },
       ]);
 
-      const service = await AutomationService.createInstanceAsync(
-        automations,
-        eventBus,
-        mockLogger,
-      );
-
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
       const now = new Date("2024-01-15T10:30:00Z");
 
-      const event = await captureNextTriggeredEvent(() =>
-        service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, now),
+      const service = await AutomationService.createInstanceAsync(
+        automations,
+        eventBus,
+        sensorListMock,
+        outputListMock,
+        undefined,
+        mockLogger,
       );
+
+      const event = await captureNextTriggeredEvent(() => service.evaluateAllAutomationsAsync(now));
 
       assert.equal(event.occurredAt.getTime(), now.getTime());
     });
@@ -237,19 +277,20 @@ describe("AutomationService", () => {
         },
       ]);
 
-      const service = await AutomationService.createInstanceAsync(
-        automations,
-        eventBus,
-        mockLogger,
-      );
-
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
       const now = new Date();
 
-      const event = await captureNextTriggeredEvent(() =>
-        service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, now),
+      const service = await AutomationService.createInstanceAsync(
+        automations,
+        eventBus,
+        sensorListMock,
+        outputListMock,
+        undefined,
+        mockLogger,
       );
+
+      const event = await captureNextTriggeredEvent(() => service.evaluateAllAutomationsAsync(now));
 
       assert.equal(event.payload.size, 2);
       assert.isTrue(event.payload.has(1));
@@ -283,17 +324,20 @@ describe("AutomationService", () => {
         },
       ]);
 
-      const service = await AutomationService.createInstanceAsync(
-        automations,
-        eventBus,
-        mockLogger,
-      );
-
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
 
+      const service = await AutomationService.createInstanceAsync(
+        automations,
+        eventBus,
+        sensorListMock,
+        outputListMock,
+        undefined,
+        mockLogger,
+      );
+
       const event = await captureNextTriggeredEvent(() =>
-        service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, new Date()),
+        service.evaluateAllAutomationsAsync(new Date()),
       );
 
       assert.isEmpty(event.payload);
@@ -318,19 +362,20 @@ describe("AutomationService", () => {
         },
       ]);
 
-      const service = await AutomationService.createInstanceAsync(
-        automations,
-        eventBus,
-        mockLogger,
-      );
-
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
       const now = new Date();
 
-      const event = await captureNextTriggeredEvent(() =>
-        service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, now),
+      const service = await AutomationService.createInstanceAsync(
+        automations,
+        eventBus,
+        sensorListMock,
+        outputListMock,
+        undefined,
+        mockLogger,
       );
+
+      const event = await captureNextTriggeredEvent(() => service.evaluateAllAutomationsAsync(now));
 
       // The automation has no conditions, so it should not trigger
       assert.isEmpty(event.payload);
@@ -340,19 +385,20 @@ describe("AutomationService", () => {
       const automations = createStubAutomationsRepository() as any;
       automations.getAllAsync.resolves([]);
 
-      const service = await AutomationService.createInstanceAsync(
-        automations,
-        eventBus,
-        mockLogger,
-      );
-
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
       const now = new Date();
 
-      const event = await captureNextTriggeredEvent(() =>
-        service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, now),
+      const service = await AutomationService.createInstanceAsync(
+        automations,
+        eventBus,
+        sensorListMock,
+        outputListMock,
+        undefined,
+        mockLogger,
       );
+
+      const event = await captureNextTriggeredEvent(() => service.evaluateAllAutomationsAsync(now));
 
       assert.isEmpty(event.payload);
     });

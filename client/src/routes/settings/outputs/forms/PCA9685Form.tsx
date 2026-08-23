@@ -77,6 +77,7 @@ export default function PCA9685Form({
         <Switch
           label="Pwm-able"
           defaultChecked={selectedOutput?.isPwm ?? false}
+          withThumbIndicator={false}
           {...form.getInputProps("isPwm")}
           onChange={() => {
             setIsPwm(!isPwm);
@@ -86,6 +87,7 @@ export default function PCA9685Form({
         <Switch
           label="Invert PWM"
           defaultChecked={selectedOutput?.isInvertedPwm ?? false}
+          withThumbIndicator={false}
           {...form.getInputProps("isInvertedPwm")}
           disabled={!isPwm}
         />

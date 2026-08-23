@@ -68,6 +68,7 @@ export default function TimeCondition({
   groupType,
 }: TimeConditionProps) {
   const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [timeConditionType, setTimeConditionType] =
     useState<TimeConditionType>("Between");
   const [startTimeMode, setStartTimeMode] =
@@ -106,7 +107,7 @@ export default function TimeCondition({
     }) => {
       await addTimeConditionAsync(automationId, groupType, timeCondition);
     },
-    onSettled: () => {
+    onSuccess: () => {
       conditionsQuery.refetch();
     },
   });
@@ -192,6 +193,7 @@ export default function TimeCondition({
   return (
     <form
       onSubmit={timeConditionForm.onSubmit(async (values) => {
+        setSubmitError(null);
         const startTime =
           timeConditionType === "Always" ? null : values.startTime || null;
         const endTime =
@@ -204,29 +206,42 @@ export default function TimeCondition({
             ? null
             : values.phaseAnchorValue || null;
 
-        addTimeMutation.mutate({
-          startTime,
-          endTime,
-          repeatInterval:
-            repeatEnabled && typeof values.repeatInterval === "number"
-              ? values.repeatInterval
-              : null,
-          repeatDuration:
-            repeatEnabled && typeof values.repeatDuration === "number"
-              ? values.repeatDuration
-              : null,
-          phaseAnchorType,
-          phaseAnchorValue,
-        });
-        timeConditionForm.reset();
-        setTimeConditionType("Between");
-        setStartTimeMode("clock");
-        setEndTimeMode("clock");
-        setPhaseAnchorMode("clock");
-        toggleAddNewCondition();
+        try {
+          await addTimeMutation.mutateAsync({
+            startTime,
+            endTime,
+            repeatInterval:
+              repeatEnabled && typeof values.repeatInterval === "number"
+                ? values.repeatInterval
+                : null,
+            repeatDuration:
+              repeatEnabled && typeof values.repeatDuration === "number"
+                ? values.repeatDuration
+                : null,
+            phaseAnchorType,
+            phaseAnchorValue,
+          });
+          timeConditionForm.reset();
+          setTimeConditionType("Between");
+          setStartTimeMode("clock");
+          setEndTimeMode("clock");
+          setPhaseAnchorMode("clock");
+          toggleAddNewCondition();
+        } catch (error) {
+          setSubmitError(
+            error instanceof Error
+              ? error.message
+              : "Unable to save time condition.",
+          );
+        }
       })}
     >
       <Stack>
+        {submitError ? (
+          <Alert color="red" title="Unable to save time condition">
+            {submitError}
+          </Alert>
+        ) : null}
         {!hasDynamicTimeSupport && (
           <Alert color="yellow" title="Dynamic time points are unavailable">
             Set latitude and longitude in System Settings to unlock solar and
@@ -527,7 +542,7 @@ function TimeExpressionField({
       />
       {mode === "clock" ? (
         <TimeInput
-          required={required ?? false}
+          withAsterisk={required ?? false}
           label={label}
           value={mode === resolveExpressionMode(value) ? value : ""}
           onChange={(event) => onChange(event.currentTarget.value)}
@@ -535,7 +550,7 @@ function TimeExpressionField({
         />
       ) : (
         <Select
-          required={required ?? false}
+          withAsterisk={required ?? false}
           searchable
           allowDeselect={false}
           label={label}

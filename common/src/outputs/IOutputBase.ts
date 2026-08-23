@@ -23,6 +23,7 @@ interface IOutputBase {
   automationTimeout: number;
   actionWarnings: OutputActionWarning[];
   activeConflict: OutputActionConflict | null;
+  triggeredBy: OutputActionParticipant[];
 }
 
 type IOutputState = {

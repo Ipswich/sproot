@@ -81,30 +81,6 @@ export default async function setupAsync(): Promise<Express> {
   );
   app.set(DI_KEYS.RetentionService, retentionService);
 
-  const automationService = await AutomationService.createInstanceAsync(
-    sprootDB.automations,
-    eventBus,
-    logger,
-    timeExpressionResolver,
-  );
-  app.set(DI_KEYS.AutomationService, automationService);
-
-  const notificationActionManager = await NotificationActionManager.createInstanceAsync(
-    sprootDB.automations.actions.notification,
-    eventBus,
-    logger,
-  );
-  app.set(DI_KEYS.NotificationActionManager, notificationActionManager);
-
-  logger.info("Creating camera manager. . .");
-  const cameraManager = await CameraManager.createInstanceAsync(
-    eventBus,
-    sprootDB.camera,
-    process.env["INTERSERVICE_AUTHENTICATION_KEY"]!,
-    logger,
-  );
-  app.set(DI_KEYS.CameraManager, cameraManager);
-
   logger.info("Creating sensor and output lists. . .");
   const sensorList = await SensorList.createInstanceAsync(
     eventBus,
@@ -130,6 +106,32 @@ export default async function setupAsync(): Promise<Express> {
   );
   app.set(DI_KEYS.OutputList, outputList);
 
+  const automationService = await AutomationService.createInstanceAsync(
+    sprootDB.automations,
+    eventBus,
+    sensorList,
+    outputList,
+    timeExpressionResolver,
+    logger,
+  );
+  app.set(DI_KEYS.AutomationService, automationService);
+
+  const notificationActionManager = await NotificationActionManager.createInstanceAsync(
+    sprootDB.automations.actions.notification,
+    eventBus,
+    logger,
+  );
+  app.set(DI_KEYS.NotificationActionManager, notificationActionManager);
+
+  logger.info("Creating camera manager. . .");
+  const cameraManager = await CameraManager.createInstanceAsync(
+    eventBus,
+    sprootDB.camera,
+    process.env["INTERSERVICE_AUTHENTICATION_KEY"]!,
+    logger,
+  );
+  app.set(DI_KEYS.CameraManager, cameraManager);
+
   const systemStatusMonitor = new SystemStatusMonitor(
     cameraManager,
     sprootDB.system,
@@ -137,12 +139,7 @@ export default async function setupAsync(): Promise<Express> {
   );
   app.set(DI_KEYS.SystemStatusMonitor, systemStatusMonitor);
 
-  const automationsCronJob = createAutomationsCronJob(
-    automationService,
-    sensorList,
-    outputList,
-    logger,
-  );
+  const automationsCronJob = createAutomationsCronJob(automationService, logger);
   app.set(DI_KEYS.AutomationsCronJob, automationsCronJob);
 
   const updateDatabaseCronJob = createDatabaseUpdateCronJob(sensorList, outputList, logger);

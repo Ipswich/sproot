@@ -1,13 +1,24 @@
 import { Fragment, useState } from "react";
-import { Button, Stack, Switch, rem } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Box,
+  Button,
+  Center,
+  Group,
+  Paper,
+  Stack,
+  Table,
+  Text,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { IconEdit, IconPlus, IconRefresh } from "@tabler/icons-react";
 
 import {
   getAutomationsAsync,
-  updateAutomationAsync,
+  getOutputsAsync,
 } from "../../requests/requests_v2";
-import EditablesTable from "../common/EditablesTable";
 import { IAutomation } from "@sproot/automation/IAutomation";
 import EditAutomationModal from "./EditAutomationModal";
 
@@ -24,19 +35,25 @@ export default function Automations() {
     queryFn: () => getAutomationsAsync(),
   });
 
-  const mutateAutomationEnabled = useMutation({
-    mutationFn: async (params: { id: number; enabled: boolean }) => {
-      await updateAutomationAsync(
-        params.id,
-        undefined,
-        undefined,
-        params.enabled,
-      );
-    },
-    onSuccess: () => {
-      getAutomationsQuery.refetch();
-    },
+  const getOutputsQuery = useQuery({
+    queryKey: ["outputs"],
+    queryFn: () => getOutputsAsync(),
+    refetchInterval: 60000,
   });
+
+  const conflictingAutomationIds = new Set(
+    Object.values(getOutputsQuery.data ?? {}).flatMap(
+      (output) =>
+        output.activeConflict?.actions.map((action) => action.automationId) ??
+        [],
+    ),
+  );
+  const automations = [...(getAutomationsQuery.data ?? [])].sort(
+    (left, right) =>
+      (left.name || "").localeCompare(right.name || "", undefined, {
+        sensitivity: "base",
+      }),
+  );
 
   const [
     viewAutomationModalOpened,
@@ -50,65 +67,134 @@ export default function Automations() {
 
   return (
     <Fragment>
-      <Stack h="600" justify="center" align="center">
+      <Stack gap="lg">
         <EditAutomationModal
           modalOpened={viewAutomationModalOpened}
           closeModal={viewAutomationModalClose}
           editAutomation={viewAutomation}
           setTargetAutomation={setViewAutomation}
           readOnly
+          onClose={() => {
+            getAutomationsQuery.refetch();
+            getOutputsQuery.refetch();
+          }}
         />
         <EditAutomationModal
           modalOpened={editAutomationModalOpened}
           closeModal={editAutomationModalClose}
           editAutomation={editAutomation}
           setTargetAutomation={setEditAutomation}
+          onClose={() => {
+            getAutomationsQuery.refetch();
+            getOutputsQuery.refetch();
+          }}
         />
+        <Paper withBorder shadow="xs" radius="lg" p="lg">
+          <Group justify="space-between" align="center" gap="md" wrap="wrap">
+            <Box>
+              <Text fw={600}>Automation Library</Text>
+              <Text size="sm" c="dimmed">
+                Review automations, enable or disable them, and add new
+                conditions and actions.
+              </Text>
+            </Box>
+            <Group gap="xs">
+              <Button
+                leftSection={<IconPlus size={18} />}
+                onClick={() => {
+                  setEditAutomation(null);
+                  editAutomationModal();
+                }}
+              >
+                Add Automation
+              </Button>
+              <ActionIcon
+                size="lg"
+                variant="light"
+                onClick={() =>
+                  Promise.all([
+                    getAutomationsQuery.refetch(),
+                    getOutputsQuery.refetch(),
+                  ])
+                }
+                disabled={
+                  getAutomationsQuery.isLoading || getOutputsQuery.isLoading
+                }
+              >
+                <IconRefresh size={16} />
+              </ActionIcon>
+            </Group>
+          </Group>
+        </Paper>
         {getAutomationsQuery.isLoading ? (
           <div>Loading...</div>
         ) : (
-          <Fragment>
-            <EditablesTable
-              editables={getAutomationsQuery.data ?? []}
-              onEditClick={(item) => {
-                setEditAutomation(item as IAutomation);
-                editAutomationModal();
-              }}
-              onNameClick={(item) => {
-                setViewAutomation(item as IAutomation);
-                viewAutomationModal();
-              }}
-              tableLeftComponent={{
-                label: "Enabled",
-                Component: (editable: unknown) => {
-                  const automation = editable as IAutomation;
+          <Paper withBorder shadow="xs" radius="lg" p="md">
+            <Table highlightOnHover style={{ tableLayout: "auto" }}>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th w="35%" miw={72} ta="center">
+                    Status
+                  </Table.Th>
+                  <Table.Th w="100%" ta="center">
+                    Name
+                  </Table.Th>
+                  <Table.Th w="10%" miw={52} ta="center">
+                    Edit
+                  </Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {automations.map((automation) => {
+                  const isConflicting =
+                    Boolean(automation.triggered) &&
+                    conflictingAutomationIds.has(automation.id);
+                  const status = !automation.enabled
+                    ? { label: "Disabled", color: "gray" }
+                    : isConflicting
+                      ? { label: "Conflict", color: "yellow" }
+                      : automation.triggered
+                        ? { label: "Triggered", color: "green" }
+                        : { label: "Idle", color: "blue" };
+
                   return (
-                    <Switch
-                      checked={automation.enabled}
-                      onChange={(
-                        event: React.ChangeEvent<HTMLInputElement>,
-                      ) => {
-                        mutateAutomationEnabled.mutate({
-                          id: automation.id,
-                          enabled: event.currentTarget.checked,
-                        });
-                      }}
-                    />
+                    <Table.Tr key={automation.id}>
+                      <Table.Td ta="center">
+                        <Badge variant="light" color={status.color} radius="sm">
+                          {status.label}
+                        </Badge>
+                      </Table.Td>
+                      <Table.Td ta="center">
+                        <Text
+                          fw={400}
+                          fz={"sm"}
+                          style={{ cursor: "pointer", textAlign: "center" }}
+                          onClick={() => {
+                            setViewAutomation(automation);
+                            viewAutomationModal();
+                          }}
+                        >
+                          {automation.name}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td ta="center">
+                        <Center>
+                          <ActionIcon
+                            onClick={() => {
+                              setEditAutomation(automation);
+                              editAutomationModal();
+                            }}
+                          >
+                            <IconEdit />
+                          </ActionIcon>
+                        </Center>
+                      </Table.Td>
+                    </Table.Tr>
                   );
-                },
-              }}
-            />
-            <Button
-              size="xl"
-              w={rem(300)}
-              onClick={() => {
-                setEditAutomation(null);
-                editAutomationModal();
-              }}
-            >
-              Add New
-            </Button>
-          </Fragment>
+                })}
+              </Table.Tbody>
+            </Table>
+          </Paper>
         )}
       </Stack>
     </Fragment>

@@ -240,6 +240,7 @@ export default function AddActionWidget({
                     size="xl"
                     onLabel="On"
                     offLabel="Off"
+                    withThumbIndicator={false}
                     checked={actionForm.values.value === 100}
                     onChange={(event) => {
                       actionForm.setFieldValue(

@@ -6,6 +6,7 @@ import {
 import { Fragment, useEffect, useState } from "react";
 import {
   Alert,
+  Badge,
   Group,
   Paper,
   SegmentedControl,
@@ -69,6 +70,11 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
   const conflictAutomationNames = output.activeConflict?.actions.map(
     (action) => action.automationName,
   );
+  const showTriggeredBy =
+    controlMode === ControlMode.automatic &&
+    !output.activeConflict &&
+    output.state.automatic.value > 0 &&
+    output.triggeredBy.length > 0;
 
   return (
     <Fragment>
@@ -78,17 +84,23 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
             <Stack gap="sm">
               <Group justify="space-between" h="80">
                 <SegmentedControl
-                  w={"96px"}
+                  miw={rem(140)}
                   styles={
                     controlMode === ControlMode.manual
                       ? {
                           root: {
                             outline: "1px solid var(--mantine-color-blue-3)",
                           },
+                          label: {
+                            whiteSpace: "nowrap",
+                          },
                         }
                       : {
                           root: {
                             outline: "1px solid var(--mantine-color-teal-3)",
+                          },
+                          label: {
+                            whiteSpace: "nowrap",
                           },
                         }
                   }
@@ -149,6 +161,7 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                           size="xl"
                           onLabel="On"
                           offLabel="Off"
+                          withThumbIndicator={false}
                           disabled={controlMode !== ControlMode.manual}
                           checked={manualValue === 100}
                           onChange={async (event) => {
@@ -195,14 +208,39 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                       {` precedence requests, so no automatic action was applied.`}
                     </Text>
                     {conflictAutomationNames?.map((automationName) => (
-                      <Text key={automationName} size="sm">
-                        {`- ${automationName}`}
-                      </Text>
+                      <Badge key={automationName} radius="sm" color="yellow">
+                        {`• ${automationName}`}
+                      </Badge>
                     ))}
                     <Text size="sm">
                       Verify the related automations and output actions so they
                       do not request different states at the same precedence.
                     </Text>
+                  </Stack>
+                </Alert>
+              ) : null}
+              {showTriggeredBy ? (
+                <Alert
+                  color="green"
+                  variant="light"
+                  // title="Automation active"
+                >
+                  <Stack gap={6} ta="left">
+                    <Text size="sm">
+                      {`${output.name ?? "This output"} is currently being driven by:`}
+                    </Text>
+                    <Group gap="xs" wrap="wrap">
+                      {output.triggeredBy.map((automation) => (
+                        <Badge
+                          key={`${output.id}-${automation.automationId}`}
+                          // variant=""
+                          color="green"
+                          radius="sm"
+                        >
+                          • {automation.automationName}
+                        </Badge>
+                      ))}
+                    </Group>
                   </Stack>
                 </Alert>
               ) : null}

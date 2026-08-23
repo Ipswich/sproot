@@ -1,10 +1,10 @@
 import { Box, Flex, Paper } from "@mantine/core";
-import StatesChartContainer from "./components/StatesChartContainer";
 import { startTransition, useState } from "react";
 import { outputStateToggledZonesKey } from "../utility/LocalStorageKeys";
 import ZoneAccordion from "./components/ZoneAccordion";
-import ChartQueryControls from "../common/ChartQueryControls";
 import type { Aggregate } from "../../requests/queryTypes";
+import ChartQueryControls from "../common/ChartQueryControls";
+import StatesChartContainer from "./components/StatesChartContainer";
 
 export default function OutputStates() {
   const [deviceZoneToggleStates, setDeviceZoneToggleStates] = useState(

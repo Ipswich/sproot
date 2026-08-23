@@ -10,6 +10,7 @@ import { FrameBuffer } from "../camera/FrameBuffer";
 import { DI_KEYS } from "../utils/DependencyInjectionConstants";
 import { AutomationsTriggeredEvent } from "../eventbus/events/automations/AutomationsTriggeredEvent";
 import { OutputList } from "../outputs/list/OutputList";
+import { AutomationService } from "../automation/AutomationService";
 
 describe("API Tests", async function () {
   this.timeout(5000);
@@ -120,6 +121,7 @@ describe("API Tests", async function () {
       "automationTimeout",
       "actionWarnings",
       "activeConflict",
+      "triggeredBy",
     ];
     const stateKeys = ["controlMode", "logTime", "value"];
     describe("Outputs", async () => {
@@ -295,6 +297,61 @@ describe("API Tests", async function () {
             validateMiddlewareValues(timeoutResetResponse);
           }
         });
+
+        it("should include triggered automations for outputs with active automation actions", async () => {
+          const eventBus = app.get(DI_KEYS.EventBus);
+          const outputList = app.get(DI_KEYS.OutputList) as OutputList;
+          try {
+            const timeoutUpdateResponse = await request(server)
+              .patch("/api/v2/outputs/1")
+              .send({ automationTimeout: 0 })
+              .expect(200);
+
+            validateMiddlewareValues(timeoutUpdateResponse);
+
+            await eventBus.publishAsync(
+              new AutomationsTriggeredEvent(
+                new Map([
+                  [
+                    1,
+                    {
+                      automationId: 1,
+                      automationName: "Automation #1",
+                      operator: "or",
+                      conditions: { allOf: [], anyOf: [], oneOf: [] },
+                    },
+                  ],
+                ]),
+              ),
+            );
+            await flushAsync();
+
+            await waitForOutputDataAsync(
+              outputList,
+              1,
+              (candidate) =>
+                Array.isArray(candidate.triggeredBy) && candidate.triggeredBy.length === 1,
+            );
+
+            const response = await request(server).get("/api/v2/outputs/1").expect(200);
+            validateMiddlewareValues(response);
+            const output = response.body["content"].data[0];
+
+            assert.deepEqual(output.triggeredBy, [
+              {
+                automationId: 1,
+                automationName: "Automation #1",
+              },
+            ]);
+          } finally {
+            const timeoutResetResponse = await request(server)
+              .patch("/api/v2/outputs/1")
+              .send({ automationTimeout: 1 })
+              .expect(200);
+
+            validateMiddlewareValues(timeoutResetResponse);
+          }
+        });
       });
       describe("Create, Update, Delete", async () => {
         describe("POST", async () => {
@@ -424,47 +481,95 @@ describe("API Tests", async function () {
         const content = response.body["content"];
         validateMiddlewareValues(response);
         assert.lengthOf(content.data, 2);
-        assert.containsAllKeys(content.data[0], ["id", "name", "operator"]);
-        assert.containsAllKeys(content.data[1], ["id", "name", "operator"]);
+        assert.containsAllKeys(content.data[0], ["id", "name", "operator", "enabled", "triggered"]);
+        assert.containsAllKeys(content.data[1], ["id", "name", "operator", "enabled", "triggered"]);
       });
 
       it("should return 200 and a single automation", async () => {
         const response = await request(server).get("/api/v2/automations/1").expect(200);
         const content = response.body["content"];
         validateMiddlewareValues(response);
-        assert.containsAllKeys(content.data, ["id", "name", "operator"]);
+        assert.containsAllKeys(content.data, ["id", "name", "operator", "enabled", "triggered"]);
+      });
+
+      it("should expose when an automation has evaluated to true", async () => {
+        const automationService = app.get(DI_KEYS.AutomationService) as AutomationService;
+        let automationId: number | undefined;
+
+        try {
+          const createAutomationResponse = await request(server)
+            .post("/api/v2/automations")
+            .send({
+              name: "Triggered Automation",
+              operator: "or",
+            })
+            .expect(201);
+          validateMiddlewareValues(createAutomationResponse);
+          automationId = createAutomationResponse.body["content"].data.id;
+
+          const createConditionResponse = await request(server)
+            .post(`/api/v2/automations/${automationId}/conditions/time`)
+            .send({
+              groupType: "oneOf",
+              startTime: "00:00",
+              endTime: "23:59",
+            })
+            .expect(201);
+          validateMiddlewareValues(createConditionResponse);
+
+          await automationService.evaluateAllAutomationsAsync(new Date("2026-08-10T10:00:00Z"));
+
+          const response = await request(server).get("/api/v2/automations").expect(200);
+          validateMiddlewareValues(response);
+
+          const triggeredAutomation = response.body["content"].data.find(
+            (automation: any) => automation.id === automationId,
+          );
+
+          assert.isTrue(triggeredAutomation.triggered);
+        } finally {
+          if (automationId !== undefined) {
+            const deleteAutomationResponse = await request(server)
+              .delete(`/api/v2/automations/${automationId}`)
+              .expect(200);
+            validateMiddlewareValues(deleteAutomationResponse);
+          }
+        }
       });
     });
 
     describe("Create, Update, Delete", async () => {
+      let createdAutomationId: number;
+
       describe("POST", async () => {
         it("should return 201", async () => {
           assert.lengthOf(await app.get("sprootDB").automations.getAllAsync(), 2);
-          await request(server)
+          const response = await request(server)
             .post("/api/v2/automations")
             .send({
               name: "Test Automation",
               operator: "or",
             })
             .expect(201);
+          createdAutomationId = response.body["content"].data.id;
           assert.lengthOf(await app.get("sprootDB").automations.getAllAsync(), 3);
         });
       });
       describe("PATCH", async () => {
         it("should return 200", async () => {
           assert.equal(
-            (await app.get("sprootDB").automations.getByIdAsync(3))[0].name,
+            (await app.get("sprootDB").automations.getByIdAsync(createdAutomationId))[0].name,
             "Test Automation",
           );
           await request(server)
-            .patch("/api/v2/automations/3")
+            .patch(`/api/v2/automations/${createdAutomationId}`)
             .send({
               name: "Test1 Automation",
               operator: "and",
             })
             .expect(200);
           assert.equal(
-            (await app.get("sprootDB").automations.getByIdAsync(3))[0].name,
+            (await app.get("sprootDB").automations.getByIdAsync(createdAutomationId))[0].name,
             "Test1 Automation",
           );
         });
@@ -472,7 +577,7 @@ describe("API Tests", async function () {
       describe("DELETE", async () => {
         it("should return 200", async () => {
           assert.lengthOf(await app.get("sprootDB").automations.getAllAsync(), 3);
-          await request(server).delete("/api/v2/automations/3").expect(200);
+          await request(server).delete(`/api/v2/automations/${createdAutomationId}`).expect(200);
           assert.lengthOf(await app.get("sprootDB").automations.getAllAsync(), 2);
         });
       });
@@ -680,10 +785,12 @@ describe("API Tests", async function () {
       });
 
       describe("Create, Update, Delete", async () => {
+        let createdTimeConditionId: number;
+
         describe("POST", async () => {
           it("should return 201", async () => {
             assert.lengthOf(await app.get("sprootDB").automations.conditions.time.getAsync(1), 2);
-            await request(server)
+            const response = await request(server)
               .post("/api/v2/automations/1/conditions/time")
               .send({
                 groupType: "oneOf",
@@ -691,6 +798,7 @@ describe("API Tests", async function () {
                 endTime: "11:59",
               })
               .expect(201);
+            createdTimeConditionId = response.body["content"].data.id;
             assert.lengthOf(await app.get("sprootDB").automations.conditions.time.getAsync(1), 3);
           });
 
@@ -795,20 +903,23 @@ describe("API Tests", async function () {
 
         describe("PATCH", async () => {
           it("should return 200", async () => {
-            assert.equal(
-              (await app.get("sprootDB").automations.conditions.time.getAsync(1))[2].startTime,
-              "00:00",
-            );
+            const beforeUpdate = (
+              await app.get("sprootDB").automations.conditions.time.getAsync(1)
+            ).find((condition: { id: number }) => condition.id === createdTimeConditionId);
+
+            assert.equal(beforeUpdate?.startTime, "00:00");
             await request(server)
-              .patch("/api/v2/automations/1/conditions/time/3")
+              .patch(`/api/v2/automations/1/conditions/time/${createdTimeConditionId}`)
               .send({
                 startTime: "01:00",
               })
               .expect(200);
-            assert.equal(
-              (await app.get("sprootDB").automations.conditions.time.getAsync(1))[2].startTime,
-              "01:00",
-            );
+
+            const updatedCondition = (
+              await app.get("sprootDB").automations.conditions.time.getAsync(1)
+            ).find((condition: { id: number }) => condition.id === createdTimeConditionId);
+
+            assert.equal(updatedCondition?.startTime, "01:00");
           });
 
           it("should update a time condition with repeat settings", async () => {
@@ -851,7 +962,9 @@ describe("API Tests", async function () {
         describe("DELETE", async () => {
           it("should return 200", async () => {
             assert.lengthOf(await app.get("sprootDB").automations.conditions.time.getAsync(1), 3);
-            await request(server).delete("/api/v2/automations/1/conditions/time/3").expect(200);
+            await request(server)
+              .delete(`/api/v2/automations/1/conditions/time/${createdTimeConditionId}`)
+              .expect(200);
             assert.lengthOf(await app.get("sprootDB").automations.conditions.time.getAsync(1), 2);
           });
         });

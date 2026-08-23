@@ -31,18 +31,24 @@ class AutomationService {
   #eventBus: IEventBus;
   #logger: winston.Logger;
   #timeExpressionResolver: TimeExpressionResolver;
+  #sensorList: SensorList;
+  #outputList: OutputList;
 
   static async createInstanceAsync(
     automationsRepository: IAutomationsRepository,
     eventBus: IEventBus,
-    logger: winston.Logger,
+    sensorList: SensorList,
+    outputList: OutputList,
     timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
+    logger: winston.Logger,
   ): Promise<AutomationService> {
     const service = new AutomationService(
       automationsRepository,
       eventBus,
-      logger,
+      sensorList,
+      outputList,
       timeExpressionResolver,
+      logger,
     );
     await service.loadAllAutomationsAsync();
     return service;
@@ -51,18 +57,26 @@ class AutomationService {
   private constructor(
     automationsRepository: IAutomationsRepository,
     eventBus: IEventBus,
-    logger: winston.Logger,
+    sensorList: SensorList,
+    outputList: OutputList,
     timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
+    logger: winston.Logger,
   ) {
     this.#automationsRepository = automationsRepository;
     this.#eventBus = eventBus;
     this.#automations = new Map();
     this.#logger = logger;
     this.#timeExpressionResolver = timeExpressionResolver;
+    this.#sensorList = sensorList;
+    this.#outputList = outputList;
   }
 
   get timeExpressionResolver(): TimeExpressionResolver {
     return this.#timeExpressionResolver;
+  }
+
+  getAutomations(): Automation[] {
+    return Array.from(this.#automations.values());
   }
 
   /**
@@ -70,6 +84,7 @@ class AutomationService {
    */
   async loadAllAutomationsAsync(): Promise<void> {
     try {
+      const previousAutomations = this.#automations;
       const rawAutomations = await this.#automationsRepository.getAllAsync();
       this.#automations = new Map();
 
@@ -82,6 +97,12 @@ class AutomationService {
           this.#automationsRepository.conditions,
           this.#timeExpressionResolver,
         );
+
+        const previousAutomation = previousAutomations.get(automation.id);
+        if (previousAutomation != null) {
+          automationInstance.setTriggered(previousAutomation.isTriggered);
+        }
+
         return [automation.id, automationInstance] as [number, Automation];
       });
 
@@ -95,11 +116,7 @@ class AutomationService {
   /**
    * Central evaluation entry point - evaluates all automations and emits events.
    */
-  async evaluateAllAutomationsAsync(
-    sensorList: SensorList,
-    outputList: OutputList,
-    now: Date,
-  ): Promise<void> {
+  async evaluateAllAutomationsAsync(now: Date): Promise<void> {
     // Evaluate each automation once
     const evaluatedAutomations: Array<{
       automation: Automation;
@@ -109,7 +126,7 @@ class AutomationService {
     for (const [_automationId, automation] of this.#automations.entries()) {
       if (!automation.enabled) continue;
 
-      const result = await automation.evaluate(sensorList, outputList, now);
+      const result = await automation.evaluate(this.#sensorList, this.#outputList, now);
       if (result.result) {
         evaluatedAutomations.push({
           automation,
@@ -368,7 +385,7 @@ class AutomationService {
   }
 
   #postAutomationChangeFunctionAsync() {
-    return this.loadAllAutomationsAsync();
+    return this.loadAllAutomationsAsync().then(() => this.evaluateAllAutomationsAsync(new Date()));
   }
 }
 

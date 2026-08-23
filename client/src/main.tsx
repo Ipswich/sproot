@@ -1,6 +1,5 @@
 import "./index.css";
 
-import { lazy } from "react";
 import ReactDOM from "react-dom/client";
 import {
   createBrowserRouter,
@@ -16,35 +15,72 @@ import ErrorPage from "./error_pages/ErrorPage";
 import { rootLoader } from "./routes/utility/Loaders";
 
 import HomeRouter from "./routes/HomeRouter";
-
-const LiveView = lazy(() => import("./routes/live-view/LiveView"));
-const SensorData = lazy(() => import("./routes/sensor-data/SensorData"));
-const OutputStates = lazy(() => import("./routes/output-states/OutputStates"));
-const Automations = lazy(() => import("./routes/automations/Automations"));
-const Journals = lazy(() => import("./routes/journals/Journals"));
-const JournalEntries = lazy(
-  () => import("./routes/journals/entries/JournalEntries"),
-);
-const JournalEntryView = lazy(
-  () => import("./routes/journals/entries/JournalEntryView"),
-);
-const OutputSettings = lazy(
-  () => import("./routes/settings/outputs/OutputSettings"),
-);
-const SensorSettings = lazy(
-  () => import("./routes/settings/sensors/SensorSettings"),
-);
-const SystemSettings = lazy(
-  () => import("./routes/settings/system/SystemSettings"),
-);
-const CameraSettings = lazy(
-  () => import("./routes/settings/camera/CameraSettings"),
-);
-const SubcontrollerSettings = lazy(
-  () => import("./routes/settings/subcontrollers/SubcontrollerSettings"),
-);
+import LiveView from "./routes/live-view/LiveView";
+import SensorData from "./routes/sensor-data/SensorData";
+import OutputStates from "./routes/output-states/OutputStates";
+import Automations from "./routes/automations/Automations";
+import Journals from "./routes/journals/Journals";
+import JournalEntries from "./routes/journals/entries/JournalEntries";
+import JournalEntryView from "./routes/journals/entries/JournalEntryView";
+import OutputSettings from "./routes/settings/outputs/OutputSettings";
+import SensorSettings from "./routes/settings/sensors/SensorSettings";
+import CameraSettings from "./routes/settings/camera/CameraSettings";
+import SubcontrollerSettings from "./routes/settings/subcontrollers/SubcontrollerSettings";
+import SystemSettings from "./routes/settings/system/SystemSettings";
 
 const queryClient = new QueryClient();
+
+// function RouteHydrateFallback() {
+//   return (
+//     <div
+//       style={{
+//         minHeight: 240,
+//         display: "flex",
+//         alignItems: "center",
+//         justifyContent: "center",
+//       }}
+//     >
+//       <div
+//         aria-label="Loading"
+//         style={{ display: "flex", alignItems: "center", gap: 6 }}
+//       >
+//         <span
+//           style={{
+//             width: 8,
+//             height: 20,
+//             borderRadius: 999,
+//             background: "#0f766e",
+//             opacity: 0.45,
+//             animation: "copilot-bars 0.8s ease-in-out infinite",
+//           }}
+//         />
+//         <span
+//           style={{
+//             width: 8,
+//             height: 28,
+//             borderRadius: 999,
+//             background: "#0f766e",
+//             opacity: 0.75,
+//             animation: "copilot-bars 0.8s ease-in-out 0.12s infinite",
+//           }}
+//         />
+//         <span
+//           style={{
+//             width: 8,
+//             height: 20,
+//             borderRadius: 999,
+//             background: "#0f766e",
+//             opacity: 0.45,
+//             animation: "copilot-bars 0.8s ease-in-out 0.24s infinite",
+//           }}
+//         />
+//         <style>
+//           {`@keyframes copilot-bars { 0%, 100% { transform: scaleY(0.7); opacity: 0.4; } 50% { transform: scaleY(1); opacity: 1; } }`}
+//         </style>
+//       </div>
+//     </div>
+//   );
+// }
 
 // Create loader functions with fallback logic
 const liveViewLoader = async () => {
@@ -98,8 +134,8 @@ const router = createBrowserRouter([
       },
       {
         path: "/live-view",
-        element: <LiveView />,
         loader: liveViewLoader,
+        element: <LiveView />,
       },
       {
         path: "/sensor-data/:readingType",
