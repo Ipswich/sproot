@@ -1,21 +1,22 @@
 import { ActionIcon, useMantineColorScheme } from "@mantine/core";
 import { IconMoon, IconSun } from "@tabler/icons-react";
-import cx from "clsx";
 
 export default function ColorToggle() {
   const { colorScheme, setColorScheme } = useMantineColorScheme();
+  const nextColorScheme = colorScheme === "light" ? "dark" : "light";
 
   return (
     <ActionIcon
-      onClick={() => setColorScheme(colorScheme === "light" ? "dark" : "light")}
+      onClick={() => setColorScheme(nextColorScheme)}
       variant="default"
       size="xl"
-      aria-label="Toggle color scheme"
+      radius="xl"
+      aria-label={`Switch to ${nextColorScheme} mode`}
     >
       {colorScheme === "dark" ? (
-        <IconSun className={cx(".icon", ".light")} stroke={1.5} />
+        <IconSun stroke={1.5} />
       ) : (
-        <IconMoon className={cx(".icon", ".dark")} stroke={1.5} />
+        <IconMoon stroke={1.5} />
       )}
     </ActionIcon>
   );

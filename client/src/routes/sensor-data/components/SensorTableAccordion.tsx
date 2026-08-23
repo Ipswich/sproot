@@ -13,7 +13,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Accordion, Center } from "@mantine/core";
+import { Accordion, Center, LoadingOverlay } from "@mantine/core";
 import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
 import { Fragment, memo, startTransition, useEffect, useState } from "react";
 import { ReadingType } from "@sproot/common/sensors/ReadingType";
@@ -167,9 +167,16 @@ function SensorTableAccordion({
   return (
     <Fragment>
       {getDeviceZonesQuery.isLoading || getSensorsQuery.isLoading ? (
-        <Center>
-          <h3>Loading...</h3>
-        </Center>
+        <LoadingOverlay
+          style={{ height: "100%", pointerEvents: "none" }}
+          visible={getDeviceZonesQuery.isLoading || getSensorsQuery.isLoading}
+          zIndex={90}
+          overlayProps={{
+            backgroundOpacity: 0.92,
+            color: "var(--mantine-color-body)",
+          }}
+          loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+        />
       ) : sortableItems.length === 1 ? (
         <SensorTable
           readingType={readingType}

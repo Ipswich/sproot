@@ -133,7 +133,7 @@ export default function ChartQueryControls({
           onUseCustomRangeChange(false);
           onChartIntervalChange(value);
         }}
-        color="blue"
+        // color="blue"
         fullWidth
         size="xs"
         radius="md"

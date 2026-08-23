@@ -1,10 +1,11 @@
 import {
   Button,
-  Group,
-  Select,
-  Stack,
-  Space,
   NumberInput,
+  Paper,
+  Select,
+  SimpleGrid,
+  Stack,
+  Text,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -141,117 +142,125 @@ export default function SensorCondition({
           toggleAddNewCondition();
         })}
       >
-        <Stack>
-          <Select
-            flex={1}
-            required
-            allowDeselect={false}
-            data={sensors.map((sensor) => {
-              return { label: sensor.name, value: String(sensor.id) };
-            })}
-            {...sensorConditionForm.getInputProps("sensorId")}
-            onChange={(value) => {
-              sensorConditionForm.setFieldValue("sensorId", value!);
-              const readingTypes = Object.keys(
-                sensors.filter((sensor) => sensor.id == Number(value))[0]!
-                  .units,
-              );
-              if (
-                !readingTypes.includes(sensorConditionForm.values.readingType!)
-              ) {
-                sensorConditionForm.setFieldValue(
-                  "readingType",
-                  readingTypes[0]!,
-                );
-              }
-            }}
-          />
-          <Group>
-            <Select
-              flex={1}
-              required
-              allowDeselect={false}
-              data={Object.keys(
-                sensors.filter(
-                  (sensor) =>
-                    sensor.id == Number(sensorConditionForm.values.sensorId),
-                )[0]!.units,
-              ).map((readingType) => {
-                return {
-                  label:
-                    readingType.charAt(0).toUpperCase() + readingType.slice(1),
-                  value: readingType,
-                };
-              })}
-              {...sensorConditionForm.getInputProps("readingType")}
-            />
-            is
-            <Select
-              w={"30%"}
-              required
-              allowDeselect={false}
-              data={[
-                {
-                  label: "<",
-                  value: "less",
-                },
-                {
-                  label: "<=",
-                  value: "lessOrEqual",
-                },
-                {
-                  label: ">",
-                  value: "greater",
-                },
-                {
-                  label: ">=",
-                  value: "greaterOrEqual",
-                },
-                {
-                  label: "=",
-                  value: "equal",
-                },
-                {
-                  label: "!=",
-                  value: "notEqual",
-                },
-              ]}
-              {...sensorConditionForm.getInputProps("operator")}
-            />
-          </Group>
-          <Group justify="center">
-            <NumberInput
-              required
-              w={"40%"}
-              step={1}
-              decimalScale={3}
-              stepHoldDelay={500}
-              stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
-              suffix={getSuffix()}
-              {...sensorConditionForm.getInputProps("comparisonValue")}
-            />
-            for
-            <NumberInput
-              required
-              w={"40%"}
-              step={1}
-              min={0}
-              max={1440}
-              suffix={
-                sensorConditionForm.values.comparisonLookback === 1
-                  ? " minute"
-                  : " minutes"
-              }
-              {...sensorConditionForm.getInputProps("comparisonLookback")}
-            />
-          </Group>
-          <Group justify="center">
-            <Button justify="center" type="submit">
-              Save
-            </Button>
-          </Group>
+        <Stack gap="md">
+          <Paper withBorder radius="md" p="md">
+            <Stack gap="md">
+              <Text size="sm" c="dimmed">
+                Compare a sensor reading against a threshold, with an optional
+                hold time.
+              </Text>
+              <Select
+                required
+                allowDeselect={false}
+                label="Sensor"
+                data={sensors.map((sensor) => {
+                  return { label: sensor.name, value: String(sensor.id) };
+                })}
+                {...sensorConditionForm.getInputProps("sensorId")}
+                onChange={(value) => {
+                  sensorConditionForm.setFieldValue("sensorId", value!);
+                  const readingTypes = Object.keys(
+                    sensors.filter((sensor) => sensor.id == Number(value))[0]!
+                      .units,
+                  );
+                  if (
+                    !readingTypes.includes(
+                      sensorConditionForm.values.readingType!,
+                    )
+                  ) {
+                    sensorConditionForm.setFieldValue(
+                      "readingType",
+                      readingTypes[0]!,
+                    );
+                  }
+                }}
+              />
+              <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                <Select
+                  required
+                  allowDeselect={false}
+                  label="Reading type"
+                  data={Object.keys(
+                    sensors.filter(
+                      (sensor) =>
+                        sensor.id ==
+                        Number(sensorConditionForm.values.sensorId),
+                    )[0]!.units,
+                  ).map((readingType) => {
+                    return {
+                      label:
+                        readingType.charAt(0).toUpperCase() +
+                        readingType.slice(1),
+                      value: readingType,
+                    };
+                  })}
+                  {...sensorConditionForm.getInputProps("readingType")}
+                />
+                <Select
+                  required
+                  allowDeselect={false}
+                  label="Comparison"
+                  data={[
+                    {
+                      label: "Less than",
+                      value: "less",
+                    },
+                    {
+                      label: "Less than or equal",
+                      value: "lessOrEqual",
+                    },
+                    {
+                      label: "Greater than",
+                      value: "greater",
+                    },
+                    {
+                      label: "Greater than or equal",
+                      value: "greaterOrEqual",
+                    },
+                    {
+                      label: "Equal to",
+                      value: "equal",
+                    },
+                    {
+                      label: "Not equal to",
+                      value: "notEqual",
+                    },
+                  ]}
+                  {...sensorConditionForm.getInputProps("operator")}
+                />
+              </SimpleGrid>
+              <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                <NumberInput
+                  required
+                  label="Target value"
+                  step={1}
+                  decimalScale={3}
+                  stepHoldDelay={500}
+                  stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
+                  suffix={getSuffix()}
+                  {...sensorConditionForm.getInputProps("comparisonValue")}
+                />
+                <NumberInput
+                  required
+                  label="Hold time"
+                  description="Triggers if target value is held for the specified time. Use 0 to trigger immediately."
+                  step={1}
+                  min={0}
+                  max={1440}
+                  suffix={
+                    sensorConditionForm.values.comparisonLookback === 1
+                      ? " minute"
+                      : " minutes"
+                  }
+                  {...sensorConditionForm.getInputProps("comparisonLookback")}
+                />
+              </SimpleGrid>
+            </Stack>
+          </Paper>
+          <Button justify="center" type="submit" fullWidth>
+            Save Condition
+          </Button>
         </Stack>
-        <Space h={"12px"} />
       </form>
     </Fragment>
   );

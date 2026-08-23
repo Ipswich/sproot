@@ -102,7 +102,7 @@ export default function LogStreamWithTerminal() {
                 <Group gap="xs">
                   <Badge
                     color={getConnectionBadgeColor(logConnectionState)}
-                    variant="filled"
+                    variant="light"
                   >
                     {logConnectionState}
                   </Badge>

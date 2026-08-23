@@ -33,24 +33,16 @@ export default function UpdateFirmwareContainer(props: { id: number }) {
   });
   return (
     <Fragment>
-      <Paper
-        px="md"
-        py="sm"
-        withBorder
-        shadow="md"
-        radius="md"
-        opacity="80%"
-        w={"100%"}
-      >
-        <Stack>
-          <Group justify="center">
-            <Text fw={500}>
-              {" "}
-              Firmware Version:{" "}
-              {connectionStatusQuery.data?.version ?? "Unknown"}
-            </Text>
-          </Group>
-          <Group justify="center">
+      <Paper px="md" py="md" withBorder radius="md" w={"100%"}>
+        <Stack gap="sm">
+          <Group justify="space-between" wrap="wrap">
+            <div>
+              <Text fw={600}>Firmware</Text>
+              <Text size="sm" c="dimmed">
+                Current version:{" "}
+                {connectionStatusQuery.data?.version ?? "Unknown"}
+              </Text>
+            </div>
             <Button
               disabled={
                 isButtonDisabled ||
@@ -80,9 +72,8 @@ export default function UpdateFirmwareContainer(props: { id: number }) {
               message: string;
             };
             const ok = response.status >= 200 && response.status < 300;
-            const alertColor = ok ? "teal" : "yellow";
             return (
-              <Alert color={alertColor} mt="md">
+              <Alert {...(ok ? {} : { color: "yellow" as const })} mt="md">
                 <Fragment>{response.message}</Fragment>
               </Alert>
             );

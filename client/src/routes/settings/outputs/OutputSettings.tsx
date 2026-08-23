@@ -10,7 +10,13 @@ import NewOutputModal from "@sproot/sproot-client/src/routes/settings/outputs/Ne
 import { useQuery } from "@tanstack/react-query";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { Models } from "@sproot/outputs/Models";
-import { IconMapPin, IconPlus } from "@tabler/icons-react";
+import {
+  IconMapPin,
+  IconPlus,
+  IconSortAscending,
+  IconSortDescending,
+} from "@tabler/icons-react";
+import { ActionIcon, Menu } from "@mantine/core";
 import DeviceZonesModal from "../shared/DeviceZonesModal";
 
 export interface OutputFormValues {
@@ -42,6 +48,8 @@ export default function OutputSettings() {
   ] = useDisclosure(false);
   const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
   const [isStale, setIsStale] = useState(false);
+  const [sortBy, setSortBy] = useState<"name" | "id">("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const getOutputsQuery = useQuery({
     queryKey: ["output-settings-outputs"],
@@ -99,14 +107,62 @@ export default function OutputSettings() {
                 leftSection={<IconMapPin size={18} />}
                 onClick={deviceZonesModalOpen}
               >
-                Manage Device Zones
+                Manage Zones
               </Button>
               <Button
+                variant="light"
                 leftSection={<IconPlus size={18} />}
                 onClick={newOutputModalOpen}
               >
                 Add Output
               </Button>
+              <Menu withinPortal={false} position="bottom-end">
+                <Menu.Target>
+                  <ActionIcon size="lg" variant="light">
+                    {sortDir === "asc" ? (
+                      <IconSortAscending size={16} />
+                    ) : (
+                      <IconSortDescending size={16} />
+                    )}
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item
+                    onClick={() => {
+                      if (sortBy === "name") {
+                        setSortDir((current) =>
+                          current === "asc" ? "desc" : "asc",
+                        );
+                      } else {
+                        setSortBy("name");
+                        setSortDir("asc");
+                      }
+                    }}
+                  >
+                    Name{" "}
+                    {sortBy === "name"
+                      ? sortDir === "asc"
+                        ? " ↑"
+                        : " ↓"
+                      : null}
+                  </Menu.Item>
+                  <Menu.Item
+                    onClick={() => {
+                      if (sortBy === "id") {
+                        setSortDir((current) =>
+                          current === "asc" ? "desc" : "asc",
+                        );
+                      } else {
+                        setSortBy("id");
+                        setSortDir("desc");
+                      }
+                    }}
+                  >
+                    Create Date{" "}
+                    {sortBy === "id" ? (sortDir === "asc" ? " ↑" : " ↓") : null}
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
             </Group>
           </Group>
         </Paper>
@@ -115,6 +171,8 @@ export default function OutputSettings() {
             outputs={outputs}
             supportedModels={supportedModels}
             setIsStale={setIsStale}
+            sortBy={sortBy}
+            sortDir={sortDir}
           />
         </Paper>
       </Stack>

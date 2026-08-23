@@ -5,6 +5,7 @@ import {
   Divider,
   Group,
   NumberInput,
+  Paper,
   Select,
   SegmentedControl,
   Stack,
@@ -236,7 +237,7 @@ export default function TimeCondition({
         }
       })}
     >
-      <Stack>
+      <Stack gap="md">
         {submitError ? (
           <Alert color="red" title="Unable to save time condition">
             {submitError}
@@ -284,195 +285,206 @@ export default function TimeCondition({
             }
           }}
           data={["Once", "Between", "Always"]}
-          color="blue"
         />
-        <Stack>
-          <Collapse
-            expanded={timeConditionType === "Between"}
-            transitionDuration={220}
-            transitionTimingFunction="ease"
-          >
-            <TimeExpressionField
-              label="Start time"
-              required
-              value={timeConditionForm.values.startTime}
-              mode={startTimeMode}
-              dynamicEnabled={hasDynamicTimeSupport}
-              error={timeConditionForm.errors["startTime"]}
-              onModeChange={(mode) => {
-                setStartTimeMode(mode);
-                timeConditionForm.setFieldValue("startTime", "");
-              }}
-              onChange={(value) => {
-                timeConditionForm.setFieldValue("startTime", value);
-              }}
-              timeSuffixes={solarLunarTimes}
-            />
-            <Space h="12px" />
-            <Divider variant="dashed" />
-            <Space h="12px" />
-            <TimeExpressionField
-              label="End time"
-              required
-              value={timeConditionForm.values.endTime}
-              mode={endTimeMode}
-              dynamicEnabled={hasDynamicTimeSupport}
-              error={timeConditionForm.errors["endTime"]}
-              onModeChange={(mode) => {
-                setEndTimeMode(mode);
-                timeConditionForm.setFieldValue("endTime", "");
-              }}
-              onChange={(value) => {
-                timeConditionForm.setFieldValue("endTime", value);
-              }}
-              timeSuffixes={solarLunarTimes}
-            />
-          </Collapse>
-          <Collapse
-            expanded={timeConditionType === "Once"}
-            transitionDuration={220}
-            transitionTimingFunction="ease"
-          >
-            <TimeExpressionField
-              label="Run at"
-              required
-              value={timeConditionForm.values.startTime}
-              mode={startTimeMode}
-              dynamicEnabled={hasDynamicTimeSupport}
-              error={timeConditionForm.errors["startTime"]}
-              onModeChange={(mode) => {
-                setStartTimeMode(mode);
-                timeConditionForm.setFieldValue("startTime", "");
-              }}
-              onChange={(value) => {
-                timeConditionForm.setFieldValue("startTime", value);
-              }}
-              timeSuffixes={solarLunarTimes}
-            />
-          </Collapse>
-        </Stack>
-        {repeatControlsVisible && (
-          <Stack gap="sm">
-            <SegmentedControl
-              value={timeConditionForm.values.repeatMode}
-              onChange={(value) => {
-                const nextMode = value as "Continuous" | "Periodic";
-                if (nextMode === "Continuous") {
-                  timeConditionForm.setValues({
-                    ...timeConditionForm.values,
-                    repeatMode: nextMode,
-                    repeatInterval: "",
-                    repeatDuration: "",
-                    phaseAnchorType: null,
-                    phaseAnchorValue: "",
-                  });
-                  return;
-                }
-
-                timeConditionForm.setFieldValue("repeatMode", nextMode);
-                timeConditionForm.setFieldValue(
-                  "phaseAnchorType",
-                  resolveDefaultAnchorType(timeConditionType),
-                );
-              }}
-              data={["Continuous", "Periodic"]}
-              color="blue"
-            />
+        <Paper withBorder radius="md" p="md">
+          <Stack gap="md">
+            <Text size="sm" c="dimmed">
+              Set a time window, then decide whether the action runs
+              continuously or on a repeating schedule.
+            </Text>
             <Collapse
-              expanded={timeConditionForm.values.repeatMode === "Periodic"}
+              expanded={timeConditionType === "Between"}
               transitionDuration={220}
               transitionTimingFunction="ease"
             >
-              <Stack gap="sm" pt={4}>
-                <Group grow align="flex-start">
-                  <NumberInput
-                    min={1}
-                    step={1}
-                    allowDecimal={false}
-                    clampBehavior="strict"
-                    label="Period length"
-                    suffix=" min"
-                    value={timeConditionForm.values.repeatInterval}
-                    onChange={(value) =>
-                      timeConditionForm.setFieldValue(
-                        "repeatInterval",
-                        typeof value === "number" ? value : "",
-                      )
-                    }
-                    error={timeConditionForm.errors["repeatInterval"]}
-                  />
-                  <NumberInput
-                    min={1}
-                    step={1}
-                    allowDecimal={false}
-                    clampBehavior="strict"
-                    label="On duration"
-                    suffix=" min"
-                    value={timeConditionForm.values.repeatDuration}
-                    onChange={(value) =>
-                      timeConditionForm.setFieldValue(
-                        "repeatDuration",
-                        typeof value === "number" ? value : "",
-                      )
-                    }
-                    error={timeConditionForm.errors["repeatDuration"]}
-                  />
-                </Group>
-                <Select
-                  allowDeselect={false}
-                  label="Period anchor"
-                  data={anchorOptions}
-                  value={selectedAnchorType}
-                  onChange={(value) => {
-                    const nextValue = (value ?? null) as PhaseAnchorType;
-                    timeConditionForm.setFieldValue(
-                      "phaseAnchorType",
-                      nextValue,
-                    );
-                    if (nextValue !== "clock" && nextValue !== "fixed") {
-                      timeConditionForm.setFieldValue("phaseAnchorValue", "");
-                    }
-                  }}
-                />
-                {selectedAnchorType === "clock" && (
-                  <TimeExpressionField
-                    label="Period anchor"
-                    value={timeConditionForm.values.phaseAnchorValue}
-                    mode={phaseAnchorMode}
-                    dynamicEnabled={hasDynamicTimeSupport}
-                    error={timeConditionForm.errors["phaseAnchorValue"]}
-                    onModeChange={(mode) => {
-                      setPhaseAnchorMode(mode);
-                      timeConditionForm.setFieldValue("phaseAnchorValue", "");
-                    }}
-                    onChange={(value) =>
-                      timeConditionForm.setFieldValue("phaseAnchorValue", value)
-                    }
-                    timeSuffixes={solarLunarTimes}
-                  />
-                )}
-                {selectedAnchorType === "fixed" && (
-                  <TextInput
-                    type="datetime-local"
-                    value={timeConditionForm.values.phaseAnchorValue}
-                    onChange={(value) =>
-                      timeConditionForm.setFieldValue(
-                        "phaseAnchorValue",
-                        value.currentTarget.value,
-                      )
-                    }
-                    error={timeConditionForm.errors["phaseAnchorValue"]}
-                  />
-                )}
-              </Stack>
+              <TimeExpressionField
+                label="Start time"
+                required
+                value={timeConditionForm.values.startTime}
+                mode={startTimeMode}
+                dynamicEnabled={hasDynamicTimeSupport}
+                error={timeConditionForm.errors["startTime"]}
+                onModeChange={(mode) => {
+                  setStartTimeMode(mode);
+                  timeConditionForm.setFieldValue("startTime", "");
+                }}
+                onChange={(value) => {
+                  timeConditionForm.setFieldValue("startTime", value);
+                }}
+                timeSuffixes={solarLunarTimes}
+              />
+              <Space h="12px" />
+              <Divider variant="dashed" />
+              <Space h="12px" />
+              <TimeExpressionField
+                label="End time"
+                required
+                value={timeConditionForm.values.endTime}
+                mode={endTimeMode}
+                dynamicEnabled={hasDynamicTimeSupport}
+                error={timeConditionForm.errors["endTime"]}
+                onModeChange={(mode) => {
+                  setEndTimeMode(mode);
+                  timeConditionForm.setFieldValue("endTime", "");
+                }}
+                onChange={(value) => {
+                  timeConditionForm.setFieldValue("endTime", value);
+                }}
+                timeSuffixes={solarLunarTimes}
+              />
+            </Collapse>
+            <Collapse
+              expanded={timeConditionType === "Once"}
+              transitionDuration={220}
+              transitionTimingFunction="ease"
+            >
+              <TimeExpressionField
+                label="Run at"
+                required
+                value={timeConditionForm.values.startTime}
+                mode={startTimeMode}
+                dynamicEnabled={hasDynamicTimeSupport}
+                error={timeConditionForm.errors["startTime"]}
+                onModeChange={(mode) => {
+                  setStartTimeMode(mode);
+                  timeConditionForm.setFieldValue("startTime", "");
+                }}
+                onChange={(value) => {
+                  timeConditionForm.setFieldValue("startTime", value);
+                }}
+                timeSuffixes={solarLunarTimes}
+              />
             </Collapse>
           </Stack>
+        </Paper>
+        {repeatControlsVisible && (
+          <Paper withBorder radius="md" p="md">
+            <Stack gap="sm">
+              <Text fw={600} size="sm">
+                Repeat behavior
+              </Text>
+              <SegmentedControl
+                value={timeConditionForm.values.repeatMode}
+                onChange={(value) => {
+                  const nextMode = value as "Continuous" | "Periodic";
+                  if (nextMode === "Continuous") {
+                    timeConditionForm.setValues({
+                      ...timeConditionForm.values,
+                      repeatMode: nextMode,
+                      repeatInterval: "",
+                      repeatDuration: "",
+                      phaseAnchorType: null,
+                      phaseAnchorValue: "",
+                    });
+                    return;
+                  }
+
+                  timeConditionForm.setFieldValue("repeatMode", nextMode);
+                  timeConditionForm.setFieldValue(
+                    "phaseAnchorType",
+                    resolveDefaultAnchorType(timeConditionType),
+                  );
+                }}
+                data={["Continuous", "Periodic"]}
+              />
+              <Collapse
+                expanded={timeConditionForm.values.repeatMode === "Periodic"}
+                transitionDuration={220}
+                transitionTimingFunction="ease"
+              >
+                <Stack gap="sm" pt={4}>
+                  <Group grow align="flex-start">
+                    <NumberInput
+                      min={1}
+                      step={1}
+                      allowDecimal={false}
+                      clampBehavior="strict"
+                      label="Period length"
+                      suffix=" min"
+                      value={timeConditionForm.values.repeatInterval}
+                      onChange={(value) =>
+                        timeConditionForm.setFieldValue(
+                          "repeatInterval",
+                          typeof value === "number" ? value : "",
+                        )
+                      }
+                      error={timeConditionForm.errors["repeatInterval"]}
+                    />
+                    <NumberInput
+                      min={1}
+                      step={1}
+                      allowDecimal={false}
+                      clampBehavior="strict"
+                      label="On duration"
+                      suffix=" min"
+                      value={timeConditionForm.values.repeatDuration}
+                      onChange={(value) =>
+                        timeConditionForm.setFieldValue(
+                          "repeatDuration",
+                          typeof value === "number" ? value : "",
+                        )
+                      }
+                      error={timeConditionForm.errors["repeatDuration"]}
+                    />
+                  </Group>
+                  <Select
+                    allowDeselect={false}
+                    label="Period anchor"
+                    data={anchorOptions}
+                    value={selectedAnchorType}
+                    onChange={(value) => {
+                      const nextValue = (value ?? null) as PhaseAnchorType;
+                      timeConditionForm.setFieldValue(
+                        "phaseAnchorType",
+                        nextValue,
+                      );
+                      if (nextValue !== "clock" && nextValue !== "fixed") {
+                        timeConditionForm.setFieldValue("phaseAnchorValue", "");
+                      }
+                    }}
+                  />
+                  {selectedAnchorType === "clock" && (
+                    <TimeExpressionField
+                      label="Period anchor"
+                      value={timeConditionForm.values.phaseAnchorValue}
+                      mode={phaseAnchorMode}
+                      dynamicEnabled={hasDynamicTimeSupport}
+                      error={timeConditionForm.errors["phaseAnchorValue"]}
+                      onModeChange={(mode) => {
+                        setPhaseAnchorMode(mode);
+                        timeConditionForm.setFieldValue("phaseAnchorValue", "");
+                      }}
+                      onChange={(value) =>
+                        timeConditionForm.setFieldValue(
+                          "phaseAnchorValue",
+                          value,
+                        )
+                      }
+                      timeSuffixes={solarLunarTimes}
+                    />
+                  )}
+                  {selectedAnchorType === "fixed" && (
+                    <TextInput
+                      type="datetime-local"
+                      value={timeConditionForm.values.phaseAnchorValue}
+                      onChange={(value) =>
+                        timeConditionForm.setFieldValue(
+                          "phaseAnchorValue",
+                          value.currentTarget.value,
+                        )
+                      }
+                      error={timeConditionForm.errors["phaseAnchorValue"]}
+                    />
+                  )}
+                </Stack>
+              </Collapse>
+            </Stack>
+          </Paper>
         )}
-        <Group justify="center" mt="md">
-          <Button type="submit">Save</Button>
-        </Group>
+        <Button type="submit" fullWidth>
+          Save Condition
+        </Button>
       </Stack>
-      <Space h={"12px"} />
     </form>
   );
 }
@@ -523,7 +535,7 @@ function TimeExpressionField({
   }, []);
 
   return (
-    <Stack gap="2px">
+    <Stack gap="xs">
       <SegmentedControl
         fullWidth
         value={mode}
@@ -537,7 +549,11 @@ function TimeExpressionField({
         }}
         data={[
           { label: "Clock", value: "clock" },
-          { label: "Solar/Lunar", value: "dynamic", disabled: !dynamicEnabled },
+          {
+            label: "Solar/Lunar",
+            value: "dynamic",
+            disabled: !dynamicEnabled,
+          },
         ]}
       />
       {mode === "clock" ? (
@@ -565,7 +581,7 @@ function TimeExpressionField({
               <span>
                 {option.label}
                 {time ? (
-                  <Text span color="dimmed" size="sm">
+                  <Text span c="dimmed" size="sm">
                     {" "}
                     ({time})
                   </Text>

@@ -4,7 +4,14 @@ import {
   getOutputActionsByAutomationIdAsync,
   deleteOutputActionAsync,
 } from "../../../requests/requests_v2";
-import { Alert, Stack, Text } from "@mantine/core";
+import {
+  Alert,
+  Badge,
+  Group,
+  Stack,
+  Text,
+  LoadingOverlay,
+} from "@mantine/core";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { Fragment } from "react/jsx-runtime";
 import DeletablesTable from "../../common/DeletablesTable";
@@ -28,13 +35,41 @@ function ActionLabel({
   const outputName = output?.name ?? `Output Id: ${output.id}`;
   if (output?.isPwm) {
     return (
-      // prettier-ignore
-      <Text ta="left" size="sm">Set {outputName} to {String(outputAction.value)}% (<Text inherit c={getOutputActionPrecedenceColor(outputAction.precedence)} span fw={600}>{outputAction.precedence}</Text>)</Text>
+      <Stack gap={4}>
+        <Text fw={500} ta="left">
+          {outputName}
+        </Text>
+        <Text ta="left" size="sm">
+          Set level to {String(outputAction.value)}%
+        </Text>
+        <Badge
+          variant="light"
+          color={getOutputActionPrecedenceColor(outputAction.precedence)}
+          radius="sm"
+          w="fit-content"
+        >
+          {outputAction.precedence} precedence
+        </Badge>
+      </Stack>
     );
   }
   return (
-    // prettier-ignore
-    <Text ta="left" size="sm">Turn {outputName} {outputAction.value == 100 ? "On" : "Off"} (<Text inherit c={getOutputActionPrecedenceColor(outputAction.precedence)} span fw={600}>{outputAction.precedence}</Text>)</Text>
+    <Stack gap={4}>
+      <Text fw={500} ta="left">
+        {outputName}
+      </Text>
+      <Text ta="left" size="sm">
+        Turn {outputAction.value == 100 ? "On" : "Off"}
+      </Text>
+      <Badge
+        variant="light"
+        color={getOutputActionPrecedenceColor(outputAction.precedence)}
+        radius="sm"
+        w="fit-content"
+      >
+        {outputAction.precedence} precedence
+      </Badge>
+    </Stack>
   );
 }
 
@@ -90,7 +125,16 @@ export default function OutputActionsTable({
   return (
     <Fragment>
       {outputActionsQueryFn.isLoading ? (
-        <div>Loading...</div>
+        <LoadingOverlay
+          style={{ height: "100%", pointerEvents: "none" }}
+          visible={outputActionsQueryFn.isLoading}
+          zIndex={90}
+          overlayProps={{
+            backgroundOpacity: 0.92,
+            color: "var(--mantine-color-body)",
+          }}
+          loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+        />
       ) : (
         <Fragment>
           {outputActionRows.length === 0 ? (
@@ -148,11 +192,18 @@ function OutputActionRow(
                 </>
               )}
             </Text>
-            {conflictingAutomations.map((action) => (
-              <Text key={action.automationId} size="sm">
-                {`- ${action.automationName}`}
-              </Text>
-            ))}
+            <Group gap="xs">
+              {conflictingAutomations.map((action) => (
+                <Badge
+                  key={action.automationId}
+                  variant="outline"
+                  color="yellow"
+                  radius="sm"
+                >
+                  {action.automationName}
+                </Badge>
+              ))}
+            </Group>
             <Text size="sm">
               If both automations request different states, neither action will
               be applied.

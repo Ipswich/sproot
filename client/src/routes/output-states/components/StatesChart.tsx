@@ -1,5 +1,6 @@
 import { LineChart } from "@mantine/charts";
 import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import {
   formatNumberForDisplay,
   formatDateForDisplay,
@@ -41,6 +42,7 @@ export default function StatesChart({
       }),
     [dataSeries],
   );
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   return (
     <Box pos="relative">
@@ -48,6 +50,10 @@ export default function StatesChart({
         style={{ height: "100%", pointerEvents: "none" }}
         visible={chartRendering}
         zIndex={90}
+        overlayProps={{
+          backgroundOpacity: 0.92,
+          color: "var(--mantine-color-body)",
+        }}
         loaderProps={{ color: "teal", type: "bars", size: "lg" }}
       />
       {showEmptyState ? (
@@ -57,7 +63,6 @@ export default function StatesChart({
             alignItems: "center",
             justifyContent: "center",
             height: 300,
-            backgroundColor: "#f5f5f5",
             borderRadius: 8,
           }}
         >
@@ -89,6 +94,7 @@ export default function StatesChart({
               );
             },
           }}
+          accessibilityLayer={!isMobile}
           mt={12}
           ml={-28}
           curveType="linear"

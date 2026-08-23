@@ -251,6 +251,7 @@ export default function CameraSettings() {
             </Fieldset>
             <Group justify="space-around">
               <Button
+                variant="light"
                 size="md"
                 style={{ width: rem(200) }}
                 type="submit"
@@ -262,7 +263,11 @@ export default function CameraSettings() {
             {newCameraForm.values.timelapseEnabled && (
               <Group justify="space-around">
                 <ConfirmDeleteButton
-                  buttonProps={{ size: "md", style: { width: rem(200) } }}
+                  buttonProps={{
+                    variant: "light",
+                    size: "md",
+                    style: { width: rem(200) },
+                  }}
                   loading={clearAllImagesMutation.isPending}
                   disabled={
                     getTimelapseArchiveStatusQuery.data?.isGenerating ?? false

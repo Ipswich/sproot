@@ -5,8 +5,10 @@ import {
   Textarea,
   Group,
   Button,
+  Paper,
   Text,
   ScrollArea,
+  Stack,
 } from "@mantine/core";
 import TagsPillsCombo from "../utils/tags/TagsPillsCombo";
 import { SDBJournalEntry } from "@sproot/database/SDBJournalEntry";
@@ -25,6 +27,7 @@ import {
 
 import { computeTagPillDiffs } from "../utils/tags/tagPillHelpers";
 import ConfirmDeleteButton from "../../../components/ConfirmDeleteButton";
+import { useMediaQuery } from "@mantine/hooks";
 
 export interface EditJournalEntryModalProps {
   modalOpened: boolean;
@@ -45,6 +48,7 @@ export default function EditJournalEntryModal({
   onSaved,
   onDeleted,
 }: EditJournalEntryModalProps) {
+  const isMobile = useMediaQuery("(max-width: 48em)");
   const form = useForm({
     initialValues: {
       title: entry.title ?? "",
@@ -175,9 +179,11 @@ export default function EditJournalEntryModal({
   return (
     <Modal
       overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
+      fullScreen={isMobile}
       scrollAreaComponent={ScrollArea.Autosize}
       centered
       size="sm"
+      padding={isMobile ? "md" : "lg"}
       opened={modalOpened}
       onClose={() => {
         closeModal();
@@ -190,47 +196,63 @@ export default function EditJournalEntryModal({
           await save();
         })}
       >
-        <TextInput
-          label="Title"
-          maxLength={64}
-          {...form.getInputProps("title")}
-        />
+        <Stack gap="sm">
+          <Paper withBorder radius="lg" p={isMobile ? "sm" : "md"}>
+            <Stack gap="xs">
+              <Text fw={600}>{entry.title ?? "Edit entry"}</Text>
+              <Text size="sm" c="dimmed">
+                Update the entry text and refine its tags without leaving the
+                journal view.
+              </Text>
+            </Stack>
+          </Paper>
+          <Paper withBorder radius="md" p="sm">
+            <Stack gap="sm">
+              <TextInput
+                label="Title"
+                maxLength={64}
+                {...form.getInputProps("title")}
+              />
 
-        <Textarea
-          label="Content"
-          autosize
-          minRows={3}
-          {...form.getInputProps("content")}
-        />
-
-        <div style={{ marginTop: 12 }}>
-          <Text fw={600} style={{ marginBottom: 8 }}>
-            Tags
-          </Text>
-          <div style={{ marginBottom: 8 }}>
-            <TagsPillsCombo
-              allTags={Array.from(
-                new Map(
-                  [...availableTags, ...(localTags ?? [])].map((t) => [
-                    t.id,
-                    t,
-                  ]),
-                ).values(),
-              )}
-              value={(localTags ?? []).map((t) => `tag:${t.id}`)}
-              onChange={handlePillsChange}
-              placeholder="Search tags"
+              <Textarea
+                label="Content"
+                autosize
+                minRows={5}
+                {...form.getInputProps("content")}
+              />
+            </Stack>
+          </Paper>
+          <Paper withBorder radius="md" p="sm">
+            <Stack gap="sm">
+              <Text fw={600} size="sm">
+                Tags
+              </Text>
+              <TagsPillsCombo
+                allTags={Array.from(
+                  new Map(
+                    [...availableTags, ...(localTags ?? [])].map((t) => [
+                      t.id,
+                      t,
+                    ]),
+                  ).values(),
+                )}
+                value={(localTags ?? []).map((t) => `tag:${t.id}`)}
+                onChange={handlePillsChange}
+                placeholder="Search tags"
+              />
+            </Stack>
+          </Paper>
+          <Group justify="space-between" mt="xs" wrap="wrap">
+            <ConfirmDeleteButton
+              loading={deleteMutation.isPending}
+              buttonProps={{ variant: "light", fullWidth: isMobile }}
+              onConfirm={doDelete}
             />
-          </div>
-        </div>
-
-        <Group justify="space-between" mt="md">
-          <ConfirmDeleteButton
-            loading={deleteMutation.isPending}
-            onConfirm={doDelete}
-          />
-          <Button type="submit">Update Entry</Button>
-        </Group>
+            <Button variant="light" type="submit" fullWidth={isMobile}>
+              Update Entry
+            </Button>
+          </Group>
+        </Stack>
       </form>
     </Modal>
   );

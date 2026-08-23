@@ -348,7 +348,12 @@ export default function Journals() {
                       Create journals, manage tags, and organize your workspace.
                     </Text>
                   </Box>
-                  <Group w={"100%"} gap="0.5rem" wrap="wrap" justify="left">
+                  <Group
+                    w={"100%"}
+                    gap="0.5rem"
+                    wrap="wrap"
+                    justify="flex-start"
+                  >
                     <Button
                       variant="default"
                       leftSection={<IconTags size={18} />}
@@ -357,6 +362,7 @@ export default function Journals() {
                       Manage Tags
                     </Button>
                     <Button
+                      variant="light"
                       leftSection={<IconPlus size={18} />}
                       onClick={() => openNewJournal()}
                     >
@@ -446,7 +452,7 @@ export default function Journals() {
                     <Box style={{ flex: 1, minWidth: 280 }}>
                       <TagsPillsCombo
                         allTags={[
-                          { id: -1, name: "Archived", color: "#868e96" },
+                          { id: -1, name: "Archived", color: "gray" },
                           ...allTags,
                         ]}
                         value={filters}

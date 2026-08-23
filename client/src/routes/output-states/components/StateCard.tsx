@@ -194,7 +194,7 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                 >
                   <Stack gap={4} ta="left">
                     <Text size="sm">
-                      {`${output.name ?? "This output"} received conflicting `}
+                      {`This output received conflicting `}
                       <Text
                         inherit
                         c={getOutputActionPrecedenceColor(
@@ -226,9 +226,7 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                   // title="Automation active"
                 >
                   <Stack gap={6} ta="left">
-                    <Text size="sm">
-                      {`${output.name ?? "This output"} is currently being driven by:`}
-                    </Text>
+                    <Text size="sm">Currently triggered automations:</Text>
                     <Group gap="xs" wrap="wrap">
                       {output.triggeredBy.map((automation) => (
                         <Badge

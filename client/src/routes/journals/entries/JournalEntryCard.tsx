@@ -44,7 +44,7 @@ export default function JournalEntryCard({
                 fw={700}
                 lineClamp={1}
                 style={{
-                  lineHeight: 1,
+                  lineHeight: 1.15,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
@@ -52,6 +52,7 @@ export default function JournalEntryCard({
                   width: "100%",
                   minWidth: 0,
                   maxWidth: "100%",
+                  paddingBottom: 1,
                 }}
               >
                 {entry.title ?? "Untitled"}

@@ -112,7 +112,7 @@ export default function JournalCard({ journal, tags }: JournalCardProps) {
               {journal.archived ? (
                 <Badge
                   variant="dot"
-                  color="gray"
+                  color="lightgray"
                   style={{ borderRadius: 6, padding: "4px 8px" }}
                   title={
                     journal.archivedAt
