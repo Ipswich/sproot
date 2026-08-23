@@ -18,7 +18,7 @@ export async function getByJournalIdAsync(
   let journalId: number | undefined = undefined;
   let withContent = true;
 
-  journalId = parseInt(req.params["journalId"] ?? "", 10);
+  journalId = parseInt((req.params["journalId"] as string) ?? "", 10);
   const badRequests: string[] = [];
   if (isNaN(journalId) || journalId <= 0) {
     badRequests.push("Valid Journal ID is required.");
@@ -104,8 +104,8 @@ export async function getByEntryIdAsync(
   let withContent = true;
   const badRequests: string[] = [];
 
-  if (req.params["entryId"]) {
-    entryId = parseInt(req.params["entryId"] ?? "", 10);
+  if ((req.params["entryId"] as string) != null) {
+    entryId = parseInt(req.params["entryId"] as string, 10);
     if (isNaN(entryId) || entryId <= 0) {
       badRequests.push("Valid Journal Entry ID is required.");
     }
@@ -183,7 +183,7 @@ export async function addAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
+  const journalId = parseInt((req.params["journalId"] as string) ?? "", 10);
   const content = req.body["content"] as string | undefined;
   const title = req.body["title"] as string | undefined;
 
@@ -273,7 +273,7 @@ export async function updateAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
 
-  const entryId = parseInt(req.params["entryId"] ?? "", 10);
+  const entryId = parseInt(req.params["entryId"] as string, 10);
 
   const badRequests: string[] = [];
   if (isNaN(entryId)) {
@@ -372,7 +372,7 @@ export async function deleteAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
 
-  const entryId = parseInt(req.params["entryId"] ?? "", 10);
+  const entryId = parseInt(req.params["entryId"] as string, 10);
 
   if (isNaN(entryId)) {
     response = {
@@ -431,7 +431,7 @@ export async function addTagAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
 
-  const entryId = parseInt(req.params["entryId"] ?? "", 10);
+  const entryId = parseInt(req.params["entryId"] as string, 10);
   const tagId = parseInt(req.body["tagId"] ?? "", 10);
 
   const badRequests: string[] = [];
@@ -529,8 +529,8 @@ export async function removeTagAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
 
-  const entryId = parseInt(req.params["entryId"] ?? "", 10);
-  const tagId = parseInt(req.params["tagId"] ?? "", 10);
+  const entryId = parseInt(req.params["entryId"] as string, 10);
+  const tagId = parseInt(req.params["tagId"] as string, 10);
 
   const badRequests: string[] = [];
   if (isNaN(entryId)) {

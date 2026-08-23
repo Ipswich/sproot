@@ -62,23 +62,18 @@ describe("BackupHandlers.ts", () => {
         return original.call(Backups, fileName, logger, tempDir);
       });
 
-      const response = {
+      const responseStream = new PassThrough();
+      responseStream.resume();
+      const response = Object.assign(responseStream, {
         status: sinon.stub().returnsThis(),
         setHeader: sinon.stub().returnsThis(),
-        // Add stream event handlers so piping to this mocked response works
-        on: sinon.stub().returnsThis(),
-        once: sinon.stub().returnsThis(),
-        emit: sinon.stub().returnsThis(),
-        write: sinon.stub().returnsThis(),
-        end: sinon.stub().returnsThis(),
-        error: sinon.stub().returnsThis(),
         locals: {
           defaultProperties: {
             timestamp: new Date().toISOString(),
             requestId: "1234",
           },
         },
-      } as unknown as Response;
+      }) as unknown as Response;
       const request = {
         params: { fileName: "test-backup-file" },
         app: {

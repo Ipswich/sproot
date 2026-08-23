@@ -97,7 +97,7 @@ export async function updateAsync(
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let response: SuccessResponse | ErrorResponse;
   try {
-    const tagId = parseInt(req.params["tagId"] ?? "", 10);
+    const tagId = parseInt(req.params["tagId"] as string, 10);
     const tag = req.body as Partial<SDBJournalTag>;
     if (tag == null || isNaN(tagId) || tagId <= 0) {
       response = {
@@ -164,7 +164,7 @@ export async function deleteAsync(
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let response: SuccessResponse | ErrorResponse;
   try {
-    const tagId = parseInt(req.params["tagId"] ?? "", 10);
+    const tagId = parseInt(req.params["tagId"] as string, 10);
     if (isNaN(tagId) || tagId <= 0) {
       response = {
         statusCode: 400,

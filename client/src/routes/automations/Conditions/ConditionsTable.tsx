@@ -252,7 +252,10 @@ export default function ConditionsTable({
                   Add Condition
                 </Button>
               </Group>
-              <Collapse in={addNewConditionOpened} transitionDuration={300}>
+              <Collapse
+                expanded={addNewConditionOpened}
+                transitionDuration={300}
+              >
                 <Space h={12} />
                 <NewConditionWidget
                   automationId={automationId}

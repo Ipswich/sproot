@@ -6,7 +6,8 @@
     "paths": {
       "@sproot/common/*": ["../common/dist/*"],
       "@sproot/*": ["../common/dist/*"]
-    }
+    },
+    "types": ["node", "mocha"]
   },
   "ts-node": {
     "require": ["tsconfig-paths/register"]

@@ -27,10 +27,11 @@ class ESP32Manager {
       fsPromises.readFile(ESP32_FIRMWARE_PATH),
     ]);
 
-    const bootloader = bootloaderBuf.toString("base64");
-    const partitions = partitionsBuf.toString("base64");
-    const boot_app0 = boot_app0Buf.toString("base64");
-    const firmware = firmwareBuf.toString("base64");
+    // esptool-js v0.6.1 requires fileArray data as Uint8Array (Buffer), not base64 strings
+    const bootloader = bootloaderBuf;
+    const partitions = partitionsBuf;
+    const boot_app0 = boot_app0Buf;
+    const firmware = firmwareBuf;
 
     const serial = new SerialPort({ baudRate: 460800, path: portPath });
 
@@ -48,7 +49,7 @@ class ESP32Manager {
         { address: 0xe000, data: boot_app0 },
         { address: 0x10000, data: firmware },
       ],
-      flashFreq: "40",
+      flashFreq: "40m",
       flashMode: "dio",
       flashSize: "4MB",
       compress: true,
@@ -61,7 +62,6 @@ class ESP32Manager {
     const loader = new ESPLoader({
       baudrate: 460800,
       port: portPath,
-      romBaudrate: 460800,
       transport,
     });
 

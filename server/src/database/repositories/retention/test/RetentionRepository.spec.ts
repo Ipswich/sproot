@@ -123,10 +123,12 @@ describe("RetentionRepository", () => {
         raw: sinon.stub().resolves(),
       } as unknown as Knex;
       const testRepo = new RetentionRepository(mockKnex);
-      await assert.isRejected(
-        testRepo.addRetentionPolicyAsync("invalid-table", "30 days"),
-        /Invalid table name/,
-      );
+      try {
+        await testRepo.addRetentionPolicyAsync("invalid-table", "30 days");
+        assert.fail("Expected addRetentionPolicyAsync to reject invalid table names");
+      } catch (error) {
+        assert.match((error as Error).message, /Invalid table name/);
+      }
     });
 
     it("accepts valid table names with underscores", async () => {

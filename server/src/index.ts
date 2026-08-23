@@ -1,4 +1,5 @@
-import "dotenv/config";
+import { configDotenv } from "dotenv";
+configDotenv();
 import mainAsync, { gracefulHaltAsync } from "./program";
 import { DI_KEYS } from "./utils/DependencyInjectionConstants";
 import { ISprootDB } from "./database/ISprootDB";

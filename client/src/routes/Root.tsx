@@ -1,5 +1,12 @@
+import { Suspense } from "react";
 import { Outlet, useLoaderData } from "react-router-dom";
-import { MantineProvider, AppShell, createTheme } from "@mantine/core";
+import {
+  MantineProvider,
+  AppShell,
+  Center,
+  Loader,
+  createTheme,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 // All packages except `@mantine/hooks` require styles imports
 import "@mantine/core/styles.css";
@@ -77,7 +84,15 @@ export default function Root() {
         <AppShell.Main style={{ padding: "0 auto" }}>
           <>
             <div onClick={closeNavbar}>
-              <Outlet />
+              <Suspense
+                fallback={
+                  <Center mih={240}>
+                    <Loader color="teal" type="bars" size="lg" />
+                  </Center>
+                }
+              >
+                <Outlet />
+              </Suspense>
             </div>
           </>
         </AppShell.Main>

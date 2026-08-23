@@ -163,8 +163,10 @@ export default function ChartQueryControls({
               : "empty"
           }
           type="range"
+          allowSingleDateInRange
           size="sm"
           clearable
+          withTime
           placeholder="Select date range"
           value={
             customRange ? [customRange.start, customRange.end] : [null, null]

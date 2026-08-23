@@ -25,7 +25,7 @@ export async function systemBackupDownloadHandlerAsync(
   request: Request,
   response: Response,
 ): Promise<void> {
-  const fileName = request.params["fileName"];
+  const fileName = request.params["fileName"] as string;
   const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
   if (!fileName) {
     response.status(400).json({
@@ -58,7 +58,7 @@ export async function systemBackupDownloadHandlerAsync(
   response.setHeader("Content-Type", "application/octet-stream");
   response.setHeader("Content-Disposition", `attachment; filename=${backupFileStreamData.name}`);
   response.setHeader("Content-Length", backupFileStreamData.size.toString());
-  backupFileStreamData.stream.pipe(response);
+  await pipeline(backupFileStreamData.stream, response);
 }
 
 export async function systemBackupRestoreHandlerAsync(

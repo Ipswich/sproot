@@ -1,5 +1,6 @@
 import "./index.css";
 
+import { lazy } from "react";
 import ReactDOM from "react-dom/client";
 import {
   createBrowserRouter,
@@ -14,19 +15,34 @@ import ErrorPage from "./error_pages/ErrorPage";
 
 import { rootLoader } from "./routes/utility/Loaders";
 
-import LiveView from "./routes/live-view/LiveView";
-import SensorData from "./routes/sensor-data/SensorData";
-import OutputStates from "./routes/output-states/OutputStates";
-import Automations from "./routes/automations/Automations";
-import Journals from "./routes/journals/Journals";
-import JournalEntries from "./routes/journals/entries/JournalEntries";
-import JournalEntryView from "./routes/journals/entries/JournalEntryView";
-import OutputSettings from "./routes/settings/outputs/OutputSettings";
-import SensorSettings from "./routes/settings/sensors/SensorSettings";
-import SystemSettings from "./routes/settings/system/SystemSettings";
-import CameraSettings from "./routes/settings/camera/CameraSettings";
 import HomeRouter from "./routes/HomeRouter";
-import SubcontrollerSettings from "./routes/settings/subcontrollers/SubcontrollerSettings";
+
+const LiveView = lazy(() => import("./routes/live-view/LiveView"));
+const SensorData = lazy(() => import("./routes/sensor-data/SensorData"));
+const OutputStates = lazy(() => import("./routes/output-states/OutputStates"));
+const Automations = lazy(() => import("./routes/automations/Automations"));
+const Journals = lazy(() => import("./routes/journals/Journals"));
+const JournalEntries = lazy(
+  () => import("./routes/journals/entries/JournalEntries"),
+);
+const JournalEntryView = lazy(
+  () => import("./routes/journals/entries/JournalEntryView"),
+);
+const OutputSettings = lazy(
+  () => import("./routes/settings/outputs/OutputSettings"),
+);
+const SensorSettings = lazy(
+  () => import("./routes/settings/sensors/SensorSettings"),
+);
+const SystemSettings = lazy(
+  () => import("./routes/settings/system/SystemSettings"),
+);
+const CameraSettings = lazy(
+  () => import("./routes/settings/camera/CameraSettings"),
+);
+const SubcontrollerSettings = lazy(
+  () => import("./routes/settings/subcontrollers/SubcontrollerSettings"),
+);
 
 const queryClient = new QueryClient();
 

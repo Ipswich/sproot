@@ -132,7 +132,7 @@ export function LinksGroup({
         </Link>
       )}
       {hasLinks ? (
-        <Collapse in={openedLinkGroups.includes(page.navLinkText)}>
+        <Collapse expanded={openedLinkGroups.includes(page.navLinkText)}>
           {items}
         </Collapse>
       ) : null}

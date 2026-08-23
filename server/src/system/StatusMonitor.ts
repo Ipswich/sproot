@@ -5,6 +5,7 @@ import { promisify } from "util";
 import { SystemStatus } from "@sproot/common/system/SystemStatus";
 import { CameraManager } from "../camera/CameraManager";
 import { Knex } from "knex";
+import { Pool as TarnPool } from "tarn";
 
 const statfsAsync = promisify(statfs);
 
@@ -26,7 +27,7 @@ export class SystemStatusMonitor implements Disposable {
 
   async getStatusAsync(): Promise<SystemStatus> {
     const fileStats = await statfsAsync("/");
-    const pool = (this.#knexConnection.client as Knex.Client).pool!;
+    const pool = (this.#knexConnection.client as Knex.Client).pool! as TarnPool<any>;
     return {
       system: {
         totalDiskSize: (fileStats.blocks * fileStats.bsize) / 1024 / 1024,

@@ -1,4 +1,5 @@
-import "dotenv/config";
+import { configDotenv } from "dotenv";
+configDotenv();
 import bcrypt from "bcrypt";
 import cookieParser from "cookie-parser";
 import cors from "cors";

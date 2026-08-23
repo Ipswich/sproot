@@ -183,7 +183,7 @@ export async function getAllAsync(
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let getAllConditionsResponse: SuccessResponse | ErrorResponse;
 
-  const automationId = parseInt(request.params["automationId"] ?? "");
+  const automationId = parseInt(request.params["automationId"] as string);
 
   const invalidFields = [];
   if (isNaN(automationId)) {
@@ -290,8 +290,8 @@ export async function getByTypeAsync(
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let getConditionResponse: SuccessResponse | ErrorResponse;
 
-  const automationId = parseInt(request.params["automationId"] ?? "");
-  const type = request.params["type"] ?? "";
+  const automationId = parseInt(request.params["automationId"] as string);
+  const type = request.params["type"] as string;
 
   const invalidFields = [];
   if (isNaN(automationId)) {
@@ -395,9 +395,9 @@ export async function getOneOfByTypeAsync(
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let getConditionResponse: SuccessResponse | ErrorResponse;
 
-  const automationId = parseInt(request.params["automationId"] ?? "");
-  const type = request.params["type"] ?? "";
-  const conditionId = parseInt(request.params["conditionId"] ?? "");
+  const automationId = parseInt(request.params["automationId"] as string);
+  const type = request.params["type"] as string;
+  const conditionId = parseInt(request.params["conditionId"] as string);
 
   const invalidFields = [];
   if (isNaN(automationId)) {
@@ -525,8 +525,8 @@ export async function addAsync(
   const settingsService = request.app.get(DI_KEYS.SettingsService) as SettingsService;
   let addConditionResponse: SuccessResponse | ErrorResponse;
 
-  const automationId = parseInt(request.params["automationId"] ?? "");
-  const conditionType = request.params["type"] as
+  const automationId = parseInt(request.params["automationId"] as string);
+  const conditionType = request.params["type"] as string as
     "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
 
   const invalidDetails = [];
@@ -840,9 +840,9 @@ export async function updateAsync(
   const settingsService = request.app.get(DI_KEYS.SettingsService) as SettingsService;
   let updateConditionResponse: SuccessResponse | ErrorResponse;
 
-  const automationId = parseInt(request.params["automationId"] ?? "");
-  const conditionId = parseInt(request.params["conditionId"] ?? "");
-  const conditionType = request.params["type"] ?? "";
+  const automationId = parseInt(request.params["automationId"] as string);
+  const conditionId = parseInt(request.params["conditionId"] as string);
+  const conditionType = request.params["type"] as string;
 
   const invalidDetails = [];
   if (isNaN(automationId)) {
@@ -1211,9 +1211,9 @@ export async function deleteAsync(
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   let deleteConditionResponse: SuccessResponse | ErrorResponse;
 
-  const automationId = parseInt(request.params["automationId"] ?? "");
-  const conditionId = parseInt(request.params["conditionId"] ?? "");
-  const conditionType = request.params["type"] as
+  const automationId = parseInt(request.params["automationId"] as string);
+  const conditionId = parseInt(request.params["conditionId"] as string);
+  const conditionType = request.params["type"] as string as
     "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
 
   const invalidDetails = [];
