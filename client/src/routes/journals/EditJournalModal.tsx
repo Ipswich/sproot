@@ -352,12 +352,6 @@ export default function EditJournalModal({
               </Text>
             ) : null}
             <Group justify="space-between" mt="xs" wrap="wrap">
-              <ConfirmDeleteButton
-                disabled={isUpdating}
-                loading={isUpdating}
-                buttonProps={{ variant: "light", fullWidth: isMobile }}
-                onConfirm={doDelete}
-              />
               <Button
                 variant="light"
                 type="submit"
@@ -368,6 +362,12 @@ export default function EditJournalModal({
               >
                 Update Journal
               </Button>
+              <ConfirmDeleteButton
+                disabled={isUpdating}
+                loading={isUpdating}
+                buttonProps={{ variant: "light", fullWidth: isMobile }}
+                onConfirm={doDelete}
+              />
             </Group>
           </Stack>
         </form>

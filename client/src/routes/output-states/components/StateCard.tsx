@@ -4,6 +4,7 @@ import {
   setOutputManualStateAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { Fragment, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
   Badge,
@@ -26,6 +27,7 @@ interface StateProps {
 }
 
 export default function StateCard({ output, updateOutputsAsync }: StateProps) {
+  const queryClient = useQueryClient();
   const [controlMode, setControlMode] = useState(output.state.controlMode);
   const [manualValue, setManualValue] = useState<number>(
     output.state.manual.value ?? 0,
@@ -50,6 +52,7 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
       );
     },
     onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["outputs"] });
       await updateOutputsAsync();
     },
   });
@@ -59,6 +62,7 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
       await setOutputManualStateAsync(newState.id, newState.value);
     },
     onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["outputs"] });
       await updateOutputsAsync();
     },
   });

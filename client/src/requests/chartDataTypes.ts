@@ -29,29 +29,18 @@ export function scalePercentile(value: number): number {
 }
 
 export function getEffectiveEndDate(selectedEnd: Date): Date {
-  const selectedDayStart = new Date(
-    selectedEnd.getFullYear(),
-    selectedEnd.getMonth(),
-    selectedEnd.getDate(),
-  );
-
-  return new Date(selectedDayStart.getTime() + 86399999);
+  return selectedEnd;
 }
 
 export function getEffectiveDisplayEndDate(selectedEnd: Date): Date {
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const selectedDayStart = new Date(
-    selectedEnd.getFullYear(),
-    selectedEnd.getMonth(),
-    selectedEnd.getDate(),
-  );
+  return selectedEnd;
+}
 
-  if (selectedDayStart.getTime() === todayStart.getTime()) {
-    return now;
-  }
-
-  return new Date(selectedDayStart.getTime() + 86399999);
+export function getLastCompleteBucketEnd(now: Date, downsample: string): Date {
+  const intervalMs = getDownsampleMinutes(downsample) * 60 * 1000;
+  const lastCompleteBucket =
+    Math.floor(now.getTime() / intervalMs) * intervalMs - intervalMs;
+  return new Date(lastCompleteBucket);
 }
 
 export function buildChartTimeline(

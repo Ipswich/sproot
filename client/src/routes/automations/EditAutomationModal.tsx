@@ -207,7 +207,7 @@ export default function EditAutomationModal({
                       {targetAutomation?.name ?? "New automation"}
                     </Title>
                     {targetAutomation ? null : (
-                      <Badge variant="light" radius="sm">
+                      <Badge color="green" variant="light" radius="sm">
                         Draft
                       </Badge>
                     )}
@@ -297,7 +297,11 @@ export default function EditAutomationModal({
                     />
                     {targetAutomation == null ? (
                       <Group justify="flex-end" mt="xs">
-                        <Button type="submit" form="add-automation-form">
+                        <Button
+                          variant="light"
+                          type="submit"
+                          form="add-automation-form"
+                        >
                           Next
                         </Button>
                       </Group>
@@ -406,7 +410,11 @@ export default function EditAutomationModal({
                             wrap="wrap"
                           >
                             <Group gap="xs">
-                              <ThemeIcon variant="light" radius="xl">
+                              <ThemeIcon
+                                variant="light"
+                                color="yellow"
+                                radius="xl"
+                              >
                                 <IconBolt size={16} />
                               </ThemeIcon>
                               <div>
@@ -447,7 +455,11 @@ export default function EditAutomationModal({
                       <Paper withBorder radius="md" p="md">
                         <Stack gap="sm">
                           <Group gap="xs">
-                            <ThemeIcon variant="light" radius="xl">
+                            <ThemeIcon
+                              variant="light"
+                              color="violet"
+                              radius="xl"
+                            >
                               <IconSparkles size={16} />
                             </ThemeIcon>
                             <div>

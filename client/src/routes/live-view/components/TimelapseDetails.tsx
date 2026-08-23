@@ -62,6 +62,7 @@ export default function TimelapseDetails({
               </Button>
               <Button
                 variant="light"
+                color="green"
                 onClick={async () => {
                   try {
                     await regenerateTimelapseArchiveAsync(camera.id);
