@@ -19,9 +19,10 @@ std::map<uint8_t, Adafruit_BME280*> bme280Registry;
  */
 Adafruit_BME280* getBME280(uint8_t address) {
     if (bme280Registry.count(address)) {
+      Wire.beginTransmission(address);
       if(Wire.endTransmission() == 0) {
         return bme280Registry[address];
-      } 
+      }
       delete bme280Registry[address];
       bme280Registry.erase(address);
     }

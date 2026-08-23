@@ -48,16 +48,33 @@ void handleResetPost(AsyncWebServerRequest *request)
 
 void handleTriggerOTAUpdatePost(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
 {
+  // Body may arrive split across multiple chunks; accumulate per-request (keyed off the request
+  // object, not a function-local static) and only act once the full body has been received.
+  if (index == 0) {
+    request->_tempObject = new String();
+    request->onDisconnect([request]() {
+      delete static_cast<String *>(request->_tempObject);
+      request->_tempObject = nullptr;
+    });
+  }
+  String *body = static_cast<String *>(request->_tempObject);
+  body->concat(reinterpret_cast<const char *>(data), len);
+
+  if (index + len != total) {
+    return;
+  }
+
   Preferences prefs;
   prefs.begin("app", false);
   String token = prefs.getString("secureToken", "");
   prefs.end();
 
-
-  // Parse JSON body from the onRequestBody buffer (data,len)
+  // Parse JSON body accumulated above.
   // Requires ArduinoJson (include <ArduinoJson.h> at top of the file)
   JsonDocument doc;
-  DeserializationError err = deserializeJson(doc, data, len);
+  DeserializationError err = deserializeJson(doc, *body);
+  delete body;
+  request->_tempObject = nullptr;
   if (err) {
     request->send(400, "application/json", "{\"status\":\"invalid json\"}");
     return;

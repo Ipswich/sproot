@@ -8,6 +8,7 @@
 #include "handlers/SensorHandlers.h"
 #include "handlers/OutputHandlers.h"
 #include "handlers/SystemHandlers.h"
+#include "utils/DeviceIdentity.h"
 #include "Version.h"
 
 void setupRoutes(AsyncWebServer& server);
@@ -15,18 +16,22 @@ void setupRoutes(AsyncWebServer& server);
 void startNormalMode(AsyncWebServer& server)
 {
   Serial.println("Starting Normal Mode...");
-  uint64_t chipid = ESP.getEfuseMac();
-  char hostname[32];
-  uint16_t last16 = (chipid >> 32) & 0xFFFF;
-  snprintf(hostname, sizeof(hostname), "sproot-esp32-%04X", last16); // Should give something like sensor-1A2B
+  String hostname = getDeviceHostname();
 
-  if (!MDNS.begin(hostname)) {
+  if (!MDNS.begin(hostname.c_str())) {
     Serial.println("Error starting mDNS");
     return;
   }
   MDNS.addService("sproot-device", "tcp", 80);
 
   ds18b20.begin();
+
+  // Routes (and the not-found handler below) are re-registered every time this mode starts,
+  // including when bouncing back from Soft AP mode after a Wi-Fi drop. AsyncWebServer::on()
+  // always appends to its internal handler list and never frees old entries on end(), so without
+  // this reset each mode switch would permanently leak handlers until the device runs out of
+  // heap and stops responding to requests entirely.
+  server.reset();
   setupRoutes(server);
 
   server.onNotFound([](AsyncWebServerRequest *request)

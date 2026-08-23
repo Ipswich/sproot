@@ -8,17 +8,18 @@
 
 void handlePCA9685Put(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
 {
-  // Assemble the body
-  static String body;
+  // Assemble the body. Buffered per-request (not a function-local static) since chunk callbacks
+  // for different concurrent requests can interleave on the AsyncTCP task.
   if (index == 0)
   {
-    body = ""; // first chunk
+    request->_tempObject = new String();
+    request->onDisconnect([request]() {
+      delete static_cast<String *>(request->_tempObject);
+      request->_tempObject = nullptr;
+    });
   }
-
-  for (size_t i = 0; i < len; i++)
-  {
-    body += (char)data[i];
-  }
+  String *body = static_cast<String *>(request->_tempObject);
+  body->concat(reinterpret_cast<const char *>(data), len);
 
   // Only process once the full body is received
   if (index + len != total)
@@ -28,7 +29,10 @@ void handlePCA9685Put(AsyncWebServerRequest *request, uint8_t *data, size_t len,
 
   // Parse the JSON and extract value
   JsonDocument doc;
-  if (deserializeJson(doc, body))
+  DeserializationError jsonErr = deserializeJson(doc, *body);
+  delete body;
+  request->_tempObject = nullptr;
+  if (jsonErr)
   {
     request->send(400, "application/json", "{\"error\":\"invalid JSON\"}");
     return;

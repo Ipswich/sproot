@@ -12,6 +12,7 @@ std::map<uint8_t, Adafruit_PWMServoDriver*> pca9685Registry;
 /// @return A pointer to the Adafruit_PWMServoDriver instance, or nullptr if initialization failed
 Adafruit_PWMServoDriver* getPCA9685(uint8_t address){
     if (pca9685Registry.count(address)) {
+      Wire.beginTransmission(address);
       if(Wire.endTransmission() == 0) {
         return pca9685Registry[address];
       }

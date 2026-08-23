@@ -19,6 +19,7 @@ std::map<uint8_t, Adafruit_ADS1115*> ads1115Registry;
  */
 Adafruit_ADS1115* getADS1115(uint8_t address) {
     if (ads1115Registry.count(address)) {
+      Wire.beginTransmission(address);
       if(Wire.endTransmission() == 0) {
         return ads1115Registry[address];
       }
