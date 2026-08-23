@@ -7,7 +7,7 @@ title: Camera
 
 Sometimes sensors and raw metrics can only get you so far. Maybe you're just curious about your plants and want to sneak a peak to see if your microgreens have greened up a bit since coming out of the dark. Maybe you want to see watch your strawberry leaves bob in the breeze of the fans. Or maybe you're worried your cat has parked itself in the middle of your shelf under the warm artificial sun.
 
-Sproot can integrate with a Raspberry Pi Camera Module (and other web cameras) for capturing images, livestreaming video, and archiving images together for timelapse generation. To get started, you'll need to have a web camera with endpoints for capturing and returning an image, and for streaming mjpeg. There's one built into Sproot - just uncomment out the camera service inside of the docker-compose.yaml file. You can connect to from Sproot with your device's IP address.
+Sproot can integrate with a Raspberry Pi Camera Module (and other web cameras) for capturing images, livestreaming video, and archiving images together for timelapse generation. To get started, you'll need to have a web camera with endpoints for capturing and returning an image, and for streaming mjpeg. There's one built into Sproot - just run the `docker compose` "up" command with the `--profiles camera` option to launch it with the app. Then, you can connect to from Sproot with your device's IP address.
 
 ## Camera Settings
 
