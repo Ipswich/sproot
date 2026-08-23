@@ -775,7 +775,9 @@ describe("API Tests", async function () {
             "automationId",
             "groupType",
             "startTime",
+            "startOffsetSeconds",
             "endTime",
+            "endOffsetSeconds",
             "repeatInterval",
             "repeatDuration",
             "phaseAnchorType",
@@ -899,6 +901,43 @@ describe("API Tests", async function () {
               .delete(`/api/v2/automations/1/conditions/time/${response.body.content.data.id}`)
               .expect(200);
           });
+
+          it("should persist dynamic time offsets on creation", async () => {
+            await request(server)
+              .patch("/api/v2/settings")
+              .send({
+                "system.latitude": "40.7128",
+                "system.longitude": "-74.0060",
+              })
+              .expect(200);
+
+            const response = await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "sunrise",
+                startOffsetSeconds: -300,
+                endTime: "sunset",
+                endOffsetSeconds: 7200,
+              })
+              .expect(201);
+
+            assert.equal(response.body.content.data.startTime, "sunrise");
+            assert.equal(response.body.content.data.startOffsetSeconds, -300);
+            assert.equal(response.body.content.data.endTime, "sunset");
+            assert.equal(response.body.content.data.endOffsetSeconds, 7200);
+
+            const stored = (await app.get("sprootDB").automations.conditions.time.getAsync(1)).find(
+              (condition: { id: number }) => condition.id === response.body.content.data.id,
+            );
+
+            assert.equal(stored?.startOffsetSeconds, -300);
+            assert.equal(stored?.endOffsetSeconds, 7200);
+
+            await request(server)
+              .delete(`/api/v2/automations/1/conditions/time/${response.body.content.data.id}`)
+              .expect(200);
+          });
         });
 
         describe("PATCH", async () => {
@@ -950,6 +989,48 @@ describe("API Tests", async function () {
             assert.equal(updated.repeatInterval, 17);
             assert.equal(updated.repeatDuration, 5);
             assert.equal(updated.phaseAnchorType, "window");
+
+            await request(server)
+              .delete(
+                `/api/v2/automations/1/conditions/time/${createResponse.body.content.data.id}`,
+              )
+              .expect(200);
+          });
+
+          it("should update dynamic time offsets", async () => {
+            await request(server)
+              .patch("/api/v2/settings")
+              .send({
+                "system.latitude": "40.7128",
+                "system.longitude": "-74.0060",
+              })
+              .expect(200);
+
+            const createResponse = await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "sunrise",
+                endTime: "sunset",
+              })
+              .expect(201);
+
+            await request(server)
+              .patch(`/api/v2/automations/1/conditions/time/${createResponse.body.content.data.id}`)
+              .send({
+                startOffsetSeconds: -600,
+                endOffsetSeconds: 1800,
+              })
+              .expect(200);
+
+            const updated = (
+              await app.get("sprootDB").automations.conditions.time.getAsync(1)
+            ).find(
+              (condition: { id: number }) => condition.id === createResponse.body.content.data.id,
+            );
+
+            assert.equal(updated?.startOffsetSeconds, -600);
+            assert.equal(updated?.endOffsetSeconds, 1800);
 
             await request(server)
               .delete(
@@ -1600,7 +1681,9 @@ describe("API Tests", async function () {
       "imageRetentionSize",
       "timelapseInterval",
       "timelapseStartTime",
+      "timelapseStartOffsetSeconds",
       "timelapseEndTime",
+      "timelapseEndOffsetSeconds",
     ];
     describe("Settings", () => {
       describe("GET", () => {
@@ -1621,6 +1704,8 @@ describe("API Tests", async function () {
             timelapseInterval: 5,
             timelapseStartTime: null,
             timelapseEndTime: null,
+            timelapseStartOffsetSeconds: null,
+            timelapseEndOffsetSeconds: null,
           });
         });
       });
@@ -1640,8 +1725,10 @@ describe("API Tests", async function () {
             imageRetentionDays: 7,
             imageRetentionSize: 1024,
             timelapseInterval: 60,
-            timelapseStartTime: "08:00",
-            timelapseEndTime: "20:00",
+            timelapseStartTime: "sunrise",
+            timelapseStartOffsetSeconds: -300,
+            timelapseEndTime: "sunset",
+            timelapseEndOffsetSeconds: 1800,
           };
 
           const response = await request(server)
@@ -1654,6 +1741,8 @@ describe("API Tests", async function () {
 
           assert.containsAllKeys(content.data, cameraSettingsKeys);
           assert.equal(app.get("cameraManager").cameraSettings[0].name, "Updated Camera Name");
+          assert.equal(content.data.timelapseStartOffsetSeconds, -300);
+          assert.equal(content.data.timelapseEndOffsetSeconds, 1800);
         });
       });
     });

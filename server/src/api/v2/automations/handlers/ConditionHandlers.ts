@@ -33,12 +33,18 @@ const TIME_CONDITION_PHASE_ANCHOR_TYPES: TimeConditionPhaseAnchorType[] = [
 
 type TimeConditionConfig = {
   startTime: string | null;
+  startOffsetSeconds: number | null;
   endTime: string | null;
+  endOffsetSeconds: number | null;
   repeatInterval: number | null;
   repeatDuration: number | null;
   phaseAnchorType: TimeConditionPhaseAnchorType | null;
   phaseAnchorValue: string | null;
 };
+
+function isValidOffsetSeconds(value: number | null): boolean {
+  return value == null || Number.isInteger(value);
+}
 
 function validateTimeConditionConfig(config: TimeConditionConfig, invalidFields: string[]): void {
   if (config.startTime != null && !isValidTimeExpression(config.startTime)) {
@@ -49,6 +55,26 @@ function validateTimeConditionConfig(config: TimeConditionConfig, invalidFields:
   }
   if (config.startTime == null && config.endTime != null) {
     invalidFields.push("End time requires a start time.");
+  }
+  if (!isValidOffsetSeconds(config.startOffsetSeconds)) {
+    invalidFields.push("Start offset must be a whole number of seconds.");
+  }
+  if (!isValidOffsetSeconds(config.endOffsetSeconds)) {
+    invalidFields.push("End offset must be a whole number of seconds.");
+  }
+  if (config.startOffsetSeconds != null) {
+    if (config.startTime == null) {
+      invalidFields.push("Start offset requires a start time.");
+    } else if (!isDynamicTimePoint(config.startTime)) {
+      invalidFields.push("Start offset is only supported for solar/lunar time points.");
+    }
+  }
+  if (config.endOffsetSeconds != null) {
+    if (config.endTime == null) {
+      invalidFields.push("End offset requires an end time.");
+    } else if (!isDynamicTimePoint(config.endTime)) {
+      invalidFields.push("End offset is only supported for solar/lunar time points.");
+    }
   }
 
   const hasRepeatInterval = config.repeatInterval != null;
@@ -159,7 +185,9 @@ async function validateDynamicTimeDependenciesAsync(
 function normalizeTimeConditionConfig(partial: Partial<TimeConditionConfig>): TimeConditionConfig {
   return {
     startTime: partial.startTime ?? null,
+    startOffsetSeconds: partial.startOffsetSeconds ?? null,
     endTime: partial.endTime ?? null,
+    endOffsetSeconds: partial.endOffsetSeconds ?? null,
     repeatInterval: partial.repeatInterval ?? null,
     repeatDuration: partial.repeatDuration ?? null,
     phaseAnchorType: partial.phaseAnchorType ?? null,
@@ -662,7 +690,9 @@ export async function addAsync(
       case "time": {
         const config = normalizeTimeConditionConfig({
           startTime: request.body.startTime,
+          startOffsetSeconds: request.body.startOffsetSeconds,
           endTime: request.body.endTime,
+          endOffsetSeconds: request.body.endOffsetSeconds,
           repeatInterval: request.body.repeatInterval,
           repeatDuration: request.body.repeatDuration,
           phaseAnchorType: request.body.phaseAnchorType,
@@ -677,7 +707,9 @@ export async function addAsync(
           automationId,
           request.body.groupType,
           config.startTime,
+          config.startOffsetSeconds,
           config.endTime,
+          config.endOffsetSeconds,
           config.repeatInterval,
           config.repeatDuration,
           config.phaseAnchorType,
@@ -693,6 +725,8 @@ export async function addAsync(
           config.phaseAnchorType,
           config.phaseAnchorValue,
           automationService.timeExpressionResolver,
+          config.startOffsetSeconds,
+          config.endOffsetSeconds,
         );
         break;
       }
@@ -1032,7 +1066,15 @@ export async function updateAsync(
         const sdbTimeCondition = sdbcondition as SDBTimeCondition;
         const config = normalizeTimeConditionConfig({
           startTime: getDefinedOrFallback(request.body.startTime, sdbTimeCondition.startTime),
+          startOffsetSeconds: getDefinedOrFallback(
+            request.body.startOffsetSeconds,
+            sdbTimeCondition.startOffsetSeconds,
+          ),
           endTime: getDefinedOrFallback(request.body.endTime, sdbTimeCondition.endTime),
+          endOffsetSeconds: getDefinedOrFallback(
+            request.body.endOffsetSeconds,
+            sdbTimeCondition.endOffsetSeconds,
+          ),
           repeatInterval: getDefinedOrFallback(
             request.body.repeatInterval,
             sdbTimeCondition.repeatInterval,
@@ -1061,6 +1103,8 @@ export async function updateAsync(
           config.phaseAnchorType,
           config.phaseAnchorValue,
           automationService.timeExpressionResolver,
+          config.startOffsetSeconds,
+          config.endOffsetSeconds,
         );
         validateTimeConditionConfig(config, invalidDetails);
         await validateDynamicTimeDependenciesAsync(settingsService, config, invalidDetails);

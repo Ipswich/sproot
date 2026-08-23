@@ -72,6 +72,14 @@ function resolveExpressionMode(value: string | null): TimeExpressionMode {
   return value != null && isDynamicTimePoint(value) ? "dynamic" : "clock";
 }
 
+function secondsToMinuteInput(value: number | null): number | "" {
+  return value == null ? "" : value / 60;
+}
+
+function minutesToOffsetSeconds(value: string | number): number | null {
+  return typeof value === "number" && value !== 0 ? value * 60 : null;
+}
+
 function formatDynamicTime(date: Date): string {
   const hh = String(date.getHours()).padStart(2, "0");
   const mm = String(date.getMinutes()).padStart(2, "0");
@@ -106,7 +114,9 @@ function createDefaultDraft(index: number): CameraDraft {
     timelapseEnabled: false,
     timelapseInterval: 5,
     timelapseStartTime: null,
+    timelapseStartOffsetSeconds: null,
     timelapseEndTime: null,
+    timelapseEndOffsetSeconds: null,
     imageRetentionDays: 90,
     imageRetentionSize: 5000,
   };
@@ -129,7 +139,9 @@ function toRequestBody(draft: CameraDraft): NewCameraSettings {
     timelapseEnabled: draft.timelapseEnabled,
     timelapseInterval: draft.timelapseInterval,
     timelapseStartTime: draft.timelapseStartTime,
+    timelapseStartOffsetSeconds: draft.timelapseStartOffsetSeconds ?? null,
     timelapseEndTime: draft.timelapseEndTime,
+    timelapseEndOffsetSeconds: draft.timelapseEndOffsetSeconds ?? null,
     imageRetentionDays: draft.imageRetentionDays,
     imageRetentionSize: draft.imageRetentionSize,
   };
@@ -216,6 +228,22 @@ function validateDraft(draft: CameraDraft): string[] {
   ) {
     errors.push(
       "Timelapse start and end time must both be set or both be empty.",
+    );
+  }
+  if (
+    draft.timelapseStartOffsetSeconds !== null &&
+    !isDynamicTimePoint(draft.timelapseStartTime ?? "")
+  ) {
+    errors.push(
+      "Timelapse start offset is only supported for solar/lunar time points.",
+    );
+  }
+  if (
+    draft.timelapseEndOffsetSeconds !== null &&
+    !isDynamicTimePoint(draft.timelapseEndTime ?? "")
+  ) {
+    errors.push(
+      "Timelapse end offset is only supported for solar/lunar time points.",
     );
   }
 
@@ -631,6 +659,9 @@ export default function CameraSettingsAccordionItem() {
                             <CameraTimeExpressionField
                               label="Timelapse Start"
                               value={draft.timelapseStartTime}
+                              offsetSeconds={
+                                draft.timelapseStartOffsetSeconds ?? null
+                              }
                               disabled={!draft.timelapseEnabled}
                               dynamicEnabled={hasDynamicTimeSupport}
                               timeSuffixes={solarLunarTimes}
@@ -641,10 +672,20 @@ export default function CameraSettingsAccordionItem() {
                                   value,
                                 );
                               }}
+                              onOffsetChange={(value) => {
+                                updateDraft(
+                                  draft.key,
+                                  "timelapseStartOffsetSeconds",
+                                  value,
+                                );
+                              }}
                             />
                             <CameraTimeExpressionField
                               label="Timelapse End"
                               value={draft.timelapseEndTime}
+                              offsetSeconds={
+                                draft.timelapseEndOffsetSeconds ?? null
+                              }
                               disabled={!draft.timelapseEnabled}
                               dynamicEnabled={hasDynamicTimeSupport}
                               timeSuffixes={solarLunarTimes}
@@ -652,6 +693,13 @@ export default function CameraSettingsAccordionItem() {
                                 updateDraft(
                                   draft.key,
                                   "timelapseEndTime",
+                                  value,
+                                );
+                              }}
+                              onOffsetChange={(value) => {
+                                updateDraft(
+                                  draft.key,
+                                  "timelapseEndOffsetSeconds",
                                   value,
                                 );
                               }}
@@ -693,6 +741,8 @@ type CameraTimeExpressionFieldProps = {
   label: string;
   value: string | null;
   onChange: (value: string | null) => void;
+  offsetSeconds: number | null;
+  onOffsetChange: (value: number | null) => void;
   disabled: boolean;
   dynamicEnabled: boolean;
   timeSuffixes: SolarLunarTimesMap | null;
@@ -702,6 +752,8 @@ function CameraTimeExpressionField({
   label,
   value,
   onChange,
+  offsetSeconds,
+  onOffsetChange,
   disabled,
   dynamicEnabled,
   timeSuffixes,
@@ -752,6 +804,7 @@ function CameraTimeExpressionField({
           ) {
             setMode(nextMode as TimeExpressionMode);
             onChange(null);
+            onOffsetChange(null);
           }
         }}
         data={[
@@ -769,28 +822,42 @@ function CameraTimeExpressionField({
           disabled={disabled}
         />
       ) : (
-        <Select
-          searchable
-          allowDeselect={false}
-          placeholder="Select a solar or lunar event"
-          data={timePointOptions}
-          value={mode === resolveExpressionMode(value) ? value : null}
-          onChange={(nextValue) => onChange(nextValue ?? null)}
-          disabled={disabled}
-          renderOption={({ option }) => {
-            const time = timeValues[option.value as DynamicTimePoint] ?? null;
-            return (
-              <span>
-                {option.label}
-                {time ? (
-                  <Text span c="dimmed" size="sm">
-                    {` (${time})`}
-                  </Text>
-                ) : null}
-              </span>
-            );
-          }}
-        />
+        <>
+          <Select
+            searchable
+            allowDeselect={false}
+            placeholder="Select a solar or lunar event"
+            data={timePointOptions}
+            value={mode === resolveExpressionMode(value) ? value : null}
+            onChange={(nextValue) => onChange(nextValue ?? null)}
+            disabled={disabled}
+            renderOption={({ option }) => {
+              const time = timeValues[option.value as DynamicTimePoint] ?? null;
+              return (
+                <span>
+                  {option.label}
+                  {time ? (
+                    <Text span c="dimmed" size="sm">
+                      {` (${time})`}
+                    </Text>
+                  ) : null}
+                </span>
+              );
+            }}
+          />
+          <NumberInput
+            allowDecimal={false}
+            description="Negative is before the event. Positive is after."
+            disabled={disabled}
+            label={`${label} Offset`}
+            step={1}
+            suffix=" min"
+            value={secondsToMinuteInput(offsetSeconds)}
+            onChange={(nextValue) => {
+              onOffsetChange(minutesToOffsetSeconds(nextValue));
+            }}
+          />
+        </>
       )}
     </Stack>
   );

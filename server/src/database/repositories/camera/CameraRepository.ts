@@ -29,7 +29,9 @@ export class CameraRepository extends BaseKnexRepository implements ICameraRepos
       imageRetentionSize: cameraSettings.imageRetentionSize,
       timelapseInterval: cameraSettings.timelapseInterval,
       timelapseStartTime: cameraSettings.timelapseStartTime,
+      timelapseStartOffsetSeconds: cameraSettings.timelapseStartOffsetSeconds,
       timelapseEndTime: cameraSettings.timelapseEndTime,
+      timelapseEndOffsetSeconds: cameraSettings.timelapseEndOffsetSeconds,
     });
   }
 
@@ -46,7 +48,9 @@ export class CameraRepository extends BaseKnexRepository implements ICameraRepos
       imageRetentionSize: cameraSettings.imageRetentionSize,
       timelapseInterval: cameraSettings.timelapseInterval,
       timelapseStartTime: cameraSettings.timelapseStartTime,
+      timelapseStartOffsetSeconds: cameraSettings.timelapseStartOffsetSeconds,
       timelapseEndTime: cameraSettings.timelapseEndTime,
+      timelapseEndOffsetSeconds: cameraSettings.timelapseEndOffsetSeconds,
     });
   }
 

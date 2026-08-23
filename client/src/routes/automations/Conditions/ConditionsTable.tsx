@@ -496,15 +496,27 @@ function TimeConditionRow({
 }): ReactNode {
   const labelStart = formatTimeLabel(timeCondition.startTime);
   const labelEnd = formatTimeLabel(timeCondition.endTime);
-  const timeStart = formatTimeDisplay(timeCondition.startTime, solarLunarTimes);
-  const timeEnd = formatTimeDisplay(timeCondition.endTime, solarLunarTimes);
+  const windowStartLabel =
+    `${formatOffsetSummary(timeCondition.startOffsetSeconds)}${labelStart ?? ""}`.trim();
+  const windowEndLabel =
+    `${formatOffsetSummary(timeCondition.endOffsetSeconds)}${labelEnd ?? ""}`.trim();
+  const timeStart = formatTimeDisplay(
+    timeCondition.startTime,
+    timeCondition.startOffsetSeconds,
+    solarLunarTimes,
+  );
+  const timeEnd = formatTimeDisplay(
+    timeCondition.endTime,
+    timeCondition.endOffsetSeconds,
+    solarLunarTimes,
+  );
 
   const windowSummary =
-    !labelStart && !labelEnd
+    !windowStartLabel && !windowEndLabel
       ? "Always"
-      : labelStart && !labelEnd
-        ? `At ${labelStart}`
-        : `Between ${labelStart} and ${labelEnd}`;
+      : windowStartLabel && !windowEndLabel
+        ? `At ${windowStartLabel}`
+        : `Between ${windowStartLabel} and ${windowEndLabel}`;
 
   const timeSummary =
     timeStart && timeEnd
@@ -542,6 +554,7 @@ function formatTimeLabel(value: string | null): string | undefined {
 
 function formatTimeDisplay(
   value: string | null,
+  offsetSeconds: number | null | undefined,
   solarLunarTimes: SolarLunarTimesMap | null,
 ): string | null {
   const dynamicLabel = getDynamicTimePointLabel(value);
@@ -549,10 +562,36 @@ function formatTimeDisplay(
     const time = solarLunarTimes[value as keyof SolarLunarTimesMap] as
       Date | null | undefined;
     if (time) {
-      return formatTime(time);
+      return formatTime(new Date(time.getTime() + (offsetSeconds ?? 0) * 1000));
     }
   }
   return null;
+}
+
+function formatOffsetSummary(offsetSeconds: number | null | undefined): string {
+  if (offsetSeconds == null || offsetSeconds === 0) {
+    return "";
+  }
+
+  const sign = offsetSeconds > 0 ? "after" : "before";
+  let remainingSeconds = Math.abs(offsetSeconds);
+  const hours = Math.floor(remainingSeconds / 3600);
+  remainingSeconds -= hours * 3600;
+  const minutes = Math.floor(remainingSeconds / 60);
+  remainingSeconds -= minutes * 60;
+  const parts: string[] = [];
+
+  if (hours > 0) {
+    parts.push(`${hours}h`);
+  }
+  if (minutes > 0) {
+    parts.push(`${minutes}m`);
+  }
+  if (remainingSeconds > 0) {
+    parts.push(`${remainingSeconds}s`);
+  }
+
+  return parts.length > 0 ? `${parts.join(" ")} ${sign} ` : "";
 }
 
 function formatTime(date: Date): string {

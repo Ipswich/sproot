@@ -47,9 +47,23 @@ function resolveExpressionMode(value: string): TimeExpressionMode {
   return isDynamicTimePoint(value) ? "dynamic" : "clock";
 }
 
+function secondsToMinuteInput(value: number | ""): number | "" {
+  return value === "" ? "" : value / 60;
+}
+
+function minutesToOffsetSeconds(value: string | number): number | "" {
+  return typeof value === "number" ? value * 60 : "";
+}
+
+function normalizeOffsetSeconds(value: number | ""): number | null {
+  return typeof value === "number" && value !== 0 ? value : null;
+}
+
 type TimeConditionFormValues = {
   startTime: string;
+  startOffsetSeconds: number | "";
   endTime: string;
+  endOffsetSeconds: number | "";
   repeatMode: "Continuous" | "Periodic";
   repeatInterval: number | "";
   repeatDuration: number | "";
@@ -100,7 +114,9 @@ export default function TimeCondition({
   const addTimeMutation = useMutation({
     mutationFn: async (timeCondition: {
       startTime: string | null;
+      startOffsetSeconds: number | null;
       endTime: string | null;
+      endOffsetSeconds: number | null;
       repeatInterval: number | null;
       repeatDuration: number | null;
       phaseAnchorType: PhaseAnchorType | null;
@@ -116,7 +132,9 @@ export default function TimeCondition({
   const timeConditionForm = useForm<TimeConditionFormValues>({
     initialValues: {
       startTime: "",
+      startOffsetSeconds: "",
       endTime: "",
+      endOffsetSeconds: "",
       repeatMode: "Continuous",
       repeatInterval: "",
       repeatDuration: "",
@@ -136,6 +154,24 @@ export default function TimeCondition({
           : value === "" || regex.test(value) || isDynamicTimePoint(value)
             ? null
             : "End time must be HH:MM or a supported solar/lunar point",
+      startOffsetSeconds: (value) => {
+        if (value === "") {
+          return null;
+        }
+
+        return Number.isInteger(value)
+          ? null
+          : "Start offset must be a whole number of minutes";
+      },
+      endOffsetSeconds: (value) => {
+        if (value === "") {
+          return null;
+        }
+
+        return Number.isInteger(value)
+          ? null
+          : "End offset must be a whole number of minutes";
+      },
       repeatInterval: (value, values) => {
         if (values.repeatMode !== "Periodic" || timeConditionType === "Once") {
           return null;
@@ -197,8 +233,16 @@ export default function TimeCondition({
         setSubmitError(null);
         const startTime =
           timeConditionType === "Always" ? null : values.startTime || null;
+        const startOffsetSeconds =
+          startTime != null && isDynamicTimePoint(startTime)
+            ? normalizeOffsetSeconds(values.startOffsetSeconds)
+            : null;
         const endTime =
           timeConditionType === "Between" ? values.endTime || null : null;
+        const endOffsetSeconds =
+          endTime != null && isDynamicTimePoint(endTime)
+            ? normalizeOffsetSeconds(values.endOffsetSeconds)
+            : null;
         const repeatEnabled =
           values.repeatMode === "Periodic" && timeConditionType !== "Once";
         const phaseAnchorType = repeatEnabled ? values.phaseAnchorType : null;
@@ -210,7 +254,9 @@ export default function TimeCondition({
         try {
           await addTimeMutation.mutateAsync({
             startTime,
+            startOffsetSeconds,
             endTime,
+            endOffsetSeconds,
             repeatInterval:
               repeatEnabled && typeof values.repeatInterval === "number"
                 ? values.repeatInterval
@@ -259,7 +305,9 @@ export default function TimeCondition({
               timeConditionForm.setValues({
                 ...timeConditionForm.values,
                 startTime: "",
+                startOffsetSeconds: "",
                 endTime: "",
+                endOffsetSeconds: "",
                 phaseAnchorType: "clock",
               });
               setStartTimeMode("clock");
@@ -275,6 +323,7 @@ export default function TimeCondition({
               timeConditionForm.setValues({
                 ...timeConditionForm.values,
                 endTime: "",
+                endOffsetSeconds: "",
                 repeatMode: "Continuous",
                 repeatInterval: "",
                 repeatDuration: "",
@@ -301,15 +350,20 @@ export default function TimeCondition({
                 label="Start time"
                 required
                 value={timeConditionForm.values.startTime}
+                offsetSeconds={timeConditionForm.values.startOffsetSeconds}
                 mode={startTimeMode}
                 dynamicEnabled={hasDynamicTimeSupport}
                 error={timeConditionForm.errors["startTime"]}
                 onModeChange={(mode) => {
                   setStartTimeMode(mode);
                   timeConditionForm.setFieldValue("startTime", "");
+                  timeConditionForm.setFieldValue("startOffsetSeconds", "");
                 }}
                 onChange={(value) => {
                   timeConditionForm.setFieldValue("startTime", value);
+                }}
+                onOffsetChange={(value) => {
+                  timeConditionForm.setFieldValue("startOffsetSeconds", value);
                 }}
                 timeSuffixes={solarLunarTimes}
               />
@@ -320,15 +374,20 @@ export default function TimeCondition({
                 label="End time"
                 required
                 value={timeConditionForm.values.endTime}
+                offsetSeconds={timeConditionForm.values.endOffsetSeconds}
                 mode={endTimeMode}
                 dynamicEnabled={hasDynamicTimeSupport}
                 error={timeConditionForm.errors["endTime"]}
                 onModeChange={(mode) => {
                   setEndTimeMode(mode);
                   timeConditionForm.setFieldValue("endTime", "");
+                  timeConditionForm.setFieldValue("endOffsetSeconds", "");
                 }}
                 onChange={(value) => {
                   timeConditionForm.setFieldValue("endTime", value);
+                }}
+                onOffsetChange={(value) => {
+                  timeConditionForm.setFieldValue("endOffsetSeconds", value);
                 }}
                 timeSuffixes={solarLunarTimes}
               />
@@ -342,15 +401,20 @@ export default function TimeCondition({
                 label="Run at"
                 required
                 value={timeConditionForm.values.startTime}
+                offsetSeconds={timeConditionForm.values.startOffsetSeconds}
                 mode={startTimeMode}
                 dynamicEnabled={hasDynamicTimeSupport}
                 error={timeConditionForm.errors["startTime"]}
                 onModeChange={(mode) => {
                   setStartTimeMode(mode);
                   timeConditionForm.setFieldValue("startTime", "");
+                  timeConditionForm.setFieldValue("startOffsetSeconds", "");
                 }}
                 onChange={(value) => {
                   timeConditionForm.setFieldValue("startTime", value);
+                }}
+                onOffsetChange={(value) => {
+                  timeConditionForm.setFieldValue("startOffsetSeconds", value);
                 }}
                 timeSuffixes={solarLunarTimes}
               />
@@ -447,9 +511,11 @@ export default function TimeCondition({
                     <TimeExpressionField
                       label="Period anchor"
                       value={timeConditionForm.values.phaseAnchorValue}
+                      offsetSeconds=""
                       mode={phaseAnchorMode}
                       dynamicEnabled={hasDynamicTimeSupport}
                       error={timeConditionForm.errors["phaseAnchorValue"]}
+                      onOffsetChange={() => {}}
                       onModeChange={(mode) => {
                         setPhaseAnchorMode(mode);
                         timeConditionForm.setFieldValue("phaseAnchorValue", "");
@@ -492,8 +558,10 @@ export default function TimeCondition({
 type TimeExpressionFieldProps = {
   label: string;
   value: string;
+  offsetSeconds: number | "";
   mode: TimeExpressionMode;
   onChange: (value: string) => void;
+  onOffsetChange: (value: number | "") => void;
   onModeChange: (mode: TimeExpressionMode) => void;
   error?: ReactNode;
   required?: boolean;
@@ -504,8 +572,10 @@ type TimeExpressionFieldProps = {
 function TimeExpressionField({
   label,
   value,
+  offsetSeconds,
   mode,
   onChange,
+  onOffsetChange,
   onModeChange,
   error,
   required,
@@ -565,31 +635,44 @@ function TimeExpressionField({
           error={error}
         />
       ) : (
-        <Select
-          withAsterisk={required ?? false}
-          searchable
-          allowDeselect={false}
-          label={label}
-          placeholder="Select a solar or lunar event"
-          data={timePointOptions}
-          value={mode === resolveExpressionMode(value) ? value : null}
-          onChange={(nextValue) => onChange(nextValue ?? "")}
-          error={error}
-          renderOption={({ option }) => {
-            const time = timeValues[option.value as DynamicTimePoint] ?? null;
-            return (
-              <span>
-                {option.label}
-                {time ? (
-                  <Text span c="dimmed" size="sm">
-                    {" "}
-                    ({time})
-                  </Text>
-                ) : null}
-              </span>
-            );
-          }}
-        />
+        <>
+          <Select
+            withAsterisk={required ?? false}
+            searchable
+            allowDeselect={false}
+            label={label}
+            placeholder="Select a solar or lunar event"
+            data={timePointOptions}
+            value={mode === resolveExpressionMode(value) ? value : null}
+            onChange={(nextValue) => onChange(nextValue ?? "")}
+            error={error}
+            renderOption={({ option }) => {
+              const time = timeValues[option.value as DynamicTimePoint] ?? null;
+              return (
+                <span>
+                  {option.label}
+                  {time ? (
+                    <Text span c="dimmed" size="sm">
+                      {" "}
+                      ({time})
+                    </Text>
+                  ) : null}
+                </span>
+              );
+            }}
+          />
+          <NumberInput
+            allowDecimal={false}
+            description="Negative is before the event. Positive is after."
+            label={`${label} offset`}
+            step={1}
+            suffix=" min"
+            value={secondsToMinuteInput(offsetSeconds)}
+            onChange={(nextValue) => {
+              onOffsetChange(minutesToOffsetSeconds(nextValue));
+            }}
+          />
+        </>
       )}
     </Stack>
   );

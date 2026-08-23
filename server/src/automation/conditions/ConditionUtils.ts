@@ -53,7 +53,9 @@ export function evaluateTime(
   now: Date,
   timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
   startTime?: string | null,
+  startOffsetSeconds?: number | null,
   endTime?: string | null,
+  endOffsetSeconds?: number | null,
   repeatInterval?: number | null,
   repeatDuration?: number | null,
   phaseAnchorType?: TimeConditionPhaseAnchorType | null,
@@ -63,7 +65,9 @@ export function evaluateTime(
     -1,
     "allOf",
     startTime,
+    startOffsetSeconds,
     endTime,
+    endOffsetSeconds,
     repeatInterval,
     repeatDuration,
     phaseAnchorType,
@@ -71,8 +75,14 @@ export function evaluateTime(
   );
 
   return (
-    evaluateTimeWindow(now, timeExpressionResolver, startTime, endTime) &&
-    evaluateTimeRepeat(now, schedule, timeExpressionResolver)
+    evaluateTimeWindow(
+      now,
+      timeExpressionResolver,
+      startTime,
+      startOffsetSeconds,
+      endTime,
+      endOffsetSeconds,
+    ) && evaluateTimeRepeat(now, schedule, timeExpressionResolver)
   );
 }
 
@@ -99,7 +109,9 @@ export function evaluateTimeWindow(
   now: Date,
   timeExpressionResolver: TimeExpressionResolver,
   startTime?: string | null,
+  startOffsetSeconds?: number | null,
   endTime?: string | null,
+  endOffsetSeconds?: number | null,
 ): boolean {
   const windowType = getTimeWindowType(startTime, endTime);
 
@@ -107,14 +119,21 @@ export function evaluateTimeWindow(
     // if neither startTime nor endTime, return true
     return true;
   } else if (windowType == "between") {
-    const bounds = deriveTimeWindowBounds(timeExpressionResolver, now, startTime!, endTime!);
+    const bounds = deriveTimeWindowBounds(
+      timeExpressionResolver,
+      now,
+      startTime!,
+      startOffsetSeconds,
+      endTime!,
+      endOffsetSeconds,
+    );
     if (bounds == null) {
       return false;
     }
 
     return now.getTime() >= bounds.start.getTime() && now.getTime() < bounds.end.getTime();
   } else if (windowType == "once") {
-    const start = timeExpressionResolver.resolveToDate(startTime!, now);
+    const start = timeExpressionResolver.resolveToDate(startTime!, now, startOffsetSeconds);
     return (
       start != null &&
       start.getHours() == now.getHours() &&
@@ -198,7 +217,14 @@ export function derivePhaseAnchor(
     case "clock":
       return deriveClockAnchor(timeExpressionResolver, schedule.phaseAnchorValue, now);
     case "window":
-      return deriveWindowAnchor(timeExpressionResolver, schedule.startTime, schedule.endTime, now);
+      return deriveWindowAnchor(
+        timeExpressionResolver,
+        schedule.startTime,
+        schedule.startOffsetSeconds,
+        schedule.endTime,
+        schedule.endOffsetSeconds,
+        now,
+      );
   }
 }
 
@@ -241,14 +267,23 @@ function deriveClockAnchor(
 function deriveWindowAnchor(
   timeExpressionResolver: TimeExpressionResolver,
   startTime: string | null | undefined,
+  startOffsetSeconds: number | null | undefined,
   endTime: string | null | undefined,
+  endOffsetSeconds: number | null | undefined,
   now: Date,
 ): Date | null {
   if (startTime == null || endTime == null) {
     return null;
   }
 
-  const bounds = deriveTimeWindowBounds(timeExpressionResolver, now, startTime, endTime);
+  const bounds = deriveTimeWindowBounds(
+    timeExpressionResolver,
+    now,
+    startTime,
+    startOffsetSeconds,
+    endTime,
+    endOffsetSeconds,
+  );
   return bounds?.start ?? null;
 }
 
@@ -269,14 +304,20 @@ function deriveTimeWindowBounds(
   timeExpressionResolver: TimeExpressionResolver,
   now: Date,
   startTime: string,
+  startOffsetSeconds: number | null | undefined,
   endTime: string,
+  endOffsetSeconds: number | null | undefined,
 ): { start: Date; end: Date } | null {
-  const start = timeExpressionResolver.resolveMostRecentOccurrence(startTime, now);
+  const start = timeExpressionResolver.resolveMostRecentOccurrence(
+    startTime,
+    now,
+    startOffsetSeconds,
+  );
   if (start == null) {
     return null;
   }
 
-  const end = timeExpressionResolver.resolveNextOccurrence(endTime, start);
+  const end = timeExpressionResolver.resolveNextOccurrence(endTime, start, endOffsetSeconds);
   if (end == null) {
     return null;
   }
@@ -288,7 +329,9 @@ function createTimeConditionSchedule(
   id: number,
   groupType: ITimeCondition["groupType"],
   startTime?: string | null,
+  startOffsetSeconds?: number | null,
   endTime?: string | null,
+  endOffsetSeconds?: number | null,
   repeatInterval?: number | null,
   repeatDuration?: number | null,
   phaseAnchorType?: TimeConditionPhaseAnchorType | null,
@@ -298,7 +341,9 @@ function createTimeConditionSchedule(
     id,
     groupType,
     ...(startTime !== undefined ? { startTime } : {}),
+    ...(startOffsetSeconds !== undefined ? { startOffsetSeconds } : {}),
     ...(endTime !== undefined ? { endTime } : {}),
+    ...(endOffsetSeconds !== undefined ? { endOffsetSeconds } : {}),
     ...(repeatInterval !== undefined ? { repeatInterval } : {}),
     ...(repeatDuration !== undefined ? { repeatDuration } : {}),
     ...(phaseAnchorType !== undefined ? { phaseAnchorType } : {}),

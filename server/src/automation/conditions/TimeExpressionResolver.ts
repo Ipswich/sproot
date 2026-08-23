@@ -111,29 +111,40 @@ export class TimeExpressionResolver {
     this.#coordinates = latitude == null || longitude == null ? null : { latitude, longitude };
   }
 
-  resolveToDate(expression: string | null | undefined, referenceDate: Date): Date | null {
+  resolveToDate(
+    expression: string | null | undefined,
+    referenceDate: Date,
+    offsetSeconds: number | null | undefined = null,
+  ): Date | null {
     if (expression == null) {
       return null;
     }
 
     if (TIME_REGEX.test(expression)) {
-      return resolveClockTime(expression, referenceDate);
+      return applyOffset(resolveClockTime(expression, referenceDate), offsetSeconds);
     }
 
     if (!isDynamicTimePoint(expression) || this.#coordinates == null) {
       return null;
     }
 
-    return resolveDynamicTimePoint(expression, referenceDate, this.#coordinates);
+    return applyOffset(
+      resolveDynamicTimePoint(expression, referenceDate, this.#coordinates),
+      offsetSeconds,
+    );
   }
 
-  resolveMostRecentOccurrence(expression: string | null | undefined, now: Date): Date | null {
+  resolveMostRecentOccurrence(
+    expression: string | null | undefined,
+    now: Date,
+    offsetSeconds: number | null | undefined = null,
+  ): Date | null {
     if (expression == null) {
       return null;
     }
 
     if (TIME_REGEX.test(expression)) {
-      const anchor = resolveClockTime(expression, now);
+      const anchor = applyOffset(resolveClockTime(expression, now), offsetSeconds);
       if (anchor == null) {
         return null;
       }
@@ -152,7 +163,10 @@ export class TimeExpressionResolver {
     for (const dayOffset of SEARCH_DAY_OFFSETS) {
       const candidateDate = new Date(now);
       candidateDate.setDate(candidateDate.getDate() + dayOffset);
-      const candidate = resolveDynamicTimePoint(expression, candidateDate, this.#coordinates);
+      const candidate = applyOffset(
+        resolveDynamicTimePoint(expression, candidateDate, this.#coordinates),
+        offsetSeconds,
+      );
       if (candidate != null && candidate.getTime() <= now.getTime()) {
         return candidate;
       }
@@ -161,13 +175,17 @@ export class TimeExpressionResolver {
     return null;
   }
 
-  resolveNextOccurrence(expression: string | null | undefined, after: Date): Date | null {
+  resolveNextOccurrence(
+    expression: string | null | undefined,
+    after: Date,
+    offsetSeconds: number | null | undefined = null,
+  ): Date | null {
     if (expression == null) {
       return null;
     }
 
     if (TIME_REGEX.test(expression)) {
-      const candidate = resolveClockTime(expression, after);
+      const candidate = applyOffset(resolveClockTime(expression, after), offsetSeconds);
       if (candidate == null) {
         return null;
       }
@@ -186,7 +204,10 @@ export class TimeExpressionResolver {
     for (const dayOffset of SEARCH_FORWARD_DAY_OFFSETS) {
       const candidateDate = new Date(after);
       candidateDate.setDate(candidateDate.getDate() + dayOffset);
-      const candidate = resolveDynamicTimePoint(expression, candidateDate, this.#coordinates);
+      const candidate = applyOffset(
+        resolveDynamicTimePoint(expression, candidateDate, this.#coordinates),
+        offsetSeconds,
+      );
       if (candidate != null && candidate.getTime() > after.getTime()) {
         return candidate;
       }
@@ -210,6 +231,18 @@ function resolveClockTime(expression: string, referenceDate: Date): Date | null 
   const result = new Date(referenceDate);
   result.setHours(hours!, minutes!, 0, 0);
   return result;
+}
+
+function applyOffset(date: Date | null, offsetSeconds: number | null | undefined): Date | null {
+  if (date == null) {
+    return null;
+  }
+
+  if (offsetSeconds == null || offsetSeconds === 0) {
+    return date;
+  }
+
+  return new Date(date.getTime() + offsetSeconds * 1000);
 }
 
 function resolveDynamicTimePoint(

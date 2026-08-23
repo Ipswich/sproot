@@ -42,6 +42,10 @@ function isValidTimeExpression(value: unknown): value is string {
   return typeof value === "string" && (TIME_REGEX.test(value) || isDynamicTimePoint(value));
 }
 
+function isValidOffsetSeconds(value: unknown): value is number | null {
+  return value == null || (typeof value === "number" && Number.isInteger(value));
+}
+
 async function validateDynamicTimeDependenciesAsync(
   settingsService: SettingsService,
   newSettings: Partial<CameraSettingsInput>,
@@ -148,6 +152,36 @@ async function validateCameraSettingsInput(
     missingOrInvalidFields.push(
       "Both timelapseStartTime and timelapseEndTime must be provided or both must be null",
     );
+  }
+  if (!isValidOffsetSeconds(newSettings.timelapseStartOffsetSeconds)) {
+    missingOrInvalidFields.push(
+      "timelapseStartOffsetSeconds must be a whole number of seconds or null",
+    );
+  }
+  if (!isValidOffsetSeconds(newSettings.timelapseEndOffsetSeconds)) {
+    missingOrInvalidFields.push(
+      "timelapseEndOffsetSeconds must be a whole number of seconds or null",
+    );
+  }
+  if (newSettings.timelapseStartOffsetSeconds != null) {
+    if (newSettings.timelapseStartTime == null) {
+      missingOrInvalidFields.push(
+        "timelapseStartOffsetSeconds requires timelapseStartTime to be set",
+      );
+    } else if (!isDynamicTimePoint(newSettings.timelapseStartTime)) {
+      missingOrInvalidFields.push(
+        "timelapseStartOffsetSeconds is only supported for solar/lunar time points",
+      );
+    }
+  }
+  if (newSettings.timelapseEndOffsetSeconds != null) {
+    if (newSettings.timelapseEndTime == null) {
+      missingOrInvalidFields.push("timelapseEndOffsetSeconds requires timelapseEndTime to be set");
+    } else if (!isDynamicTimePoint(newSettings.timelapseEndTime)) {
+      missingOrInvalidFields.push(
+        "timelapseEndOffsetSeconds is only supported for solar/lunar time points",
+      );
+    }
   }
 
   await validateDynamicTimeDependenciesAsync(settingsService, newSettings, missingOrInvalidFields);
