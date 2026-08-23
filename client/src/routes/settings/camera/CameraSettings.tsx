@@ -170,7 +170,7 @@ export default function CameraSettings() {
             />
             <Switch
               disabled={!newCameraForm.values.enabled}
-              label="Timelapse"
+              label="Enable Timelapse"
               type="checkbox"
               withThumbIndicator={false}
               {...newCameraForm.getInputProps("timelapseEnabled", {

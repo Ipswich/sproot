@@ -26,6 +26,8 @@ Once your device is flashed, you should be able to disconnect it and plug it in 
 
 - If your subcontroller can't connect to the Wi-Fi network, it'll pop up again as its own access point. Verify and repeat the above steps to get it connected.
 
-Now that your subcontroller is connected to the Wi-Fi network, it should show up on Sproot. Navigate to `Settings -> Subcontrollers`, and click `Connect`. In the pop up that appears, select your device and give it a name, then click `Add Device`.
+Now that your subcontroller is connected to the Wi-Fi network, it should show up on Sproot. Navigate to `Settings -> Subcontrollers`, and click `Connect`. In the pop up that appears, select your device and give it a name, then click `Add Device`. Once you've connected your subcontroller, it'll display a connection status in the table.
 
 At this point, you should have a new Subcontroller ready to have sensors and outputs added to it. Those steps are virtually identical to connecting them to the Raspberry Pi. You can find steps for sensors [here](sensors/#integrating-devices) and for outputs [here](outputs/#integrating-devices).
+
+Additionally, once a subcontroller is integrated, you can use this page to transmit over-the-air (OTA) updates when they're available. You'll be able to see your device's version, and any possible firmware updates.

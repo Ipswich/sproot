@@ -141,7 +141,7 @@ const config: Config = {
             {
               type: "doc",
               label: "Data Retention",
-              docId: "how-to/data-retention",
+              docId: "how-to/application-settings",
             },
             {
               type: "doc",

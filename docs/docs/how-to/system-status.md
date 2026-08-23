@@ -5,9 +5,9 @@ title: System Status
 
 # System Status
 
-Not much actionable here, but always a good thing to know about. If you're ever curious about how Sproot is performing, you can checkout the system's status by navigating to `Settings -> System` and expanding the `Status` section.
+Not much actionable here, but always a good thing to know about. If you're ever curious about how Sproot is performing, you can checkout the system's status by navigating to `Settings -> System` and expanding the `Status` accordion.
 
-Additionally, if you need to restart sproot, there's a big ol' `Restart` button at the bottom of this page.
+Additionally, if you need to restart sproot, there's a big ol' `Restart` button at the bottom of this page. This will kill the container, causing it to come back online. Hang out on this page, a modal with a "Server is offline, (This will disappear when we're back!)" sort of message will appear until things are back online.
 
 <p style={{ textAlign: 'center' }}>
   <img src="/docs/img/SystemStatus.png" alt="System Status" style={{ width: '30%', maxWidth: '100%', height: 'auto' }} />

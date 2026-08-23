@@ -45,7 +45,9 @@ These settings effectively determine how many images will go into an archive (at
   - [System](system-status/#system)
   - [Timelapse](system-status/#timelapse)
 
-## Managing your Timelapes
+There's also a button labeled `Delete All Images` that will delete all of your existing timelapse images. This is useful if you want to start fresh for a new timelapse.
+
+## Managing your Timelapse
 
 <p style={{ textAlign: 'center' }}>
   <img src="/docs/img/LiveView.png" alt="Live View" style={{ width: '30%', maxWidth: '100%', height: 'auto' }} />
