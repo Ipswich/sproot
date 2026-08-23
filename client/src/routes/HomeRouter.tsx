@@ -7,10 +7,10 @@ export default function HomeRouter() {
   const { readingTypes, outputs, cameraSettings } = useLoaderData() as {
     readingTypes: Partial<Record<ReadingType, string>>;
     outputs: Record<string, IOutputBase>;
-    cameraSettings: SDBCameraSettings;
+    cameraSettings: SDBCameraSettings[];
   };
 
-  if (cameraSettings?.enabled) {
+  if (cameraSettings.some((camera) => camera.enabled)) {
     return <Navigate to="/live-view" replace />;
   }
 

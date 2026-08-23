@@ -135,7 +135,7 @@ export default async function setupAsync(): Promise<Express> {
   const cameraManager = await CameraManager.createInstanceAsync(
     eventBus,
     sprootDB.camera,
-    process.env["INTERSERVICE_AUTHENTICATION_KEY"]!,
+    timeExpressionResolver,
     logger,
   );
   app.set(DI_KEYS.CameraManager, cameraManager);

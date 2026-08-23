@@ -1,45 +1,42 @@
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
-import { generateInterserviceAuthenticationToken } from "@sproot/common/utility/InterserviceAuthentication";
-import { CRON, TIMELAPSE_DIRECTORY } from "@sproot/common/utility/Constants";
+import { CRON } from "@sproot/common/utility/Constants";
 import { ICameraRepository } from "../database/repositories/camera/ICameraRepository";
-import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { CronJob } from "cron";
-
 import winston from "winston";
 import ImageCapture from "./ImageCapture";
-import StreamProxy from "./StreamProxy";
 import { IEventBus } from "../eventbus/IEventBus";
 import { CameraSettingsModifiedEvent } from "../eventbus/events/camera/CameraSettingsModifiedEvent";
 import { Events } from "../eventbus/events/Events";
+import { PromiseQueue } from "./PromiseQueue";
+import { TimeExpressionResolver } from "../automation/conditions/TimeExpressionResolver";
+
+type ManagedCamera = {
+  settings: SDBCameraSettings;
+  imageCapture: ImageCapture;
+};
 
 class CameraManager {
   #eventBus: IEventBus;
   #cameraRepository: ICameraRepository;
-  #interserviceAuthenticationKey: string;
   #logger: winston.Logger;
-
-  #imageCapture: ImageCapture;
-  #streamProxy: StreamProxy | null = null;
-  #picameraServerProcess: ChildProcessWithoutNullStreams | null = null;
-  #currentSettings: SDBCameraSettings | null = null;
+  #timeExpressionResolver: TimeExpressionResolver;
+  #managedCameras = new Map<number, ManagedCamera>();
+  #archiveQueue = new PromiseQueue();
   #isUpdating: boolean = false;
-
   #imageCaptureCronJob: CronJob;
-
   #disposed: boolean = false;
-  readonly #baseUrl: string = "http://localhost:3002";
   #listenerCleanupFunction: () => void;
 
   static createInstanceAsync(
     eventBus: IEventBus,
     cameraRepository: ICameraRepository,
-    interserviceAuthenticationKey: string,
+    timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
     logger: winston.Logger,
   ): Promise<CameraManager> {
     const cameraManager = new CameraManager(
       eventBus,
       cameraRepository,
-      interserviceAuthenticationKey,
+      timeExpressionResolver,
       logger,
     );
     return cameraManager.regenerateAsync();
@@ -48,33 +45,26 @@ class CameraManager {
   private constructor(
     eventBus: IEventBus,
     cameraRepository: ICameraRepository,
-    interserviceAuthenticationKey: string,
+    timeExpressionResolver: TimeExpressionResolver,
     logger: winston.Logger,
   ) {
     this.#eventBus = eventBus;
     this.#cameraRepository = cameraRepository;
-    this.#interserviceAuthenticationKey = interserviceAuthenticationKey;
     this.#logger = logger;
-    this.#imageCapture = new ImageCapture(logger);
+    this.#timeExpressionResolver = timeExpressionResolver;
     this.#imageCaptureCronJob = new CronJob(
       CRON.EVERY_MINUTE,
       async () => {
-        if (this.#picameraServerProcess !== null) {
-          await this.#imageCapture.captureImageAsync(
-            "latest.jpg",
-            this.#baseUrl,
-            this.generateRequestHeaders(),
-          );
-        }
+        await this.refreshEnabledCamerasAsync();
       },
-      undefined, // onComplete
-      true, // start
-      undefined, // timezone
-      null, // context
-      true, // runOnInit
-      undefined, // utcOffset
-      undefined, // unrefTimeout
-      undefined, // waitForCompletion
+      undefined,
+      true,
+      undefined,
+      null,
+      true,
+      undefined,
+      undefined,
+      undefined,
       (err: unknown) => this.#logger.error(`Image capture cron error: ${err}`),
     );
 
@@ -93,88 +83,133 @@ class CameraManager {
   }
 
   get cameraSettings() {
-    return this.#currentSettings;
+    return Array.from(this.#managedCameras.values()).map((camera) => camera.settings);
   }
 
-  /**
-   * Gets a buffer containing the latest image.
-   * @returns A promise that resolves to the latest image captured by the camera.
-   */
-  getLatestImageAsync() {
-    return this.#imageCapture.getLatestImageAsync();
+  async listCameraSettingsAsync() {
+    return this.cameraSettings;
   }
 
-  /**
-   * Gets the progress of the timelapse archive generation.
-   * @returns An object containing the status of the timelapse generation.
-   */
-  getTimelapseArchiveProgress() {
-    return this.#imageCapture.getTimelapseGenerationStatus();
+  async getCameraSettingsAsync(cameraId: number) {
+    return (
+      this.#managedCameras.get(cameraId)?.settings ?? this.#cameraRepository.getByIdAsync(cameraId)
+    );
   }
 
-  /**
-   * Gets a buffer containing the timelapse archive.
-   * @returns A promise that resolves with read stream to the timelapse archive.
-   */
-  getTimelapseArchiveAsync() {
-    return this.#imageCapture.getTimelapseArchiveAsync();
+  getLatestImageAsync(cameraId: number) {
+    return (
+      this.#managedCameras.get(cameraId)?.imageCapture.getLatestImageAsync() ??
+      Promise.resolve(null)
+    );
+  }
+
+  getTimelapseArchiveProgress(cameraId: number) {
+    return (
+      this.#managedCameras.get(cameraId)?.imageCapture.getTimelapseGenerationStatus() ?? {
+        isGenerating: false,
+        archiveProgress: 0,
+      }
+    );
+  }
+
+  getTimelapseArchiveAsync(cameraId: number) {
+    return (
+      this.#managedCameras.get(cameraId)?.imageCapture.getTimelapseArchiveAsync() ??
+      Promise.resolve(null)
+    );
   }
 
   getTimelapseImageCount() {
-    return this.#imageCapture.getTimelapseImageCount();
+    return Array.from(this.#managedCameras.values()).reduce((total, camera) => {
+      return total + camera.imageCapture.getTimelapseImageCount();
+    }, 0);
   }
 
-  getTimelapseArchiveSizeAsync() {
-    return this.#imageCapture.getTimelapseArchiveSizeAsync();
+  async getTimelapseArchiveSizeAsync() {
+    const sizes = await Promise.all(
+      Array.from(this.#managedCameras.values()).map((camera) => {
+        return camera.imageCapture.getTimelapseArchiveSizeAsync();
+      }),
+    );
+
+    return sizes.reduce<number>((total, size) => total + (size ?? 0), 0);
   }
 
   getLastTimelapseGenerationDuration() {
-    if (this.#currentSettings?.timelapseEnabled) {
-      return this.#imageCapture.getLastTimelapseGenerationDuration();
+    const durations = Array.from(this.#managedCameras.values())
+      .map((camera) => camera.imageCapture.getLastTimelapseGenerationDuration())
+      .filter((duration): duration is number => duration !== null);
+
+    if (durations.length === 0) {
+      return null;
     }
-    return null;
+
+    return Math.max(...durations);
   }
 
-  /**
-   * Clears all images from the timelapse directory.
-   * @returns A promise that resolves to a boolean indicating whether the images were successfully cleared.
-   */
-  async clearAllImagesAsync(): Promise<boolean> {
-    return this.#imageCapture.clearAllImagesAsync(TIMELAPSE_DIRECTORY);
+  async clearAllImagesAsync(cameraId: number): Promise<boolean> {
+    return this.#managedCameras.get(cameraId)?.imageCapture.clearAllImagesAsync() ?? false;
   }
 
-  /**
-   * Regenerates the timelapse archive.
-   * @returns A promise that resolves when the timelapse archive has been regenerated.
-   */
-  regenerateTimelapseArchiveAsync() {
-    // Force regeneration - this ignores the time checks
-    return this.#imageCapture.regenerateTimelapseArchiveAsync(false);
+  regenerateTimelapseArchiveAsync(cameraId: number) {
+    return this.#managedCameras.get(cameraId)?.imageCapture.regenerateTimelapseArchiveAsync(false);
   }
 
-  /**
-   * Forces a reconnect to the upstream camera server.
-   * @returns A promise that resolves with the result of the reconnection attempt.
-   */
-  reconnectLivestreamAsync() {
-    if (!this.#streamProxy) {
-      this.#logger.warn("CameraManager: stream proxy not initialized");
-      return Promise.resolve(false);
+  async fetchStreamAsync(cameraId: number): Promise<Response | null> {
+    const camera = this.#managedCameras.get(cameraId);
+    if (!camera?.settings.enabled || camera.settings.streamUrl.trim() === "") {
+      return null;
     }
-    return this.#streamProxy.reconnectAsync();
+
+    return fetch(camera.settings.streamUrl, {
+      method: "GET",
+    });
   }
 
-  /**
-   * Gets the frame buffer for direct access (used by streaming handlers).
-   * @returns The frame buffer, or null if stream proxy is not initialized.
-   */
-  getFrameBuffer() {
-    return this.#streamProxy?.getFrameBuffer() ?? null;
+  async fetchHealthAsync(cameraId: number): Promise<Response | null> {
+    const camera = this.#managedCameras.get(cameraId);
+    if (!camera || camera.settings.healthUrl.trim() === "") {
+      return null;
+    }
+
+    return fetch(camera.settings.healthUrl, {
+      method: "GET",
+    });
   }
 
-  async updateCameraSettingsAsync(newSettings: SDBCameraSettings): Promise<void> {
+  async addCameraSettingsAsync(
+    cameraSettings: Omit<SDBCameraSettings, "id">,
+  ): Promise<SDBCameraSettings> {
+    const id = await this.#cameraRepository.addAsync(cameraSettings);
+    await this.#eventBus.publishAsync(new CameraSettingsModifiedEvent({}));
+    return {
+      ...cameraSettings,
+      id,
+    };
+  }
+
+  async updateCameraSettingsAsync(
+    newSettings: SDBCameraSettings,
+  ): Promise<SDBCameraSettings | null> {
+    const existingSettings = await this.#cameraRepository.getByIdAsync(newSettings.id);
+    if (!existingSettings) {
+      return null;
+    }
+
     await this.#cameraRepository.updateAsync(newSettings);
     await this.#eventBus.publishAsync(new CameraSettingsModifiedEvent({}));
+    return newSettings;
+  }
+
+  async deleteCameraSettingsAsync(cameraId: number): Promise<boolean> {
+    const existingSettings = await this.#cameraRepository.getByIdAsync(cameraId);
+    if (!existingSettings) {
+      return false;
+    }
+
+    await this.#cameraRepository.deleteAsync(cameraId);
+    await this.#eventBus.publishAsync(new CameraSettingsModifiedEvent({}));
+    return true;
   }
 
   async regenerateAsync(): Promise<this> {
@@ -188,52 +223,53 @@ class CameraManager {
     this.#isUpdating = true;
     try {
       const settings = await this.#cameraRepository.getAllAsync();
+      const previousCameras = this.#managedCameras;
+      const nextCameras = new Map<number, ManagedCamera>();
 
-      if (settings[0] != undefined) {
-        this.#currentSettings = settings[0];
-        if (this.#currentSettings.enabled) {
-          // Don't await these here - internally, they keeps track if they're running
-          // so this should prevent it from blocking until its done.
-          this.#imageCapture
-            .runImageRetentionAsync(
-              this.#currentSettings.imageRetentionSize,
-              this.#currentSettings.imageRetentionDays,
-            )
-            .then(() => {
-              this.#imageCapture.regenerateTimelapseArchiveAsync();
-            });
-          this.createCameraProcess(this.#currentSettings);
+      for (const cameraSettings of settings) {
+        const existingCamera = previousCameras.get(cameraSettings.id);
+        const imageCapture =
+          existingCamera?.imageCapture ??
+          new ImageCapture(
+            cameraSettings.id,
+            async (fileName: string, directory: string) => {
+              const latestSettings = this.#managedCameras.get(cameraSettings.id)?.settings;
+              const latestImageCapture = this.#managedCameras.get(cameraSettings.id)?.imageCapture;
+              if (
+                !latestSettings?.enabled ||
+                !latestImageCapture ||
+                latestSettings.captureUrl.trim() === ""
+              ) {
+                return;
+              }
 
-          // Start stream proxy if not already running
-          if (!this.#streamProxy) {
-            this.#logger.info("CameraManager: creating new stream proxy");
-            const streamProxy = new StreamProxy({
-              logger: this.#logger,
-              upstreamUrl: this.#baseUrl,
-              upstreamHeaders: this.generateRequestHeaders.bind(this),
-            });
-            const streamProxyStarted = await streamProxy.startAsync();
-            this.#streamProxy = streamProxy;
-            if (streamProxyStarted) {
-              this.#logger.info("CameraManager: stream proxy created");
-            } else {
-              this.#logger.info(
-                "CameraManager: stream proxy failed to connect to upstream, retrying...",
+              await latestImageCapture.captureImageAsync(
+                fileName,
+                latestSettings.captureUrl,
+                {},
+                directory,
               );
-            }
-          }
+            },
+            this.#archiveQueue.enqueue.bind(this.#archiveQueue),
+            this.#logger,
+            this.#timeExpressionResolver,
+          );
 
-          this.#imageCapture.updateTimelapseSettings(this.#currentSettings);
+        imageCapture.updateTimelapseSettings(cameraSettings);
+        nextCameras.set(cameraSettings.id, {
+          settings: cameraSettings,
+          imageCapture,
+        });
+      }
 
-          return this;
+      for (const [cameraId, managedCamera] of previousCameras.entries()) {
+        if (!nextCameras.has(cameraId)) {
+          managedCamera.imageCapture[Symbol.dispose]();
         }
       }
 
-      // Camera disabled - stop stream proxy
-      if (this.#streamProxy) {
-        await this.#streamProxy.stopAsync();
-        this.#streamProxy = null;
-      }
+      this.#managedCameras = nextCameras;
+      await this.refreshEnabledCamerasAsync();
     } finally {
       this.#isUpdating = false;
     }
@@ -244,116 +280,28 @@ class CameraManager {
     this.#disposed = true;
     this.#listenerCleanupFunction();
     await this.#imageCaptureCronJob.stop();
-    if (this.#streamProxy) {
-      await this.#streamProxy.stopAsync();
-      this.#streamProxy = null;
+
+    for (const managedCamera of this.#managedCameras.values()) {
+      managedCamera.imageCapture[Symbol.dispose]();
     }
-    this.cleanupCameraProcess();
+    this.#managedCameras.clear();
   }
 
-  private createCameraProcess(cameraSettings: SDBCameraSettings) {
-    // Kill existing process if the settings have changed
-    if (!this.areSameDeviceSettings(cameraSettings)) {
-      this.cleanupCameraProcess();
-    }
-
-    // If there is no live stream process, create one.
-    if (this.#picameraServerProcess == null) {
-      const cameraArguments = ["python/pi_camera_server.py"];
-      if (cameraSettings.xImageResolution && cameraSettings.yImageResolution) {
-        cameraArguments.push("--imageResolution");
-        cameraArguments.push(
-          `${cameraSettings.xImageResolution}x${cameraSettings.yImageResolution}`,
-        );
-      }
-      if (cameraSettings.xVideoResolution && cameraSettings.yVideoResolution) {
-        cameraArguments.push("--videoResolution");
-        cameraArguments.push(
-          `${cameraSettings.xVideoResolution}x${cameraSettings.yVideoResolution}`,
-        );
-      }
-      if (cameraSettings.videoFps) {
-        cameraArguments.push("--fps");
-        cameraArguments.push(`${cameraSettings.videoFps}`);
+  private async refreshEnabledCamerasAsync(): Promise<void> {
+    for (const { settings, imageCapture } of this.#managedCameras.values()) {
+      if (!settings.enabled) {
+        continue;
       }
 
-      this.#picameraServerProcess = spawn("python3", cameraArguments);
-
-      this.#picameraServerProcess.on("spawn", () => {
-        this.#logger.info(`Picamera server started`);
-      });
-
-      this.#picameraServerProcess.on("error", (error: Error) => {
-        this.#logger.error(`Error on spawning Picamera Server: ${error}`);
-        this.cleanupCameraProcess();
-        this.#picameraServerProcess = null;
-      });
-
-      this.#picameraServerProcess.stdout.on("data", (data: string) => {
-        this.#logger.info(`Message from Picamera Server: ${data}`);
-      });
-
-      this.#picameraServerProcess.stderr.on("data", (data: string) => {
-        this.#logger.info(`Message from Picamera Server: ${data}`);
-        // Check for bad address error
-        if (data.includes("Bad address") || data.includes("OSError")) {
-          this.#logger.error("Camera encoder error detected, attempting recovery");
-          this.cleanupCameraProcess();
-        }
-        if (data.includes("timed out")) {
-          this.#logger.error("Camera encoder timed out, attempting recovery");
-          this.cleanupCameraProcess();
-        }
-      });
-
-      this.#picameraServerProcess.on("close", async (code, signal) => {
-        this.#logger.info(
-          `Picamera server exited with status: ${code ?? signal ?? "Unknown exit condition!"}`,
-        );
-        //SIGINT should basically only come from a ctrl-c, everything is dying at this point
-        if (signal === "SIGINT") {
-          await this[Symbol.asyncDispose]();
-          return;
-        }
-        this.cleanupCameraProcess();
-      });
-    }
-  }
-
-  private cleanupCameraProcess() {
-    // Clean up process
-    if (this.#picameraServerProcess !== null) {
-      this.#picameraServerProcess.removeAllListeners();
-      this.#picameraServerProcess.stderr.removeAllListeners();
-      this.#picameraServerProcess.stdout.removeAllListeners();
-      const result = this.#picameraServerProcess.kill();
-      if (result === true) {
-        this.#picameraServerProcess = null;
+      if (settings.captureUrl.trim() !== "") {
+        await imageCapture.captureLatestImageAsync(settings.captureUrl, {});
       }
+      await imageCapture.runImageRetentionAsync(
+        settings.imageRetentionSize,
+        settings.imageRetentionDays,
+      );
+      await imageCapture.regenerateTimelapseArchiveAsync(true);
     }
-  }
-
-  private areSameDeviceSettings(newSettings?: SDBCameraSettings) {
-    if (!this.#currentSettings || newSettings == undefined) {
-      return false;
-    }
-
-    return (
-      this.#currentSettings.id === newSettings.id &&
-      this.#currentSettings.xVideoResolution === newSettings.xVideoResolution &&
-      this.#currentSettings.yVideoResolution === newSettings.yVideoResolution &&
-      this.#currentSettings.videoFps === newSettings.videoFps &&
-      this.#currentSettings.xImageResolution === newSettings.xImageResolution &&
-      this.#currentSettings.yImageResolution === newSettings.yImageResolution
-    );
-  }
-
-  private generateRequestHeaders(): Record<string, string> {
-    return {
-      "X-Interservice-Authentication-Token": generateInterserviceAuthenticationToken(
-        this.#interserviceAuthenticationKey,
-      ),
-    };
   }
 }
 

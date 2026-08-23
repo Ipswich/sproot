@@ -7,6 +7,7 @@ import RestartButton from "./RestartButton";
 import StatusAccordionItem from "./StatusAccordionItem";
 import BackupsAccordionItem from "./BackupsAccordionItem";
 import ApplicationSettingsAccordionItem from "./ApplicationSettingsAccordionItem";
+import CameraSettingsAccordionItem from "./CameraSettingsAccordionItem";
 
 export default function SystemSettings() {
   const [serverIsOnline, setServerIsOnline] = useState(true);
@@ -66,6 +67,7 @@ export default function SystemSettings() {
             >
               <StatusAccordionItem />
               <ApplicationSettingsAccordionItem />
+              <CameraSettingsAccordionItem />
               <BackupsAccordionItem />
             </Accordion>
             <RestartButton />

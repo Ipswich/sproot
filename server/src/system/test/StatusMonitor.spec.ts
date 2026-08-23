@@ -5,6 +5,7 @@ import { CameraManager } from "../../camera/CameraManager";
 import ImageCapture from "../../camera/ImageCapture";
 import winston from "winston";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
+import { TimeExpressionResolver } from "../../automation/conditions/TimeExpressionResolver";
 
 describe("ServerStatsManager", () => {
   const eventBus = new MemoryEventBus(
@@ -21,7 +22,10 @@ describe("ServerStatsManager", () => {
       },
       camera: {
         getAllAsync: sinon.stub().resolves([]),
+        getByIdAsync: sinon.stub().resolves(null),
+        addAsync: sinon.stub().resolves(1),
         updateAsync: sinon.stub().resolves(),
+        deleteAsync: sinon.stub().resolves(),
       },
     };
     systemRepoMock = {
@@ -39,13 +43,13 @@ describe("ServerStatsManager", () => {
     };
   });
 
-  it("should return stats with correct properties", async () => {
+  it("returns stats with correct properties", async () => {
     sinon.stub(ImageCapture.prototype, "getTimelapseArchiveSizeAsync").resolves(0);
 
     await using manager = await CameraManager.createInstanceAsync(
       eventBus,
       sprootDBMock.camera,
-      "test_key",
+      TimeExpressionResolver.createNoop(),
       winston.createLogger({
         transports: [new winston.transports.Console({ silent: true })],
       }),
@@ -70,11 +74,11 @@ describe("ServerStatsManager", () => {
     assert.strictEqual(stats.timelapse.lastArchiveGenerationDuration, null);
   });
 
-  it("should call getDatabaseSizeAsync", async () => {
+  it("calls getDatabaseSizeAsync", async () => {
     await using manager = await CameraManager.createInstanceAsync(
       eventBus,
       sprootDBMock.camera,
-      "test_key",
+      TimeExpressionResolver.createNoop(),
       winston.createLogger({
         transports: [new winston.transports.Console({ silent: true })],
       }),

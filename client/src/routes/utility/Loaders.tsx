@@ -1,6 +1,6 @@
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import {
-  getCameraSettingsAsync,
+  getCameraSettingsListAsync,
   getOutputsAsync,
   getReadingTypesAsync,
 } from "../../requests/requests_v2";
@@ -11,7 +11,7 @@ import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 type RootLoaderData = {
   readingTypes: Partial<Record<ReadingType, string>>;
   outputs: Record<string, IOutputBase>;
-  cameraSettings: SDBCameraSettings;
+  cameraSettings: SDBCameraSettings[];
 };
 
 const ROOT_LOADER_CACHE_TTL_MS = 30000;
@@ -33,7 +33,7 @@ export async function rootLoader(): Promise<RootLoaderData> {
   inFlightRootLoader = Promise.all([
     getReadingTypesAsync(),
     getOutputsAsync(),
-    getCameraSettingsAsync(),
+    getCameraSettingsListAsync(),
   ])
     .then(([readingTypes, outputs, cameraSettings]) => {
       const data: RootLoaderData = {

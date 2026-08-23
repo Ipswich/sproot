@@ -6,6 +6,7 @@ import ImageCapture from "../ImageCapture";
 import * as Constants from "@sproot/common/utility/Constants";
 import winston from "winston";
 import os from "os";
+import { getCameraImageDirectory, getCameraLatestImagePath } from "../CameraPaths";
 
 describe("ImageCapture.ts tests", () => {
   let imageCapture: ImageCapture;
@@ -28,7 +29,7 @@ describe("ImageCapture.ts tests", () => {
 
     // Store and override the IMAGE_DIRECTORY constant
     originalImageDir = Constants.IMAGE_DIRECTORY;
-    Object.defineProperty(Constants, "IMAGE_DIRECTORY", { value: tempDir });
+    Object.defineProperty(Constants, "IMAGE_DIRECTORY", { value: tempDir, configurable: true });
 
     imageCapture = new ImageCapture(mockLogger);
   });
@@ -42,15 +43,18 @@ describe("ImageCapture.ts tests", () => {
 
     // Ensure directory exists and is empty
     fs.mkdirSync(tempDir, { recursive: true });
-    const files = fs.readdirSync(tempDir);
+    const files = fs.readdirSync(tempDir, { withFileTypes: true });
     for (const file of files) {
-      fs.unlinkSync(path.join(tempDir, file));
+      fs.rmSync(path.join(tempDir, file.name), { recursive: true, force: true });
     }
   });
 
   after(async () => {
     // Restore original IMAGE_DIRECTORY
-    Object.defineProperty(Constants, "IMAGE_DIRECTORY", { value: originalImageDir });
+    Object.defineProperty(Constants, "IMAGE_DIRECTORY", {
+      value: originalImageDir,
+      configurable: true,
+    });
 
     // Restore stubs
     fetchStub.restore();
@@ -71,7 +75,7 @@ describe("ImageCapture.ts tests", () => {
       fetchStub.resolves({ ok: true, status: 200, body: mockBody });
 
       await imageCapture.captureImageAsync("test.jpg", "http://camera.url", {});
-      const savedFilePath = path.join(tempDir, "test.jpg");
+      const savedFilePath = path.join(getCameraImageDirectory(1), "test.jpg");
 
       assert.strictEqual(fs.existsSync(savedFilePath), true);
       assert.strictEqual((mockLogger.info as sinon.SinonSpy).calledOnce, true);
@@ -108,20 +112,15 @@ describe("ImageCapture.ts tests", () => {
   });
 
   describe("getLatestImageAsync", () => {
-    it("should return the most recently modified image", async () => {
-      const oldImage = Buffer.from("old image");
-      const newImage = Buffer.from("new image");
-      const oldPath = path.join(tempDir, "old.jpg");
-      const newPath = path.join(tempDir, "new.jpg");
-
-      await fs.promises.writeFile(oldPath, oldImage);
-      await fs.promises.utimes(oldPath, new Date(Date.now() - 10000), new Date(Date.now() - 10000)); // 10 seconds old
-      await fs.promises.writeFile(newPath, newImage);
+    it("should return the saved latest image", async () => {
+      const latestImage = Buffer.from("latest image");
+      await fs.promises.mkdir(getCameraImageDirectory(1), { recursive: true });
+      await fs.promises.writeFile(getCameraLatestImagePath(1), latestImage);
 
       const result = await imageCapture.getLatestImageAsync();
 
       assert.notStrictEqual(result, null);
-      assert.strictEqual(result!.toString(), newImage.toString());
+      assert.strictEqual(result!.toString(), latestImage.toString());
     });
 
     it("should return null when no images exist", async () => {

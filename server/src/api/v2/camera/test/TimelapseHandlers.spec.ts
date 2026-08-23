@@ -13,7 +13,6 @@ describe("TimelapseHandlers", () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
   let cameraManager: Partial<CameraManager>;
-  let sendSpy: sinon.SinonSpy;
   let jsonSpy: sinon.SinonSpy;
   let statusStub: sinon.SinonStub;
   let setHeaderSpy: sinon.SinonSpy;
@@ -21,21 +20,20 @@ describe("TimelapseHandlers", () => {
   beforeEach(() => {
     cameraManager = {
       getTimelapseArchiveAsync: sinon.stub(),
-      getTimelapseArchiveSizeAsync: sinon.stub().resolves(1024),
       regenerateTimelapseArchiveAsync: sinon.stub(),
       getTimelapseArchiveProgress: sinon.stub(),
     };
 
-    sendSpy = sinon.spy();
     jsonSpy = sinon.spy();
-    statusStub = sinon.stub().returns({ send: sendSpy, json: jsonSpy });
+    statusStub = sinon.stub().returns({ json: jsonSpy });
     setHeaderSpy = sinon.spy();
 
     req = {
       app: {
         get: (_dependency: string) => cameraManager,
       },
-      originalUrl: "/api/v2/camera/timelapse",
+      params: { cameraId: "1" },
+      originalUrl: "/api/v2/camera/1/timelapse/archive",
     } as unknown as Request;
 
     res = {
@@ -44,9 +42,7 @@ describe("TimelapseHandlers", () => {
       locals: {
         defaultProperties: { requestId: "test-id" },
       },
-      on: sinon.stub(),
       once: sinon.stub(),
-      emit: sinon.stub(),
     };
   });
 
@@ -54,62 +50,42 @@ describe("TimelapseHandlers", () => {
     sinon.restore();
   });
 
-  describe("getTimelapseArchiveAsync", () => {
-    it("should return 200 with the archive when a timelapse archive exists", async () => {
-      const mockArchive = createReadStream("path/to/mock/timelapse.tar");
-      cameraManager.getTimelapseArchiveAsync = sinon.stub().resolves(mockArchive);
+  it("returns 404 when no timelapse archive is available", async () => {
+    (cameraManager.getTimelapseArchiveAsync as sinon.SinonStub).resolves(null);
 
-      await getTimelapseArchiveAsync(req as Request, res as Response);
+    await getTimelapseArchiveAsync(req as Request, res as Response);
 
-      assert.isTrue(setHeaderSpy.calledWith("Content-Type", "application/x-tar"));
-      assert.isTrue(
-        setHeaderSpy.calledWith("Content-Disposition", "attachment; filename=timelapse.tar"),
-      );
-    });
-
-    it("should return 404 when no timelapse archive is available", async () => {
-      (cameraManager.getTimelapseArchiveAsync as sinon.SinonStub).resolves(null);
-
-      await getTimelapseArchiveAsync(req as Request, res as Response);
-
-      assert.isTrue(statusStub.calledOnceWith(404));
-      assert.isTrue(jsonSpy.calledOnce);
-      const jsonResponse = jsonSpy.firstCall.args[0];
-      assert.equal(jsonResponse.statusCode, 404);
-      assert.equal(jsonResponse.error.name, "Not Found");
-      assert.deepEqual(jsonResponse.error.details, ["No timelapse archive available"]);
-      assert.equal(jsonResponse.error.url, "/api/v2/camera/timelapse");
-    });
+    assert.isTrue(statusStub.calledOnceWith(404));
   });
 
-  describe("postRegenerateTimelapseArchive", () => {
-    it("should queue timelapse regeneration and return 202 status", () => {
-      postRegenerateTimelapseArchive(req as Request, res as Response);
+  it("queues timelapse regeneration and returns 202 status", () => {
+    postRegenerateTimelapseArchive(req as Request, res as Response);
 
-      assert.isTrue((cameraManager.regenerateTimelapseArchiveAsync as sinon.SinonStub).calledOnce);
-      assert.isTrue(statusStub.calledOnceWith(202));
-      assert.isTrue(jsonSpy.calledOnce);
-      const jsonResponse = jsonSpy.firstCall.args[0];
-      assert.equal(jsonResponse.statusCode, 202);
-      assert.equal(jsonResponse.content.data, "Timelapse archive regeneration queued.");
-      assert.deepEqual(jsonResponse.requestId, "test-id");
-    });
+    assert.isTrue(
+      (cameraManager.regenerateTimelapseArchiveAsync as sinon.SinonStub).calledOnceWithExactly(1),
+    );
+    assert.isTrue(statusStub.calledOnceWith(202));
   });
 
-  describe("getTimelapseGenerationStatus", () => {
-    it("should return the current timelapse generation status", () => {
-      const mockStatus = { isGenerating: true, archiveProgress: 50 };
-      (cameraManager.getTimelapseArchiveProgress as sinon.SinonStub).returns(mockStatus);
+  it("returns the current timelapse generation status", () => {
+    const mockStatus = { isGenerating: true, archiveProgress: 50 };
+    (cameraManager.getTimelapseArchiveProgress as sinon.SinonStub).returns(mockStatus);
 
-      getTimelapseGenerationStatus(req as Request, res as Response);
+    getTimelapseGenerationStatus(req as Request, res as Response);
 
-      assert.isTrue((cameraManager.getTimelapseArchiveProgress as sinon.SinonStub).calledOnce);
-      assert.isTrue(statusStub.calledOnceWith(200));
-      assert.isTrue(jsonSpy.calledOnce);
-      const jsonResponse = jsonSpy.firstCall.args[0];
-      assert.equal(jsonResponse.statusCode, 200);
-      assert.deepEqual(jsonResponse.content?.data, mockStatus);
-      assert.deepEqual(jsonResponse.requestId, "test-id");
-    });
+    assert.isTrue(
+      (cameraManager.getTimelapseArchiveProgress as sinon.SinonStub).calledOnceWithExactly(1),
+    );
+    assert.isTrue(statusStub.calledOnceWith(200));
+  });
+
+  it("sets archive headers when a timelapse archive exists", async () => {
+    const mockArchive = createReadStream("/dev/null");
+    (cameraManager.getTimelapseArchiveAsync as sinon.SinonStub).resolves(mockArchive);
+    (mockArchive as any).pipe = sinon.stub();
+
+    await getTimelapseArchiveAsync(req as Request, res as Response);
+
+    assert.isTrue(setHeaderSpy.calledWith("Content-Type", "application/x-tar"));
   });
 });

@@ -1,17 +1,13 @@
 FROM node:24.13.1-bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PYTHONDONTWRITEBYTECODE=1
 
 RUN set -eux; \
   echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom; \
   echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom; \
   echo "Acquire::BrokenProxy true;" >> /etc/apt/apt.conf.d/99custom; \
   apt-get update; \
-  apt-get install -y --no-install-recommends ca-certificates curl g++ git gnupg make nano python3 python3-pip udev wget; \
-  curl -fsSL https://archive.raspberrypi.org/debian/raspberrypi.gpg.key \
-    | gpg --dearmor -o /usr/share/keyrings/raspberrypi-archive-keyring.gpg; \
-  echo "deb [signed-by=/usr/share/keyrings/raspberrypi-archive-keyring.gpg] https://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list; \
+  apt-get install -y --no-install-recommends ca-certificates curl g++ git gnupg make nano python3 wget; \
   curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg; \
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list; \
@@ -19,8 +15,7 @@ RUN set -eux; \
   wget --quiet -O /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc; \
   echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list; \
   apt-get update; \
-  apt-get install -y --no-install-recommends gh postgresql-client-18 python3-picamera2; \
-  pip3 install --no-cache-dir fastapi uvicorn --break-system-packages; \
+  apt-get install -y --no-install-recommends gh postgresql-client-18; \
   rm -rf /var/lib/apt/lists/*
 
 # Copy project

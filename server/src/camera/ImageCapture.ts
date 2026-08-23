@@ -1,9 +1,5 @@
-import { IMAGE_DIRECTORY, TIMELAPSE_DIRECTORY } from "@sproot/common/utility/Constants";
-import {
-  getDirectorySizeAsync,
-  getOldestFilePathAsync,
-  getSortedFileAsync,
-} from "@sproot/common/utility/Files";
+import { TIMELAPSE_DIRECTORY } from "@sproot/common/utility/Constants";
+import { getDirectorySizeAsync, getOldestFilePathAsync } from "@sproot/common/utility/Files";
 import fs, { createWriteStream } from "fs";
 import path from "path";
 import { Readable } from "stream";
@@ -11,66 +7,113 @@ import { pipeline } from "stream/promises";
 import winston from "winston";
 import Timelapse from "./Timelapse";
 import { SDBCameraSettings } from "@sproot/common/database/SDBCameraSettings";
+import { TimeExpressionResolver } from "../automation/conditions/TimeExpressionResolver";
+import {
+  getCameraImageDirectory,
+  getCameraLatestImagePath,
+  getCameraTimelapseDirectory,
+} from "./CameraPaths";
+
+type AddImageToTimelapseFunction = (filename: string, directory: string) => Promise<void>;
+type EnqueueArchiveGenerationFunction = <T>(task: () => Promise<T>) => Promise<T>;
 
 class ImageCapture {
+  #cameraId: number;
   #timelapse: Timelapse;
   #logger: winston.Logger;
   #isRunningImageRetention: boolean = false;
 
-  constructor(logger: winston.Logger) {
-    this.#timelapse = new Timelapse(async (filename: string, directory: string) => {
-      const latestImage = await this.getLatestImageAsync();
-      if (latestImage) {
-        // Ensure the directory exists
+  constructor(
+    cameraIdOrLogger: number | winston.Logger,
+    addImageToTimelapseFunction?: AddImageToTimelapseFunction,
+    enqueueArchiveGeneration?: EnqueueArchiveGenerationFunction,
+    logger?: winston.Logger,
+    timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
+  ) {
+    if (typeof cameraIdOrLogger === "number") {
+      this.#cameraId = cameraIdOrLogger;
+      this.#logger = logger!;
+      this.#timelapse = new Timelapse(
+        cameraIdOrLogger,
+        addImageToTimelapseFunction!,
+        enqueueArchiveGeneration!,
+        this.#logger,
+        timeExpressionResolver,
+      );
+      return;
+    }
+
+    this.#cameraId = 1;
+    this.#logger = cameraIdOrLogger;
+    this.#timelapse = new Timelapse(
+      async (filename: string, directory: string) => {
+        const latestImage = await this.getLatestImageAsync();
+        if (!latestImage) {
+          return;
+        }
+
         await fs.promises.mkdir(directory, { recursive: true });
         const outputPath = path.join(directory, filename);
         await fs.promises.writeFile(outputPath, latestImage as unknown as Uint8Array);
-      }
-    }, logger);
-    this.#logger = logger;
+      },
+      this.#logger,
+      undefined,
+      undefined,
+      timeExpressionResolver,
+    );
   }
 
   updateTimelapseSettings(settings: SDBCameraSettings): void {
     this.#timelapse.updateSettings(settings);
   }
 
-  async captureImageAsync(fileName: string, url: string, headers: Record<string, string>) {
+  async captureImageAsync(
+    fileName: string,
+    url: string,
+    headers: Record<string, string>,
+    directory = getCameraImageDirectory(this.#cameraId),
+  ) {
     let response: Response;
     try {
-      response = await fetch(`${url}/capture`, {
+      response = await fetch(url, {
         method: "GET",
-        headers: headers,
+        headers,
       });
-      if (!response?.ok || !response.body) {
+      if (!response.ok || !response.body) {
         this.#logger.error(
-          `Image capture was unsuccessful (status: ${response?.status}).. Filename: ${IMAGE_DIRECTORY}/${fileName}`,
+          `Image capture was unsuccessful (status: ${response.status}). Filename: ${directory}/${fileName}`,
         );
         return;
       }
-      // Ensure the directory exists
-      await fs.promises.mkdir(IMAGE_DIRECTORY, { recursive: true });
 
-      const outputPath = path.join(IMAGE_DIRECTORY, fileName);
+      await fs.promises.mkdir(directory, { recursive: true });
+      const outputPath = path.join(directory, fileName);
       await pipeline(Readable.fromWeb(response.body), createWriteStream(outputPath));
 
-      this.#logger.info(`Image captured. Filename: ${IMAGE_DIRECTORY}/${fileName}`);
+      this.#logger.info(`Image captured. Filename: ${outputPath}`);
     } catch (e) {
       this.#logger.error(
-        `Image capture failed for ${IMAGE_DIRECTORY}/${fileName}: ${e instanceof Error ? e.message : String(e)}`,
+        `Image capture failed for ${directory}/${fileName}: ${e instanceof Error ? e.message : String(e)}`,
       );
-      return;
     }
   }
 
-  async getLatestImageAsync(): Promise<Buffer | null> {
-    const imagePath = await getSortedFileAsync(
-      IMAGE_DIRECTORY,
-      (a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime(),
+  async captureLatestImageAsync(url: string, headers: Record<string, string>) {
+    return this.captureImageAsync(
+      "latest.jpg",
+      url,
+      headers,
+      getCameraImageDirectory(this.#cameraId),
     );
-    if (imagePath) {
-      return fs.promises.readFile(imagePath);
+  }
+
+  async getLatestImageAsync(): Promise<Buffer | null> {
+    const imagePath = getCameraLatestImagePath(this.#cameraId);
+    if (!fs.existsSync(imagePath)) {
+      return null;
     }
-    return null;
+
+    return fs.promises.readFile(imagePath);
   }
 
   getLastTimelapseGenerationDuration(): number | null {
@@ -103,11 +146,9 @@ class ImageCapture {
     };
   }
 
-  /**
-   * Clears all images from the specified directory.
-   * @returns true if images were cleared, false if operation was skipped due to ongoing timelapse generation
-   */
-  async clearAllImagesAsync(directory: string = TIMELAPSE_DIRECTORY): Promise<boolean> {
+  async clearAllImagesAsync(
+    directory = getCameraTimelapseDirectory(this.#cameraId),
+  ): Promise<boolean> {
     if (this.#timelapse.isGeneratingTimelapseArchive) {
       return false;
     }
@@ -134,37 +175,31 @@ class ImageCapture {
     return true;
   }
 
-  /**
-   * Manages images based on retention settings by removing old images
-   * when either space limit or time retention period is exceeded
-   */
   async runImageRetentionAsync(
     retentionSize: number = 0,
     retentionDays: number = 0,
     now = new Date(),
     directory = TIMELAPSE_DIRECTORY,
   ): Promise<void> {
+    const timelapseDirectory =
+      directory === TIMELAPSE_DIRECTORY ? getCameraTimelapseDirectory(this.#cameraId) : directory;
+
     if (this.#isRunningImageRetention || this.#timelapse.isGeneratingTimelapseArchive) {
       return;
     }
-    // If directory doesn't exist, nothing to do
-    if (!fs.existsSync(directory)) {
+    if (!fs.existsSync(timelapseDirectory)) {
       return;
     }
 
     this.#isRunningImageRetention = true;
-    // Get retention settings from current camera settings
     const maxRetentionSizeMB = retentionSize ?? Infinity;
     const retentionPeriodInMS = (retentionDays || 0) * 24 * 60 * 60 * 1000;
     const cutoffTime = now.getTime() - retentionPeriodInMS;
-    let directorySizeMB = (await getDirectorySizeAsync(directory)) / (1024 * 1024);
-
-    // Process files until we're within limits
-    let oldestFilePath = await getOldestFilePathAsync(directory);
+    let directorySizeMB = (await getDirectorySizeAsync(timelapseDirectory)) / (1024 * 1024);
+    let oldestFilePath = await getOldestFilePathAsync(timelapseDirectory);
 
     const ignoreFiles = new Set<string>();
     while (oldestFilePath) {
-      // Get stats for the oldest file
       try {
         await fs.promises.access(oldestFilePath, fs.constants.R_OK | fs.constants.W_OK);
       } catch (e) {
@@ -172,7 +207,7 @@ class ImageCapture {
           `Cannot access file for retention check: ${oldestFilePath}. Skipping. Error: ${e instanceof Error ? e.message : String(e)}`,
         );
         ignoreFiles.add(oldestFilePath);
-        oldestFilePath = await getOldestFilePathAsync(directory, ignoreFiles);
+        oldestFilePath = await getOldestFilePathAsync(timelapseDirectory, ignoreFiles);
         continue;
       }
       let fileSizeMB: number;
@@ -183,23 +218,20 @@ class ImageCapture {
         const stats = await fs.promises.stat(oldestFilePath);
         oldestFileTime = stats.mtime.getTime();
         fileSizeMB = stats.size / (1024 * 1024);
-
-        // Check if we need to delete this file
         oversizedStorage = directorySizeMB > maxRetentionSizeMB;
         exceededRetentionPeriod = retentionPeriodInMS > 0 && oldestFileTime < cutoffTime;
 
         if (!oversizedStorage && !exceededRetentionPeriod) {
-          break; // Stop if we're within all limits
+          break;
         }
 
-        // Delete the file
         await fs.promises.rm(oldestFilePath);
       } catch (e) {
         this.#logger.warn(
           `Cannot delete file for retention check: ${oldestFilePath}. Skipping. Error: ${e instanceof Error ? e.message : String(e)}`,
         );
         ignoreFiles.add(oldestFilePath);
-        oldestFilePath = await getOldestFilePathAsync(directory, ignoreFiles);
+        oldestFilePath = await getOldestFilePathAsync(timelapseDirectory, ignoreFiles);
         continue;
       }
       const reasons = [];
@@ -216,12 +248,14 @@ class ImageCapture {
       this.#logger.debug(`Removed old image: ${oldestFilePath}, ${reasons.join(", ")}`);
 
       directorySizeMB -= fileSizeMB;
-
-      // Update for next iteration
-      oldestFilePath = await getOldestFilePathAsync(directory, ignoreFiles);
+      oldestFilePath = await getOldestFilePathAsync(timelapseDirectory, ignoreFiles);
     }
 
     this.#isRunningImageRetention = false;
+  }
+
+  [Symbol.dispose](): void {
+    this.#timelapse[Symbol.dispose]();
   }
 }
 
