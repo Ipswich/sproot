@@ -4,9 +4,12 @@
  * compile-time type safety for known settings.
  */
 export interface SettingsSchema {
-  "sensors.data_retention": string;
-  "outputs.data_retention": string;
-  "system.backup_retention": string;
+  "sensors.data_retention": string | null;
+  "outputs.data_retention": string | null;
+  "system.backup_retention": string | null;
+  "system.log_debug": boolean;
+  "system.latitude": string | null;
+  "system.longitude": string | null;
 }
 
 /** Extracts a union of all known setting keys. */
@@ -27,6 +30,9 @@ export const SETTINGS = {
   },
   system: {
     backup_retention: "system.backup_retention",
+    log_debug: "system.log_debug",
+    latitude: "system.latitude",
+    longitude: "system.longitude",
   },
 } as const;
 
@@ -38,7 +44,10 @@ export const SETTINGS = {
 type _AllSettingsValuesAreKeys =
   | (typeof SETTINGS)["sensors"]["data_retention"]
   | (typeof SETTINGS)["outputs"]["data_retention"]
-  | (typeof SETTINGS)["system"]["backup_retention"];
+  | (typeof SETTINGS)["system"]["backup_retention"]
+  | (typeof SETTINGS)["system"]["log_debug"]
+  | (typeof SETTINGS)["system"]["latitude"]
+  | (typeof SETTINGS)["system"]["longitude"];
 
 // Compile-time: every SETTINGS value must be assignable to SettingsKey
 const _assertSettingsValuesAreKeys: _AllSettingsValuesAreKeys extends SettingsKey ? true : never =

@@ -19,28 +19,56 @@ export default function JournalEntryCard({
   return (
     <Fragment>
       <CardWrapper onClick={() => onClick?.()}>
-        <Stack style={{ gap: 6 }}>
+        <Stack style={{ gap: 6, width: "100%", minWidth: 0 }}>
           <div
             style={{
               display: "flex",
               alignItems: "center",
               gap: 6,
               minWidth: 0,
+              width: "100%",
+              maxWidth: "100%",
+              overflow: "hidden",
             }}
           >
-            <div style={{ minWidth: 0, width: "100%" }}>
-              <Text fw={700} style={{ lineHeight: 1 }}>
+            <div
+              style={{
+                minWidth: 0,
+                width: 0,
+                maxWidth: "100%",
+                flex: 1,
+                overflow: "hidden",
+              }}
+            >
+              <Text
+                fw={700}
+                lineClamp={1}
+                style={{
+                  lineHeight: 1.15,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  display: "block",
+                  width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                  paddingBottom: 1,
+                }}
+              >
                 {entry.title ?? "Untitled"}
               </Text>
               <Text
                 fz="sm"
                 c="dimmed"
+                lineClamp={1}
                 style={{
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
                   display: "block",
                   width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
                   marginTop: 4,
                 }}
               >

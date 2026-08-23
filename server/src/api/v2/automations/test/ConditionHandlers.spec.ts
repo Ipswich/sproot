@@ -15,6 +15,7 @@ import {
 } from "../handlers/ConditionHandlers";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { AutomationService } from "../../../../automation/AutomationService";
+import { TimeExpressionResolver } from "../../../../automation/conditions/TimeExpressionResolver";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { SensorList } from "../../../../sensors/list/SensorList";
@@ -29,41 +30,43 @@ const createStubSprootDB = () => {
   const sprootDB = createMockSprootDB() as any;
   sprootDB.automations = {
     getAllAsync: sinon.stub(),
-    getByIdAsync: sinon.stub(),
+    getByIdAsync: sinon.stub().resolves([]),
   } as any;
   sprootDB.automations.conditions = {
     sensor: {
-      getAsync: sinon.stub(),
+      getAsync: sinon.stub().resolves([]),
       addAsync: sinon.stub(),
       updateAsync: sinon.stub(),
+      getMostRecentViolationAsync: sinon.stub().resolves(null),
       deleteAsync: sinon.stub(),
     },
     output: {
-      getAsync: sinon.stub(),
+      getAsync: sinon.stub().resolves([]),
       addAsync: sinon.stub(),
       updateAsync: sinon.stub(),
+      getMostRecentViolationAsync: sinon.stub().resolves(null),
       deleteAsync: sinon.stub(),
     },
     time: {
-      getAsync: sinon.stub(),
+      getAsync: sinon.stub().resolves([]),
       addAsync: sinon.stub(),
       updateAsync: sinon.stub(),
       deleteAsync: sinon.stub(),
     },
     weekday: {
-      getAsync: sinon.stub(),
+      getAsync: sinon.stub().resolves([]),
       addAsync: sinon.stub(),
       updateAsync: sinon.stub(),
       deleteAsync: sinon.stub(),
     },
     month: {
-      getAsync: sinon.stub(),
+      getAsync: sinon.stub().resolves([]),
       addAsync: sinon.stub(),
       updateAsync: sinon.stub(),
       deleteAsync: sinon.stub(),
     },
     dateRange: {
-      getAsync: sinon.stub(),
+      getAsync: sinon.stub().resolves([]),
       addAsync: sinon.stub(),
       updateAsync: sinon.stub(),
       deleteAsync: sinon.stub(),
@@ -95,6 +98,9 @@ describe("ConditionHandlers.ts", () => {
     AutomationService.createInstanceAsync(
       sprootDB.automations,
       new MemoryEventBus(mockLogger),
+      sinon.createStubInstance(SensorList),
+      sinon.createStubInstance(OutputList),
+      TimeExpressionResolver.createNoop(),
       mockLogger,
     );
 
@@ -948,8 +954,26 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.conditions.sensor.getAsync.resolves([]);
       sprootDB.automations.conditions.output.getAsync.resolves([]);
       sprootDB.automations.conditions.time.getAsync.resolves([
-        { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
-        { id: 2, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
+        {
+          id: 1,
+          groupType: "allOf",
+          startTime: "12:00",
+          endTime: "13:00",
+          repeatInterval: null,
+          repeatDuration: null,
+          phaseAnchorType: null,
+          phaseAnchorValue: null,
+        } as SDBTimeCondition,
+        {
+          id: 2,
+          groupType: "allOf",
+          startTime: "12:00",
+          endTime: "13:00",
+          repeatInterval: null,
+          repeatDuration: null,
+          phaseAnchorType: null,
+          phaseAnchorValue: null,
+        } as SDBTimeCondition,
       ]);
 
       const mockRequest = {
@@ -977,6 +1001,10 @@ describe("ConditionHandlers.ts", () => {
         groupType: "allOf",
         startTime: "12:00",
         endTime: "13:00",
+        repeatInterval: null,
+        repeatDuration: null,
+        phaseAnchorType: null,
+        phaseAnchorValue: null,
       });
     });
 
@@ -1492,6 +1520,12 @@ describe("ConditionHandlers.ts", () => {
         groupType: "allOf",
         startTime: "12:00",
         endTime: "13:00",
+        repeatInterval: null,
+        repeatDuration: null,
+        phaseAnchorType: null,
+        phaseAnchorValue: null,
+        startOffsetSeconds: null,
+        endOffsetSeconds: null,
       });
     });
 
@@ -2254,7 +2288,16 @@ describe("ConditionHandlers.ts", () => {
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
       sprootDB.automations.conditions.time.getAsync.resolves([
-        { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
+        {
+          id: 1,
+          groupType: "allOf",
+          startTime: "12:00",
+          endTime: "13:00",
+          repeatInterval: null,
+          repeatDuration: null,
+          phaseAnchorType: null,
+          phaseAnchorValue: null,
+        } as SDBTimeCondition,
       ]);
       sprootDB.automations.conditions.time.updateAsync.resolves();
       sprootDB.automations.getAllAsync.resolves([]);
@@ -2292,6 +2335,12 @@ describe("ConditionHandlers.ts", () => {
         groupType: "anyOf",
         startTime: "13:00",
         endTime: "14:00",
+        repeatInterval: null,
+        repeatDuration: null,
+        phaseAnchorType: null,
+        phaseAnchorValue: null,
+        startOffsetSeconds: null,
+        endOffsetSeconds: null,
       });
     });
 
@@ -2686,7 +2735,10 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.statusCode, 400);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.deepEqual(error.error.details, ["Invalid start time.", "Invalid end time."]);
+      assert.deepEqual(error.error.details, [
+        "Invalid or missing start time.",
+        "Invalid or missing end time.",
+      ]);
     });
 
     it("should return a 400 and details for the invalid request (weekday)", async () => {

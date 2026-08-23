@@ -13,4 +13,11 @@ export interface IOutputConditionsRepository extends IBaseConditionsRepository<S
     outputId: number,
   ): Promise<number>;
   updateAsync(automationId: number, condition: IOutputCondition): Promise<void>;
+  getMostRecentViolationAsync(
+    outputId: number,
+    operator: ConditionOperator,
+    comparisonValue: number,
+    comparisonLookback: number,
+    now?: Date,
+  ): Promise<Date | null>;
 }

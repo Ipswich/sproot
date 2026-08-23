@@ -41,12 +41,23 @@ describe("SettingsRepository", () => {
 
       await repo.syncDefaultsAsync();
 
-      const expectedRows = DEFAULTS.filter((d) => d.key !== "sensors.data_retention").map((d) => ({
-        key: d.key,
-        value: typeof d.value === "string" ? JSON.stringify(d.value) : d.value,
-      }));
+      const insertedRows = insertStub.firstCall.args[0] as Array<{ key: string; value: unknown }>;
 
-      assert.isTrue(insertStub.calledWith(expectedRows));
+      assert.sameMembers(
+        insertedRows.map((row) => row.key),
+        DEFAULTS.filter((d) => d.key !== "sensors.data_retention").map((d) => d.key),
+      );
+      assert.equal(
+        insertedRows.find((row) => row.key === "outputs.data_retention")?.value,
+        JSON.stringify("2 years"),
+      );
+      assert.equal(
+        insertedRows.find((row) => row.key === "system.backup_retention")?.value,
+        JSON.stringify("30 days"),
+      );
+      assert.strictEqual(insertedRows.find((row) => row.key === "system.log_debug")?.value, false);
+      assert.exists(insertedRows.find((row) => row.key === "system.latitude")?.value);
+      assert.exists(insertedRows.find((row) => row.key === "system.longitude")?.value);
     });
 
     it("should not insert when all defaults already exist", async () => {
@@ -64,12 +75,19 @@ describe("SettingsRepository", () => {
 
       await repo.syncDefaultsAsync();
 
-      const expectedRows = DEFAULTS.map((d) => ({
-        key: d.key,
-        value: typeof d.value === "string" ? JSON.stringify(d.value) : d.value,
-      }));
+      const insertedRows = insertStub.firstCall.args[0] as Array<{ key: string; value: unknown }>;
 
-      assert.isTrue(insertStub.calledWith(expectedRows));
+      assert.sameMembers(
+        insertedRows.map((row) => row.key),
+        DEFAULTS.map((d) => d.key),
+      );
+      assert.equal(
+        insertedRows.find((row) => row.key === "sensors.data_retention")?.value,
+        JSON.stringify("2 years"),
+      );
+      assert.strictEqual(insertedRows.find((row) => row.key === "system.log_debug")?.value, false);
+      assert.exists(insertedRows.find((row) => row.key === "system.latitude")?.value);
+      assert.exists(insertedRows.find((row) => row.key === "system.longitude")?.value);
     });
   });
 });

@@ -14,12 +14,12 @@ export function get(request: Request, response: Response): SuccessResponse | Err
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   let getOutputResponse: SuccessResponse | ErrorResponse;
 
-  if (request.params["outputId"] !== undefined) {
-    if (outputList.outputData[request.params["outputId"]]) {
+  if ((request.params["outputId"] as string) !== undefined) {
+    if (outputList.outputData[request.params["outputId"] as string]) {
       getOutputResponse = {
         statusCode: 200,
         content: {
-          data: [outputList.outputData[request.params["outputId"]]],
+          data: [outputList.outputData[request.params["outputId"] as string]],
         },
         ...response.locals["defaultProperties"],
       };
@@ -29,7 +29,7 @@ export function get(request: Request, response: Response): SuccessResponse | Err
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Output with ID ${request.params["outputId"]} not found.`],
+          details: [`Output with ID ${request.params["outputId"] as string} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -144,7 +144,7 @@ export async function updateAsync(
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   let updateOutputResponse: SuccessResponse | ErrorResponse;
 
-  const outputId = parseInt(request.params["outputId"] ?? "");
+  const outputId = parseInt((request.params["outputId"] as string) ?? "");
   if (isNaN(outputId)) {
     updateOutputResponse = {
       statusCode: 400,
@@ -225,7 +225,7 @@ export async function deleteAsync(
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   let deleteOutputResponse: SuccessResponse | ErrorResponse;
 
-  const outputId = parseInt(request.params["outputId"] ?? "");
+  const outputId = parseInt((request.params["outputId"] as string) ?? "");
   if (isNaN(outputId)) {
     deleteOutputResponse = {
       statusCode: 400,

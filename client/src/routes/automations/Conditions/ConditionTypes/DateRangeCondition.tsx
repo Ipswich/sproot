@@ -6,7 +6,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "@mantine/form";
 import { Fragment } from "react/jsx-runtime";
-import { Group, Button, Stack, Space, Select } from "@mantine/core";
+import { Button, Paper, Select, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useEffect } from "react";
 
 export interface DateRangeConditionProps {
@@ -209,57 +209,61 @@ export default function DateRangeCondition({
           toggleAddNewCondition();
         })}
       >
-        <Stack>
-          <Group justify="space-between" gap={"0px"}>
-            <Stack w={"45%"}>
-              <Select
-                required
-                data={monthOptions}
-                label="Start Month"
-                allowDeselect={false}
-                {...dateRangeConditionForm.getInputProps("startMonth")}
-              />
-              <Select
-                required
-                w={"60%"}
-                key={startMonth}
-                data={startDayOptions}
-                label="Start Date"
-                allowDeselect={false}
-                {...dateRangeConditionForm.getInputProps("startDate")}
-              />
+        <Stack gap="md">
+          <Paper withBorder radius="md" p="md">
+            <Stack gap="md">
+              <Text size="sm" c="dimmed">
+                Define the seasonal window when this automation should be
+                active.
+              </Text>
+              <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                <Stack>
+                  <Select
+                    required
+                    data={monthOptions}
+                    label="Start Month"
+                    allowDeselect={false}
+                    {...dateRangeConditionForm.getInputProps("startMonth")}
+                  />
+                  <Select
+                    required
+                    key={startMonth}
+                    data={startDayOptions}
+                    label="Start Date"
+                    allowDeselect={false}
+                    {...dateRangeConditionForm.getInputProps("startDate")}
+                  />
+                </Stack>
+                <Stack>
+                  <Select
+                    required
+                    data={monthOptions}
+                    label="End Month"
+                    allowDeselect={false}
+                    {...dateRangeConditionForm.getInputProps("endMonth")}
+                  />
+                  <Select
+                    required
+                    key={endMonth}
+                    data={endDayOptions}
+                    label="End Date"
+                    allowDeselect={false}
+                    {...dateRangeConditionForm.getInputProps("endDate")}
+                  />
+                </Stack>
+              </SimpleGrid>
             </Stack>
-            <Stack w={"45%"}>
-              <Select
-                required
-                data={monthOptions}
-                label="End Month"
-                allowDeselect={false}
-                {...dateRangeConditionForm.getInputProps("endMonth")}
-              />
-              <Select
-                required
-                w={"60%"}
-                key={endMonth}
-                data={endDayOptions}
-                label="End Date"
-                allowDeselect={false}
-                {...dateRangeConditionForm.getInputProps("endDate")}
-              />
-            </Stack>
-          </Group>
-          <Group pt="xs" justify="center">
-            <Button
-              type="submit"
-              disabled={Object.values(dateRangeConditionForm.values).some(
-                (value) => value == null,
-              )}
-            >
-              Save
-            </Button>
-          </Group>
+          </Paper>
+          <Button
+            type="submit"
+            fullWidth
+            disabled={Object.values(dateRangeConditionForm.values).some(
+              (value) => value == null,
+            )}
+          >
+            Save Condition
+          </Button>
         </Stack>
-        <Space h={"12px"} />
       </form>
     </Fragment>
   );

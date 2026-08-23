@@ -4,6 +4,7 @@ import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { ISprootDB } from "../../../../database/ISprootDB";
 import { SDBSubcontroller } from "@sproot/database/SDBSubcontroller";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
+import { MdnsService } from "../../../../system/MdnsService";
 
 export async function getESP32ManifestAsync(
   req: Request,
@@ -223,7 +224,7 @@ export async function updateESP32FirmwareOTAAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   // const mdnsService = request.app.get("mdnsService") as MdnsService;
-  const { deviceId } = request.params;
+  const { deviceId } = request.params as { deviceId: string | undefined };
   if (deviceId != undefined && isNaN(parseInt(deviceId, 10))) {
     return {
       statusCode: 400,
@@ -278,8 +279,8 @@ export async function updateESP32FirmwareOTAAsync(
     };
   }
 
-  const ipAddress = "192.168.2.88";
-  // const ipAddress = mdnsService.getIPAddressByHostName(device.hostName);
+  const mdnsService = request.app.get("mdnsService") as MdnsService;
+  const ipAddress = mdnsService.getIPAddressByHostName(device.hostName);
   if (!ipAddress) {
     return {
       statusCode: 404,

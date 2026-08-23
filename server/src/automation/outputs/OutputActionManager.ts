@@ -9,7 +9,15 @@ import winston from "winston";
 import { IEventBus } from "../../eventbus/IEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
-import { OutputActionConflict, OutputActionWarning } from "@sproot/outputs/IOutputBase";
+import {
+  OutputActionDeletedEvent,
+  OutputActionAddedEvent,
+} from "../../eventbus/events/actions/OutputActionEvents";
+import {
+  OutputActionConflict,
+  OutputActionParticipant,
+  OutputActionWarning,
+} from "@sproot/outputs/IOutputBase";
 
 export class OutputActionManager implements Disposable {
   #outputId: number;
@@ -21,6 +29,7 @@ export class OutputActionManager implements Disposable {
   #actionMap: Map<number, OutputAction> = new Map();
   #actionWarnings: OutputActionWarning[] = [];
   #activeConflict: OutputActionConflict | null = null;
+  #triggeredBy: OutputActionParticipant[] = [];
   #automationTimeout: number; // Per-output timeout
   #triggeredActionFunction: (result: number | undefined) => Promise<void>;
   #listenerCleanupFunction: () => void;
@@ -61,7 +70,22 @@ export class OutputActionManager implements Disposable {
     this.#logger = logger;
     this.#automationTimeout = automationTimeout;
 
-    const actionReloadListener = async () => {
+    const actionAddedListener = async (event: OutputActionAddedEvent) => {
+      if (
+        event.payload.action.outputId !== this.#outputId &&
+        event.payload.previousOutputId !== this.#outputId
+      ) {
+        return;
+      }
+
+      await this.#reloadActionsAsync();
+    };
+
+    const actionDeletedListener = async (event: OutputActionDeletedEvent) => {
+      if (event.payload.outputId !== this.#outputId) {
+        return;
+      }
+
       await this.#reloadActionsAsync();
     };
 
@@ -81,9 +105,13 @@ export class OutputActionManager implements Disposable {
         });
     };
 
-    const outputActionUnsubscribe = this.#eventBus.subscribe(
-      Events.OUTPUT_ACTION_MODIFIED_EVENT,
-      actionReloadListener,
+    const outputActionAddedUnsubscribe = this.#eventBus.subscribe(
+      Events.OUTPUT_ACTION_ADDED_EVENT,
+      actionAddedListener,
+    );
+    const outputActionDeletedUnsubscribe = this.#eventBus.subscribe(
+      Events.OUTPUT_ACTION_DELETED_EVENT,
+      actionDeletedListener,
     );
     const automationUnsubscribe = this.#eventBus.subscribe(
       Events.AUTOMATIONS_TRIGGERED_EVENT,
@@ -91,7 +119,8 @@ export class OutputActionManager implements Disposable {
     );
 
     this.#listenerCleanupFunction = () => {
-      outputActionUnsubscribe();
+      outputActionAddedUnsubscribe();
+      outputActionDeletedUnsubscribe();
       automationUnsubscribe();
     };
   }
@@ -115,6 +144,10 @@ export class OutputActionManager implements Disposable {
 
   get activeConflict(): OutputActionConflict | null {
     return this.#activeConflict;
+  }
+
+  get triggeredBy(): OutputActionParticipant[] {
+    return this.#triggeredBy;
   }
 
   /**
@@ -222,6 +255,7 @@ export class OutputActionManager implements Disposable {
     }
 
     if (triggeredActions.length === 0) {
+      this.#triggeredBy = [];
       this.#activeConflict = null;
       resolvedValue = 0;
       if (resolvedValue !== this.#lastActionValue) {
@@ -242,6 +276,11 @@ export class OutputActionManager implements Disposable {
     const highestPriorityActions = triggeredActions.filter(
       (action) => OUTPUT_ACTION_PRECEDENCE_PRIORITY[action.precedence] === highestPriority,
     );
+
+    this.#triggeredBy = triggeredActions.map((action) => ({
+      automationId: action.payload.automationId,
+      automationName: action.payload.automationName,
+    }));
 
     const valueCounts = new Map<number, number>();
     for (const { value } of highestPriorityActions) {

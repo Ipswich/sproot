@@ -7,7 +7,9 @@ import {
   Textarea,
   Text,
   ColorInput,
+  Paper,
   ScrollArea,
+  Stack,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -21,6 +23,7 @@ import {
 import { SDBJournal } from "@sproot/database/SDBJournal";
 import { DefaultColors } from "@sproot/common/utility/Constants";
 import TagsPillsCombo from "./utils/tags/TagsPillsCombo";
+import { useMediaQuery } from "@mantine/hooks";
 
 interface NewJournalModalProps {
   modalOpened: boolean;
@@ -33,6 +36,7 @@ export default function NewJournalModal({
   closeModal,
   onCreated,
 }: NewJournalModalProps) {
+  const isMobile = useMediaQuery("(max-width: 48em)");
   const addJournalMutation = useMutation({
     mutationFn: async (values: Partial<SDBJournal>) => {
       return await addJournalAsync(values);
@@ -95,15 +99,17 @@ export default function NewJournalModal({
     <Fragment>
       <Modal
         overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
+        fullScreen={isMobile}
         scrollAreaComponent={ScrollArea.Autosize}
         centered
-        size="xs"
+        size="lg"
+        padding={isMobile ? "md" : "lg"}
         opened={modalOpened}
         onClose={() => {
           closeModal();
           form.reset();
         }}
-        title="Add New"
+        title="Add Journal"
       >
         <form
           onSubmit={form.onSubmit(async (values) => {
@@ -137,47 +143,74 @@ export default function NewJournalModal({
             closeModal();
           })}
         >
-          <TextInput
-            required
-            label="Title"
-            placeholder="My Journal"
-            maxLength={64}
-            {...form.getInputProps("title")}
-          />
-          <Textarea
-            label="Description"
-            placeholder="Notes about this journal"
-            {...form.getInputProps("description")}
-          />
-          <IconSelect
-            required
-            label="Icon"
-            placeholder="Select icon"
-            iconSize={18}
-            iconColor={form.values.color}
-            value={form.values.icon}
-            onChange={(val) => form.setFieldValue("icon", val ?? "")}
-          />
-          <ColorInput
-            required
-            label="Color"
-            swatches={[...DefaultColors]}
-            {...form.getInputProps("color")}
-          />
-          <div style={{ marginTop: 12 }}>
-            <Text size="sm" style={{ marginBottom: 6 }}>
-              Tags
-            </Text>
-            <TagsPillsCombo
-              allTags={availableTags}
-              value={selectedTags}
-              onChange={setSelectedTags}
-              placeholder="Select tags"
-            />
-          </div>
-          <Group justify="right" mt="md">
-            <Button type="submit">Add Journal</Button>
-          </Group>
+          <Stack gap="sm">
+            <Paper withBorder radius="lg" p={isMobile ? "sm" : "md"}>
+              <Stack gap="xs">
+                <Text fw={600}>New journal</Text>
+                <Text size="sm" c="dimmed">
+                  Create a new journal with its own icon, color, and optional
+                  tags for faster organization.
+                </Text>
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="sm">
+              <Stack gap="sm">
+                <TextInput
+                  required
+                  label="Title"
+                  placeholder="My Journal"
+                  maxLength={64}
+                  {...form.getInputProps("title")}
+                />
+                <Textarea
+                  label="Description"
+                  placeholder="Notes about this journal"
+                  minRows={6}
+                  {...form.getInputProps("description")}
+                />
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="sm">
+              <Stack gap="sm">
+                <Text fw={600} size="sm">
+                  Appearance
+                </Text>
+                <IconSelect
+                  required
+                  label="Icon"
+                  placeholder="Select icon"
+                  iconSize={18}
+                  iconColor={form.values.color}
+                  value={form.values.icon}
+                  onChange={(val) => form.setFieldValue("icon", val ?? "")}
+                />
+                <ColorInput
+                  required
+                  label="Color"
+                  swatches={[...DefaultColors]}
+                  {...form.getInputProps("color")}
+                />
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="sm">
+              <Stack gap="sm">
+                <Text fw={600} size="sm">
+                  Tags
+                </Text>
+                <TagsPillsCombo
+                  allTags={availableTags}
+                  value={selectedTags}
+                  onChange={setSelectedTags}
+                  placeholder="Select tags"
+                />
+              </Stack>
+            </Paper>
+            <Group variant="light" justify="flex-end" mt="xs">
+              <Button variant="light" type="submit" fullWidth={isMobile}>
+                Add Journal
+              </Button>
+            </Group>
+          </Stack>
         </form>
       </Modal>
     </Fragment>

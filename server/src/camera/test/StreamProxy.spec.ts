@@ -1,5 +1,4 @@
 import { assert } from "chai";
-import { EventEmitter } from "events";
 import { PassThrough, Readable } from "stream";
 import { FrameBuffer } from "../FrameBuffer";
 import StreamProxy from "../StreamProxy";
@@ -266,21 +265,36 @@ describe("FrameBuffer", () => {
 });
 
 describe("streamHandlerAsync", () => {
-  let frameBuffer: FrameBuffer;
   let request: any;
   let response: any;
+  let cameraManager: { fetchStreamAsync: sinon.SinonStub };
+  let upstreamStream: PassThrough;
+  let bodyCancelSpy: sinon.SinonSpy;
 
   beforeEach(() => {
-    frameBuffer = new FrameBuffer({ logger });
+    upstreamStream = new PassThrough();
+    bodyCancelSpy = sinon.spy(async () => undefined);
+    cameraManager = {
+      fetchStreamAsync: sinon.stub().resolves({
+        ok: true,
+        status: 200,
+        headers: new Headers({
+          "content-type": "multipart/x-mixed-replace; boundary=FRAME",
+          "cache-control": "no-store",
+        }),
+        body: Object.assign(Readable.toWeb(upstreamStream), {
+          cancel: bodyCancelSpy,
+        }),
+      }),
+    };
 
     request = {
-      originalUrl: "/api/v2/camera/stream",
+      originalUrl: "/api/v2/camera/1/stream",
+      params: { cameraId: "1" },
       app: {
         get: (key: string) => {
           if (key === DI_KEYS.CameraManager) {
-            return {
-              getFrameBuffer: () => frameBuffer,
-            };
+            return cameraManager;
           }
 
           if (key === DI_KEYS.Logger) {
@@ -292,91 +306,62 @@ describe("streamHandlerAsync", () => {
       },
     };
 
-    response = Object.assign(new EventEmitter(), {
-      headersSent: false,
-      writableEnded: false,
-      writable: true,
-      writableHighWaterMark: 16,
-      destroyed: false,
-      locals: {
-        defaultProperties: {},
-      },
-      setHeader: sinon.stub(),
-      removeHeader: sinon.stub(),
-      write: sinon.stub().returns(true),
-      end: sinon.stub().callsFake(() => {
-        response.writableEnded = true;
-        return response;
-      }),
-      status: sinon.stub().returnsThis(),
-      json: sinon.stub().returnsThis(),
-    });
+    response = new PassThrough() as any;
+    response.headersSent = false;
+    response.locals = {
+      defaultProperties: {},
+    };
+    response.setHeader = sinon.stub();
+    response.status = sinon.stub().returnsThis();
+    response.json = sinon.stub().returnsThis();
+    sinon.spy(response, "destroy");
   });
 
-  it("should remove the shared stream error listener when the client disconnects", async () => {
-    const stream = frameBuffer.getStream();
-    const baselineErrorListeners = stream.listenerCount("error");
+  it("should forward upstream headers and cancel the upstream body when the client disconnects", async () => {
+    const receivedChunks: Buffer[] = [];
+    response.on("data", (chunk: Buffer) => receivedChunks.push(chunk));
 
     await streamHandlerAsync(request, response);
+    upstreamStream.write(Buffer.from("test frame"));
+    await new Promise((resolve) => setImmediate(resolve));
 
-    assert.equal(frameBuffer.getSubscriberCount(), 1);
-    assert.equal(stream.listenerCount("error"), baselineErrorListeners + 1);
+    assert.isTrue(cameraManager.fetchStreamAsync.calledOnceWithExactly(1));
+    assert.isTrue(
+      response.setHeader.calledWith("Content-Type", "multipart/x-mixed-replace; boundary=FRAME"),
+    );
+    assert.isTrue(response.setHeader.calledWith("Cache-Control", "no-store"));
+    assert.equal(Buffer.concat(receivedChunks).toString(), "test frame");
 
     response.emit("close");
 
-    assert.equal(frameBuffer.getSubscriberCount(), 0);
-    assert.equal(stream.listenerCount("error"), baselineErrorListeners);
+    assert.isTrue(bodyCancelSpy.calledOnce);
   });
 
-  it("should disconnect the client when response.write throws", async () => {
-    const stream = frameBuffer.getStream();
-    const baselineErrorListeners = stream.listenerCount("error");
-    response.write = sinon.stub().throws(new Error("socket closed"));
-
-    await streamHandlerAsync(request, response);
-    stream.write(Buffer.from("test frame"));
-
-    assert.equal(frameBuffer.getSubscriberCount(), 0);
-    assert.equal(stream.listenerCount("error"), baselineErrorListeners);
-    assert.equal(response.end.callCount, 1);
-  });
-
-  it("should buffer chunks until drain is emitted", async () => {
-    const stream = frameBuffer.getStream();
-    let writeCallCount = 0;
-
-    response.write = sinon.stub().callsFake(() => {
-      writeCallCount++;
-      return writeCallCount !== 1;
-    });
+  it("should return 502 when the upstream stream is unavailable", async () => {
+    cameraManager.fetchStreamAsync.resolves(null);
 
     await streamHandlerAsync(request, response);
 
-    stream.write(Buffer.from("frame-1"));
-    stream.write(Buffer.from("frame-2"));
-
-    assert.equal(response.write.callCount, 1);
-    assert.equal(frameBuffer.getSubscriberCount(), 1);
-
-    response.emit("drain");
-
-    assert.equal(response.write.callCount, 2);
-    assert.equal((response.write as sinon.SinonStub).secondCall.args[0].toString(), "frame-2");
-    assert.equal(frameBuffer.getSubscriberCount(), 1);
+    assert.isTrue(response.status.calledOnceWithExactly(502));
+    assert.isTrue(response.json.calledOnce);
   });
 
-  it("should disconnect slow clients when buffered data exceeds the limit", async () => {
-    const stream = frameBuffer.getStream();
-    response.writableHighWaterMark = 8;
-    response.write = sinon.stub().returns(false);
+  it("should return 400 for an invalid camera id", async () => {
+    request.params = { cameraId: "invalid" };
 
     await streamHandlerAsync(request, response);
 
-    stream.write(Buffer.from("12345678"));
-    stream.write(Buffer.alloc(1024 * 1024 + 1, "a"));
+    assert.isTrue(response.status.calledOnceWithExactly(400));
+    assert.isTrue(response.json.calledOnce);
+  });
 
-    assert.equal(frameBuffer.getSubscriberCount(), 0);
-    assert.equal(response.end.callCount, 1);
+  it("should return 502 when fetching the upstream stream throws", async () => {
+    cameraManager.fetchStreamAsync.rejects(new Error("upstream failed"));
+
+    await streamHandlerAsync(request, response);
+
+    assert.isTrue(response.status.calledOnceWithExactly(502));
+    assert.isTrue(response.json.calledOnce);
   });
 });
 

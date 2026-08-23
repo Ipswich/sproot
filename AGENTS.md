@@ -124,7 +124,6 @@ DATABASE_PORT=<db port>
 DATABASE_USER=<db username>
 DATABASE_PASSWORD=<db password>
 INTERSERVICE_AUTHENTICATION_KEY=<key>
-BACKUP_RETENTION_DAYS=30
 ```
 
 **Client (`client/.env.development`):**

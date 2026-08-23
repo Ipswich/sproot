@@ -10,6 +10,7 @@ import { TimeCondition } from "./TimeCondition";
 import { WeekdayCondition } from "./WeekdayCondition";
 import { DateRangeCondition } from "./DateRangeCondition";
 import { MonthCondition } from "./MonthCondition";
+import { TimeExpressionResolver } from "./TimeExpressionResolver";
 
 type EnabledConditionTypes =
   | SensorCondition
@@ -28,8 +29,13 @@ export class Conditions {
   #monthConditions: Record<string, MonthCondition>;
   #dateRangeConditions: Record<string, DateRangeCondition>;
   #conditionsRepository: IConditionsRepository;
+  #timeExpressionResolver: TimeExpressionResolver;
 
-  constructor(automationId: number, conditionsRepository: IConditionsRepository) {
+  constructor(
+    automationId: number,
+    conditionsRepository: IConditionsRepository,
+    timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
+  ) {
     this.#automationId = automationId;
     this.#sensorConditions = {};
     this.#outputConditions = {};
@@ -38,6 +44,7 @@ export class Conditions {
     this.#monthConditions = {};
     this.#dateRangeConditions = {};
     this.#conditionsRepository = conditionsRepository;
+    this.#timeExpressionResolver = timeExpressionResolver;
   }
 
   get groupedConditions(): {
@@ -245,6 +252,10 @@ export class Conditions {
         id: condition.id,
         startTime: condition.startTime ?? undefined,
         endTime: condition.endTime ?? undefined,
+        repeatInterval: condition.repeatInterval ?? undefined,
+        repeatDuration: condition.repeatDuration ?? undefined,
+        phaseAnchorType: condition.phaseAnchorType ?? undefined,
+        phaseAnchorValue: condition.phaseAnchorValue ?? undefined,
       };
     }
     if (condition instanceof WeekdayCondition) {
@@ -284,35 +295,54 @@ export class Conditions {
     this.#monthConditions = {};
     this.#dateRangeConditions = {};
 
+    const now = new Date();
     const promises = [];
     promises.push(
-      this.#conditionsRepository.sensor.getAsync(this.#automationId).then((sensorConditions) => {
-        sensorConditions.map((sensorCondition) => {
-          this.#sensorConditions[sensorCondition.id] = new SensorCondition(
-            sensorCondition.id,
-            sensorCondition.groupType,
-            sensorCondition.sensorId,
-            sensorCondition.readingType,
-            sensorCondition.operator,
-            sensorCondition.comparisonValue,
-            sensorCondition.comparisonLookback,
+      this.#conditionsRepository.sensor
+        .getAsync(this.#automationId)
+        .then(async (sensorConditions) => {
+          await Promise.all(
+            sensorConditions.map(async (sensorCondition) => {
+              const nextCondition = new SensorCondition(
+                sensorCondition.id,
+                sensorCondition.groupType,
+                sensorCondition.sensorId,
+                sensorCondition.readingType,
+                sensorCondition.operator,
+                sensorCondition.comparisonValue,
+                sensorCondition.comparisonLookback,
+              );
+              await nextCondition.initializeLookbackStateAsync(
+                this.#conditionsRepository.sensor,
+                now,
+              );
+              this.#sensorConditions[sensorCondition.id] = nextCondition;
+            }),
           );
-        });
-      }),
+        }),
     );
     promises.push(
-      this.#conditionsRepository.output.getAsync(this.#automationId).then((outputConditions) => {
-        outputConditions.map((outputCondition) => {
-          this.#outputConditions[outputCondition.id] = new OutputCondition(
-            outputCondition.id,
-            outputCondition.groupType,
-            outputCondition.outputId,
-            outputCondition.operator,
-            outputCondition.comparisonValue,
-            outputCondition.comparisonLookback,
+      this.#conditionsRepository.output
+        .getAsync(this.#automationId)
+        .then(async (outputConditions) => {
+          await Promise.all(
+            outputConditions.map(async (outputCondition) => {
+              const nextCondition = new OutputCondition(
+                outputCondition.id,
+                outputCondition.groupType,
+                outputCondition.outputId,
+                outputCondition.operator,
+                outputCondition.comparisonValue,
+                outputCondition.comparisonLookback,
+              );
+              await nextCondition.initializeLookbackStateAsync(
+                this.#conditionsRepository.output,
+                now,
+              );
+              this.#outputConditions[outputCondition.id] = nextCondition;
+            }),
           );
-        });
-      }),
+        }),
     );
     promises.push(
       this.#conditionsRepository.time.getAsync(this.#automationId).then((timeConditions) => {
@@ -322,6 +352,13 @@ export class Conditions {
             timeCondition.groupType,
             timeCondition.startTime,
             timeCondition.endTime,
+            timeCondition.repeatInterval,
+            timeCondition.repeatDuration,
+            timeCondition.phaseAnchorType,
+            timeCondition.phaseAnchorValue,
+            this.#timeExpressionResolver,
+            timeCondition.startOffsetSeconds,
+            timeCondition.endOffsetSeconds,
           );
         });
       }),

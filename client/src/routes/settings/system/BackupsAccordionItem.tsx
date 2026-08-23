@@ -19,6 +19,7 @@ import {
   Accordion,
   Group,
   Modal,
+  LoadingOverlay,
 } from "@mantine/core";
 import { useState, Fragment, useEffect } from "react";
 import { IconDatabaseExport } from "@tabler/icons-react";
@@ -82,10 +83,11 @@ export default function BackupsAccordionItem() {
         onClose={closeUploadWarning}
       >
         <Group mt="md" justify="space-between">
-          <Button color="red" onClick={closeUploadWarning}>
+          <Button variant="light" color="red" onClick={closeUploadWarning}>
             Cancel
           </Button>
           <Button
+            variant="light"
             color="grape"
             onClick={async () => {
               if (!uploadFile) return;
@@ -118,7 +120,18 @@ export default function BackupsAccordionItem() {
         </Accordion.Control>
         <Accordion.Panel>
           <Group justify="center">
-            {backupsListQuery.isLoading && <p>Loading...</p>}
+            {backupsListQuery.isLoading && (
+              <LoadingOverlay
+                style={{ height: "100%", pointerEvents: "none" }}
+                visible={backupsListQuery.isLoading}
+                zIndex={90}
+                overlayProps={{
+                  backgroundOpacity: 0.92,
+                  color: "var(--mantine-color-body)",
+                }}
+                loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+              />
+            )}
             {backupsListQuery.isError && <p>Error loading backups list.</p>}
             <Paper
               radius="sm"
@@ -170,6 +183,7 @@ export default function BackupsAccordionItem() {
                   )}
                 </ScrollArea.Autosize>
                 <Button
+                  variant="light"
                   disabled={!downloadFile}
                   mt="md"
                   onClick={async () => {
@@ -185,6 +199,7 @@ export default function BackupsAccordionItem() {
                   Download
                 </Button>
                 <Button
+                  variant="light"
                   color="green"
                   disabled={
                     backupsCreationStatusQuery.data?.isGeneratingBackup === true

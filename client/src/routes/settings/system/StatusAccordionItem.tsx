@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getSystemStatusAsync } from "../../../requests/requests_v2";
 import { useEffect } from "react";
 import { Fragment } from "react/jsx-runtime";
-import { Accordion, Group, Table, Title } from "@mantine/core";
+import { Accordion, Group, LoadingOverlay, Table, Title } from "@mantine/core";
 import {
   IconCpu,
   IconDatabase,
@@ -42,7 +42,18 @@ export default function StatusAccordionItem() {
         </Accordion.Control>
         <Accordion.Panel>
           <Group justify="center">
-            {systemStatusQuery.isLoading && <p>Loading...</p>}
+            {systemStatusQuery.isLoading && (
+              <LoadingOverlay
+                style={{ height: "100%", pointerEvents: "none" }}
+                visible={systemStatusQuery.isLoading}
+                zIndex={90}
+                overlayProps={{
+                  backgroundOpacity: 0.92,
+                  color: "var(--mantine-color-body)",
+                }}
+                loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+              />
+            )}
             {systemStatusQuery.isError && <p>Error loading system status.</p>}
             {systemStatusQuery.data && (
               <Accordion w="90%" multiple={true}>

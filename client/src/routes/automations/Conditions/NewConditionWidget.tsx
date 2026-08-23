@@ -2,9 +2,12 @@ import { Fragment } from "react/jsx-runtime";
 import {
   ComboboxItem,
   Divider,
-  Group,
   OptionsFilter,
+  Paper,
   Select,
+  SimpleGrid,
+  Stack,
+  Text,
 } from "@mantine/core";
 import { useState } from "react";
 import {
@@ -53,60 +56,67 @@ export default function NewConditionWidget({
 
   return (
     <Fragment>
-      <Group justify="space-between">
-        <Select
-          allowDeselect={false}
-          w={"45%"}
-          label="Condition Type"
-          value={conditionType}
-          filter={optionsFilter}
-          data={[
-            {
-              value: "Sensor",
-              label: "Sensor",
-              disabled:
-                !getSensorsQuery.isSuccess ||
-                Object.keys(getSensorsQuery.data).length == 0,
-            },
-            {
-              value: "Output",
-              label: "Output",
-              disabled:
-                !getOutputsQuery.isSuccess ||
-                Object.keys(getOutputsQuery.data).length == 0,
-            },
-            { value: "Weekday", label: "Weekday", disabled: false },
-            { value: "Month", label: "Month", disabled: false },
-            { value: "Date Range", label: "Date Range", disabled: false },
-            { value: "Time", label: "Time", disabled: false },
-          ]}
-          onChange={(value) => setConditionType(value)}
-        />
-        <Select
-          w={"45%"}
-          label="Group"
-          value={groupType}
-          data={[
-            { value: "allOf", label: "All Of" },
-            { value: "anyOf", label: "Any Of" },
-            { value: "oneOf", label: "One Of" },
-          ]}
-          onChange={(value) => setGroupType(value)}
-        />
-      </Group>
-      <Divider my="md" />
-      {updateDisplayedCondition(
-        conditionType!,
-        groupType as ConditionGroupType,
-        automationId,
-        toggleAddNewCondition,
-        Object.values(getSensorsQuery.data ?? {}).map((sensor) => {
-          return { id: sensor.id, units: sensor.units, name: sensor.name };
-        }) ?? [],
-        Object.values(getOutputsQuery.data ?? {}).map((output) => {
-          return { id: output.id, name: output.name ?? "" };
-        }) ?? [],
-      )}
+      <Paper withBorder radius="md" p="md">
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            Start with the condition type, then choose how it should be grouped
+            with the rest of the automation logic.
+          </Text>
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+            <Select
+              allowDeselect={false}
+              label="Condition Type"
+              value={conditionType}
+              filter={optionsFilter}
+              data={[
+                {
+                  value: "Sensor",
+                  label: "Sensor",
+                  disabled:
+                    !getSensorsQuery.isSuccess ||
+                    Object.keys(getSensorsQuery.data).length == 0,
+                },
+                {
+                  value: "Output",
+                  label: "Output",
+                  disabled:
+                    !getOutputsQuery.isSuccess ||
+                    Object.keys(getOutputsQuery.data).length == 0,
+                },
+                { value: "Weekday", label: "Weekday", disabled: false },
+                { value: "Month", label: "Month", disabled: false },
+                { value: "Date Range", label: "Date Range", disabled: false },
+                { value: "Time", label: "Time", disabled: false },
+              ]}
+              onChange={(value) => setConditionType(value)}
+            />
+            <Select
+              label="Condition Group"
+              description="Determines how this condition combines with neighboring rules."
+              value={groupType}
+              data={[
+                { value: "allOf", label: "All Of" },
+                { value: "anyOf", label: "Any Of" },
+                { value: "oneOf", label: "One Of" },
+              ]}
+              onChange={(value) => setGroupType(value)}
+            />
+          </SimpleGrid>
+          <Divider variant="dashed" />
+          {updateDisplayedCondition(
+            conditionType!,
+            groupType as ConditionGroupType,
+            automationId,
+            toggleAddNewCondition,
+            Object.values(getSensorsQuery.data ?? {}).map((sensor) => {
+              return { id: sensor.id, units: sensor.units, name: sensor.name };
+            }) ?? [],
+            Object.values(getOutputsQuery.data ?? {}).map((output) => {
+              return { id: output.id, name: output.name ?? "" };
+            }) ?? [],
+          )}
+        </Stack>
+      </Paper>
     </Fragment>
   );
 }

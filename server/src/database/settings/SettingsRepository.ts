@@ -15,6 +15,16 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
     super(connection);
   }
 
+  private encodeValue(value: unknown): unknown {
+    if (value !== null) {
+      return typeof value === "string" ? JSON.stringify(value) : value;
+    }
+
+    return typeof this.connection.raw === "function"
+      ? this.connection.raw("'null'::jsonb")
+      : JSON.stringify(null);
+  }
+
   async getAsync<K extends SettingsKey>(key: K): Promise<SettingsSchema[K] | undefined> {
     const result = await this.connection<SettingsRow[]>("settings")
       .select("key", "value")
@@ -61,16 +71,8 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
   }
 
   async setAsync<K extends SettingsKey>(key: K, value: SettingsSchema[K]): Promise<void> {
-    let encodedValue: unknown;
-    if (value === null) {
-      encodedValue = this.connection.raw("'null'::jsonb");
-    } else if (typeof value === "string") {
-      encodedValue = JSON.stringify(value);
-    } else {
-      encodedValue = value;
-    }
     await this.connection("settings")
-      .insert({ key, value: encodedValue })
+      .insert({ key, value: this.encodeValue(value) })
       .onConflict("key")
       .merge();
   }
@@ -103,7 +105,7 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
 
     const rows = keysToInsert.map((def) => ({
       key: def.key,
-      value: JSON.stringify(def.value),
+      value: this.encodeValue(def.value),
     }));
 
     await this.connection("settings").insert(rows).onConflict("key").merge();

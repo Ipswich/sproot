@@ -1,19 +1,28 @@
 import {
+  Badge,
   TextInput,
   Button,
   Collapse,
   ScrollArea,
   Group,
   Modal,
+  Paper,
   SegmentedControl,
   Stack,
   Space,
+  Switch,
+  Text,
   Title,
   Accordion,
   ActionIcon,
+  Divider,
+  Box,
+  ThemeIcon,
+  LoadingOverlay,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   addAutomationAsync,
   deleteAutomationAsync,
@@ -32,7 +41,15 @@ import AddActionWidget from "./Actions/AddActionWidget";
 import OutputActionsTable from "./Actions/OutputActionsTable";
 import NotificationActionsTable from "./Actions/NotificationActionsTable";
 import { useEffect } from "react";
-import { IconDeviceFloppy } from "@tabler/icons-react";
+import {
+  IconBolt,
+  IconDeviceFloppy,
+  IconPlus,
+  IconSparkles,
+  IconVectorBezier2,
+  IconWaveSine,
+  IconX,
+} from "@tabler/icons-react";
 import ConfirmDeleteButton from "../../components/ConfirmDeleteButton";
 
 interface EditAutomationModalProps {
@@ -41,6 +58,7 @@ interface EditAutomationModalProps {
   modalOpened: boolean;
   closeModal: () => void;
   readOnly?: boolean;
+  onClose?: () => void;
 }
 
 export default function EditAutomationModal({
@@ -49,9 +67,12 @@ export default function EditAutomationModal({
   modalOpened: modalOpened,
   closeModal: closeModal,
   readOnly = false,
+  onClose,
 }: EditAutomationModalProps) {
+  const isMobile = useMediaQuery("(max-width: 48em)");
   const [addActionOpened, { toggle: toggleAddAction, close: closeAddAction }] =
     useDisclosure(false);
+  const [enabled, setEnabled] = useState(targetAutomation?.enabled ?? true);
   const mutateAutomationForm = useForm({
     initialValues: {
       name: targetAutomation?.name ?? "",
@@ -72,6 +93,7 @@ export default function EditAutomationModal({
   useEffect(() => {
     setTargetAutomation(targetAutomation);
     closeAddAction();
+    setEnabled(targetAutomation?.enabled ?? true);
     mutateAutomationForm.setValues({
       name: targetAutomation?.name ?? "",
       operator: targetAutomation?.operator ?? "or",
@@ -100,8 +122,24 @@ export default function EditAutomationModal({
         updatedAutomationValues.operator,
       );
     },
+    onSuccess: (_data, variables) => {
+      setTargetAutomation({
+        ...(targetAutomation ?? ({} as IAutomation)),
+        ...variables,
+      });
+    },
     onSettled: () => {
       getAutomationsQuery.refetch();
+    },
+  });
+
+  const updateAutomationEnabledMutation = useMutation({
+    mutationFn: ({ id, enabled }: { id: number; enabled: boolean }) => {
+      return updateAutomationAsync(id, undefined, undefined, enabled);
+    },
+    onSettled: () => {
+      getAutomationsQuery.refetch();
+      getOutputsQuery.refetch();
     },
   });
 
@@ -129,7 +167,10 @@ export default function EditAutomationModal({
   return (
     <Fragment>
       <Modal
+        fullScreen={isMobile}
+        size="xl"
         radius="md"
+        padding={isMobile ? "md" : "lg"}
         overlayProps={{
           backgroundOpacity: 0.55,
           blur: 3,
@@ -144,78 +185,176 @@ export default function EditAutomationModal({
             name: targetAutomation?.name ?? "",
             operator: targetAutomation?.operator ?? "or",
           });
+          onClose?.();
         }}
         title={
           readOnly ? (
-            <Title order={4}>{targetAutomation?.name}</Title>
+            <Title order={4}>Automation Details</Title>
           ) : targetAutomation ? (
-            "Edit"
+            "Edit Automation"
           ) : (
-            "Add New"
+            "Create Automation"
           )
         }
       >
-        <form
-          id="add-automation-form"
-          onSubmit={mutateAutomationForm.onSubmit((values) => {
-            addAutomationMutation.mutate(values as IAutomation);
-          })}
-        >
-          {readOnly ? null : (
-            <Fragment>
-              <Title order={4}>Name</Title>
-              <TextInput
-                onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
-                rightSection={
-                  targetAutomation == null ? null : (
-                    <ActionIcon
-                      onClick={() => {
-                        updateAutomationMutation.mutate({
-                          id: targetAutomation.id,
-                          operator: targetAutomation.operator,
-                          name: mutateAutomationForm.values.name,
-                          enabled: targetAutomation.enabled,
-                        });
-                      }}
+        <Stack gap="md">
+          <Paper withBorder radius="lg" p={isMobile ? "md" : "lg"}>
+            <Stack gap="sm">
+              <Group justify="space-between" align="flex-start" wrap="wrap">
+                <Box style={{ flex: 1, minWidth: 0 }}>
+                  <Group gap="xs" align="center" wrap="wrap">
+                    <Title order={3} lineClamp={2}>
+                      {targetAutomation?.name ?? "New automation"}
+                    </Title>
+                    {targetAutomation ? null : (
+                      <Badge color="green" variant="light" radius="sm">
+                        Draft
+                      </Badge>
+                    )}
+                  </Group>
+                  <Text size="sm" c="dimmed" mt={4}>
+                    {readOnly
+                      ? "Review the automation's current status, conditions, and actions."
+                      : targetAutomation
+                        ? "Adjust the trigger logic and actions below."
+                        : "Start with a name. Once created, you can add conditions and actions."}
+                  </Text>
+                </Box>
+                {targetAutomation && !readOnly ? (
+                  <Stack>
+                    <Paper withBorder radius="md" px="sm" py="xs">
+                      <Group gap="sm" wrap="nowrap">
+                        <Text fw={600} size="sm">
+                          Active
+                        </Text>
+                        <Switch
+                          size="md"
+                          checked={enabled}
+                          onLabel="On"
+                          offLabel="Off"
+                          withThumbIndicator={false}
+                          onChange={(
+                            event: React.ChangeEvent<HTMLInputElement>,
+                          ) => {
+                            const newEnabled = event.currentTarget.checked;
+                            setEnabled(newEnabled);
+                            updateAutomationEnabledMutation.mutate({
+                              id: targetAutomation.id,
+                              enabled: newEnabled,
+                            });
+                          }}
+                        />
+                      </Group>
+                    </Paper>
+
+                    {/* <Badge
+                      color={enabled ? "green" : "gray"}
+                      variant="light"
+                      radius="sm"
                     >
-                      <IconDeviceFloppy />
-                    </ActionIcon>
-                  )
-                }
-                maxLength={64}
-                required
-                {...mutateAutomationForm.getInputProps("name")}
-              />
-            </Fragment>
-          )}
-        </form>
-        {targetAutomation != null ? (
-          <Fragment>
-            <Group justify="space-around">
+                      {enabled ? "Enabled" : "Disabled"}
+                    </Badge> */}
+                  </Stack>
+                ) : null}
+              </Group>
+
+              {readOnly ? null : (
+                <form
+                  id="add-automation-form"
+                  onSubmit={mutateAutomationForm.onSubmit((values) => {
+                    addAutomationMutation.mutate(values as IAutomation);
+                  })}
+                >
+                  <Stack gap="xs">
+                    <Text fw={600} size="sm">
+                      Automation name
+                    </Text>
+                    <TextInput
+                      size="md"
+                      onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
+                      rightSection={
+                        targetAutomation == null ? null : (
+                          <ActionIcon
+                            variant="light"
+                            radius="xl"
+                            onClick={() => {
+                              updateAutomationMutation.mutate({
+                                id: targetAutomation.id,
+                                operator: targetAutomation.operator,
+                                name: mutateAutomationForm.values.name,
+                                enabled: targetAutomation.enabled,
+                              });
+                            }}
+                          >
+                            <IconDeviceFloppy size={18} />
+                          </ActionIcon>
+                        )
+                      }
+                      maxLength={64}
+                      placeholder="Example: Vent fan on hot afternoons"
+                      required
+                      {...mutateAutomationForm.getInputProps("name")}
+                    />
+                    {targetAutomation == null ? (
+                      <Group justify="flex-end" mt="xs">
+                        <Button
+                          variant="light"
+                          type="submit"
+                          form="add-automation-form"
+                        >
+                          Next
+                        </Button>
+                      </Group>
+                    ) : null}
+                  </Stack>
+                </form>
+              )}
+            </Stack>
+          </Paper>
+
+          {targetAutomation != null ? (
+            <Fragment>
               <Accordion
-                defaultValue={readOnly ? ["Conditions", "Actions"] : []}
+                defaultValue={
+                  readOnly ? ["Conditions", "Actions"] : ["Conditions"]
+                }
                 multiple={true}
-                w={"100%"}
+                variant="separated"
+                radius="lg"
               >
                 <Accordion.Item key={"Conditions"} value="Conditions">
-                  <Accordion.Control pl={"0px"}>
-                    <Title order={4}>
-                      Conditions{" "}
-                      {readOnly
-                        ? `(${targetAutomation.operator == "or" ? "match any group" : "match all groups"})`
-                        : null}
-                    </Title>
+                  <Accordion.Control>
+                    <Group gap="sm" wrap="nowrap">
+                      <ThemeIcon variant="light" radius="xl" size="lg">
+                        <IconWaveSine size={18} />
+                      </ThemeIcon>
+                      <Box style={{ flex: 1, minWidth: 0 }}>
+                        <Text fw={600}>Conditions</Text>
+                        <Text size="sm" c="dimmed">
+                          {readOnly
+                            ? targetAutomation.operator == "or"
+                              ? "Triggers when any condition group matches."
+                              : "Triggers when all condition groups match."
+                            : "Manage the logic that decides when this automation runs."}
+                        </Text>
+                      </Box>
+                    </Group>
                   </Accordion.Control>
                   <Accordion.Panel>
-                    {targetAutomation.id == null ? null : (
-                      <Fragment>
-                        {readOnly ? null : (
-                          <Fragment>
+                    <Stack gap="md">
+                      {readOnly ? null : (
+                        <Paper withBorder radius="md" p="sm">
+                          <Stack gap="xs">
+                            <Text fw={600} size="sm">
+                              Condition groups
+                            </Text>
+                            <Text size="sm" c="dimmed">
+                              Choose whether this automation runs when any group
+                              matches or when all groups match.
+                            </Text>
                             <SegmentedControl
-                              size="xs"
-                              readOnly={readOnly}
-                              color={"blue"}
-                              w={"100%"}
+                              size="sm"
+                              fullWidth
                               radius="md"
                               data={[
                                 { value: "or", label: "Match Any Group" },
@@ -237,100 +376,190 @@ export default function EditAutomationModal({
                                 );
                               }}
                             />
-                            <Space h={12} />
-                          </Fragment>
-                        )}
-                        <ConditionsTable
-                          automationId={targetAutomation.id}
-                          readOnly={readOnly}
-                        />
-                      </Fragment>
-                    )}
+                          </Stack>
+                        </Paper>
+                      )}
+                      <ConditionsTable
+                        automationId={targetAutomation.id}
+                        readOnly={readOnly}
+                      />
+                    </Stack>
                   </Accordion.Panel>
                 </Accordion.Item>
                 <Accordion.Item key={"Actions"} value="Actions">
-                  <Accordion.Control pl={"0px"}>
-                    <Title order={4}>Actions</Title>
+                  <Accordion.Control>
+                    <Group gap="sm" wrap="nowrap">
+                      <ThemeIcon variant="light" radius="xl" size="lg">
+                        <IconVectorBezier2 size={18} />
+                      </ThemeIcon>
+                      <Box style={{ flex: 1, minWidth: 0 }}>
+                        <Text fw={600}>Actions</Text>
+                        <Text size="sm" c="dimmed">
+                          Pick what happens when this automation runs.
+                        </Text>
+                      </Box>
+                    </Group>
                   </Accordion.Control>
                   <Accordion.Panel>
                     <Stack gap="md">
-                      <div>
-                        <Title order={5} mb="xs">
-                          Output
-                        </Title>
-                        {getOutputsQuery.data == null ? (
-                          <div>Loading...</div>
-                        ) : (
-                          <OutputActionsTable
-                            automationId={targetAutomation.id}
-                            outputs={Object.values(getOutputsQuery.data ?? {})}
-                            readOnly={readOnly}
-                          />
-                        )}
-                      </div>
-                      <div>
-                        <Title order={5} mb="xs">
-                          Notifications
-                        </Title>
-                        <NotificationActionsTable
-                          automationId={targetAutomation.id}
-                          readOnly={readOnly}
-                        />
-                      </div>
-                      {readOnly ? null : (
-                        <>
-                          <Button color="green" onClick={toggleAddAction}>
-                            Add Action
-                          </Button>
-                          <Collapse
-                            in={addActionOpened}
-                            transitionDuration={300}
+                      <Paper withBorder radius="md" p="md">
+                        <Stack gap="sm">
+                          <Group
+                            justify="space-between"
+                            align="center"
+                            wrap="wrap"
                           >
-                            <Space h={12} />
-                            <AddActionWidget
+                            <Group gap="xs">
+                              <ThemeIcon
+                                variant="light"
+                                color="yellow"
+                                radius="xl"
+                              >
+                                <IconBolt size={16} />
+                              </ThemeIcon>
+                              <div>
+                                <Title order={5}>Output actions</Title>
+                                <Text size="sm" c="dimmed">
+                                  Control switches, relays, and PWM outputs.
+                                </Text>
+                              </div>
+                            </Group>
+                          </Group>
+                          <Divider />
+                          {getOutputsQuery.isLoading ? (
+                            <LoadingOverlay
+                              style={{ height: "100%", pointerEvents: "none" }}
+                              visible={getOutputsQuery.isLoading}
+                              zIndex={90}
+                              overlayProps={{
+                                backgroundOpacity: 0.92,
+                                color: "var(--mantine-color-body)",
+                              }}
+                              loaderProps={{
+                                color: "teal",
+                                type: "bars",
+                                size: "lg",
+                              }}
+                            />
+                          ) : (
+                            <OutputActionsTable
                               automationId={targetAutomation.id}
                               outputs={Object.values(
                                 getOutputsQuery.data ?? {},
-                              ).map((output) => ({
-                                id: output.id,
-                                parentOutputId: output.parentOutputId,
-                                isPwm: output.isPwm,
-                                name: output.name ?? "",
-                                actionWarnings: output.actionWarnings,
-                              }))}
-                              onSaved={closeAddAction}
+                              )}
+                              readOnly={readOnly}
                             />
-                          </Collapse>
-                        </>
+                          )}
+                        </Stack>
+                      </Paper>
+                      <Paper withBorder radius="md" p="md">
+                        <Stack gap="sm">
+                          <Group gap="xs">
+                            <ThemeIcon
+                              variant="light"
+                              color="violet"
+                              radius="xl"
+                            >
+                              <IconSparkles size={16} />
+                            </ThemeIcon>
+                            <div>
+                              <Title order={5}>Notification actions</Title>
+                              <Text size="sm" c="dimmed">
+                                Trigger an in-app notification.
+                              </Text>
+                            </div>
+                          </Group>
+                          <Divider />
+                          <NotificationActionsTable
+                            automationId={targetAutomation.id}
+                            readOnly={readOnly}
+                          />
+                        </Stack>
+                      </Paper>
+                      {readOnly ? null : (
+                        <Paper withBorder radius="md" p="md">
+                          <Stack gap="sm">
+                            <Button
+                              color="green"
+                              onClick={toggleAddAction}
+                              fullWidth
+                              leftSection={
+                                <BuilderToggleIcon opened={addActionOpened} />
+                              }
+                            >
+                              {addActionOpened
+                                ? "Hide Action Builder"
+                                : "Show Action Builder"}
+                            </Button>
+                            <Collapse
+                              expanded={addActionOpened}
+                              transitionDuration={300}
+                            >
+                              <Space h={12} />
+                              <AddActionWidget
+                                automationId={targetAutomation.id}
+                                outputs={Object.values(
+                                  getOutputsQuery.data ?? {},
+                                ).map((output) => ({
+                                  id: output.id,
+                                  parentOutputId: output.parentOutputId,
+                                  isPwm: output.isPwm,
+                                  name: output.name ?? "",
+                                  actionWarnings: output.actionWarnings,
+                                }))}
+                                onSaved={closeAddAction}
+                              />
+                            </Collapse>
+                          </Stack>
+                        </Paper>
                       )}
                     </Stack>
                   </Accordion.Panel>
                 </Accordion.Item>
               </Accordion>
-            </Group>
-            {readOnly ? null : (
-              <Group justify="space-between" mt="md">
-                <ConfirmDeleteButton
-                  onConfirm={() => {
-                    deleteAutomationMutation.mutate(targetAutomation.id);
-                    closeModal();
-                  }}
-                />
-              </Group>
-            )}
-          </Fragment>
-        ) : (
-          <Fragment>
-            {readOnly ? null : (
-              <Group justify="flex-end" mt="md">
-                <Button type="submit" form="add-automation-form">
-                  Next
-                </Button>
-              </Group>
-            )}
-          </Fragment>
-        )}
+
+              {readOnly ? null : (
+                <Group justify="space-between" mt="sm">
+                  <ConfirmDeleteButton
+                    onConfirm={() => {
+                      deleteAutomationMutation.mutate(targetAutomation.id);
+                      closeModal();
+                    }}
+                    buttonProps={{ variant: "light" }}
+                  />
+                </Group>
+              )}
+            </Fragment>
+          ) : null}
+        </Stack>
       </Modal>
     </Fragment>
+  );
+}
+
+function BuilderToggleIcon({ opened }: { opened: boolean }) {
+  return (
+    <Box style={{ position: "relative", width: 16, height: 16 }}>
+      <IconPlus
+        size={16}
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: opened ? 0 : 1,
+          transform: `rotate(${opened ? 90 : 0}deg) scale(${opened ? 0.7 : 1})`,
+          transition: "opacity 150ms ease, transform 150ms ease",
+        }}
+      />
+      <IconX
+        size={16}
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: opened ? 1 : 0,
+          transform: `rotate(${opened ? 0 : -90}deg) scale(${opened ? 1 : 0.7})`,
+          transition: "opacity 150ms ease, transform 150ms ease",
+        }}
+      />
+    </Box>
   );
 }

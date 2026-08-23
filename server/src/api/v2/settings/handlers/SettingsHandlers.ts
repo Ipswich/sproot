@@ -19,7 +19,32 @@ for (const section of Object.values(SETTINGS)) {
 const RETENTION_DURATION_KEYS = new Set<SettingsKey>([
   "sensors.data_retention",
   "outputs.data_retention",
+  "system.backup_retention",
 ]);
+
+const BOOLEAN_KEYS = new Set<SettingsKey>([SETTINGS.system.log_debug]);
+
+function validateCoordinate(
+  value: string,
+  key: SettingsKey,
+  min: number,
+  max: number,
+): string | null {
+  if (value.trim() === "") {
+    return `${key} cannot be empty. Use null to clear it.`;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return `${key} must be a valid number.`;
+  }
+
+  if (parsed < min || parsed > max) {
+    return `${key} must be between ${min} and ${max}.`;
+  }
+
+  return null;
+}
 
 function getActualType(value: unknown): string {
   if (value === null) return "null";
@@ -81,16 +106,37 @@ export async function updateSettingsAsync(
       errors.push(`Unknown setting key: ${key}`);
       continue;
     }
-    // All SettingsSchema values are string; null is also accepted.
+
+    if (BOOLEAN_KEYS.has(key as SettingsKey)) {
+      if (typeof value !== "boolean") {
+        errors.push(`Invalid type for ${key}: expected boolean, got ${getActualType(value)}`);
+      }
+      continue;
+    }
+
     const actualType = getActualType(value);
     if (value !== null && typeof value !== "string") {
       errors.push(`Invalid type for ${key}: expected string or null, got ${actualType}`);
     }
-    // Validate duration format for retention settings (not backup_retention)
+
     if (RETENTION_DURATION_KEYS.has(key as SettingsKey) && value !== null) {
       const durationResult = validateDuration(value as string, key);
       if (!durationResult.valid) {
         errors.push(...durationResult.errors);
+      }
+    }
+
+    if (key === SETTINGS.system.latitude && value !== null) {
+      const error = validateCoordinate(value as string, key, -90, 90);
+      if (error) {
+        errors.push(error);
+      }
+    }
+
+    if (key === SETTINGS.system.longitude && value !== null) {
+      const error = validateCoordinate(value as string, key, -180, 180);
+      if (error) {
+        errors.push(error);
       }
     }
   }

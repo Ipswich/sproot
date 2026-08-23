@@ -14,6 +14,7 @@ import ErrorPage from "./error_pages/ErrorPage";
 
 import { rootLoader } from "./routes/utility/Loaders";
 
+import HomeRouter from "./routes/HomeRouter";
 import LiveView from "./routes/live-view/LiveView";
 import SensorData from "./routes/sensor-data/SensorData";
 import OutputStates from "./routes/output-states/OutputStates";
@@ -23,21 +24,72 @@ import JournalEntries from "./routes/journals/entries/JournalEntries";
 import JournalEntryView from "./routes/journals/entries/JournalEntryView";
 import OutputSettings from "./routes/settings/outputs/OutputSettings";
 import SensorSettings from "./routes/settings/sensors/SensorSettings";
-import SystemSettings from "./routes/settings/system/SystemSettings";
-import CameraSettings from "./routes/settings/camera/CameraSettings";
-import HomeRouter from "./routes/HomeRouter";
 import SubcontrollerSettings from "./routes/settings/subcontrollers/SubcontrollerSettings";
+import SystemSettings from "./routes/settings/system/SystemSettings";
+import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 
 const queryClient = new QueryClient();
+
+// function RouteHydrateFallback() {
+//   return (
+//     <div
+//       style={{
+//         minHeight: 240,
+//         display: "flex",
+//         alignItems: "center",
+//         justifyContent: "center",
+//       }}
+//     >
+//       <div
+//         aria-label="Loading"
+//         style={{ display: "flex", alignItems: "center", gap: 6 }}
+//       >
+//         <span
+//           style={{
+//             width: 8,
+//             height: 20,
+//             borderRadius: 999,
+//             background: "#0f766e",
+//             opacity: 0.45,
+//             animation: "copilot-bars 0.8s ease-in-out infinite",
+//           }}
+//         />
+//         <span
+//           style={{
+//             width: 8,
+//             height: 28,
+//             borderRadius: 999,
+//             background: "#0f766e",
+//             opacity: 0.75,
+//             animation: "copilot-bars 0.8s ease-in-out 0.12s infinite",
+//           }}
+//         />
+//         <span
+//           style={{
+//             width: 8,
+//             height: 20,
+//             borderRadius: 999,
+//             background: "#0f766e",
+//             opacity: 0.45,
+//             animation: "copilot-bars 0.8s ease-in-out 0.24s infinite",
+//           }}
+//         />
+//         <style>
+//           {`@keyframes copilot-bars { 0%, 100% { transform: scaleY(0.7); opacity: 0.4; } 50% { transform: scaleY(1); opacity: 1; } }`}
+//         </style>
+//       </div>
+//     </div>
+//   );
+// }
 
 // Create loader functions with fallback logic
 const liveViewLoader = async () => {
   const { cameraSettings } = await rootLoader();
-  // If the camera isn't enabled, redirect to the temperature sensor data page
-  if (!cameraSettings?.enabled) {
+  const enabledCameras = cameraSettings.filter((camera) => camera.enabled);
+  if (enabledCameras.length === 0) {
     return redirect("/sensor-data/temperature");
   }
-  return { cameraSettings };
+  return { cameraSettings: enabledCameras as SDBCameraSettings[] };
 };
 
 const sensorDataPageLoader = async ({ params }: LoaderFunctionArgs) => {
@@ -82,8 +134,8 @@ const router = createBrowserRouter([
       },
       {
         path: "/live-view",
-        element: <LiveView />,
         loader: liveViewLoader,
+        element: <LiveView />,
       },
       {
         path: "/sensor-data/:readingType",
@@ -118,10 +170,6 @@ const router = createBrowserRouter([
       {
         path: "/settings/sensors",
         element: <SensorSettings />,
-      },
-      {
-        path: "/settings/camera",
-        element: <CameraSettings />,
       },
       {
         path: "/settings/subcontrollers",

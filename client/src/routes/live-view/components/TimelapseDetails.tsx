@@ -1,6 +1,5 @@
 import { Button, Card, Group, Progress, Stack, Text } from "@mantine/core";
 import {
-  getCameraSettingsAsync,
   getTimelapseArchiveAsync,
   getTimelapseArchiveStatusAsync,
   regenerateTimelapseArchiveAsync,
@@ -8,20 +7,20 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Fragment } from "react/jsx-runtime";
+import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 
-export default function TimelapseDetails() {
+export default function TimelapseDetails({
+  camera,
+}: {
+  camera: SDBCameraSettings;
+}) {
   const [statusRefetchInterval, setStatusRefetchInterval] = useState(60000);
 
-  const cameraSettingsQuery = useQuery({
-    queryKey: ["camera-settings"],
-    queryFn: () => getCameraSettingsAsync(),
-    refetchInterval: 60000,
-  });
-
   const timelapseArchiveStatusQuery = useQuery({
-    queryKey: ["timelapse-archive-status"],
-    queryFn: () => getTimelapseArchiveStatusAsync(),
+    queryKey: ["timelapse-archive-status", camera.id],
+    queryFn: () => getTimelapseArchiveStatusAsync(camera.id),
     refetchInterval: statusRefetchInterval,
+    enabled: camera.timelapseEnabled,
   });
 
   useEffect(() => {
@@ -37,19 +36,20 @@ export default function TimelapseDetails() {
 
   return (
     <Fragment>
-      {cameraSettingsQuery.data?.timelapseEnabled && (
+      {camera.timelapseEnabled && (
         <Card withBorder shadow="sm" radius="md">
           <Card.Section inheritPadding py="sm">
             <Group justify="center">
-              <Text fw={500}>Timelapse Archive</Text>
+              <Text fw={500}>{camera.name} Timelapse Archive</Text>
             </Group>
           </Card.Section>
           <Card.Section mx="xs" mb="xs">
             <Stack>
               <Button
+                variant="light"
                 onClick={async () => {
                   try {
-                    await getTimelapseArchiveAsync();
+                    await getTimelapseArchiveAsync(camera.id);
                   } catch (error) {
                     console.error(
                       "Failed to download timelapse archive:",
@@ -61,9 +61,11 @@ export default function TimelapseDetails() {
                 Download
               </Button>
               <Button
+                variant="light"
+                color="green"
                 onClick={async () => {
                   try {
-                    await regenerateTimelapseArchiveAsync();
+                    await regenerateTimelapseArchiveAsync(camera.id);
                     timelapseArchiveStatusQuery.refetch();
                   } catch (error) {
                     console.error(

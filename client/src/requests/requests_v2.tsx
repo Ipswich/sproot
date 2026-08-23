@@ -49,14 +49,14 @@ export type SystemLogEvent = {
   metadata?: Record<string, unknown>;
 };
 
-export type ApplicationSettingsKey =
-  | "sensors.data_retention"
-  | "outputs.data_retention"
-  | "system.backup_retention";
-
-export type ApplicationSettings = Partial<
-  Record<ApplicationSettingsKey, string | null>
->;
+export type ApplicationSettings = Partial<{
+  "sensors.data_retention": string | null;
+  "outputs.data_retention": string | null;
+  "system.backup_retention": string | null;
+  "system.log_debug": boolean;
+  "system.latitude": string | null;
+  "system.longitude": string | null;
+}>;
 
 function getErrorMessage(
   response: ErrorResponse,
@@ -442,21 +442,40 @@ export async function deleteOutputConditionAsync(
 export async function addTimeConditionAsync(
   automationId: number,
   groupType: ConditionGroupType,
-  startTime: string | null,
-  endTime: string | null,
+  timeCondition: {
+    startTime: string | null;
+    startOffsetSeconds: number | null;
+    endTime: string | null;
+    endOffsetSeconds: number | null;
+    repeatInterval: number | null;
+    repeatDuration: number | null;
+    phaseAnchorType: "default" | "epoch" | "window" | "clock" | "fixed" | null;
+    phaseAnchorValue: string | null;
+  },
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions/time`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ groupType, startTime, endTime }),
+      body: JSON.stringify({ groupType, ...timeCondition }),
       mode: "cors",
       // credentials: "include",
     },
   );
-  const deserializedResponse = (await response.json()) as SuccessResponse;
-  return deserializedResponse.content?.data;
+  const deserializedResponse = (await response.json()) as
+    SuccessResponse | ErrorResponse;
+
+  if (!response.ok) {
+    throw new Error(
+      getErrorMessage(
+        deserializedResponse as ErrorResponse,
+        "Error adding time condition",
+      ),
+    );
+  }
+
+  return (deserializedResponse as SuccessResponse).content?.data;
 }
 
 export async function deleteTimeConditionAsync(
@@ -1257,14 +1276,19 @@ export async function getAvailableSensorDevicesAsync(
   }
 }
 
-export async function getLatestImageAsync() {
+export type NewCameraSettings = Omit<SDBCameraSettings, "id">;
+
+export async function getLatestImageAsync(cameraId: number) {
   try {
-    const response = await fetch(`${SERVER_URL}/api/v2/camera/latest-image`, {
-      method: "GET",
-      headers: {},
-      mode: "cors",
-      // credentials: "include",
-    });
+    const response = await fetch(
+      `${SERVER_URL}/api/v2/camera/${cameraId}/latest-image`,
+      {
+        method: "GET",
+        headers: {},
+        mode: "cors",
+        // credentials: "include",
+      },
+    );
     if (response.ok) {
       const blob = await response.blob();
       return URL.createObjectURL(blob);
@@ -1276,21 +1300,13 @@ export async function getLatestImageAsync() {
   }
 }
 
-export async function getTimelapseArchiveAsync() {
+export async function getTimelapseArchiveAsync(cameraId: number) {
   try {
-    // Create a new window/tab for the download
-    // This will use the browser's native download handling
-    const downloadUrl = `${SERVER_URL}/api/v2/camera/timelapse/archive`;
-
-    // Open in a hidden iframe to prevent opening a new tab
+    const downloadUrl = `${SERVER_URL}/api/v2/camera/${cameraId}/timelapse/archive`;
     const iframe = document.createElement("iframe");
     iframe.style.display = "none";
     document.body.appendChild(iframe);
-
-    // Set the source to the download URL
     iframe.src = downloadUrl;
-
-    // Clean up after a short delay to ensure download starts
     setTimeout(() => {
       document.body.removeChild(iframe);
     }, 5000);
@@ -1302,12 +1318,14 @@ export async function getTimelapseArchiveAsync() {
   }
 }
 
-export async function getTimelapseArchiveStatusAsync(): Promise<{
+export async function getTimelapseArchiveStatusAsync(
+  cameraId: number,
+): Promise<{
   isGenerating: boolean;
   archiveProgress: number;
 }> {
   const response = await fetch(
-    `${SERVER_URL}/api/v2/camera/timelapse/archive/status`,
+    `${SERVER_URL}/api/v2/camera/${cameraId}/timelapse/archive/status`,
     {
       method: "GET",
       headers: {},
@@ -1322,9 +1340,11 @@ export async function getTimelapseArchiveStatusAsync(): Promise<{
   return deserializedResponse.content?.data;
 }
 
-export async function regenerateTimelapseArchiveAsync(): Promise<void> {
+export async function regenerateTimelapseArchiveAsync(
+  cameraId: number,
+): Promise<void> {
   const response = await fetch(
-    `${SERVER_URL}/api/v2/camera/timelapse/archive/regenerate`,
+    `${SERVER_URL}/api/v2/camera/${cameraId}/timelapse/archive/regenerate`,
     {
       method: "POST",
       headers: {},
@@ -1339,12 +1359,14 @@ export async function regenerateTimelapseArchiveAsync(): Promise<void> {
   return deserializedResponse.content?.data;
 }
 
-export async function getLivestreamAsync() {
-  return `${SERVER_URL}/api/v2/camera/stream`;
+export async function getLivestreamAsync(cameraId: number) {
+  return `${SERVER_URL}/api/v2/camera/${cameraId}/stream`;
 }
 
-export async function getCameraSettingsAsync(): Promise<SDBCameraSettings> {
-  const response = await fetch(`${SERVER_URL}/api/v2/camera/settings`, {
+export async function getCameraSettingsListAsync(): Promise<
+  SDBCameraSettings[]
+> {
+  const response = await fetch(`${SERVER_URL}/api/v2/camera`, {
     method: "GET",
     headers: {},
     mode: "cors",
@@ -1357,34 +1379,82 @@ export async function getCameraSettingsAsync(): Promise<SDBCameraSettings> {
   return deserializedResponse.content?.data;
 }
 
-export async function updateCameraSettingsAsync(
-  settings: SDBCameraSettings,
-): Promise<void> {
-  settings.videoFps = null;
-  settings.xImageResolution = null;
-  settings.yImageResolution = null;
-  settings.xVideoResolution = null;
-  settings.yVideoResolution = null;
+export async function getCameraSettingsAsync(
+  cameraId: number,
+): Promise<SDBCameraSettings> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/camera/${cameraId}/settings`,
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error fetching camera settings: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
 
-  const response = await fetch(`${SERVER_URL}/api/v2/camera/settings`, {
-    method: "PATCH",
+export async function createCameraSettingsAsync(
+  settings: NewCameraSettings,
+): Promise<SDBCameraSettings> {
+  const response = await fetch(`${SERVER_URL}/api/v2/camera`, {
+    method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(settings),
     mode: "cors",
-    // credentials: "include",
   });
+  if (!response.ok) {
+    console.error(`Error creating camera settings: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function updateCameraSettingsAsync(
+  cameraId: number,
+  settings: NewCameraSettings,
+): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/camera/${cameraId}/settings`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settings),
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
   if (!response.ok) {
     console.error(`Error updating camera settings: ${response}`);
   }
 }
 
-export async function clearAllImagesAsync(): Promise<void> {
-  const response = await fetch(`${SERVER_URL}/api/v2/camera/timelapse/images`, {
+export async function deleteCameraSettingsAsync(
+  cameraId: number,
+): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/camera/${cameraId}`, {
     method: "DELETE",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
+  if (!response.ok) {
+    console.error(`Error deleting camera settings: ${response}`);
+  }
+}
+
+export async function clearAllImagesAsync(cameraId: number): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/camera/${cameraId}/timelapse/images`,
+    {
+      method: "DELETE",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
   if (!response.ok) {
     console.error(`Error clearing all images: ${response}`);
   }

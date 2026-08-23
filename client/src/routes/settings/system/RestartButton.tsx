@@ -19,6 +19,7 @@ export default function RestartButton() {
   return (
     <Fragment>
       <Button
+        variant="light"
         size="xl"
         w={rem(300)}
         onClick={() => {

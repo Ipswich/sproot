@@ -3,15 +3,17 @@ import { get as httpGet } from "http";
 import sinon from "sinon";
 import request from "supertest";
 import { validateMiddlewareValues } from "./utils";
-import { app, server } from "./setup";
+import { app, server, baseUrl } from "./setup";
 import fs from "fs";
+import { PassThrough, Readable } from "stream";
 import { CameraManager } from "../camera/CameraManager";
-import { FrameBuffer } from "../camera/FrameBuffer";
 import { DI_KEYS } from "../utils/DependencyInjectionConstants";
 import { AutomationsTriggeredEvent } from "../eventbus/events/automations/AutomationsTriggeredEvent";
+import { OutputList } from "../outputs/list/OutputList";
+import { AutomationService } from "../automation/AutomationService";
 
 describe("API Tests", async function () {
-  this.timeout(2000);
+  this.timeout(5000);
 
   const flushAsync = () => new Promise((resolve) => setImmediate(resolve));
   const delayAsync = (milliseconds: number) =>
@@ -36,6 +38,26 @@ describe("API Tests", async function () {
     }
 
     assert.fail(`Timed out waiting for output ${outputId}: ${JSON.stringify(lastOutput)}`);
+  };
+  const waitForOutputDataAsync = async (
+    outputList: OutputList,
+    outputId: number,
+    predicate: (output: any) => boolean,
+    attempts = 40,
+  ) => {
+    let lastOutput: any;
+
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      lastOutput = outputList.outputData[outputId.toString()];
+
+      if (lastOutput && predicate(lastOutput)) {
+        return lastOutput;
+      }
+
+      await delayAsync(25);
+    }
+
+    assert.fail(`Timed out waiting for output data ${outputId}: ${JSON.stringify(lastOutput)}`);
   };
   // describe("Authentication Routes", async () => {
   //   before(() => {
@@ -99,6 +121,7 @@ describe("API Tests", async function () {
       "automationTimeout",
       "actionWarnings",
       "activeConflict",
+      "triggeredBy",
     ];
     const stateKeys = ["controlMode", "logTime", "value"];
     describe("Outputs", async () => {
@@ -178,6 +201,7 @@ describe("API Tests", async function () {
 
         it("should include an active conflict when the highest-precedence triggered actions disagree", async () => {
           const eventBus = app.get(DI_KEYS.EventBus);
+          const outputList = app.get(DI_KEYS.OutputList) as OutputList;
 
           let createdActionId: number | undefined;
 
@@ -235,10 +259,15 @@ describe("API Tests", async function () {
             );
             await flushAsync();
 
-            const output = await waitForOutputAsync(
+            await waitForOutputDataAsync(
+              outputList,
               1,
               (candidate) => candidate.activeConflict !== null,
             );
+
+            const response = await request(server).get("/api/v2/outputs/1").expect(200);
+            validateMiddlewareValues(response);
+            const output = response.body["content"].data[0];
 
             assert.deepEqual(output.activeConflict, {
               precedence: "High",
@@ -260,6 +289,61 @@ describe("API Tests", async function () {
               assert.isNull(cleanupOutput.activeConflict);
             }
 
+            const timeoutResetResponse = await request(server)
+              .patch("/api/v2/outputs/1")
+              .send({ automationTimeout: 1 })
+              .expect(200);
+
+            validateMiddlewareValues(timeoutResetResponse);
+          }
+        });
+
+        it("should include triggered automations for outputs with active automation actions", async () => {
+          const eventBus = app.get(DI_KEYS.EventBus);
+          const outputList = app.get(DI_KEYS.OutputList) as OutputList;
+          try {
+            const timeoutUpdateResponse = await request(server)
+              .patch("/api/v2/outputs/1")
+              .send({ automationTimeout: 0 })
+              .expect(200);
+
+            validateMiddlewareValues(timeoutUpdateResponse);
+
+            await eventBus.publishAsync(
+              new AutomationsTriggeredEvent(
+                new Map([
+                  [
+                    1,
+                    {
+                      automationId: 1,
+                      automationName: "Automation #1",
+                      operator: "or",
+                      conditions: { allOf: [], anyOf: [], oneOf: [] },
+                    },
+                  ],
+                ]),
+              ),
+            );
+            await flushAsync();
+
+            await waitForOutputDataAsync(
+              outputList,
+              1,
+              (candidate) =>
+                Array.isArray(candidate.triggeredBy) && candidate.triggeredBy.length === 1,
+            );
+
+            const response = await request(server).get("/api/v2/outputs/1").expect(200);
+            validateMiddlewareValues(response);
+            const output = response.body["content"].data[0];
+
+            assert.deepEqual(output.triggeredBy, [
+              {
+                automationId: 1,
+                automationName: "Automation #1",
+              },
+            ]);
+          } finally {
             const timeoutResetResponse = await request(server)
               .patch("/api/v2/outputs/1")
               .send({ automationTimeout: 1 })
@@ -397,47 +481,95 @@ describe("API Tests", async function () {
         const content = response.body["content"];
         validateMiddlewareValues(response);
         assert.lengthOf(content.data, 2);
-        assert.containsAllKeys(content.data[0], ["id", "name", "operator"]);
-        assert.containsAllKeys(content.data[1], ["id", "name", "operator"]);
+        assert.containsAllKeys(content.data[0], ["id", "name", "operator", "enabled", "triggered"]);
+        assert.containsAllKeys(content.data[1], ["id", "name", "operator", "enabled", "triggered"]);
       });
 
       it("should return 200 and a single automation", async () => {
         const response = await request(server).get("/api/v2/automations/1").expect(200);
         const content = response.body["content"];
         validateMiddlewareValues(response);
-        assert.containsAllKeys(content.data, ["id", "name", "operator"]);
+        assert.containsAllKeys(content.data, ["id", "name", "operator", "enabled", "triggered"]);
+      });
+
+      it("should expose when an automation has evaluated to true", async () => {
+        const automationService = app.get(DI_KEYS.AutomationService) as AutomationService;
+        let automationId: number | undefined;
+
+        try {
+          const createAutomationResponse = await request(server)
+            .post("/api/v2/automations")
+            .send({
+              name: "Triggered Automation",
+              operator: "or",
+            })
+            .expect(201);
+          validateMiddlewareValues(createAutomationResponse);
+          automationId = createAutomationResponse.body["content"].data.id;
+
+          const createConditionResponse = await request(server)
+            .post(`/api/v2/automations/${automationId}/conditions/time`)
+            .send({
+              groupType: "oneOf",
+              startTime: "00:00",
+              endTime: "23:59",
+            })
+            .expect(201);
+          validateMiddlewareValues(createConditionResponse);
+
+          await automationService.evaluateAllAutomationsAsync(new Date("2026-08-10T10:00:00Z"));
+
+          const response = await request(server).get("/api/v2/automations").expect(200);
+          validateMiddlewareValues(response);
+
+          const triggeredAutomation = response.body["content"].data.find(
+            (automation: any) => automation.id === automationId,
+          );
+
+          assert.isTrue(triggeredAutomation.triggered);
+        } finally {
+          if (automationId !== undefined) {
+            const deleteAutomationResponse = await request(server)
+              .delete(`/api/v2/automations/${automationId}`)
+              .expect(200);
+            validateMiddlewareValues(deleteAutomationResponse);
+          }
+        }
       });
     });
 
     describe("Create, Update, Delete", async () => {
+      let createdAutomationId: number;
+
       describe("POST", async () => {
         it("should return 201", async () => {
           assert.lengthOf(await app.get("sprootDB").automations.getAllAsync(), 2);
-          await request(server)
+          const response = await request(server)
             .post("/api/v2/automations")
             .send({
               name: "Test Automation",
               operator: "or",
             })
             .expect(201);
+          createdAutomationId = response.body["content"].data.id;
           assert.lengthOf(await app.get("sprootDB").automations.getAllAsync(), 3);
         });
       });
       describe("PATCH", async () => {
         it("should return 200", async () => {
           assert.equal(
-            (await app.get("sprootDB").automations.getByIdAsync(3))[0].name,
+            (await app.get("sprootDB").automations.getByIdAsync(createdAutomationId))[0].name,
             "Test Automation",
           );
           await request(server)
-            .patch("/api/v2/automations/3")
+            .patch(`/api/v2/automations/${createdAutomationId}`)
             .send({
               name: "Test1 Automation",
               operator: "and",
             })
             .expect(200);
           assert.equal(
-            (await app.get("sprootDB").automations.getByIdAsync(3))[0].name,
+            (await app.get("sprootDB").automations.getByIdAsync(createdAutomationId))[0].name,
             "Test1 Automation",
           );
         });
@@ -445,7 +577,7 @@ describe("API Tests", async function () {
       describe("DELETE", async () => {
         it("should return 200", async () => {
           assert.lengthOf(await app.get("sprootDB").automations.getAllAsync(), 3);
-          await request(server).delete("/api/v2/automations/3").expect(200);
+          await request(server).delete(`/api/v2/automations/${createdAutomationId}`).expect(200);
           assert.lengthOf(await app.get("sprootDB").automations.getAllAsync(), 2);
         });
       });
@@ -643,16 +775,24 @@ describe("API Tests", async function () {
             "automationId",
             "groupType",
             "startTime",
+            "startOffsetSeconds",
             "endTime",
+            "endOffsetSeconds",
+            "repeatInterval",
+            "repeatDuration",
+            "phaseAnchorType",
+            "phaseAnchorValue",
           ]);
         });
       });
 
       describe("Create, Update, Delete", async () => {
+        let createdTimeConditionId: number;
+
         describe("POST", async () => {
           it("should return 201", async () => {
             assert.lengthOf(await app.get("sprootDB").automations.conditions.time.getAsync(1), 2);
-            await request(server)
+            const response = await request(server)
               .post("/api/v2/automations/1/conditions/time")
               .send({
                 groupType: "oneOf",
@@ -660,33 +800,252 @@ describe("API Tests", async function () {
                 endTime: "11:59",
               })
               .expect(201);
+            createdTimeConditionId = response.body["content"].data.id;
             assert.lengthOf(await app.get("sprootDB").automations.conditions.time.getAsync(1), 3);
+          });
+
+          it("should create a repeating time condition", async () => {
+            const response = await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "08:00",
+                endTime: "17:00",
+                repeatInterval: 30,
+                repeatDuration: 10,
+                phaseAnchorType: "default",
+              })
+              .expect(201);
+
+            assert.equal(response.body.content.data.repeatInterval, 30);
+            assert.equal(response.body.content.data.repeatDuration, 10);
+            assert.equal(response.body.content.data.phaseAnchorType, "default");
+            assert.isNull(response.body.content.data.phaseAnchorValue);
+
+            await request(server)
+              .delete(`/api/v2/automations/1/conditions/time/${response.body.content.data.id}`)
+              .expect(200);
+          });
+
+          it("should reject a time condition when repeatDuration >= repeatInterval", async () => {
+            await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "08:00",
+                endTime: "17:00",
+                repeatInterval: 30,
+                repeatDuration: 30,
+                phaseAnchorType: "default",
+              })
+              .expect(400);
+
+            await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "08:00",
+                endTime: "17:00",
+                repeatInterval: 30,
+                repeatDuration: 45,
+                phaseAnchorType: "default",
+              })
+              .expect(400);
+          });
+
+          it("should reject dynamic time points when location settings are missing", async () => {
+            await request(server)
+              .patch("/api/v2/settings")
+              .send({
+                "system.latitude": null,
+                "system.longitude": null,
+              })
+              .expect(200);
+
+            await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "sunrise",
+              })
+              .expect(400);
+          });
+
+          it("should create a dynamic time condition when location settings are configured", async () => {
+            await request(server)
+              .patch("/api/v2/settings")
+              .send({
+                "system.latitude": "40.7128",
+                "system.longitude": "-74.0060",
+              })
+              .expect(200);
+
+            const response = await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "goldenHourEnd",
+                endTime: "nauticalDusk",
+                repeatInterval: 30,
+                repeatDuration: 10,
+                phaseAnchorType: "clock",
+                phaseAnchorValue: "sunset",
+              })
+              .expect(201);
+
+            assert.equal(response.body.content.data.startTime, "goldenHourEnd");
+            assert.equal(response.body.content.data.endTime, "nauticalDusk");
+            assert.equal(response.body.content.data.phaseAnchorValue, "sunset");
+
+            await request(server)
+              .delete(`/api/v2/automations/1/conditions/time/${response.body.content.data.id}`)
+              .expect(200);
+          });
+
+          it("should persist dynamic time offsets on creation", async () => {
+            await request(server)
+              .patch("/api/v2/settings")
+              .send({
+                "system.latitude": "40.7128",
+                "system.longitude": "-74.0060",
+              })
+              .expect(200);
+
+            const response = await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "sunrise",
+                startOffsetSeconds: -300,
+                endTime: "sunset",
+                endOffsetSeconds: 7200,
+              })
+              .expect(201);
+
+            assert.equal(response.body.content.data.startTime, "sunrise");
+            assert.equal(response.body.content.data.startOffsetSeconds, -300);
+            assert.equal(response.body.content.data.endTime, "sunset");
+            assert.equal(response.body.content.data.endOffsetSeconds, 7200);
+
+            const stored = (await app.get("sprootDB").automations.conditions.time.getAsync(1)).find(
+              (condition: { id: number }) => condition.id === response.body.content.data.id,
+            );
+
+            assert.equal(stored?.startOffsetSeconds, -300);
+            assert.equal(stored?.endOffsetSeconds, 7200);
+
+            await request(server)
+              .delete(`/api/v2/automations/1/conditions/time/${response.body.content.data.id}`)
+              .expect(200);
           });
         });
 
         describe("PATCH", async () => {
           it("should return 200", async () => {
-            assert.equal(
-              (await app.get("sprootDB").automations.conditions.time.getAsync(1))[2].startTime,
-              "00:00",
-            );
+            const beforeUpdate = (
+              await app.get("sprootDB").automations.conditions.time.getAsync(1)
+            ).find((condition: { id: number }) => condition.id === createdTimeConditionId);
+
+            assert.equal(beforeUpdate?.startTime, "00:00");
             await request(server)
-              .patch("/api/v2/automations/1/conditions/time/3")
+              .patch(`/api/v2/automations/1/conditions/time/${createdTimeConditionId}`)
               .send({
                 startTime: "01:00",
               })
               .expect(200);
-            assert.equal(
-              (await app.get("sprootDB").automations.conditions.time.getAsync(1))[2].startTime,
-              "01:00",
+
+            const updatedCondition = (
+              await app.get("sprootDB").automations.conditions.time.getAsync(1)
+            ).find((condition: { id: number }) => condition.id === createdTimeConditionId);
+
+            assert.equal(updatedCondition?.startTime, "01:00");
+          });
+
+          it("should update a time condition with repeat settings", async () => {
+            const createResponse = await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "23:30",
+                endTime: "04:00",
+              })
+              .expect(201);
+
+            await request(server)
+              .patch(`/api/v2/automations/1/conditions/time/${createResponse.body.content.data.id}`)
+              .send({
+                repeatInterval: 17,
+                repeatDuration: 5,
+                phaseAnchorType: "window",
+              })
+              .expect(200);
+
+            const updated = (
+              await app.get("sprootDB").automations.conditions.time.getAsync(1)
+            ).find(
+              (condition: { id: number }) => condition.id === createResponse.body.content.data.id,
             );
+
+            assert.equal(updated.repeatInterval, 17);
+            assert.equal(updated.repeatDuration, 5);
+            assert.equal(updated.phaseAnchorType, "window");
+
+            await request(server)
+              .delete(
+                `/api/v2/automations/1/conditions/time/${createResponse.body.content.data.id}`,
+              )
+              .expect(200);
+          });
+
+          it("should update dynamic time offsets", async () => {
+            await request(server)
+              .patch("/api/v2/settings")
+              .send({
+                "system.latitude": "40.7128",
+                "system.longitude": "-74.0060",
+              })
+              .expect(200);
+
+            const createResponse = await request(server)
+              .post("/api/v2/automations/1/conditions/time")
+              .send({
+                groupType: "oneOf",
+                startTime: "sunrise",
+                endTime: "sunset",
+              })
+              .expect(201);
+
+            await request(server)
+              .patch(`/api/v2/automations/1/conditions/time/${createResponse.body.content.data.id}`)
+              .send({
+                startOffsetSeconds: -600,
+                endOffsetSeconds: 1800,
+              })
+              .expect(200);
+
+            const updated = (
+              await app.get("sprootDB").automations.conditions.time.getAsync(1)
+            ).find(
+              (condition: { id: number }) => condition.id === createResponse.body.content.data.id,
+            );
+
+            assert.equal(updated?.startOffsetSeconds, -600);
+            assert.equal(updated?.endOffsetSeconds, 1800);
+
+            await request(server)
+              .delete(
+                `/api/v2/automations/1/conditions/time/${createResponse.body.content.data.id}`,
+              )
+              .expect(200);
           });
         });
 
         describe("DELETE", async () => {
           it("should return 200", async () => {
             assert.lengthOf(await app.get("sprootDB").automations.conditions.time.getAsync(1), 3);
-            await request(server).delete("/api/v2/automations/1/conditions/time/3").expect(200);
+            await request(server)
+              .delete(`/api/v2/automations/1/conditions/time/${createdTimeConditionId}`)
+              .expect(200);
             assert.lengthOf(await app.get("sprootDB").automations.conditions.time.getAsync(1), 2);
           });
         });
@@ -1314,39 +1673,39 @@ describe("API Tests", async function () {
       "id",
       "enabled",
       "name",
-      "xVideoResolution",
-      "yVideoResolution",
-      "videoFps",
-      "xImageResolution",
-      "yImageResolution",
+      "captureUrl",
+      "streamUrl",
+      "healthUrl",
       "timelapseEnabled",
       "imageRetentionDays",
       "imageRetentionSize",
       "timelapseInterval",
       "timelapseStartTime",
+      "timelapseStartOffsetSeconds",
       "timelapseEndTime",
+      "timelapseEndOffsetSeconds",
     ];
     describe("Settings", () => {
       describe("GET", () => {
         it("should return 200 and camera settings data", async () => {
-          const response = await request(server).get("/api/v2/camera/settings").expect(200);
+          const response = await request(server).get("/api/v2/camera/1/settings").expect(200);
           const content = response.body["content"];
           validateMiddlewareValues(response);
           assert.deepEqual(content.data, {
             id: 1,
             enabled: false,
             name: "Pi Camera",
-            xVideoResolution: null,
-            yVideoResolution: null,
-            videoFps: null,
-            xImageResolution: null,
-            yImageResolution: null,
+            captureUrl: "http://camera:3002/capture",
+            streamUrl: "http://camera:3002/stream.mjpg",
+            healthUrl: "http://camera:3002/health",
             imageRetentionDays: 90,
             imageRetentionSize: 5000,
             timelapseEnabled: false,
             timelapseInterval: 5,
             timelapseStartTime: null,
             timelapseEndTime: null,
+            timelapseStartOffsetSeconds: null,
+            timelapseEndOffsetSeconds: null,
           });
         });
       });
@@ -1354,26 +1713,26 @@ describe("API Tests", async function () {
       describe("PATCH", () => {
         it("should return 200 and the updated settings", async function () {
           this.timeout(15000);
-          assert.equal(app.get("cameraManager").cameraSettings.name, "Pi Camera");
+          assert.equal(app.get("cameraManager").cameraSettings[0].name, "Pi Camera");
 
           const updatedSettings = {
             enabled: true,
             name: "Updated Camera Name",
-            xVideoResolution: 1280,
-            yVideoResolution: 720,
-            videoFps: 30,
-            xImageResolution: 1920,
-            yImageResolution: 1080,
+            captureUrl: "http://camera:3002/capture",
+            streamUrl: "http://camera:3002/stream.mjpg",
+            healthUrl: "http://camera:3002/health",
             timelapseEnabled: true,
             imageRetentionDays: 7,
             imageRetentionSize: 1024,
             timelapseInterval: 60,
-            timelapseStartTime: "08:00",
-            timelapseEndTime: "20:00",
+            timelapseStartTime: "sunrise",
+            timelapseStartOffsetSeconds: -300,
+            timelapseEndTime: "sunset",
+            timelapseEndOffsetSeconds: 1800,
           };
 
           const response = await request(server)
-            .patch("/api/v2/camera/settings")
+            .patch("/api/v2/camera/1/settings")
             .send(updatedSettings)
             .expect(200);
 
@@ -1381,7 +1740,9 @@ describe("API Tests", async function () {
           validateMiddlewareValues(response);
 
           assert.containsAllKeys(content.data, cameraSettingsKeys);
-          assert.equal(app.get("cameraManager").cameraSettings.name, "Updated Camera Name");
+          assert.equal(app.get("cameraManager").cameraSettings[0].name, "Updated Camera Name");
+          assert.equal(content.data.timelapseStartOffsetSeconds, -300);
+          assert.equal(content.data.timelapseEndOffsetSeconds, 1800);
         });
       });
     });
@@ -1390,15 +1751,20 @@ describe("API Tests", async function () {
       describe("GET", () => {
         it("should return 200 and a stream", async () => {
           const cameraManager = app.get("cameraManager") as CameraManager;
-          const frameBuffer = new FrameBuffer({ logger: app.get("logger") });
-          const getFrameBufferStub = sinon
-            .stub(cameraManager, "getFrameBuffer")
-            .returns(frameBuffer);
+          const upstreamStream = new PassThrough();
+          const fetchStreamStub = sinon.stub(cameraManager, "fetchStreamAsync").resolves(
+            new Response(Readable.toWeb(upstreamStream) as ReadableStream, {
+              status: 200,
+              headers: {
+                "content-type": "multipart/x-mixed-replace; boundary=FRAME",
+              },
+            }),
+          );
 
           try {
             await new Promise<void>((resolve, reject) => {
               let settled = false;
-              const req = httpGet("http://127.0.0.1:3000/api/v2/camera/stream", (res) => {
+              const req = httpGet(`${baseUrl}/api/v2/camera/1/stream`, (res) => {
                 try {
                   assert.equal(res.statusCode, 200);
                   assert.equal(
@@ -1428,7 +1794,7 @@ describe("API Tests", async function () {
                   }
                   settled = true;
                   clearTimeout(timeout);
-                  clearInterval(waitForSubscriberInterval);
+                  clearInterval(waitForUpstreamInterval);
                   req.destroy();
                   reject(streamError);
                 });
@@ -1438,17 +1804,17 @@ describe("API Tests", async function () {
                   return;
                 }
                 settled = true;
-                clearInterval(waitForSubscriberInterval);
+                clearInterval(waitForUpstreamInterval);
                 req.destroy();
                 reject(new Error("Stream did not send data within timeout period"));
               }, 300);
-              const waitForSubscriberInterval = setInterval(() => {
-                if (settled || frameBuffer.getSubscriberCount() === 0) {
+              const waitForUpstreamInterval = setInterval(() => {
+                if (settled) {
                   return;
                 }
 
-                clearInterval(waitForSubscriberInterval);
-                frameBuffer.getStream().write(Buffer.from("test-stream-chunk"));
+                clearInterval(waitForUpstreamInterval);
+                upstreamStream.write(Buffer.from("test-stream-chunk"));
               }, 5);
 
               req.on("error", (err) => {
@@ -1461,31 +1827,14 @@ describe("API Tests", async function () {
                 if (!settled) {
                   settled = true;
                   clearTimeout(timeout);
-                  clearInterval(waitForSubscriberInterval);
+                  clearInterval(waitForUpstreamInterval);
                   reject(err);
                 }
               });
             });
           } finally {
-            getFrameBufferStub.restore();
-          }
-        });
-
-        // This test doesn't _really_ test the reconnect endpoint, but it at least ensures that the endpoint is hit and returns a 200
-        it("should return a 200 after reconnecting to the livestream server", async () => {
-          const cameraManager = app.get("cameraManager") as CameraManager;
-          const reconnectStub = sinon
-            .stub(cameraManager, "reconnectLivestreamAsync")
-            .resolves(true);
-
-          try {
-            const response = await request(server).post("/api/v2/camera/reconnect").expect(200);
-
-            validateMiddlewareValues(response);
-            assert.isTrue(reconnectStub.calledOnce);
-            assert.equal(response.body.content.data, "Livestream successfully reconnected");
-          } finally {
-            reconnectStub.restore();
+            fetchStreamStub.restore();
+            upstreamStream.destroy();
           }
         });
       });
@@ -1495,7 +1844,7 @@ describe("API Tests", async function () {
   describe("Latest Image", () => {
     describe("GET", () => {
       it("should return 200 and the latest image", async () => {
-        const response = await request(server).get("/api/v2/camera/latest-image").expect(200);
+        const response = await request(server).get("/api/v2/camera/1/latest-image").expect(200);
         validateMiddlewareValues(response);
         assert.equal(response.headers["content-type"], "image/jpeg");
         assert.isNotNull(response.body);
@@ -1508,7 +1857,7 @@ describe("API Tests", async function () {
       describe("GET", () => {
         it("should return 200 and the archive file", async () => {
           const response = await request(server)
-            .get("/api/v2/camera/timelapse/archive")
+            .get("/api/v2/camera/1/timelapse/archive")
             .expect(200);
           validateMiddlewareValues(response);
           assert.equal(response.headers["content-type"], "application/x-tar");
@@ -1521,7 +1870,7 @@ describe("API Tests", async function () {
       describe("POST", () => {
         it("should return 202 and queue archive regeneration", async () => {
           const response = await request(server)
-            .post("/api/v2/camera/timelapse/archive/regenerate")
+            .post("/api/v2/camera/1/timelapse/archive/regenerate")
             .expect(202);
           validateMiddlewareValues(response);
           assert.equal(response.body["content"].data, "Timelapse archive regeneration queued.");
@@ -1533,7 +1882,7 @@ describe("API Tests", async function () {
       describe("GET", async () => {
         it("should return 200 and the timelapse generation status", async () => {
           const response = await request(server)
-            .get("/api/v2/camera/timelapse/archive/status")
+            .get("/api/v2/camera/1/timelapse/archive/status")
             .expect(200);
           validateMiddlewareValues(response);
           assert.isBoolean(response.body["content"].data.isGenerating);
@@ -1547,20 +1896,20 @@ describe("API Tests", async function () {
         it("should return 200 and clear all timelapse images", async () => {
           let attempts = 0;
           while (
-            (app.get("cameraManager") as CameraManager).getTimelapseArchiveProgress()
+            (app.get("cameraManager") as CameraManager).getTimelapseArchiveProgress(1)
               .isGenerating &&
             attempts < 5
           ) {
             attempts++;
             await new Promise((resolve) => setTimeout(resolve, 100));
           }
-          let imageCount = await fs.promises.readdir("images/timelapse");
+          let imageCount = await fs.promises.readdir("images/1/timelapse");
           assert.isAbove(imageCount.length, 0, "There should be images to clear for this test");
           const response = await request(server)
-            .delete("/api/v2/camera/timelapse/images")
+            .delete("/api/v2/camera/1/timelapse/images")
             .expect(200);
           validateMiddlewareValues(response);
-          imageCount = await fs.promises.readdir("images/timelapse");
+          imageCount = await fs.promises.readdir("images/1/timelapse");
           assert.equal(imageCount.length, 0, "All images should be cleared");
           assert.equal(response.body["content"].data, "All images cleared successfully");
         });
@@ -1576,13 +1925,13 @@ describe("API Tests", async function () {
           // request to actuall generate a timelapse, causing this test to fail.
           let retryCount = 0;
           let timelapseCompletion = await request(server).get(
-            "/api/v2/camera/timelapse/archive/status",
+            "/api/v2/camera/1/timelapse/archive/status",
           );
           while (timelapseCompletion.body["content"].data.isGenerating && retryCount < 5) {
             try {
               await new Promise((resolve) => setTimeout(resolve, 100));
               timelapseCompletion = await request(server).get(
-                "/api/v2/camera/timelapse/archive/status",
+                "/api/v2/camera/1/timelapse/archive/status",
               );
             } catch (err) {
               // If the request fails, log the error and break the loop to avoid an infinite retry
@@ -1678,15 +2027,17 @@ describe("API Tests", async function () {
 
   describe("Settings Routes", async () => {
     describe("GET", async () => {
-      it("should return 200 with all 3 settings", async () => {
+      it("should return 200 with all 6 settings", async () => {
         const response = await request(server).get("/api/v2/settings").expect(200);
         const content = response.body["content"];
         validateMiddlewareValues(response);
         assert.isObject(content.data);
-        assert.equal(Object.keys(content.data).length, 3);
+        assert.equal(Object.keys(content.data).length, 6);
         assert.exists(content.data["sensors.data_retention"]);
         assert.exists(content.data["outputs.data_retention"]);
         assert.exists(content.data["system.backup_retention"]);
+        assert.strictEqual(content.data["system.log_debug"], false);
+        assert.containsAllKeys(content.data, ["system.latitude", "system.longitude"]);
       });
     });
 
@@ -1733,6 +2084,16 @@ describe("API Tests", async function () {
         assert.include(response.body.error.details[0], "got number");
       });
 
+      it("should accept boolean updates for system.log_debug", async () => {
+        const response = await request(server)
+          .patch("/api/v2/settings")
+          .send({ "system.log_debug": true })
+          .expect(200);
+
+        validateMiddlewareValues(response);
+        assert.strictEqual(response.body.content.data["system.log_debug"], true);
+      });
+
       it("should return 200 for null value", async () => {
         const response = await request(server)
           .patch("/api/v2/settings")
@@ -1758,6 +2119,32 @@ describe("API Tests", async function () {
         validateMiddlewareValues(response);
         assert.deepEqual(content.data, {});
       });
+
+      it("should accept valid latitude and longitude settings", async () => {
+        const response = await request(server)
+          .patch("/api/v2/settings")
+          .send({
+            "system.latitude": "40.7128",
+            "system.longitude": "-74.0060",
+          })
+          .expect(200);
+
+        validateMiddlewareValues(response);
+        assert.equal(response.body.content.data["system.latitude"], "40.7128");
+        assert.equal(response.body.content.data["system.longitude"], "-74.0060");
+      });
+
+      it("should reject an out-of-range latitude", async () => {
+        const response = await request(server)
+          .patch("/api/v2/settings")
+          .send({
+            "system.latitude": "91",
+          })
+          .expect(400);
+
+        validateMiddlewareValues(response);
+        assert.include(response.body.error.details[0], "must be between -90 and 90");
+      });
     });
   });
 
@@ -1766,7 +2153,7 @@ describe("API Tests", async function () {
       it("should return 200 with SSE headers", async () => {
         await new Promise<void>((resolve, reject) => {
           let settled = false;
-          const req = httpGet("http://127.0.0.1:3000/api/v2/system/logs/stream", (res) => {
+          const req = httpGet(`${baseUrl}/api/v2/system/logs/stream`, (res) => {
             try {
               assert.equal(res.statusCode, 200);
               assert.equal(res.headers["content-type"], "text/event-stream; charset=utf-8");
@@ -1814,7 +2201,7 @@ describe("API Tests", async function () {
         const received: string[] = [];
         await new Promise<void>((resolve, reject) => {
           let settled = false;
-          const req = httpGet("http://127.0.0.1:3000/api/v2/system/logs/stream", (res) => {
+          const req = httpGet(`${baseUrl}/api/v2/system/logs/stream`, (res) => {
             try {
               assert.equal(res.statusCode, 200);
             } catch (error) {

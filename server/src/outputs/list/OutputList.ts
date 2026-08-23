@@ -139,7 +139,7 @@ class OutputList implements AsyncDisposable {
   }
 
   async updateControlModeAsync(outputId: string, controlMode: ControlMode): Promise<void> {
-    this.#outputs[outputId]?.updateControlModeAsync(controlMode);
+    await this.#outputs[outputId]?.updateControlModeAsync(controlMode);
   }
 
   async setAndExecuteStateAsync(outputId: string, newState: SDBOutputState): Promise<void> {

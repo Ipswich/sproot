@@ -1,13 +1,32 @@
 import { Fragment, useState } from "react";
-import { Button, Stack, Switch, rem } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Box,
+  Button,
+  Center,
+  Group,
+  Menu,
+  Paper,
+  Stack,
+  Table,
+  Text,
+  LoadingOverlay,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import {
+  IconEdit,
+  IconPlus,
+  IconRefresh,
+  IconSortAscending,
+  IconSortDescending,
+} from "@tabler/icons-react";
 
 import {
   getAutomationsAsync,
-  updateAutomationAsync,
+  getOutputsAsync,
 } from "../../requests/requests_v2";
-import EditablesTable from "../common/EditablesTable";
 import { IAutomation } from "@sproot/automation/IAutomation";
 import EditAutomationModal from "./EditAutomationModal";
 
@@ -18,25 +37,59 @@ export default function Automations() {
   const [editAutomation, setEditAutomation] = useState<IAutomation | null>(
     null,
   );
+  const [sortBy, setSortBy] = useState<"name" | "id" | "status">("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const getAutomationsQuery = useQuery({
     queryKey: ["automations"],
     queryFn: () => getAutomationsAsync(),
   });
 
-  const mutateAutomationEnabled = useMutation({
-    mutationFn: async (params: { id: number; enabled: boolean }) => {
-      await updateAutomationAsync(
-        params.id,
-        undefined,
-        undefined,
-        params.enabled,
+  const getOutputsQuery = useQuery({
+    queryKey: ["outputs"],
+    queryFn: () => getOutputsAsync(),
+    refetchInterval: 60000,
+  });
+
+  const conflictingAutomationIds = new Set(
+    Object.values(getOutputsQuery.data ?? {}).flatMap(
+      (output) =>
+        output.activeConflict?.actions.map((action) => action.automationId) ??
+        [],
+    ),
+  );
+  const statusOf = (automation: IAutomation) => {
+    const isConflicting =
+      Boolean(automation.triggered) &&
+      conflictingAutomationIds.has(automation.id);
+
+    if (!automation.enabled)
+      return { label: "Disabled", color: "gray", rank: 0 };
+    if (isConflicting) return { label: "Conflict", color: "yellow", rank: 3 };
+    if (automation.triggered)
+      return { label: "Triggered", color: "green", rank: 2 };
+    return { label: "Idle", color: "blue", rank: 1 };
+  };
+
+  const automations = [...(getAutomationsQuery.data ?? [])].sort(
+    (left, right) => {
+      const dir = sortDir === "asc" ? 1 : -1;
+
+      if (sortBy === "id") {
+        return ((left.id ?? 0) - (right.id ?? 0)) * dir;
+      }
+
+      if (sortBy === "status") {
+        return (statusOf(left).rank - statusOf(right).rank) * dir;
+      }
+
+      return (
+        (left.name || "").localeCompare(right.name || "", undefined, {
+          sensitivity: "base",
+        }) * dir
       );
     },
-    onSuccess: () => {
-      getAutomationsQuery.refetch();
-    },
-  });
+  );
 
   const [
     viewAutomationModalOpened,
@@ -50,65 +103,202 @@ export default function Automations() {
 
   return (
     <Fragment>
-      <Stack h="600" justify="center" align="center">
+      <Stack gap="lg">
         <EditAutomationModal
           modalOpened={viewAutomationModalOpened}
           closeModal={viewAutomationModalClose}
           editAutomation={viewAutomation}
           setTargetAutomation={setViewAutomation}
           readOnly
+          onClose={() => {
+            getAutomationsQuery.refetch();
+            getOutputsQuery.refetch();
+          }}
         />
         <EditAutomationModal
           modalOpened={editAutomationModalOpened}
           closeModal={editAutomationModalClose}
           editAutomation={editAutomation}
           setTargetAutomation={setEditAutomation}
+          onClose={() => {
+            getAutomationsQuery.refetch();
+            getOutputsQuery.refetch();
+          }}
         />
+        <Paper withBorder shadow="xs" radius="lg" p="lg">
+          <Group justify="space-between" align="center" gap="md" wrap="wrap">
+            <Box>
+              <Text fw={600}>Automation Library</Text>
+              <Text size="sm" c="dimmed">
+                Review automations, enable or disable them, and add new
+                conditions and actions.
+              </Text>
+            </Box>
+            <Group gap="xs">
+              <Button
+                variant="light"
+                leftSection={<IconPlus size={18} />}
+                onClick={() => {
+                  setEditAutomation(null);
+                  editAutomationModal();
+                }}
+              >
+                Add Automation
+              </Button>
+              <ActionIcon
+                size="lg"
+                variant="light"
+                onClick={() =>
+                  Promise.all([
+                    getAutomationsQuery.refetch(),
+                    getOutputsQuery.refetch(),
+                  ])
+                }
+                disabled={
+                  getAutomationsQuery.isLoading || getOutputsQuery.isLoading
+                }
+              >
+                <IconRefresh size={16} />
+              </ActionIcon>
+              <Menu withinPortal={false} position="bottom-end">
+                <Menu.Target>
+                  <ActionIcon size="lg" variant="light">
+                    {sortDir === "asc" ? (
+                      <IconSortAscending size={16} />
+                    ) : (
+                      <IconSortDescending size={16} />
+                    )}
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item
+                    onClick={() => {
+                      if (sortBy === "name") {
+                        setSortDir((current) =>
+                          current === "asc" ? "desc" : "asc",
+                        );
+                      } else {
+                        setSortBy("name");
+                        setSortDir("asc");
+                      }
+                    }}
+                  >
+                    Name{" "}
+                    {sortBy === "name"
+                      ? sortDir === "asc"
+                        ? " ↑"
+                        : " ↓"
+                      : null}
+                  </Menu.Item>
+                  <Menu.Item
+                    onClick={() => {
+                      if (sortBy === "id") {
+                        setSortDir((current) =>
+                          current === "asc" ? "desc" : "asc",
+                        );
+                      } else {
+                        setSortBy("id");
+                        setSortDir("desc");
+                      }
+                    }}
+                  >
+                    Create Date{" "}
+                    {sortBy === "id" ? (sortDir === "asc" ? " ↑" : " ↓") : null}
+                  </Menu.Item>
+                  <Menu.Item
+                    onClick={() => {
+                      if (sortBy === "status") {
+                        setSortDir((current) =>
+                          current === "asc" ? "desc" : "asc",
+                        );
+                      } else {
+                        setSortBy("status");
+                        setSortDir("desc");
+                      }
+                    }}
+                  >
+                    Status{" "}
+                    {sortBy === "status"
+                      ? sortDir === "asc"
+                        ? " ↑"
+                        : " ↓"
+                      : null}
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
+          </Group>
+        </Paper>
         {getAutomationsQuery.isLoading ? (
-          <div>Loading...</div>
+          <LoadingOverlay
+            style={{ height: "100%", pointerEvents: "none" }}
+            visible={getAutomationsQuery.isLoading}
+            zIndex={90}
+            overlayProps={{
+              backgroundOpacity: 0.92,
+              color: "var(--mantine-color-body)",
+            }}
+            loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+          />
         ) : (
-          <Fragment>
-            <EditablesTable
-              editables={getAutomationsQuery.data ?? []}
-              onEditClick={(item) => {
-                setEditAutomation(item as IAutomation);
-                editAutomationModal();
-              }}
-              onNameClick={(item) => {
-                setViewAutomation(item as IAutomation);
-                viewAutomationModal();
-              }}
-              tableLeftComponent={{
-                label: "Enabled",
-                Component: (editable: unknown) => {
-                  const automation = editable as IAutomation;
+          <Paper withBorder shadow="xs" radius="lg" p="md">
+            <Table highlightOnHover style={{ tableLayout: "auto" }}>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th w="35%" miw={72} ta="center">
+                    Status
+                  </Table.Th>
+                  <Table.Th w="100%" ta="center">
+                    Name
+                  </Table.Th>
+                  <Table.Th w="10%" miw={52} ta="center">
+                    Edit
+                  </Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {automations.map((automation) => {
+                  const status = statusOf(automation);
+
                   return (
-                    <Switch
-                      checked={automation.enabled}
-                      onChange={(
-                        event: React.ChangeEvent<HTMLInputElement>,
-                      ) => {
-                        mutateAutomationEnabled.mutate({
-                          id: automation.id,
-                          enabled: event.currentTarget.checked,
-                        });
-                      }}
-                    />
+                    <Table.Tr key={automation.id}>
+                      <Table.Td ta="center">
+                        <Badge variant="light" color={status.color} radius="sm">
+                          {status.label}
+                        </Badge>
+                      </Table.Td>
+                      <Table.Td ta="center">
+                        <Text
+                          fw={400}
+                          fz={"sm"}
+                          style={{ cursor: "pointer", textAlign: "center" }}
+                          onClick={() => {
+                            setViewAutomation(automation);
+                            viewAutomationModal();
+                          }}
+                        >
+                          {automation.name}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td ta="center">
+                        <Center>
+                          <ActionIcon
+                            variant="light"
+                            onClick={() => {
+                              setEditAutomation(automation);
+                              editAutomationModal();
+                            }}
+                          >
+                            <IconEdit />
+                          </ActionIcon>
+                        </Center>
+                      </Table.Td>
+                    </Table.Tr>
                   );
-                },
-              }}
-            />
-            <Button
-              size="xl"
-              w={rem(300)}
-              onClick={() => {
-                setEditAutomation(null);
-                editAutomationModal();
-              }}
-            >
-              Add New
-            </Button>
-          </Fragment>
+                })}
+              </Table.Tbody>
+            </Table>
+          </Paper>
         )}
       </Stack>
     </Fragment>

@@ -2,8 +2,10 @@ import {
   Alert,
   Button,
   Group,
+  Paper,
   SegmentedControl,
   Select,
+  SimpleGrid,
   Slider,
   Stack,
   Switch,
@@ -136,140 +138,166 @@ export default function AddActionWidget({
         onSaved();
       })}
     >
-      <Stack>
-        <SegmentedControl
-          fullWidth
-          radius="md"
-          data={[
-            { value: "output", label: "Output" },
-            { value: "notification", label: "Notification" },
-          ]}
-          {...actionForm.getInputProps("actionType")}
-          onChange={(value) => {
-            actionForm.setFieldValue("actionType", value as ActionType);
-          }}
-        />
+      <Stack gap="md">
+        <Paper withBorder radius="md" p="md">
+          <Stack gap="sm">
+            <Text size="sm" c="dimmed">
+              Choose what happens when this automation is triggered.
+            </Text>
+            <SegmentedControl
+              fullWidth
+              radius="md"
+              data={[
+                { value: "output", label: "Output" },
+                { value: "notification", label: "Notification" },
+              ]}
+              {...actionForm.getInputProps("actionType")}
+              onChange={(value) => {
+                actionForm.setFieldValue("actionType", value as ActionType);
+              }}
+            />
+          </Stack>
+        </Paper>
         {actionForm.values.actionType === "output" ? (
           rootOutputs.length === 0 ? (
             <Text c="dimmed">No outputs are available for output actions.</Text>
           ) : (
-            <>
-              <Select
-                data={rootOutputs.map((output) => ({
-                  value: String(output.id),
-                  label: output.name ?? `Output Id: ${output.id}`,
-                }))}
-                label="Output"
-                {...actionForm.getInputProps("outputId")}
-                onChange={(value) => {
-                  actionForm.setFieldValue("outputId", value ?? "");
-                  const selectedOutput = rootOutputs.find(
-                    (output) => String(output.id) === value,
-                  );
-                  actionForm.setFieldValue(
-                    "value",
-                    selectedOutput?.isPwm ? 50 : 100,
-                  );
-                }}
-              />
-              <Select
-                label="Precedence"
-                data={OUTPUT_ACTION_PRECEDENCE_VALUES.map((precedence) => ({
-                  value: precedence,
-                  label: precedence,
-                }))}
-                {...actionForm.getInputProps("precedence")}
-              />
-              {conflictingAutomations.length > 0 ? (
-                <Alert
-                  color="yellow"
-                  variant="light"
-                  title="Potential precedence conflict"
-                  mt="xs"
-                >
-                  <Stack gap={4} ta="left">
-                    <Text size="sm">
-                      {conflictingAutomations.length === 1 ? (
-                        <>
-                          Another automation also controls{" "}
-                          {selectedOutput?.name ?? "this output"} at{" "}
-                          <PrecedenceText
-                            precedence={actionForm.values.precedence}
-                          />{" "}
-                          precedence.
-                        </>
-                      ) : (
-                        <>
-                          Other automations also control{" "}
-                          {selectedOutput?.name ?? "this output"} at{" "}
-                          <PrecedenceText
-                            precedence={actionForm.values.precedence}
-                          />{" "}
-                          precedence.
-                        </>
-                      )}
-                    </Text>
-                    {conflictingAutomations.map((action) => (
-                      <Text key={action.automationId} size="sm">
-                        {`- ${action.automationName}`}
-                      </Text>
-                    ))}
-                    <Text size="sm">
-                      If both automations request different states, neither
-                      action will be applied.
-                    </Text>
-                  </Stack>
-                </Alert>
-              ) : null}
-              {selectedOutput?.isPwm ? (
-                <Slider
-                  min={0}
-                  max={100}
-                  step={1}
-                  label={(value) => `${value}%`}
-                  marks={[
-                    { value: 20, label: "20%" },
-                    { value: 50, label: "50%" },
-                    { value: 80, label: "80%" },
-                  ]}
-                  {...actionForm.getInputProps("value")}
-                />
-              ) : (
-                <Group justify="center">
-                  <Switch
-                    size="xl"
-                    onLabel="On"
-                    offLabel="Off"
-                    checked={actionForm.values.value === 100}
-                    onChange={(event) => {
+            <Paper withBorder radius="md" p="md">
+              <Stack gap="md">
+                <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                  <Select
+                    data={rootOutputs.map((output) => ({
+                      value: String(output.id),
+                      label: output.name ?? `Output Id: ${output.id}`,
+                    }))}
+                    label="Output"
+                    {...actionForm.getInputProps("outputId")}
+                    onChange={(value) => {
+                      actionForm.setFieldValue("outputId", value ?? "");
+                      const selectedOutput = rootOutputs.find(
+                        (output) => String(output.id) === value,
+                      );
                       actionForm.setFieldValue(
                         "value",
-                        event.target.checked ? 100 : 0,
+                        selectedOutput?.isPwm ? 50 : 100,
                       );
                     }}
                   />
-                </Group>
-              )}
-            </>
+                  <Select
+                    label="Precedence"
+                    data={OUTPUT_ACTION_PRECEDENCE_VALUES.map((precedence) => ({
+                      value: precedence,
+                      label: precedence,
+                    }))}
+                    {...actionForm.getInputProps("precedence")}
+                  />
+                </SimpleGrid>
+                {conflictingAutomations.length > 0 ? (
+                  <Alert
+                    color="yellow"
+                    variant="light"
+                    title="Potential precedence conflict"
+                    mt="xs"
+                  >
+                    <Stack gap={4} ta="left">
+                      <Text size="sm">
+                        {conflictingAutomations.length === 1 ? (
+                          <>
+                            Another automation also controls{" "}
+                            {selectedOutput?.name ?? "this output"} at{" "}
+                            <PrecedenceText
+                              precedence={actionForm.values.precedence}
+                            />{" "}
+                            precedence.
+                          </>
+                        ) : (
+                          <>
+                            Other automations also control{" "}
+                            {selectedOutput?.name ?? "this output"} at{" "}
+                            <PrecedenceText
+                              precedence={actionForm.values.precedence}
+                            />{" "}
+                            precedence.
+                          </>
+                        )}
+                      </Text>
+                      {conflictingAutomations.map((action) => (
+                        <Text key={action.automationId} size="sm">
+                          {`- ${action.automationName}`}
+                        </Text>
+                      ))}
+                      <Text size="sm">
+                        If both automations request different states, neither
+                        action will be applied.
+                      </Text>
+                    </Stack>
+                  </Alert>
+                ) : null}
+                {selectedOutput?.isPwm ? (
+                  <Stack gap="xs">
+                    <Text fw={500} size="sm">
+                      Target level
+                    </Text>
+                    <Slider
+                      min={0}
+                      max={100}
+                      step={1}
+                      label={(value) => `${value}%`}
+                      marks={[
+                        { value: 20, label: "20%" },
+                        { value: 50, label: "50%" },
+                        { value: 80, label: "80%" },
+                      ]}
+                      {...actionForm.getInputProps("value")}
+                    />
+                  </Stack>
+                ) : (
+                  <Group justify="space-between" wrap="nowrap">
+                    <Text fw={500} size="sm">
+                      Power state
+                    </Text>
+                    <Switch
+                      size="xl"
+                      onLabel="On"
+                      offLabel="Off"
+                      withThumbIndicator={false}
+                      checked={actionForm.values.value === 100}
+                      onChange={(event) => {
+                        actionForm.setFieldValue(
+                          "value",
+                          event.target.checked ? 100 : 0,
+                        );
+                      }}
+                    />
+                  </Group>
+                )}
+              </Stack>
+            </Paper>
           )
         ) : (
-          <>
-            <TextInput
-              label="Subject"
-              maxLength={128}
-              {...actionForm.getInputProps("subject")}
-            />
-            <Textarea
-              label="Content"
-              minRows={4}
-              autosize
-              maxLength={2000}
-              {...actionForm.getInputProps("content")}
-            />
-          </>
+          <Paper withBorder radius="md" p="md">
+            <Stack gap="md">
+              <TextInput
+                label="Subject"
+                placeholder="Example: Greenhouse fan activated"
+                maxLength={128}
+                {...actionForm.getInputProps("subject")}
+              />
+              <Textarea
+                label="Content"
+                placeholder="Describe what happened and any follow-up someone should know about."
+                minRows={4}
+                autosize
+                maxLength={2000}
+                {...actionForm.getInputProps("content")}
+              />
+            </Stack>
+          </Paper>
         )}
-        <Group justify="center" mt="md">
-          <Button type="submit">Save</Button>
+        <Group justify="center" mt="xs">
+          <Button type="submit" fullWidth>
+            Save Action
+          </Button>
         </Group>
       </Stack>
     </form>

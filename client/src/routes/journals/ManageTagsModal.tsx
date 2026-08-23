@@ -1,17 +1,20 @@
 import { Fragment, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
+  ActionIcon,
   Group,
   Modal,
-  ScrollArea,
-  Table,
-  TextInput,
   ColorInput,
+  Paper,
+  ScrollArea,
+  Stack,
+  Text,
+  TextInput,
 } from "@mantine/core";
-import { ActionIcon } from "@mantine/core";
 import { IconDeviceFloppy, IconPlus } from "@tabler/icons-react";
 import { DefaultColors } from "@sproot/common/utility/Constants";
 import ConfirmDeleteButton from "../../components/ConfirmDeleteButton";
+import { useMediaQuery } from "@mantine/hooks";
 
 type TagLike = { id: number; name?: string | null; color?: string | null };
 
@@ -36,6 +39,7 @@ export default function ManageTagsModal<T extends TagLike>({
   updateFn,
   deleteFn,
 }: ManageTagsModalProps<T>) {
+  const isMobile = useMediaQuery("(max-width: 48em)");
   const tagsQuery = useQuery({
     queryKey,
     queryFn: fetchFn,
@@ -94,45 +98,79 @@ export default function ManageTagsModal<T extends TagLike>({
     <Fragment>
       <Modal
         overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
+        fullScreen={isMobile}
         centered
-        size="xs"
+        size="md"
+        padding={isMobile ? "md" : "lg"}
         opened={modalOpened}
         onClose={() => {
           closeModal();
         }}
         title={title}
       >
-        <ScrollArea
-          style={{ height: "50vh" }}
-          viewportProps={{ style: { maxHeight: "50vh" } }}
-        >
-          <Table
-            highlightOnHover
-            style={{ marginLeft: "auto", marginRight: "auto" }}
-          >
-            <Table.Thead
-              style={{
-                position: "sticky",
-                top: 0,
-                zIndex: 20,
-                background: "white",
-              }}
-            >
-              <Table.Tr>
-                <Table.Th style={{ textAlign: "center" }}>
-                  Name & Color
-                </Table.Th>
-                {updateFn ? (
-                  <Table.Th style={{ textAlign: "center", width: "10%" }}>
-                    Save
-                  </Table.Th>
-                ) : null}
-                <Table.Th style={{ textAlign: "center", width: "10%" }}>
-                  Delete
-                </Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
+        <ScrollArea style={{ height: isMobile ? "100%" : "70vh" }}>
+          <Stack gap="md">
+            <Paper withBorder radius="lg" p={isMobile ? "md" : "lg"}>
+              <Stack gap="xs">
+                <Text fw={600}>{title}</Text>
+                <Text size="sm" c="dimmed">
+                  Create, rename, recolor, and remove tags without leaving the
+                  current workflow.
+                </Text>
+              </Stack>
+            </Paper>
+
+            <Paper withBorder radius="md" p="md">
+              <Stack gap="sm">
+                <Text fw={600} size="sm">
+                  Add tag
+                </Text>
+                <TextInput
+                  placeholder="New tag"
+                  styles={{ input: { fontSize: 16 } }}
+                  value={newTagName}
+                  onChange={(e) => setNewTagName(e.currentTarget.value)}
+                />
+                <Group align="flex-end" wrap="nowrap">
+                  <ColorInput
+                    style={{ flex: 1 }}
+                    placeholder="#RRGGBB"
+                    swatches={[...DefaultColors]}
+                    value={newTagColor ?? ""}
+                    format="hex"
+                    popoverProps={{ withinPortal: true }}
+                    styles={{ input: { fontSize: 16 } }}
+                    onChange={(v) => setNewTagColor(v || null)}
+                  />
+                  <ActionIcon
+                    variant="light"
+                    radius="xl"
+                    size="lg"
+                    disabled={!newTagName.trim()}
+                    onClick={async () => {
+                      if (!newTagName.trim()) return;
+                      await addTagMutation.mutateAsync({
+                        name: newTagName.trim(),
+                        color: newTagColor,
+                      });
+                      setNewTagName("");
+                      setNewTagColor(
+                        DefaultColors[
+                          Math.floor(Math.random() * DefaultColors.length)
+                        ] ??
+                          DefaultColors[0] ??
+                          "#000000",
+                      );
+                      await tagsQuery.refetch();
+                    }}
+                  >
+                    <IconPlus size={18} />
+                  </ActionIcon>
+                </Group>
+              </Stack>
+            </Paper>
+
+            <Stack gap="sm">
               {[...(localTags ?? [])]
                 .sort((a, b) =>
                   (a.name || "").localeCompare(b.name || "", undefined, {
@@ -140,31 +178,29 @@ export default function ManageTagsModal<T extends TagLike>({
                   }),
                 )
                 .map((tag) => (
-                  <Table.Tr key={tag.id}>
-                    <Table.Td align="center">
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 8,
+                  <Paper key={tag.id} withBorder radius="md" p="sm">
+                    <Stack gap="sm">
+                      <TextInput
+                        required
+                        value={tag.name ?? ""}
+                        styles={{ input: { fontSize: 16 } }}
+                        onChange={(event) => {
+                          const value = event.currentTarget.value;
+                          setLocalTags((prev) =>
+                            prev.map((g) =>
+                              g.id === tag.id ? { ...g, name: value } : g,
+                            ),
+                          );
                         }}
+                      />
+                      <Group
+                        align="flex-end"
+                        justify="space-between"
+                        wrap="nowrap"
                       >
-                        <TextInput
-                          required
-                          value={tag.name ?? ""}
-                          style={{ width: "100%" }}
-                          styles={{ input: { fontSize: 16 } }}
-                          onChange={(event) => {
-                            const value = event.currentTarget.value;
-                            setLocalTags((prev) =>
-                              prev.map((g) =>
-                                g.id === tag.id ? { ...g, name: value } : g,
-                              ),
-                            );
-                          }}
-                        />
                         <ColorInput
                           required
+                          style={{ flex: 1 }}
                           swatches={[...DefaultColors]}
                           value={tag.color ?? ""}
                           format="hex"
@@ -179,124 +215,45 @@ export default function ManageTagsModal<T extends TagLike>({
                             );
                           }}
                         />
-                      </div>
-                    </Table.Td>
-                    {updateFn ? (
-                      <Table.Td style={{ width: "10%" }} align="center">
-                        <Group justify="center">
-                          <ActionIcon
-                            onClick={async () => {
-                              const updated = localTags.find(
-                                (g) => g.id === tag.id,
-                              );
-                              if (updated) {
-                                await updateTagMutation.mutateAsync(updated);
-                                await tagsQuery.refetch();
-                              }
+                        <Group gap="xs" wrap="nowrap">
+                          {updateFn ? (
+                            <ActionIcon
+                              variant="light"
+                              radius="xl"
+                              size="lg"
+                              onClick={async () => {
+                                const updated = localTags.find(
+                                  (g) => g.id === tag.id,
+                                );
+                                if (updated) {
+                                  await updateTagMutation.mutateAsync(updated);
+                                  await tagsQuery.refetch();
+                                }
+                              }}
+                            >
+                              <IconDeviceFloppy size={18} />
+                            </ActionIcon>
+                          ) : null}
+                          <ConfirmDeleteButton
+                            kind="icon"
+                            loading={deleteTagMutation.isPending}
+                            actionIconProps={{
+                              variant: "light",
+                              radius: "xl",
+                              size: "lg",
                             }}
-                          >
-                            <IconDeviceFloppy />
-                          </ActionIcon>
+                            onConfirm={async () => {
+                              await deleteTagMutation.mutateAsync(tag.id);
+                              await tagsQuery.refetch();
+                            }}
+                          />
                         </Group>
-                      </Table.Td>
-                    ) : null}
-                    <Table.Td style={{ width: "10%" }} align="center">
-                      <Group justify="center">
-                        <ConfirmDeleteButton
-                          kind="icon"
-                          loading={deleteTagMutation.isPending}
-                          onConfirm={async () => {
-                            await deleteTagMutation.mutateAsync(tag.id);
-                            await tagsQuery.refetch();
-                          }}
-                        />
                       </Group>
-                    </Table.Td>
-                  </Table.Tr>
+                    </Stack>
+                  </Paper>
                 ))}
-
-              <Table.Tr key={"new"}>
-                <Table.Td align="center">
-                  <div
-                    style={{ display: "flex", flexDirection: "column", gap: 8 }}
-                  >
-                    <TextInput
-                      placeholder="New Tag"
-                      style={{ width: "100%" }}
-                      styles={{ input: { fontSize: 16 } }}
-                      value={newTagName}
-                      onChange={(e) => setNewTagName(e.currentTarget.value)}
-                    />
-                    <ColorInput
-                      placeholder="#RRGGBB"
-                      swatches={[...DefaultColors]}
-                      value={newTagColor ?? ""}
-                      format="hex"
-                      popoverProps={{ withinPortal: true }}
-                      styles={{ input: { fontSize: 16 } }}
-                      onChange={(v) => setNewTagColor(v || null)}
-                    />
-                  </div>
-                </Table.Td>
-                {updateFn ? (
-                  <Table.Td style={{ width: "10%" }} align="center">
-                    <Group justify="center">
-                      <ActionIcon
-                        color="green"
-                        onClick={async () => {
-                          if (!newTagName.trim()) return;
-                          await addTagMutation.mutateAsync({
-                            name: newTagName.trim(),
-                            color: newTagColor,
-                          });
-                          setNewTagName("");
-                          setNewTagColor(
-                            DefaultColors[
-                              Math.floor(Math.random() * DefaultColors.length)
-                            ] ??
-                              DefaultColors[0] ??
-                              "#000000",
-                          );
-                          await tagsQuery.refetch();
-                        }}
-                      >
-                        <IconPlus />
-                      </ActionIcon>
-                    </Group>
-                  </Table.Td>
-                ) : (
-                  <Table.Td style={{ width: "10%" }} align="center">
-                    <Group justify="center">
-                      <ActionIcon
-                        color="green"
-                        onClick={async () => {
-                          if (!newTagName.trim()) return;
-                          await addTagMutation.mutateAsync({
-                            name: newTagName.trim(),
-                            color: newTagColor,
-                          });
-                          setNewTagName("");
-                          setNewTagColor(
-                            DefaultColors[
-                              Math.floor(Math.random() * DefaultColors.length)
-                            ] ??
-                              DefaultColors[0] ??
-                              "#000000",
-                          );
-                          await tagsQuery.refetch();
-                        }}
-                      >
-                        <IconPlus />
-                      </ActionIcon>
-                    </Group>
-                  </Table.Td>
-                )}
-                <Table.Td style={{ width: "10%" }} align="center">
-                  {/* empty cell to align with Delete column */}
-                </Table.Td>
-              </Table.Tr>
-            </Table.Tbody>
-          </Table>
+            </Stack>
+          </Stack>
         </ScrollArea>
       </Modal>
     </Fragment>

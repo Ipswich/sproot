@@ -29,7 +29,6 @@ x-client-args: &client_env
 x-server-environment: &server_env
   <<: 
     - *base_env
-  LOG_DEBUG: "false"
   DEFAULT_USER: *default_user_name
   DEFAULT_USER_EMAIL: *default_user_email
   DEFAULT_USER_PASSWORD: *default_user_password
@@ -41,9 +40,36 @@ x-server-environment: &server_env
   DATABASE_USER: "postgres"
   DATABASE_PASSWORD: *db_password
   INTERSERVICE_AUTHENTICATION_KEY: *interservice_authentication_key
-  BACKUP_RETENTION_DAYS: "30"
+
+x-camera-environment: &camera_env
+  <<:
+    - *base_env
+  INTERSERVICE_AUTHENTICATION_KEY: *interservice_authentication_key
+  CAMERA_PORT: "3002"
+  CAMERA_VIDEO_RESOLUTION: "1280x960"
+  CAMERA_FPS: "30"
+  CAMERA_GRACEFUL_SHUTDOWN_TIMEOUT: "10"
+  CAMERA_STALL_TIMEOUT_SECONDS: "3"
+  CAMERA_WATCHDOG_INTERVAL_SECONDS: "1"
+  CAMERA_MAX_RECOVERY_FAILURES: "3"
 
 services:
+  camera:
+    profiles:
+      - camera
+    restart: unless-stopped
+    build:
+      context: ./
+      dockerfile: ./camera/Dockerfile
+    environment: *camera_env
+    volumes:
+      - /run/udev:/run/udev:ro
+      - /sys:/sys
+    network_mode: "host"
+    expose:
+      - "3002"
+    privileged: true
+
   server:
     restart: unless-stopped
     depends_on:
@@ -57,7 +83,6 @@ services:
       dockerfile: ./server/Dockerfile
     environment: *server_env
     volumes:
-      - /run/udev:/run/udev:ro
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
       - ./docker_volumes/sproot/server/images:/sproot/server/images

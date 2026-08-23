@@ -21,7 +21,6 @@ env:
   DATABASE_USER: postgres
   DATABASE_PASSWORD: postgres
   INTERSERVICE_AUTHENTICATION_KEY: test
-  BACKUP_RETENTION_DAYS: 30
 
 permissions:
   contents: read

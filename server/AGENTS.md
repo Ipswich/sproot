@@ -104,7 +104,6 @@ DATABASE_PORT=<db port>
 DATABASE_USER=<db username>
 DATABASE_PASSWORD=<db password>
 INTERSERVICE_AUTHENTICATION_KEY=<key>
-BACKUP_RETENTION_DAYS=30
 ```
 
 **Note:** Copy `server/.env.development` to `server/.env` before running. `server/.env` may contain secrets and is not currently git-ignored by the repository, so do not commit it unless ignore rules are added separately.

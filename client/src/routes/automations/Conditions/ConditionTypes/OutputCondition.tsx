@@ -1,11 +1,11 @@
 import {
   Button,
-  Group,
+  NumberInput,
+  Paper,
   Select,
   Slider,
   Stack,
-  Space,
-  NumberInput,
+  Text,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -104,69 +104,75 @@ export default function OutputCondition({
           toggleAddNewCondition();
         })}
       >
-        <Stack>
-          <Group>
-            <Select
-              flex={1}
-              required
-              allowDeselect={false}
-              data={outputs.map((output) => {
-                return { label: output.name, value: String(output.id) };
-              })}
-              {...outputConditionForm.getInputProps("outputId")}
-            />
-            is
-            <Select
-              w={"30%"}
-              required
-              allowDeselect={false}
-              data={[
-                {
-                  label: "<",
-                  value: "less",
-                },
-                {
-                  label: "<=",
-                  value: "lessOrEqual",
-                },
-                {
-                  label: ">",
-                  value: "greater",
-                },
-                {
-                  label: ">=",
-                  value: "greaterOrEqual",
-                },
-                {
-                  label: "=",
-                  value: "equal",
-                },
-                {
-                  label: "!=",
-                  value: "notEqual",
-                },
-              ]}
-              {...outputConditionForm.getInputProps("operator")}
-            />
-          </Group>
-          <Stack>
-            <Slider
-              min={0}
-              max={100}
-              step={1}
-              label={(value) => `${value}%`}
-              marks={[
-                { value: 20, label: "20%" },
-                { value: 50, label: "50%" },
-                { value: 80, label: "80%" },
-              ]}
-              {...outputConditionForm.getInputProps("comparisonValue")}
-            />
-            <Group pt="15px" justify="center">
-              for
+        <Stack gap="md">
+          <Paper withBorder radius="md" p="md">
+            <Stack gap="md">
+              <Text size="sm" c="dimmed">
+                Watch an output's current level or state and only trigger after
+                it stays there long enough.
+              </Text>
+              <Select
+                required
+                allowDeselect={false}
+                label="Output"
+                data={outputs.map((output) => {
+                  return { label: output.name, value: String(output.id) };
+                })}
+                {...outputConditionForm.getInputProps("outputId")}
+              />
+              <Select
+                required
+                allowDeselect={false}
+                label="Comparison"
+                data={[
+                  {
+                    label: "Less than",
+                    value: "less",
+                  },
+                  {
+                    label: "Less than or equal",
+                    value: "lessOrEqual",
+                  },
+                  {
+                    label: "Greater than",
+                    value: "greater",
+                  },
+                  {
+                    label: "Greater than or equal",
+                    value: "greaterOrEqual",
+                  },
+                  {
+                    label: "Equal to",
+                    value: "equal",
+                  },
+                  {
+                    label: "Not equal to",
+                    value: "notEqual",
+                  },
+                ]}
+                {...outputConditionForm.getInputProps("operator")}
+              />
+              <Stack gap="xs">
+                <Text fw={500} size="sm">
+                  Target output level
+                </Text>
+                <Slider
+                  min={0}
+                  max={100}
+                  step={1}
+                  label={(value) => `${value}%`}
+                  marks={[
+                    { value: 20, label: "20%" },
+                    { value: 50, label: "50%" },
+                    { value: 80, label: "80%" },
+                  ]}
+                  {...outputConditionForm.getInputProps("comparisonValue")}
+                />
+              </Stack>
               <NumberInput
                 required
-                w={"40%"}
+                label="Hold time"
+                description="Triggers if target value is held for the specified time. Use 0 to trigger immediately."
                 step={1}
                 min={0}
                 max={1440}
@@ -177,13 +183,12 @@ export default function OutputCondition({
                 }
                 {...outputConditionForm.getInputProps("comparisonLookback")}
               />
-            </Group>
-          </Stack>
-          <Group justify="center" mt="md">
-            <Button type="submit">Save</Button>
-          </Group>
+            </Stack>
+          </Paper>
+          <Button type="submit" fullWidth>
+            Save Condition
+          </Button>
         </Stack>
-        <Space h={"12px"} />
       </form>
     </Fragment>
   );

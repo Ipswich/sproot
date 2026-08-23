@@ -31,11 +31,11 @@ export interface Page {
 export function getNavbarItems(
   readingTypes: ReadingType[],
   outputs: IOutputBase[],
-  cameraSettings: SDBCameraSettings,
+  cameraSettings: SDBCameraSettings[],
 ): Record<string, Page> {
   const pages = {} as Record<string, Page>;
 
-  if (cameraSettings.enabled) {
+  if (cameraSettings.some((camera) => camera.enabled)) {
     pages["live-view"] = {
       navLinkText: "Live View",
       headerText: "Live View",
@@ -92,11 +92,6 @@ export function getNavbarItems(
         navLinkText: "Outputs",
         headerText: "Output Settings",
         href: "/settings/outputs",
-      } as Page,
-      {
-        navLinkText: "Camera",
-        headerText: "Camera Settings",
-        href: "/settings/camera",
       } as Page,
       {
         navLinkText: "Subcontrollers",

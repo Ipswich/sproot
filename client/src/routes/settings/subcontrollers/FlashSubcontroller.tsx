@@ -128,21 +128,14 @@ export default function FlashSubcontroller(): JSX.Element {
           getSubcontrollerBinaryAsync("esp32"),
         ]);
 
-      const [bootloader, partitions, bootApp0, firmware] = await Promise.all([
-        arrayBufferToBinaryString(bootloaderB),
-        arrayBufferToBinaryString(partitionsB),
-        arrayBufferToBinaryString(bootApp0B),
-        arrayBufferToBinaryString(firmwareB),
-      ]);
-
       const flashOptions: FlashOptions = {
         fileArray: [
-          { address: 0x1000, data: bootloader },
-          { address: 0x8000, data: partitions },
-          { address: 0xe000, data: bootApp0 },
-          { address: 0x10000, data: firmware },
+          { address: 0x1000, data: bootloaderB },
+          { address: 0x8000, data: partitionsB },
+          { address: 0xe000, data: bootApp0B },
+          { address: 0x10000, data: firmwareB },
         ],
-        flashFreq: "40",
+        flashFreq: "40m",
         flashMode: "dio",
         flashSize: "4MB",
         compress: true,
@@ -167,57 +160,27 @@ export default function FlashSubcontroller(): JSX.Element {
 
       // Prepare loader constructor
       const LoaderCtor = ESPLoader as unknown as new (opts: {
-        baudrate?: number;
-        romBaudrate?: number;
+        baudrate: number;
         transport: unknown;
       }) => ESPLoader;
-
-      const transport = transportRef.current as unknown as EsptTransportLike;
-      const romBaudRates = [115200, 460800];
-      let initializedLoader: ESPLoader | null = null;
-
-      const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
       pushLog(
         "info",
         "Starting flash process (attempting to initialize loader)...",
       );
 
-      for (const romBaud of romBaudRates) {
-        const loader = new LoaderCtor({
-          baudrate: 460800,
-          romBaudrate: romBaud,
-          transport: transportRef.current as unknown,
-        });
+      const loader = new LoaderCtor({
+        baudrate: 460800,
+        transport: transportRef.current as unknown,
+      });
 
-        try {
-          // pushLog("debug", `Trying loader.main() with romBaudrate=${romBaud}`);
-          await loader.main();
-          pushLog("info", `Initialized loader at romBaudrate=${romBaud}`);
-          initializedLoader = loader;
-          loaderRef.current = loader;
-          break;
-        } catch (err) {
-          pushLog(
-            "error",
-            `Loader init failed at romBaudrate=${romBaud}: ${(err as Error).message}`,
-          );
-          try {
-            if (transport && typeof transport.disconnect === "function") {
-              await transport.disconnect();
-              await sleep(200);
-            }
-          } catch (e) {
-            // ignore
-          }
-        }
-      }
-
-      if (!initializedLoader) throw new Error("Failed to initialize ESPLoader");
+      pushLog("info", "Initializing loader...");
+      await loader.main();
+      loaderRef.current = loader;
 
       pushLog("info", "Writing firmware...");
-      await initializedLoader.writeFlash(flashOptions);
-      await initializedLoader.after();
+      await loader.writeFlash(flashOptions);
+      await loader.after();
 
       pushLog("info", "Flashing completed successfully");
       setProgress(100);
@@ -230,12 +193,13 @@ export default function FlashSubcontroller(): JSX.Element {
   }
 
   return (
-    <Paper withBorder p="md" radius="md" w={"90%"}>
+    <Paper withBorder p="md" radius="md" w={"100%"}>
       <Stack>
         <Group justify="space-between">
           <Text fw={600}>ESP32 Flasher</Text>
         </Group>
         <Button
+          variant="light"
           onClick={async () => {
             await connectPort();
             await flashESP32();
@@ -249,10 +213,11 @@ export default function FlashSubcontroller(): JSX.Element {
         </Button>
         <Stack>
           <Group align="center" gap="sm" style={{ width: "100%" }}>
-            <Text w={"35%"} size="sm">
+            <Text w={"25%"} size="sm">
               Progress: {progress}%
             </Text>
             <Progress
+              w="75%"
               style={{ flex: 1 }}
               value={progress}
               color={(function () {
@@ -287,13 +252,4 @@ export default function FlashSubcontroller(): JSX.Element {
       </Stack>
     </Paper>
   );
-}
-
-function arrayBufferToBinaryString(ab: Uint8Array): string {
-  const bytes = new Uint8Array(ab);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]!);
-  }
-  return binary;
 }

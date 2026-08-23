@@ -4,8 +4,10 @@ import {
   setOutputManualStateAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { Fragment, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
+  Badge,
   Group,
   Paper,
   SegmentedControl,
@@ -25,6 +27,7 @@ interface StateProps {
 }
 
 export default function StateCard({ output, updateOutputsAsync }: StateProps) {
+  const queryClient = useQueryClient();
   const [controlMode, setControlMode] = useState(output.state.controlMode);
   const [manualValue, setManualValue] = useState<number>(
     output.state.manual.value ?? 0,
@@ -49,6 +52,7 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
       );
     },
     onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["outputs"] });
       await updateOutputsAsync();
     },
   });
@@ -58,6 +62,7 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
       await setOutputManualStateAsync(newState.id, newState.value);
     },
     onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["outputs"] });
       await updateOutputsAsync();
     },
   });
@@ -69,6 +74,11 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
   const conflictAutomationNames = output.activeConflict?.actions.map(
     (action) => action.automationName,
   );
+  const showTriggeredBy =
+    controlMode === ControlMode.automatic &&
+    !output.activeConflict &&
+    output.state.automatic.value > 0 &&
+    output.triggeredBy.length > 0;
 
   return (
     <Fragment>
@@ -78,17 +88,23 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
             <Stack gap="sm">
               <Group justify="space-between" h="80">
                 <SegmentedControl
-                  w={"96px"}
+                  miw={rem(140)}
                   styles={
                     controlMode === ControlMode.manual
                       ? {
                           root: {
                             outline: "1px solid var(--mantine-color-blue-3)",
                           },
+                          label: {
+                            whiteSpace: "nowrap",
+                          },
                         }
                       : {
                           root: {
                             outline: "1px solid var(--mantine-color-teal-3)",
+                          },
+                          label: {
+                            whiteSpace: "nowrap",
                           },
                         }
                   }
@@ -149,6 +165,7 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                           size="xl"
                           onLabel="On"
                           offLabel="Off"
+                          withThumbIndicator={false}
                           disabled={controlMode !== ControlMode.manual}
                           checked={manualValue === 100}
                           onChange={async (event) => {
@@ -181,7 +198,7 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                 >
                   <Stack gap={4} ta="left">
                     <Text size="sm">
-                      {`${output.name ?? "This output"} received conflicting `}
+                      {`This output received conflicting `}
                       <Text
                         inherit
                         c={getOutputActionPrecedenceColor(
@@ -195,14 +212,37 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                       {` precedence requests, so no automatic action was applied.`}
                     </Text>
                     {conflictAutomationNames?.map((automationName) => (
-                      <Text key={automationName} size="sm">
-                        {`- ${automationName}`}
-                      </Text>
+                      <Badge key={automationName} radius="sm" color="yellow">
+                        {`• ${automationName}`}
+                      </Badge>
                     ))}
                     <Text size="sm">
                       Verify the related automations and output actions so they
                       do not request different states at the same precedence.
                     </Text>
+                  </Stack>
+                </Alert>
+              ) : null}
+              {showTriggeredBy ? (
+                <Alert
+                  color="green"
+                  variant="light"
+                  // title="Automation active"
+                >
+                  <Stack gap={6} ta="left">
+                    <Text size="sm">Currently triggered automations:</Text>
+                    <Group gap="xs" wrap="wrap">
+                      {output.triggeredBy.map((automation) => (
+                        <Badge
+                          key={`${output.id}-${automation.automationId}`}
+                          // variant=""
+                          color="green"
+                          radius="sm"
+                        >
+                          • {automation.automationName}
+                        </Badge>
+                      ))}
+                    </Group>
                   </Stack>
                 </Alert>
               ) : null}

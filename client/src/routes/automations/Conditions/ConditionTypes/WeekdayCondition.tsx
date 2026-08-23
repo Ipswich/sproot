@@ -6,7 +6,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "@mantine/form";
 import { Fragment } from "react/jsx-runtime";
-import { Group, Button, Stack, Space, Chip } from "@mantine/core";
+import { Button, Chip, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
 
 export interface WeekdayConditionProps {
   toggleAddNewCondition: () => void;
@@ -70,79 +70,83 @@ export default function WeekdayCondition({
           toggleAddNewCondition();
         })}
       >
-        <Stack>
-          <Group justify="center" gap={"0px"}>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={weekdayConditionForm.values["sunday"]}
-              {...weekdayConditionForm.getInputProps("sunday")}
-            >
-              Sun
-            </Chip>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={weekdayConditionForm.values["monday"]}
-              {...weekdayConditionForm.getInputProps("monday")}
-            >
-              Mon
-            </Chip>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={weekdayConditionForm.values["tuesday"]}
-              {...weekdayConditionForm.getInputProps("tuesday")}
-            >
-              Tue
-            </Chip>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={weekdayConditionForm.values["wednesday"]}
-              {...weekdayConditionForm.getInputProps("wednesday")}
-            >
-              Wed
-            </Chip>
-          </Group>
-          <Group justify="center" gap={"0px"}>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={weekdayConditionForm.values["thursday"]}
-              {...weekdayConditionForm.getInputProps("thursday")}
-            >
-              Thu
-            </Chip>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={weekdayConditionForm.values["friday"]}
-              {...weekdayConditionForm.getInputProps("friday")}
-            >
-              Fri
-            </Chip>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={weekdayConditionForm.values["saturday"]}
-              {...weekdayConditionForm.getInputProps("saturday")}
-            >
-              Sat
-            </Chip>
-          </Group>
-          <Group pt="xs" justify="center">
-            <Button
-              type="submit"
-              disabled={Object.values(weekdayConditionForm.values).every(
-                (day) => day == false,
-              )}
-            >
-              Save
-            </Button>
-          </Group>
+        <Stack gap="md">
+          <Paper withBorder radius="md" p="md">
+            <Stack gap="md">
+              <Text size="sm" c="dimmed">
+                Choose the days when this automation is allowed to run.
+              </Text>
+              <SimpleGrid cols={{ base: 2, xs: 3, sm: 4 }} spacing="xs">
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={weekdayConditionForm.values["sunday"]}
+                  {...weekdayConditionForm.getInputProps("sunday")}
+                >
+                  Sun
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={weekdayConditionForm.values["monday"]}
+                  {...weekdayConditionForm.getInputProps("monday")}
+                >
+                  Mon
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={weekdayConditionForm.values["tuesday"]}
+                  {...weekdayConditionForm.getInputProps("tuesday")}
+                >
+                  Tue
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={weekdayConditionForm.values["wednesday"]}
+                  {...weekdayConditionForm.getInputProps("wednesday")}
+                >
+                  Wed
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={weekdayConditionForm.values["thursday"]}
+                  {...weekdayConditionForm.getInputProps("thursday")}
+                >
+                  Thu
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={weekdayConditionForm.values["friday"]}
+                  {...weekdayConditionForm.getInputProps("friday")}
+                >
+                  Fri
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={weekdayConditionForm.values["saturday"]}
+                  {...weekdayConditionForm.getInputProps("saturday")}
+                >
+                  Sat
+                </Chip>
+              </SimpleGrid>
+            </Stack>
+          </Paper>
+          <Button
+            variant="light"
+            type="submit"
+            fullWidth
+            disabled={Object.values(weekdayConditionForm.values).every(
+              (day) => day == false,
+            )}
+          >
+            Save Condition
+          </Button>
         </Stack>
-        <Space h={"12px"} />
       </form>
     </Fragment>
   );

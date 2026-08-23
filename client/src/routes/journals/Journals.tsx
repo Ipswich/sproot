@@ -3,15 +3,23 @@ import { useState, useEffect, useRef } from "react";
 import {
   Button,
   Group,
-  rem,
   Stack,
   Menu,
   ScrollArea,
   LoadingOverlay,
   Box,
   ActionIcon,
+  Paper,
+  Text,
+  Collapse,
 } from "@mantine/core";
-import { IconSortAscending, IconSortDescending } from "@tabler/icons-react";
+import {
+  IconFilter,
+  IconPlus,
+  IconSortAscending,
+  IconSortDescending,
+  IconTags,
+} from "@tabler/icons-react";
 
 import TagsPillsCombo from "./utils/tags/TagsPillsCombo";
 import { useQuery } from "@tanstack/react-query";
@@ -77,6 +85,7 @@ export default function Journals() {
   }, [sortBy, sortDir]);
   const [isSorting, setIsSorting] = useState(false);
   const firstRenderRef = useRef(true);
+  const [filtersOpened, { toggle: toggleFilters }] = useDisclosure(false);
 
   useEffect(() => {
     if (firstRenderRef.current) {
@@ -325,112 +334,149 @@ export default function Journals() {
           <Box style={{ height: 260 }} />
         ) : (
           <Stack>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 12,
-                flexWrap: "wrap",
-              }}
-            >
-              <div
-                style={{
-                  flex: 1,
-                  minWidth: 280,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                }}
-              >
-                <TagsPillsCombo
-                  allTags={[
-                    { id: -1, name: "Archived", color: "#868e96" },
-                    ...allTags,
-                  ]}
-                  value={filters}
-                  onChange={(newFilters) => {
-                    setFilters(newFilters);
-                    try {
-                      localStorage.setItem(
-                        journalsFiltersKey(),
-                        JSON.stringify(newFilters),
-                      );
-                    } catch (error) {
-                      console.error("Failed to save journal filters:", error);
-                    }
-                  }}
-                  placeholder="Filter by tags"
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <Menu withinPortal={false} position="bottom-end">
-                  <Menu.Target>
-                    <ActionIcon size="lg">
-                      {sortDir === "asc" ? (
-                        <IconSortAscending size={16} />
-                      ) : (
-                        <IconSortDescending size={16} />
-                      )}
+            <Paper withBorder shadow="xs" radius="lg" p="lg">
+              <Stack gap="md">
+                <Group
+                  justify="space-between"
+                  align="center"
+                  gap="md"
+                  wrap="wrap"
+                >
+                  <Box>
+                    <Text fw={600}>Journal Workspace</Text>
+                    <Text size="sm" c="dimmed">
+                      Create journals, manage tags, and organize your workspace.
+                    </Text>
+                  </Box>
+                  <Group
+                    w={"100%"}
+                    gap="0.5rem"
+                    wrap="wrap"
+                    justify="flex-start"
+                  >
+                    <Button
+                      variant="default"
+                      leftSection={<IconTags size={18} />}
+                      onClick={() => openTagsModal()}
+                    >
+                      Manage Tags
+                    </Button>
+                    <Button
+                      variant="light"
+                      leftSection={<IconPlus size={18} />}
+                      onClick={() => openNewJournal()}
+                    >
+                      Create
+                    </Button>
+                    <ActionIcon
+                      size="lg"
+                      variant="light"
+                      onClick={toggleFilters}
+                    >
+                      <IconFilter size={16} />
                     </ActionIcon>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Item
-                      onClick={() => {
-                        if (sortBy === "name")
-                          setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                        else {
-                          setSortBy("name");
-                          setSortDir("asc");
-                        }
-                      }}
-                    >
-                      Name{" "}
-                      {sortBy === "name"
-                        ? sortDir === "asc"
-                          ? " ↑"
-                          : " ↓"
-                        : null}
-                    </Menu.Item>
-                    <Menu.Item
-                      onClick={() => {
-                        if (sortBy === "editedAt")
-                          setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                        else {
-                          setSortBy("editedAt");
-                          setSortDir("asc");
-                        }
-                      }}
-                    >
-                      Edited{" "}
-                      {sortBy === "editedAt"
-                        ? sortDir === "asc"
-                          ? " ↑"
-                          : " ↓"
-                        : null}
-                    </Menu.Item>
-                    <Menu.Item
-                      onClick={() => {
-                        if (sortBy === "archivedAt")
-                          setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                        else {
-                          setSortBy("archivedAt");
-                          setSortDir("asc");
-                        }
-                      }}
-                    >
-                      Archived{" "}
-                      {sortBy === "archivedAt"
-                        ? sortDir === "asc"
-                          ? " ↑"
-                          : " ↓"
-                        : null}
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
-              </div>
-            </div>
+                    <Menu withinPortal={false} position="bottom-end">
+                      <Menu.Target>
+                        <ActionIcon size="lg" variant="light">
+                          {sortDir === "asc" ? (
+                            <IconSortAscending size={16} />
+                          ) : (
+                            <IconSortDescending size={16} />
+                          )}
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Item
+                          onClick={() => {
+                            if (sortBy === "name")
+                              setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                            else {
+                              setSortBy("name");
+                              setSortDir("asc");
+                            }
+                          }}
+                        >
+                          Name{" "}
+                          {sortBy === "name"
+                            ? sortDir === "asc"
+                              ? " ↑"
+                              : " ↓"
+                            : null}
+                        </Menu.Item>
+                        <Menu.Item
+                          onClick={() => {
+                            if (sortBy === "editedAt")
+                              setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                            else {
+                              setSortBy("editedAt");
+                              setSortDir("asc");
+                            }
+                          }}
+                        >
+                          Edited{" "}
+                          {sortBy === "editedAt"
+                            ? sortDir === "asc"
+                              ? " ↑"
+                              : " ↓"
+                            : null}
+                        </Menu.Item>
+                        <Menu.Item
+                          onClick={() => {
+                            if (sortBy === "archivedAt")
+                              setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                            else {
+                              setSortBy("archivedAt");
+                              setSortDir("asc");
+                            }
+                          }}
+                        >
+                          Archived{" "}
+                          {sortBy === "archivedAt"
+                            ? sortDir === "asc"
+                              ? " ↑"
+                              : " ↓"
+                            : null}
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  </Group>
+                </Group>
+
+                <Collapse expanded={filtersOpened}>
+                  <Group
+                    justify="space-between"
+                    align="center"
+                    gap="md"
+                    wrap="wrap"
+                  >
+                    <Box style={{ flex: 1, minWidth: 280 }}>
+                      <TagsPillsCombo
+                        allTags={[
+                          { id: -1, name: "Archived", color: "gray" },
+                          ...allTags,
+                        ]}
+                        value={filters}
+                        onChange={(newFilters) => {
+                          setFilters(newFilters);
+                          try {
+                            localStorage.setItem(
+                              journalsFiltersKey(),
+                              JSON.stringify(newFilters),
+                            );
+                          } catch (error) {
+                            console.error(
+                              "Failed to save journal filters:",
+                              error,
+                            );
+                          }
+                        }}
+                        placeholder="Filter by tags"
+                      />
+                    </Box>
+                  </Group>
+                </Collapse>
+              </Stack>
+            </Paper>
 
             <ScrollArea.Autosize
               mah="calc(80vh - 176px)"
@@ -462,16 +508,6 @@ export default function Journals() {
                 })}
               </div>
             </ScrollArea.Autosize>
-            <Group justify="center" mt="md">
-              <Button size="xl" w={rem(300)} onClick={() => openNewJournal()}>
-                Add New
-              </Button>
-            </Group>
-            <Group justify="center" mt="sm">
-              <Button size="sm" w={rem(200)} onClick={() => openTagsModal()}>
-                Manage Journal Tags
-              </Button>
-            </Group>
             <ManageJournalTagsModal
               modalOpened={tagsModalOpened}
               closeModal={closeTagsModal}

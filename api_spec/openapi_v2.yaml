@@ -8858,7 +8858,7 @@ components:
     OutputBase:
       description: >
         A basic output object that is returned by the API. This expands upon SDBOutput, including the
-        ID, state, static action warnings, and any active automation conflict for the output. This maps to what the app keeps in memory.
+        ID, state, static action warnings, currently triggered automations, and any active automation conflict for the output. This maps to what the app keeps in memory.
       allOf:
         - $ref: "#/components/schemas/SDBOutput"
         - type: object
@@ -8888,6 +8888,10 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/OutputActionWarning"
+            triggeredBy:
+              type: array
+              items:
+                $ref: "#/components/schemas/OutputActionParticipant"
             activeConflict:
               nullable: true
               allOf:
@@ -8915,7 +8919,7 @@ components:
     Automation:
       description: >
         A generic automation object stored in the database. This is the base object that all automations
-        are built from. Contains a just a name and an ID.
+        are built from. Contains the base automation data plus the current runtime triggered state.
       type: object
       properties:
         id:
@@ -8931,6 +8935,9 @@ components:
         enabled:
           type: boolean
           example: true
+        triggered:
+          type: boolean
+          example: false
 
     OutputAction:
       description: >

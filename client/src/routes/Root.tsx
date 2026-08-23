@@ -1,5 +1,13 @@
+import { Suspense } from "react";
 import { Outlet, useLoaderData } from "react-router-dom";
-import { MantineProvider, AppShell, createTheme } from "@mantine/core";
+import {
+  MantineProvider,
+  AppShell,
+  Center,
+  Loader,
+  createTheme,
+  localStorageColorSchemeManager,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 // All packages except `@mantine/hooks` require styles imports
 import "@mantine/core/styles.css";
@@ -13,11 +21,15 @@ import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 
+const colorSchemeManager = localStorageColorSchemeManager({
+  key: "sproot-color-scheme",
+});
+
 export default function Root() {
   const loaderData = useLoaderData() as {
     readingTypes: Partial<Record<ReadingType, string>>;
     outputs: Record<string, IOutputBase>;
-    cameraSettings: SDBCameraSettings;
+    cameraSettings: SDBCameraSettings[];
   };
 
   const readingTypes = Object.keys(
@@ -35,19 +47,54 @@ export default function Root() {
 
   // This prevents zoom on IOS when interacting with form elements.
   const theme = createTheme({
+    defaultRadius: "md",
     components: {
       Input: {
+        defaultProps: {
+          autoComplete: "off",
+        },
         styles: {
           input: {
             fontSize: "16px",
           },
         },
       },
+      TextInput: {
+        defaultProps: {
+          autoComplete: "off",
+        },
+      },
+      Textarea: {
+        defaultProps: {
+          autoComplete: "off",
+        },
+      },
+      NumberInput: {
+        defaultProps: {
+          autoComplete: "off",
+        },
+      },
+      Select: {
+        defaultProps: {
+          autoComplete: "off",
+          comboboxProps: { withinPortal: false },
+        },
+      },
+      ColorInput: {
+        defaultProps: {
+          autoComplete: "off",
+          popoverProps: { withinPortal: false },
+        },
+      },
     },
   });
 
   return (
-    <MantineProvider theme={theme}>
+    <MantineProvider
+      theme={theme}
+      colorSchemeManager={colorSchemeManager}
+      defaultColorScheme="light"
+    >
       <AppShell
         navbar={{
           width: 250,
@@ -60,13 +107,29 @@ export default function Root() {
         padding="xs"
       >
         <AppShell.Header>
-          <HeaderContents
-            navbarToggle={setIsNavbarOpened.toggle}
-            navbarOpened={isNavbarOpened}
-            navbarItems={navbarItems}
-          />
+          <div
+            onClick={(event) => {
+              const target = event.target as HTMLElement;
+              if (target.closest(".mantine-Burger-root")) {
+                return;
+              }
+              closeNavbar();
+            }}
+          >
+            <HeaderContents
+              navbarToggle={setIsNavbarOpened.toggle}
+              navbarOpened={isNavbarOpened}
+              navbarItems={navbarItems}
+            />
+          </div>
         </AppShell.Header>
-        <AppShell.Navbar style={{ width: "250px", opacity: "95%" }} p="md">
+        <AppShell.Navbar
+          style={{
+            width: "250px",
+            opacity: "95%",
+            borderInlineEnd: "none",
+          }}
+        >
           <NavbarContents
             closeNavbar={() => {
               closeNavbar();
@@ -77,7 +140,15 @@ export default function Root() {
         <AppShell.Main style={{ padding: "0 auto" }}>
           <>
             <div onClick={closeNavbar}>
-              <Outlet />
+              <Suspense
+                fallback={
+                  <Center mih={240}>
+                    <Loader color="teal" type="bars" size="lg" />
+                  </Center>
+                }
+              >
+                <Outlet />
+              </Suspense>
             </div>
           </>
         </AppShell.Main>

@@ -5,10 +5,13 @@ import {
   Button,
   ColorInput,
   ColorPicker,
+  Paper,
   ScrollArea,
   NumberInput,
   Select,
   Input,
+  Stack,
+  Text,
 } from "@mantine/core";
 import { Fragment, useState } from "react";
 import {
@@ -31,20 +34,27 @@ import GroupedOutputForm from "./forms/OutputGroupForm";
 import { Models } from "@sproot/common/outputs/Models";
 import ESP32_PCA9685Form from "./forms/ESP32_PCA9685Form";
 import ConfirmDeleteButton from "../../../components/ConfirmDeleteButton";
+import { useMediaQuery } from "@mantine/hooks";
 
 interface EditTableProps {
   outputs: Record<string, IOutputBase>;
   supportedModels: Record<string, string>;
   setIsStale: (isStale: boolean) => void;
+  sortBy?: "name" | "id";
+  sortDir?: "asc" | "desc";
 }
 
 export default function EditTable({
   outputs,
   supportedModels,
   setIsStale,
+  sortBy,
+  sortDir,
 }: EditTableProps) {
+  const isMobile = useMediaQuery("(max-width: 48em)");
   const revalidator = useRevalidator();
   const [selectedOutput, setSelectedOutput] = useState({} as IOutputBase);
+  const [shouldResetAfterClose, setShouldResetAfterClose] = useState(false);
   const [modalOpened, { open: openModal, close: closeModal }] =
     useDisclosure(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -186,6 +196,7 @@ export default function EditTable({
   });
 
   const editTableOnClick = function (output: IOutputBase) {
+    setShouldResetAfterClose(false);
     setSelectedOutput(output);
     updateOutputForm.setFieldValue("name", output.name ?? "");
     updateOutputForm.setFieldValue("color", output.color);
@@ -226,24 +237,31 @@ export default function EditTable({
           backgroundOpacity: 0.55,
           blur: 3,
         }}
+        fullScreen={isMobile}
         scrollAreaComponent={ScrollArea.Autosize}
         centered
-        size="xs"
+        size="lg"
+        padding={isMobile ? "md" : "lg"}
         opened={modalOpened}
-        onClose={() => {
-          closeModal();
+        onExitTransitionEnd={() => {
+          if (!shouldResetAfterClose) return;
+          setSelectedOutput({} as IOutputBase);
           updateOutputForm.reset();
+          setShouldResetAfterClose(false);
         }}
-        title="Edit"
+        onClose={() => {
+          setShouldResetAfterClose(true);
+          closeModal();
+        }}
+        title="Edit Output"
       >
         <form
           onSubmit={updateOutputForm.onSubmit(async (values) => {
             setIsUpdating(true);
             await updateOutputMutation.mutateAsync(values as IOutputBase);
             setIsUpdating(false);
-            setSelectedOutput({} as IOutputBase);
+            setShouldResetAfterClose(true);
             closeModal();
-            updateOutputForm.reset();
           })}
         >
           <TextInput
@@ -251,117 +269,145 @@ export default function EditTable({
             required
             {...updateOutputForm.getInputProps("id")}
           />
-          <TextInput
-            maxLength={64}
-            label="Name"
-            placeholder={selectedOutput.name || ""}
-            {...updateOutputForm.getInputProps("name")}
-          />
-          <ColorInput
-            readOnly
-            label="Color"
-            required
-            // closeOnColorSwatchClick
-            defaultValue={selectedOutput.color}
-            placeholder={selectedOutput.color}
-            // swatches={[...DefaultColors]}
-            {...updateOutputForm.getInputProps("color")}
-          />
-          <ColorPicker
-            size="xs"
-            fullWidth
-            defaultValue={selectedOutput.color}
-            swatches={[...DefaultColors]}
-            {...updateOutputForm.getInputProps("color")}
-          />
-          <Select
-            label="Model"
-            data={Object.keys(supportedModels).map((key) => {
-              return { value: key, label: supportedModels[key]! };
-            })}
-            required
-            {...updateOutputForm.getInputProps("model")}
-            disabled
-          />
-          {updateOutputForm.values.model !== Models.OUTPUT_GROUP ? (
-            <NumberInput
-              min={0}
-              max={999999999}
-              step={1}
-              label="Automation Timeout"
-              suffix=" seconds"
-              placeholder="60 seconds"
-              stepHoldDelay={500}
-              stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
-              required
-              {...updateOutputForm.getInputProps("automationTimeout")}
-            />
-          ) : (
-            <Input
-              type="hidden"
-              {...updateOutputForm.getInputProps("automationTimeout")}
-            />
-          )}
-          <Select
-            label="Zone"
-            placeholder="Default"
-            data={Object.keys(zoneQuery.data ?? {}).map((key) => {
-              const zone = zoneQuery.data?.[parseInt(key)];
-              return {
-                value: String(zone?.id) ?? "",
-                label: zone?.name ?? "",
-              };
-            })}
-            searchable
-            clearable
-            allowDeselect={true}
-            {...updateOutputForm.getInputProps("deviceZoneId")}
-          />
-          {selectedOutput.model === Models.PCA9685 ? (
-            <PCA9685Form
-              selectedOutput={selectedOutput}
-              form={updateOutputForm}
-            />
-          ) : selectedOutput.model === Models.TPLINK_SMART_PLUG ? (
-            <TPLinkSmartPlugForm
-              selectedOutput={selectedOutput}
-              form={updateOutputForm}
-            />
-          ) : selectedOutput.model === Models.ESP32_PCA9685 ? (
-            subcontrollersQuery.isSuccess ? (
-              <ESP32_PCA9685Form
-                subcontrollers={subcontrollersQuery.data?.recognized}
-                selectedOutput={selectedOutput}
-                form={updateOutputForm}
+          <Stack gap="sm">
+            <Paper withBorder radius="lg" p={isMobile ? "sm" : "md"}>
+              <Stack gap="xs">
+                <Text fw={600}>{selectedOutput.name ?? "Output details"}</Text>
+                <Text size="sm" c="dimmed">
+                  Update hardware mapping, timing behavior, and output grouping
+                  for this device.
+                </Text>
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="sm">
+              <Stack gap="sm">
+                <TextInput
+                  maxLength={64}
+                  label="Name"
+                  placeholder={selectedOutput.name || ""}
+                  {...updateOutputForm.getInputProps("name")}
+                />
+                <Select
+                  label="Model"
+                  data={Object.keys(supportedModels).map((key) => {
+                    return { value: key, label: supportedModels[key]! };
+                  })}
+                  required
+                  {...updateOutputForm.getInputProps("model")}
+                  disabled
+                />
+                {updateOutputForm.values.model !== Models.OUTPUT_GROUP ? (
+                  <NumberInput
+                    min={0}
+                    max={999999999}
+                    step={1}
+                    label="Automation Timeout"
+                    suffix=" seconds"
+                    placeholder="60 seconds"
+                    stepHoldDelay={500}
+                    stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
+                    required
+                    {...updateOutputForm.getInputProps("automationTimeout")}
+                  />
+                ) : (
+                  <Input
+                    type="hidden"
+                    {...updateOutputForm.getInputProps("automationTimeout")}
+                  />
+                )}
+                <Select
+                  label="Zone"
+                  placeholder="Default"
+                  data={Object.keys(zoneQuery.data ?? {}).map((key) => {
+                    const zone = zoneQuery.data?.[parseInt(key)];
+                    return {
+                      value: String(zone?.id) ?? "",
+                      label: zone?.name ?? "",
+                    };
+                  })}
+                  searchable
+                  clearable
+                  allowDeselect={true}
+                  {...updateOutputForm.getInputProps("deviceZoneId")}
+                />
+                {selectedOutput.model === Models.PCA9685 ? (
+                  <PCA9685Form
+                    selectedOutput={selectedOutput}
+                    form={updateOutputForm}
+                  />
+                ) : selectedOutput.model === Models.TPLINK_SMART_PLUG ? (
+                  <TPLinkSmartPlugForm
+                    selectedOutput={selectedOutput}
+                    form={updateOutputForm}
+                  />
+                ) : selectedOutput.model === Models.ESP32_PCA9685 ? (
+                  subcontrollersQuery.isSuccess ? (
+                    <ESP32_PCA9685Form
+                      subcontrollers={subcontrollersQuery.data?.recognized}
+                      selectedOutput={selectedOutput}
+                      form={updateOutputForm}
+                    />
+                  ) : null
+                ) : selectedOutput.model === Models.OUTPUT_GROUP ? (
+                  <GroupedOutputForm
+                    selectedOutput={selectedOutput}
+                    form={updateOutputForm}
+                  />
+                ) : null}
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="sm">
+              <Stack gap="sm">
+                <Text fw={600} size="sm">
+                  Appearance
+                </Text>
+                <ColorInput
+                  readOnly
+                  label="Color"
+                  required
+                  defaultValue={selectedOutput.color}
+                  placeholder={selectedOutput.color}
+                  {...updateOutputForm.getInputProps("color")}
+                />
+                <ColorPicker
+                  size="xs"
+                  fullWidth
+                  defaultValue={selectedOutput.color}
+                  swatches={[...DefaultColors]}
+                  {...updateOutputForm.getInputProps("color")}
+                />
+              </Stack>
+            </Paper>
+            <Group justify="space-between" mt="xs" wrap="wrap">
+              <Button
+                variant="light"
+                type="submit"
+                disabled={isUpdating}
+                fullWidth={isMobile}
+              >
+                Update Output
+              </Button>
+              <ConfirmDeleteButton
+                disabled={isUpdating}
+                buttonProps={{ variant: "light", fullWidth: isMobile }}
+                onConfirm={async () => {
+                  setIsUpdating(true);
+                  await deleteOutputMutation.mutateAsync(selectedOutput.id);
+                  delete outputs[selectedOutput.id];
+                  setIsUpdating(false);
+                  setShouldResetAfterClose(true);
+                  closeModal();
+                }}
               />
-            ) : null
-          ) : selectedOutput.model === Models.OUTPUT_GROUP ? (
-            <GroupedOutputForm
-              selectedOutput={selectedOutput}
-              form={updateOutputForm}
-            />
-          ) : null}
-          <Group justify="space-between" mt="md">
-            <ConfirmDeleteButton
-              disabled={isUpdating}
-              onConfirm={async () => {
-                setIsUpdating(true);
-                await deleteOutputMutation.mutateAsync(selectedOutput.id);
-                delete outputs[selectedOutput.id];
-                setIsUpdating(false);
-                setSelectedOutput({} as IOutputBase);
-                closeModal();
-                updateOutputForm.reset();
-              }}
-            />
-            <Button type="submit" disabled={isUpdating}>
-              Update Output
-            </Button>
-          </Group>
+            </Group>
+          </Stack>
         </form>
       </Modal>
       <EditablesTable
         editables={Object.values(outputs)}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        showSortControl={false}
         onEditClick={(item) => {
           editTableOnClick(item as IOutputBase);
         }}

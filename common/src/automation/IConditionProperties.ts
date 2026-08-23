@@ -1,5 +1,6 @@
 import { ReadingType } from "../sensors/ReadingType";
 import { ConditionOperator } from "./ConditionTypes";
+import { TimeConditionPhaseAnchorType } from "./ITimeCondition";
 
 export type IConditionProperties =
   | {
@@ -23,7 +24,13 @@ export type IConditionProperties =
       kind: "time";
       id: number;
       startTime?: string | null | undefined;
+      startOffsetSeconds?: number | null | undefined;
       endTime?: string | null | undefined;
+      endOffsetSeconds?: number | null | undefined;
+      repeatInterval?: number | null | undefined;
+      repeatDuration?: number | null | undefined;
+      phaseAnchorType?: TimeConditionPhaseAnchorType | null | undefined;
+      phaseAnchorValue?: string | null | undefined;
     }
   | {
       kind: "weekday";

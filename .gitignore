@@ -144,3 +144,5 @@ build
 .opencode/
 .superpowers
 ANCHOR.md
+.camera-venv
+client/vite.config.js

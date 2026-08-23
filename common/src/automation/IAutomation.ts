@@ -3,6 +3,7 @@ export interface IAutomation {
   name: string;
   operator: AutomationOperator;
   enabled: boolean;
+  triggered?: boolean;
 }
 
 export type AutomationOperator = "and" | "or";

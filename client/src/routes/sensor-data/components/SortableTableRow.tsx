@@ -40,14 +40,20 @@ export default function SortableTableRow({
 
   return (
     <Table.Tr ref={setNodeRef} style={style} key={sensor.id}>
-      <Table.Td ref={setActivatorNodeRef} {...attributes} {...listeners}>
+      <Table.Td
+        ref={setActivatorNodeRef}
+        {...attributes}
+        {...listeners}
+        style={{ textAlign: "center", verticalAlign: "middle" }}
+      >
         <IconGripVertical color={"lightgray"} />
       </Table.Td>
-      <Table.Td style={{ verticalAlign: "middle" }}>
-        <Flex style={{ alignContent: "center" }}>
+      <Table.Td style={{ verticalAlign: "middle", textAlign: "center" }}>
+        <Flex justify="center" align="center">
           <Switch
             checked={!sensorToggleStates.includes(sensor.name)}
             color={sensor.color}
+            withThumbIndicator={false}
             onChange={() => {
               startTransition(() => {
                 if (sensorToggleStates.includes(sensor.name)) {
@@ -68,8 +74,25 @@ export default function SortableTableRow({
           />
         </Flex>
       </Table.Td>
-      <Table.Td>{sensor.name}</Table.Td>
-      <Table.Td>
+      <Table.Td
+        style={{
+          whiteSpace: "normal",
+          overflowWrap: "break-word",
+          wordBreak: "normal",
+          paddingRight: 8,
+          textAlign: "center",
+          verticalAlign: "middle",
+        }}
+      >
+        {sensor.name}
+      </Table.Td>
+      <Table.Td
+        style={{
+          whiteSpace: "nowrap",
+          textAlign: "center",
+          verticalAlign: "middle",
+        }}
+      >
         {useAlternateUnits && readingType == ReadingType.temperature
           ? `${convertCelsiusToFahrenheit(sensor.lastReading[readingType])} °F`
           : `${sensor.lastReading[readingType]} ${sensor.units[readingType]}`}

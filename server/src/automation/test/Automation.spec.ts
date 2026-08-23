@@ -11,6 +11,7 @@ type ConditionStub = {
   getAsync: sinon.SinonStub<any[], any>;
   addAsync: sinon.SinonStub<any[], any>;
   updateAsync: sinon.SinonStub<any[], any>;
+  getMostRecentViolationAsync: sinon.SinonStub<any[], any>;
   deleteAsync: sinon.SinonStub<any[], any>;
 };
 
@@ -18,6 +19,7 @@ const makeConditionStub = (): ConditionStub => ({
   getAsync: sinon.stub().resolves([]),
   addAsync: sinon.stub(),
   updateAsync: sinon.stub(),
+  getMostRecentViolationAsync: sinon.stub().resolves(null),
   deleteAsync: sinon.stub(),
 });
 

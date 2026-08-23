@@ -59,7 +59,7 @@ export default function StatesAccordion({
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      <Accordion>
+      <Accordion keepMounted={false}>
         <SortableContext
           items={orderedOutputs.map((output) => output.id)}
           strategy={verticalListSortingStrategy}

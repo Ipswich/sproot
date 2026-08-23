@@ -1,6 +1,50 @@
+import "mocha";
 import { TimeCondition } from "../TimeCondition";
+import {
+  derivePhaseAnchor,
+  evaluateTimeRepeat,
+  hasValidRepeatConfiguration,
+} from "../ConditionUtils";
+import { TimeExpressionResolver } from "../TimeExpressionResolver";
 
 import { assert } from "chai";
+
+async function createResolverAsync(
+  // latitude: string | null = "40.7128",
+  latitude: string | null = "45.504444",
+  // longitude: string | null = "-74.0060",
+  longitude: string | null = "-122.591944",
+): Promise<TimeExpressionResolver> {
+  return TimeExpressionResolver.createInstanceAsync(
+    {
+      getAsync: async () => undefined,
+      getManyAsync: async () => ({
+        "sensors.data_retention": undefined,
+        "outputs.data_retention": undefined,
+        "system.backup_retention": undefined,
+        "system.log_debug": false,
+        "system.latitude": latitude,
+        "system.longitude": longitude,
+      }),
+      getAllAsync: async () => ({
+        "sensors.data_retention": undefined,
+        "outputs.data_retention": undefined,
+        "system.backup_retention": undefined,
+        "system.log_debug": false,
+        "system.latitude": latitude,
+        "system.longitude": longitude,
+      }),
+      setAsync: async () => undefined,
+      existsAsync: async () => false,
+      deleteAsync: async () => undefined,
+      syncDefaultsAsync: async () => undefined,
+    },
+    {
+      publishAsync: async () => undefined,
+      subscribe: () => () => undefined,
+    },
+  );
+}
 
 describe("TimeCondition.ts tests", () => {
   describe("evaluate", () => {
@@ -86,6 +130,395 @@ describe("TimeCondition.ts tests", () => {
       now.setMinutes(0);
 
       assert.isFalse(timeCondition.evaluate(now));
+    });
+
+    it("should preserve legacy continuous behavior when repeat is not configured", () => {
+      const timeCondition = new TimeCondition(1, "allOf", "08:00", "17:00", null, null);
+      const now = new Date("2026-08-05T08:30:00");
+
+      assert.isTrue(timeCondition.evaluate(now));
+    });
+
+    it("should evaluate repeating schedules inside a bounded window", () => {
+      const timeCondition = new TimeCondition(
+        1,
+        "allOf",
+        "08:00",
+        "17:00",
+        30,
+        10,
+        "default",
+        null,
+      );
+
+      assert.isTrue(timeCondition.evaluate(new Date("2026-08-05T08:00:00")));
+      assert.isTrue(timeCondition.evaluate(new Date("2026-08-05T08:09:00")));
+      assert.isFalse(timeCondition.evaluate(new Date("2026-08-05T08:10:00")));
+      assert.isFalse(timeCondition.evaluate(new Date("2026-08-05T08:29:00")));
+      assert.isTrue(timeCondition.evaluate(new Date("2026-08-05T08:30:00")));
+      assert.isFalse(timeCondition.evaluate(new Date("2026-08-05T17:00:00")));
+    });
+
+    it("should evaluate wrapping repeating schedules from the current window start", () => {
+      const timeCondition = new TimeCondition(1, "allOf", "23:30", "04:00", 17, 5, "default", null);
+
+      assert.isTrue(timeCondition.evaluate(new Date("2026-08-05T23:30:00")));
+      assert.isFalse(timeCondition.evaluate(new Date("2026-08-05T23:35:00")));
+      assert.isTrue(timeCondition.evaluate(new Date("2026-08-05T23:47:00")));
+      assert.isTrue(timeCondition.evaluate(new Date("2026-08-06T00:04:00")));
+      assert.isFalse(timeCondition.evaluate(new Date("2026-08-06T00:09:00")));
+    });
+
+    it("should reject repeat patterns for once schedules", () => {
+      const timeCondition = new TimeCondition(1, "allOf", "10:00", null, 10, 5, "default");
+      assert.isFalse(timeCondition.evaluate(new Date("2026-08-05T10:00:00")));
+    });
+
+    it("should reject partial repeat configuration", () => {
+      assert.isFalse(
+        evaluateTimeRepeat(new Date("2026-08-05T10:00:00"), {
+          id: 1,
+          groupType: "allOf",
+          startTime: "08:00",
+          endTime: "17:00",
+          repeatInterval: 10,
+          repeatDuration: null,
+        }),
+      );
+    });
+
+    it("should reject when repeatDuration >= repeatInterval", () => {
+      assert.isFalse(
+        evaluateTimeRepeat(new Date("2026-08-05T10:00:00"), {
+          id: 1,
+          groupType: "allOf",
+          startTime: "08:00",
+          endTime: "17:00",
+          repeatInterval: 30,
+          repeatDuration: 30,
+        }),
+      );
+
+      assert.isFalse(
+        evaluateTimeRepeat(new Date("2026-08-05T10:00:00"), {
+          id: 1,
+          groupType: "allOf",
+          startTime: "08:00",
+          endTime: "17:00",
+          repeatInterval: 30,
+          repeatDuration: 45,
+        }),
+      );
+    });
+
+    it("should evaluate a dynamic solar window when coordinates are configured", async () => {
+      const resolver = await createResolverAsync();
+      const start = resolver.resolveToDate("goldenHourEnd", new Date("2026-08-05T12:00:00"));
+      const end = resolver.resolveToDate("nauticalDusk", new Date("2026-08-05T12:00:00"));
+
+      assert.isNotNull(start);
+      assert.isNotNull(end);
+
+      const midpoint = new Date((start!.getTime() + end!.getTime()) / 2);
+      const timeCondition = new TimeCondition(
+        1,
+        "allOf",
+        "goldenHourEnd",
+        "nauticalDusk",
+        null,
+        null,
+        null,
+        null,
+        resolver,
+      );
+
+      assert.isTrue(timeCondition.evaluate(midpoint));
+    });
+
+    it("should apply offsets to dynamic start and end times", async () => {
+      const resolver = await createResolverAsync();
+      const referenceDate = new Date("2026-08-07T12:00:00Z");
+      const sunrise = resolver.resolveToDate("sunrise", referenceDate);
+
+      assert.isNotNull(sunrise);
+
+      const timeCondition = new TimeCondition(
+        1,
+        "allOf",
+        "sunrise",
+        "sunrise",
+        null,
+        null,
+        null,
+        null,
+        resolver,
+        -5 * 60,
+        5 * 60,
+      );
+
+      assert.isFalse(timeCondition.evaluate(new Date(sunrise!.getTime() - 6 * 60 * 1000)));
+      assert.isTrue(timeCondition.evaluate(new Date(sunrise!.getTime())));
+      assert.isFalse(timeCondition.evaluate(new Date(sunrise!.getTime() + 5 * 60 * 1000)));
+    });
+
+    it("should keep a sunrise-to-sunset window active until the exact sunset instant", async () => {
+      const resolver = await createResolverAsync();
+      const referenceDate = new Date("2026-08-07T12:00:00Z");
+      const sunrise = resolver.resolveToDate("sunrise", referenceDate);
+      const sunset = resolver.resolveToDate("sunset", referenceDate);
+
+      assert.isNotNull(sunrise);
+      assert.isNotNull(sunset);
+
+      const timeCondition = new TimeCondition(
+        1,
+        "allOf",
+        "sunrise",
+        "sunset",
+        null,
+        null,
+        null,
+        null,
+        resolver,
+      );
+
+      assert.isTrue(timeCondition.evaluate(new Date(sunrise!.getTime())));
+      assert.isTrue(timeCondition.evaluate(new Date(sunset!.getTime() - 1000)));
+      assert.isFalse(timeCondition.evaluate(new Date(sunset!.getTime())));
+    });
+
+    it("should evaluate sunrise-to-sunset windows correctly when solar events cross UTC dates", async () => {
+      const resolver = await createResolverAsync("35.6895", "139.6917");
+      const referenceDate = new Date("2026-08-07T05:00:00Z");
+      const sunrise = resolver.resolveToDate("sunrise", referenceDate);
+      const sunset = resolver.resolveToDate("sunset", referenceDate);
+
+      assert.isNotNull(sunrise);
+      assert.isNotNull(sunset);
+      assert.notEqual(
+        sunrise!.toISOString().slice(0, 10),
+        sunset!.toISOString().slice(0, 10),
+        "sunrise and sunset should span different UTC dates",
+      );
+    });
+
+    it("should resolve sunset from the local calendar date after midnight UTC", async () => {
+      const resolver = await createResolverAsync("45.5152", "-122.6784");
+      const noonReference = new Date("2026-08-08T12:00:00-07:00");
+      const utcBoundaryReference = new Date("2026-08-08T17:00:00-07:00");
+
+      const sunsetAtNoon = resolver.resolveToDate("sunset", noonReference);
+      const sunsetAtUtcBoundary = resolver.resolveToDate("sunset", utcBoundaryReference);
+
+      assert.isNotNull(sunsetAtNoon);
+      assert.isNotNull(sunsetAtUtcBoundary);
+      assert.equal(sunsetAtUtcBoundary!.getTime(), sunsetAtNoon!.getTime());
+    });
+
+    it("should resolve sunrise from the local calendar date before local noon in positive-offset timezones", async () => {
+      const resolver = await createResolverAsync("35.6895", "139.6917");
+      const earlyMorningReference = new Date("2026-08-07T00:30:00+09:00");
+      const noonReference = new Date("2026-08-07T12:00:00+09:00");
+
+      const sunriseEarlyMorning = resolver.resolveToDate("sunrise", earlyMorningReference);
+      const sunriseAtNoon = resolver.resolveToDate("sunrise", noonReference);
+
+      assert.isNotNull(sunriseEarlyMorning);
+      assert.isNotNull(sunriseAtNoon);
+      assert.equal(sunriseEarlyMorning!.getTime(), sunriseAtNoon!.getTime());
+    });
+
+    it("should resolve moonrise from the local calendar date after midnight UTC", async () => {
+      const resolver = await createResolverAsync("45.5152", "-122.6784");
+      const noonReference = new Date("2026-08-08T12:00:00-07:00");
+      const utcBoundaryReference = new Date("2026-08-08T17:00:00-07:00");
+
+      const moonriseAtNoon = resolver.resolveToDate("moonrise", noonReference);
+      const moonriseAtUtcBoundary = resolver.resolveToDate("moonrise", utcBoundaryReference);
+
+      assert.isNotNull(moonriseAtNoon);
+      assert.isNotNull(moonriseAtUtcBoundary);
+      assert.equal(moonriseAtUtcBoundary!.getTime(), moonriseAtNoon!.getTime());
+    });
+
+    it("should keep a moonrise-to-moonset window active until the exact moonset instant", async () => {
+      const resolver = await createResolverAsync();
+      const referenceDate = new Date("2026-08-07T12:00:00Z");
+      const moonrise = resolver.resolveToDate("moonrise", referenceDate);
+      const moonset = resolver.resolveToDate("moonset", referenceDate);
+
+      assert.isNotNull(moonrise);
+      assert.isNotNull(moonset);
+
+      const timeCondition = new TimeCondition(
+        1,
+        "allOf",
+        "moonrise",
+        "moonset",
+        null,
+        null,
+        null,
+        null,
+        resolver,
+      );
+
+      assert.isTrue(timeCondition.evaluate(new Date(moonrise!.getTime())));
+      assert.isTrue(timeCondition.evaluate(new Date(moonset!.getTime() - 1000)));
+      assert.isFalse(timeCondition.evaluate(new Date(moonset!.getTime())));
+    });
+
+    it("should return false for dynamic points when coordinates are unavailable", () => {
+      const timeCondition = new TimeCondition(1, "allOf", "sunrise", null);
+      assert.isFalse(timeCondition.evaluate(new Date("2026-08-05T06:00:00")));
+    });
+  });
+
+  describe("hasValidRepeatConfiguration", () => {
+    it("should reject when repeatDuration >= repeatInterval", () => {
+      assert.isFalse(
+        hasValidRepeatConfiguration({
+          id: 1,
+          groupType: "allOf",
+          startTime: "08:00",
+          endTime: "17:00",
+          repeatInterval: 30,
+          repeatDuration: 30,
+        }),
+      );
+
+      assert.isFalse(
+        hasValidRepeatConfiguration({
+          id: 1,
+          groupType: "allOf",
+          startTime: "08:00",
+          endTime: "17:00",
+          repeatInterval: 30,
+          repeatDuration: 45,
+        }),
+      );
+    });
+
+    it("should accept when repeatDuration < repeatInterval", () => {
+      assert.isTrue(
+        hasValidRepeatConfiguration({
+          id: 1,
+          groupType: "allOf",
+          startTime: "08:00",
+          endTime: "17:00",
+          repeatInterval: 30,
+          repeatDuration: 10,
+        }),
+      );
+    });
+  });
+
+  describe("derivePhaseAnchor", () => {
+    it("should default always schedules to the epoch", () => {
+      const anchor = derivePhaseAnchor(
+        {
+          id: 1,
+          groupType: "allOf",
+          startTime: null,
+          endTime: null,
+          repeatInterval: 10,
+          repeatDuration: 5,
+          phaseAnchorType: "default",
+        },
+        new Date("2026-08-05T10:00:00"),
+      );
+
+      assert.isNotNull(anchor);
+      assert.equal(anchor?.toISOString(), "1970-01-01T00:00:00.000Z");
+    });
+
+    it("should default between schedules to the current window start", () => {
+      const anchor = derivePhaseAnchor(
+        {
+          id: 1,
+          groupType: "allOf",
+          startTime: "23:30",
+          endTime: "04:00",
+          repeatInterval: 17,
+          repeatDuration: 5,
+          phaseAnchorType: "default",
+        },
+        new Date("2026-08-06T00:04:00"),
+      );
+
+      assert.isNotNull(anchor);
+      assert.equal(anchor?.getFullYear(), 2026);
+      assert.equal(anchor?.getMonth(), 7);
+      assert.equal(anchor?.getDate(), 5);
+      assert.equal(anchor?.getHours(), 23);
+      assert.equal(anchor?.getMinutes(), 30);
+    });
+
+    it("should derive clock anchors from the most recent wall-clock time", () => {
+      const anchor = derivePhaseAnchor(
+        {
+          id: 1,
+          groupType: "allOf",
+          startTime: null,
+          endTime: null,
+          repeatInterval: 120,
+          repeatDuration: 30,
+          phaseAnchorType: "clock",
+          phaseAnchorValue: "08:15",
+        },
+        new Date("2026-08-05T07:00:00"),
+      );
+
+      assert.isNotNull(anchor);
+      assert.equal(anchor?.getFullYear(), 2026);
+      assert.equal(anchor?.getMonth(), 7);
+      assert.equal(anchor?.getDate(), 4);
+      assert.equal(anchor?.getHours(), 8);
+      assert.equal(anchor?.getMinutes(), 15);
+    });
+
+    it("should derive fixed anchors from absolute timestamps", () => {
+      const anchor = derivePhaseAnchor(
+        {
+          id: 1,
+          groupType: "allOf",
+          startTime: null,
+          endTime: null,
+          repeatInterval: 120,
+          repeatDuration: 30,
+          phaseAnchorType: "fixed",
+          phaseAnchorValue: "2026-08-01T12:00:00.000Z",
+        },
+        new Date("2026-08-05T07:00:00"),
+      );
+
+      assert.isNotNull(anchor);
+      assert.equal(anchor?.toISOString(), "2026-08-01T12:00:00.000Z");
+    });
+
+    it("should derive dynamic phase anchors from the most recent solar event", async () => {
+      const resolver = await createResolverAsync();
+      const now = new Date("2026-08-05T18:00:00");
+
+      const anchor = derivePhaseAnchor(
+        {
+          id: 1,
+          groupType: "allOf",
+          startTime: null,
+          endTime: null,
+          repeatInterval: 120,
+          repeatDuration: 30,
+          phaseAnchorType: "clock",
+          phaseAnchorValue: "sunrise",
+        },
+        now,
+        resolver,
+      );
+
+      assert.isNotNull(anchor);
+      assert.equal(
+        anchor?.getTime(),
+        resolver.resolveMostRecentOccurrence("sunrise", now)?.getTime(),
+      );
     });
   });
 });

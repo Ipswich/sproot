@@ -71,8 +71,8 @@ export async function getByIdAsync(
   let automationResponse: SuccessResponse | ErrorResponse;
 
   if (
-    request.params["notificationActionId"] == null ||
-    isNaN(parseInt(request.params["notificationActionId"]))
+    (request.params["notificationActionId"] as string) == null ||
+    isNaN(parseInt(request.params["notificationActionId"] as string))
   ) {
     automationResponse = {
       statusCode: 400,
@@ -87,7 +87,7 @@ export async function getByIdAsync(
   }
 
   try {
-    const notificationActionId = parseInt(request.params["notificationActionId"] ?? "");
+    const notificationActionId = parseInt((request.params["notificationActionId"] as string) ?? "");
     const notification = (
       await sprootDB.automations.actions.notification.getNotificationActionByIdAsync(
         notificationActionId,
@@ -100,7 +100,7 @@ export async function getByIdAsync(
           name: "Not Found",
           url: request.originalUrl,
           details: [
-            `Notification action with Id ${request.params["notificationActionId"]} not found.`,
+            `Notification action with Id ${request.params["notificationActionId"] as string} not found.`,
           ],
         },
         ...response.locals["defaultProperties"],
@@ -232,8 +232,8 @@ export async function deleteAsync(
   let automationResponse: SuccessResponse | ErrorResponse;
 
   if (
-    request.params["notificationActionId"] == null ||
-    isNaN(parseInt(request.params["notificationActionId"]))
+    (request.params["notificationActionId"] as string) == null ||
+    isNaN(parseInt(request.params["notificationActionId"] as string))
   ) {
     automationResponse = {
       statusCode: 400,
@@ -248,7 +248,7 @@ export async function deleteAsync(
   }
 
   try {
-    const notificationActionId = parseInt(request.params["notificationActionId"] ?? "");
+    const notificationActionId = parseInt((request.params["notificationActionId"] as string) ?? "");
     const notificationAction = (
       await sprootDB.automations.actions.notification.getNotificationActionByIdAsync(
         notificationActionId,
@@ -261,7 +261,7 @@ export async function deleteAsync(
           name: "Not Found",
           url: request.originalUrl,
           details: [
-            `Notification action with Id ${request.params["notificationActionId"]} not found.`,
+            `Notification action with Id ${request.params["notificationActionId"] as string} not found.`,
           ],
         },
         ...response.locals["defaultProperties"],

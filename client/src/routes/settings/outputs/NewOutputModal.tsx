@@ -5,10 +5,13 @@ import {
   Button,
   Select,
   ColorInput,
+  Paper,
   ScrollArea,
   ColorPicker,
   NumberInput,
   Input,
+  Stack,
+  Text,
 } from "@mantine/core";
 import { IOutputBase } from "@sproot/common/outputs/IOutputBase";
 import {
@@ -29,6 +32,7 @@ import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
 import { Models } from "@sproot/common/outputs/Models";
 import ESP32_PCA9685Form from "./forms/ESP32_PCA9685Form";
 import GroupedOutputForm from "./forms/OutputGroupForm";
+import { useMediaQuery } from "@mantine/hooks";
 
 interface NewOutputModalProps {
   supportedModels: Record<string, string>;
@@ -43,6 +47,7 @@ export default function NewOutputModal({
   closeModal,
   setIsStale,
 }: NewOutputModalProps) {
+  const isMobile = useMediaQuery("(max-width: 48em)");
   const revalidator = useRevalidator();
   const addOutputMutation = useMutation({
     mutationFn: async (newOutputValues: IOutputBase) => {
@@ -158,15 +163,17 @@ export default function NewOutputModal({
           backgroundOpacity: 0.55,
           blur: 3,
         }}
+        fullScreen={isMobile}
         scrollAreaComponent={ScrollArea.Autosize}
         centered
-        size="xs"
+        size="lg"
+        padding={isMobile ? "md" : "lg"}
         opened={modalOpened}
         onClose={() => {
           closeModal();
           newOutputForm.reset();
         }}
-        title="Add New"
+        title="Add Output"
       >
         <form
           onSubmit={newOutputForm.onSubmit(async (values) => {
@@ -193,90 +200,112 @@ export default function NewOutputModal({
             newOutputForm.reset();
           })}
         >
-          <TextInput
-            maxLength={64}
-            label="Name"
-            placeholder="Output #1"
-            {...newOutputForm.getInputProps("name")}
-          />
-          <ColorInput
-            readOnly
-            label="Color"
-            required
-            // closeOnColorSwatchClick
-            placeholder={newOutputForm.values.color}
-            defaultValue={newOutputForm.values.color}
-            // swatches={[...DefaultColors]}
-            {...newOutputForm.getInputProps("color")}
-          />
-          <ColorPicker
-            size="xs"
-            fullWidth
-            defaultValue={newOutputForm.values.color}
-            swatches={[...DefaultColors]}
-            {...newOutputForm.getInputProps("color")}
-          />
-          <Select
-            label="Model"
-            data={Object.keys(supportedModels).map((key) => {
-              return { value: key, label: supportedModels[key]! };
-            })}
-            allowDeselect={false}
-            placeholder="Model Name"
-            required
-            {...newOutputForm.getInputProps("model")}
-          />
-          {newOutputForm.values.model !== Models.OUTPUT_GROUP ? (
-            <NumberInput
-              min={0}
-              max={999999999}
-              step={1}
-              label="Automation Timeout"
-              suffix=" seconds"
-              placeholder="60 seconds"
-              stepHoldDelay={500}
-              stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
-              required
-              {...newOutputForm.getInputProps("automationTimeout")}
-            />
-          ) : (
-            <Input
-              type="hidden"
-              {...newOutputForm.getInputProps("automationTimeout")}
-            />
-          )}
-          <Select
-            label="Zone"
-            placeholder="Default"
-            data={Object.keys(zoneQuery.data ?? {}).map((key) => {
-              const zone = zoneQuery.data?.[parseInt(key)];
-              return {
-                value: String(zone?.id) ?? "",
-                label: zone?.name ?? "",
-              };
-            })}
-            searchable
-            clearable
-            allowDeselect={true}
-            {...newOutputForm.getInputProps("deviceZoneId")}
-          />
-          {newOutputForm.values.model === Models.PCA9685 ? (
-            <PCA9685Form form={newOutputForm} />
-          ) : newOutputForm.values.model === Models.TPLINK_SMART_PLUG ? (
-            <TPLinkSmartPlugForm form={newOutputForm} />
-          ) : newOutputForm.values.model === Models.ESP32_PCA9685 ? (
-            subcontrollersQuery.isSuccess ? (
-              <ESP32_PCA9685Form
-                subcontrollers={subcontrollersQuery.data?.recognized}
-                form={newOutputForm}
-              />
-            ) : null
-          ) : newOutputForm.values.model === Models.OUTPUT_GROUP ? (
-            <GroupedOutputForm form={newOutputForm} />
-          ) : null}
-          <Group justify="flex-end" mt="md">
-            <Button type="submit">Add Output</Button>
-          </Group>
+          <Stack gap="sm">
+            <Paper withBorder radius="lg" p={isMobile ? "sm" : "md"}>
+              <Stack gap="xs">
+                <Text fw={600}>New output</Text>
+                <Text size="sm" c="dimmed">
+                  Add an output, assign its model and zone, and then connect it
+                  to an available hardware target.
+                </Text>
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="sm">
+              <Stack gap="sm">
+                <TextInput
+                  maxLength={64}
+                  label="Name"
+                  placeholder="Output #1"
+                  {...newOutputForm.getInputProps("name")}
+                />
+                <Select
+                  label="Model"
+                  data={Object.keys(supportedModels).map((key) => {
+                    return { value: key, label: supportedModels[key]! };
+                  })}
+                  allowDeselect={false}
+                  placeholder="Model name"
+                  required
+                  {...newOutputForm.getInputProps("model")}
+                />
+                {newOutputForm.values.model !== Models.OUTPUT_GROUP ? (
+                  <NumberInput
+                    min={0}
+                    max={999999999}
+                    step={1}
+                    label="Automation Timeout"
+                    suffix=" seconds"
+                    placeholder="60 seconds"
+                    stepHoldDelay={500}
+                    stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
+                    required
+                    {...newOutputForm.getInputProps("automationTimeout")}
+                  />
+                ) : (
+                  <Input
+                    type="hidden"
+                    {...newOutputForm.getInputProps("automationTimeout")}
+                  />
+                )}
+                <Select
+                  label="Zone"
+                  placeholder="Default"
+                  data={Object.keys(zoneQuery.data ?? {}).map((key) => {
+                    const zone = zoneQuery.data?.[parseInt(key)];
+                    return {
+                      value: String(zone?.id) ?? "",
+                      label: zone?.name ?? "",
+                    };
+                  })}
+                  searchable
+                  clearable
+                  allowDeselect={true}
+                  {...newOutputForm.getInputProps("deviceZoneId")}
+                />
+                {newOutputForm.values.model === Models.PCA9685 ? (
+                  <PCA9685Form form={newOutputForm} />
+                ) : newOutputForm.values.model === Models.TPLINK_SMART_PLUG ? (
+                  <TPLinkSmartPlugForm form={newOutputForm} />
+                ) : newOutputForm.values.model === Models.ESP32_PCA9685 ? (
+                  subcontrollersQuery.isSuccess ? (
+                    <ESP32_PCA9685Form
+                      subcontrollers={subcontrollersQuery.data?.recognized}
+                      form={newOutputForm}
+                    />
+                  ) : null
+                ) : newOutputForm.values.model === Models.OUTPUT_GROUP ? (
+                  <GroupedOutputForm form={newOutputForm} />
+                ) : null}
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="sm">
+              <Stack gap="sm">
+                <Text fw={600} size="sm">
+                  Appearance
+                </Text>
+                <ColorInput
+                  readOnly
+                  label="Color"
+                  required
+                  placeholder={newOutputForm.values.color}
+                  defaultValue={newOutputForm.values.color}
+                  {...newOutputForm.getInputProps("color")}
+                />
+                <ColorPicker
+                  size="xs"
+                  fullWidth
+                  defaultValue={newOutputForm.values.color}
+                  swatches={[...DefaultColors]}
+                  {...newOutputForm.getInputProps("color")}
+                />
+              </Stack>
+            </Paper>
+            <Group justify="flex-end" mt="xs">
+              <Button variant="light" type="submit" fullWidth={isMobile}>
+                Add Output
+              </Button>
+            </Group>
+          </Stack>
         </form>
       </Modal>
     </Fragment>

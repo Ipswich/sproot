@@ -14,10 +14,18 @@ import { SensorList } from "../sensors/list/SensorList";
 import winston from "winston";
 import { IEventBus } from "../eventbus/IEventBus";
 import { AutomationsTriggeredEvent } from "../eventbus/events/automations/AutomationsTriggeredEvent";
-import { OutputActionsModifiedEvent } from "../eventbus/events/actions/OutputActionsModifiedEvent";
-import { NotificationActionsModifiedEvent } from "../eventbus/events/actions/NotificationActionsModifiedEvent";
+import {
+  NotificationActionDeletedEvent,
+  NotificationActionAddedEvent,
+} from "../eventbus/events/actions/NotificationActionEvents";
+import {
+  OutputActionDeletedEvent,
+  OutputActionAddedEvent,
+} from "../eventbus/events/actions/OutputActionEvents";
 import type { IAutomationsRepository } from "../database/repositories/automations/IAutomationsRepository";
 import { OutputActionPrecedence } from "@sproot/common/automation/OutputActionPrecedence";
+import { TimeConditionPhaseAnchorType } from "@sproot/common/automation/ITimeCondition";
+import { TimeExpressionResolver } from "./conditions/TimeExpressionResolver";
 
 /**
  * Central automation evaluator and event emitter.
@@ -28,13 +36,26 @@ class AutomationService {
   #automationsRepository: IAutomationsRepository;
   #eventBus: IEventBus;
   #logger: winston.Logger;
+  #timeExpressionResolver: TimeExpressionResolver;
+  #sensorList: SensorList;
+  #outputList: OutputList;
 
   static async createInstanceAsync(
     automationsRepository: IAutomationsRepository,
     eventBus: IEventBus,
+    sensorList: SensorList,
+    outputList: OutputList,
+    timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
     logger: winston.Logger,
   ): Promise<AutomationService> {
-    const service = new AutomationService(automationsRepository, eventBus, logger);
+    const service = new AutomationService(
+      automationsRepository,
+      eventBus,
+      sensorList,
+      outputList,
+      timeExpressionResolver,
+      logger,
+    );
     await service.loadAllAutomationsAsync();
     return service;
   }
@@ -42,12 +63,26 @@ class AutomationService {
   private constructor(
     automationsRepository: IAutomationsRepository,
     eventBus: IEventBus,
+    sensorList: SensorList,
+    outputList: OutputList,
+    timeExpressionResolver: TimeExpressionResolver = TimeExpressionResolver.createNoop(),
     logger: winston.Logger,
   ) {
     this.#automationsRepository = automationsRepository;
     this.#eventBus = eventBus;
     this.#automations = new Map();
     this.#logger = logger;
+    this.#timeExpressionResolver = timeExpressionResolver;
+    this.#sensorList = sensorList;
+    this.#outputList = outputList;
+  }
+
+  get timeExpressionResolver(): TimeExpressionResolver {
+    return this.#timeExpressionResolver;
+  }
+
+  getAutomations(): Automation[] {
+    return Array.from(this.#automations.values());
   }
 
   /**
@@ -55,6 +90,7 @@ class AutomationService {
    */
   async loadAllAutomationsAsync(): Promise<void> {
     try {
+      const previousAutomations = this.#automations;
       const rawAutomations = await this.#automationsRepository.getAllAsync();
       this.#automations = new Map();
 
@@ -65,7 +101,14 @@ class AutomationService {
           automation.operator,
           automation.enabled,
           this.#automationsRepository.conditions,
+          this.#timeExpressionResolver,
         );
+
+        const previousAutomation = previousAutomations.get(automation.id);
+        if (previousAutomation != null) {
+          automationInstance.setTriggered(previousAutomation.isTriggered);
+        }
+
         return [automation.id, automationInstance] as [number, Automation];
       });
 
@@ -76,14 +119,34 @@ class AutomationService {
     }
   }
 
+  async #reloadAutomationAsync(automationId: number): Promise<void> {
+    const automationRecord = (await this.#automationsRepository.getByIdAsync(automationId))[0];
+    if (automationRecord == null) {
+      this.#automations.delete(automationId);
+      return;
+    }
+
+    const previousAutomation = this.#automations.get(automationId);
+    const nextAutomation = await Automation.createInstanceAsync(
+      automationRecord.id,
+      automationRecord.name,
+      automationRecord.operator,
+      automationRecord.enabled,
+      this.#automationsRepository.conditions,
+      this.#timeExpressionResolver,
+    );
+
+    if (previousAutomation != null) {
+      nextAutomation.setTriggered(previousAutomation.isTriggered);
+    }
+
+    this.#automations.set(automationId, nextAutomation);
+  }
+
   /**
    * Central evaluation entry point - evaluates all automations and emits events.
    */
-  async evaluateAllAutomationsAsync(
-    sensorList: SensorList,
-    outputList: OutputList,
-    now: Date,
-  ): Promise<void> {
+  async evaluateAllAutomationsAsync(now: Date): Promise<void> {
     // Evaluate each automation once
     const evaluatedAutomations: Array<{
       automation: Automation;
@@ -93,7 +156,7 @@ class AutomationService {
     for (const [_automationId, automation] of this.#automations.entries()) {
       if (!automation.enabled) continue;
 
-      const result = await automation.evaluate(sensorList, outputList, now);
+      const result = await automation.evaluate(this.#sensorList, this.#outputList, now);
       if (result.result) {
         evaluatedAutomations.push({
           automation,
@@ -118,13 +181,13 @@ class AutomationService {
   // CRUD methods
   async addAutomationAsync(name: string, operator: AutomationOperator): Promise<number> {
     const resultId = await this.#automationsRepository.addAsync(name, operator);
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(resultId);
     return resultId;
   }
 
   async deleteAutomationAsync(id: number) {
     await this.#automationsRepository.deleteAsync(id);
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(id, true);
   }
 
   async updateAutomationAsync(
@@ -134,7 +197,7 @@ class AutomationService {
     enabled: boolean,
   ) {
     await this.#automationsRepository.updateAsync(name, operator, id, enabled);
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(id);
   }
 
   async addSensorConditionAsync(
@@ -155,7 +218,7 @@ class AutomationService {
       sensorId,
       readingType,
     );
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(automationId);
     return resultId;
   }
 
@@ -175,7 +238,7 @@ class AutomationService {
       comparisonLookback,
       outputId,
     );
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(automationId);
     return resultId;
   }
 
@@ -183,15 +246,27 @@ class AutomationService {
     automationId: number,
     type: ConditionGroupType,
     startTime: string | null | undefined,
+    startOffsetSeconds: number | null | undefined,
     endTime: string | null | undefined,
+    endOffsetSeconds: number | null | undefined,
+    repeatInterval: number | null | undefined,
+    repeatDuration: number | null | undefined,
+    phaseAnchorType: TimeConditionPhaseAnchorType | null | undefined,
+    phaseAnchorValue: string | null | undefined,
   ): Promise<number> {
     const resultId = await this.#automationsRepository.conditions.time.addAsync(
       automationId,
       type,
       startTime,
+      startOffsetSeconds,
       endTime,
+      endOffsetSeconds,
+      repeatInterval,
+      repeatDuration,
+      phaseAnchorType,
+      phaseAnchorValue,
     );
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(automationId);
     return resultId;
   }
 
@@ -205,7 +280,7 @@ class AutomationService {
       type,
       weekdays,
     );
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(automationId);
     return resultId;
   }
 
@@ -219,7 +294,7 @@ class AutomationService {
       type,
       months,
     );
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(automationId);
     return resultId;
   }
 
@@ -239,7 +314,7 @@ class AutomationService {
       endMonth,
       endDate,
     );
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(automationId);
     return resultId;
   }
 
@@ -268,37 +343,37 @@ class AutomationService {
     } else {
       return;
     }
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(automationId);
   }
 
-  async deleteSensorConditionAsync(id: number) {
+  async deleteSensorConditionAsync(automationId: number, id: number) {
     await this.#automationsRepository.conditions.sensor.deleteAsync(id);
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(automationId);
   }
 
-  async deleteOutputConditionAsync(id: number) {
+  async deleteOutputConditionAsync(automationId: number, id: number) {
     await this.#automationsRepository.conditions.output.deleteAsync(id);
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(automationId);
   }
 
-  async deleteTimeConditionAsync(id: number) {
+  async deleteTimeConditionAsync(automationId: number, id: number) {
     await this.#automationsRepository.conditions.time.deleteAsync(id);
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(automationId);
   }
 
-  async deleteWeekdayConditionAsync(id: number) {
+  async deleteWeekdayConditionAsync(automationId: number, id: number) {
     await this.#automationsRepository.conditions.weekday.deleteAsync(id);
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(automationId);
   }
 
-  async deleteMonthConditionAsync(id: number) {
+  async deleteMonthConditionAsync(automationId: number, id: number) {
     await this.#automationsRepository.conditions.month.deleteAsync(id);
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(automationId);
   }
 
-  async deleteDateRangeConditionAsync(id: number) {
+  async deleteDateRangeConditionAsync(automationId: number, id: number) {
     await this.#automationsRepository.conditions.dateRange.deleteAsync(id);
-    await this.#postAutomationChangeFunctionAsync();
+    await this.#postAutomationChangeFunctionAsync(automationId);
   }
 
   // Notification actions
@@ -312,13 +387,30 @@ class AutomationService {
       subject,
       content,
     );
-    await this.#eventBus.publishAsync(new NotificationActionsModifiedEvent({}));
+    const action = (
+      await this.#automationsRepository.actions.notification.getNotificationActionByIdAsync(result)
+    )[0];
+    if (action != null) {
+      await this.#eventBus.publishAsync(new NotificationActionAddedEvent({ action }));
+    }
     return result;
   }
 
   async deleteNotificationActionAsync(notificationActionId: number) {
+    const action = (
+      await this.#automationsRepository.actions.notification.getNotificationActionByIdAsync(
+        notificationActionId,
+      )
+    )[0];
     await this.#automationsRepository.actions.notification.deleteAsync(notificationActionId);
-    await this.#eventBus.publishAsync(new NotificationActionsModifiedEvent({}));
+    if (action != null) {
+      await this.#eventBus.publishAsync(
+        new NotificationActionDeletedEvent({
+          actionId: action.id,
+          automationId: action.automationId,
+        }),
+      );
+    }
   }
 
   // Output actions
@@ -334,17 +426,42 @@ class AutomationService {
       value,
       precedence,
     );
-    await this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));
+    const action = (
+      await this.#automationsRepository.actions.output.getOutputActionAsync(result)
+    )[0];
+    if (action != null) {
+      await this.#eventBus.publishAsync(new OutputActionAddedEvent({ action }));
+    }
     return result;
   }
 
   async deleteOutputActionAsync(outputActionId: number) {
+    const action = (
+      await this.#automationsRepository.actions.output.getOutputActionAsync(outputActionId)
+    )[0];
     await this.#automationsRepository.actions.output.deleteAsync(outputActionId);
-    await this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));
+    if (action != null) {
+      await this.#eventBus.publishAsync(
+        new OutputActionDeletedEvent({
+          actionId: action.id,
+          automationId: action.automationId,
+          outputId: action.outputId,
+        }),
+      );
+    }
   }
 
-  #postAutomationChangeFunctionAsync() {
-    return this.loadAllAutomationsAsync();
+  async #postAutomationChangeFunctionAsync(
+    automationId: number,
+    wasDeleted: boolean = false,
+  ): Promise<void> {
+    if (wasDeleted) {
+      this.#automations.delete(automationId);
+    } else {
+      await this.#reloadAutomationAsync(automationId);
+    }
+
+    await this.evaluateAllAutomationsAsync(new Date());
   }
 }
 

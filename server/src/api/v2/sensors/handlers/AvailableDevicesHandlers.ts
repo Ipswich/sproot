@@ -22,7 +22,7 @@ export async function getAvailableDevices(
     };
   }
 
-  if (!(Object.values(Models) as string[]).includes(request.params["model"]!)) {
+  if (!(Object.values(Models) as string[]).includes(request.params["model"]! as string)) {
     return {
       statusCode: 400,
       error: {
@@ -38,7 +38,7 @@ export async function getAvailableDevices(
 
   try {
     const devices = await sensorList.getAvailableDevices(
-      request.params["model"]!,
+      request.params["model"] as string,
       request.query["address"] as string | undefined,
       request.query["filterUsed"] !== "false",
       request.query["subcontrollerId"] != null

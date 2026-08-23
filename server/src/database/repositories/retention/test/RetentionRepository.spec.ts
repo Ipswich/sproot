@@ -105,15 +105,13 @@ describe("RetentionRepository", () => {
 
   describe("runPolicyJobAsync", () => {
     it("calls CALL run_job with the job ID", async () => {
-      const execStub = sinon.stub().resolves();
-      const rawStub = sinon.stub().returns({ exec: execStub });
+      const rawStub = sinon.stub().resolves();
       const mockKnex = {
         raw: rawStub,
       } as unknown as Knex;
       const testRepo = new RetentionRepository(mockKnex);
       await testRepo.runPolicyJobAsync(5001);
       assert.isTrue(rawStub.calledWith("CALL run_job(?)", [5001]));
-      assert.isTrue(execStub.calledOnce);
     });
   });
 
@@ -123,10 +121,12 @@ describe("RetentionRepository", () => {
         raw: sinon.stub().resolves(),
       } as unknown as Knex;
       const testRepo = new RetentionRepository(mockKnex);
-      await assert.isRejected(
-        testRepo.addRetentionPolicyAsync("invalid-table", "30 days"),
-        /Invalid table name/,
-      );
+      try {
+        await testRepo.addRetentionPolicyAsync("invalid-table", "30 days");
+        assert.fail("Expected addRetentionPolicyAsync to reject invalid table names");
+      } catch (error) {
+        assert.match((error as Error).message, /Invalid table name/);
+      }
     });
 
     it("accepts valid table names with underscores", async () => {

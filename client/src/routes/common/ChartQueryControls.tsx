@@ -133,7 +133,7 @@ export default function ChartQueryControls({
           onUseCustomRangeChange(false);
           onChartIntervalChange(value);
         }}
-        color="blue"
+        // color="blue"
         fullWidth
         size="xs"
         radius="md"
@@ -157,15 +157,14 @@ export default function ChartQueryControls({
         }}
       >
         <PopoverDatePickerInput
-          key={
-            customRange
-              ? `${customRange.start.getTime()}-${customRange.end.getTime()}`
-              : "empty"
-          }
           type="range"
+          allowSingleDateInRange
           size="sm"
           clearable
+          withTime
+          commitOnClose
           placeholder="Select date range"
+          label="Select date range"
           value={
             customRange ? [customRange.start, customRange.end] : [null, null]
           }

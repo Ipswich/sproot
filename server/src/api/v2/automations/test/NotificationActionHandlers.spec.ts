@@ -13,6 +13,9 @@ import { SDBAutomation } from "@sproot/database/SDBAutomation";
 import { assert } from "chai";
 import sinon from "sinon";
 import { AutomationService } from "../../../../automation/AutomationService";
+import { TimeExpressionResolver } from "../../../../automation/conditions/TimeExpressionResolver";
+import { OutputList } from "../../../../outputs/list/OutputList";
+import { SensorList } from "../../../../sensors/list/SensorList";
 import winston from "winston";
 import { MemoryEventBus } from "../../../../eventbus/MemoryEventBus";
 
@@ -30,12 +33,14 @@ const createStubSprootDB = () => {
         getAsync: sinon.stub().resolves([]),
         addAsync: sinon.stub(),
         updateAsync: sinon.stub(),
+        getMostRecentViolationAsync: sinon.stub().resolves(null),
         deleteAsync: sinon.stub(),
       },
       output: {
         getAsync: sinon.stub().resolves([]),
         addAsync: sinon.stub(),
         updateAsync: sinon.stub(),
+        getMostRecentViolationAsync: sinon.stub().resolves(null),
         deleteAsync: sinon.stub(),
       },
       time: {
@@ -74,7 +79,7 @@ const createStubSprootDB = () => {
       notification: {
         getAllAsync: sinon.stub(),
         getAsync: sinon.stub(),
-        getNotificationActionByIdAsync: sinon.stub(),
+        getNotificationActionByIdAsync: sinon.stub().resolves([]),
         addAsync: sinon.stub(),
         deleteAsync: sinon.stub(),
       },
@@ -90,6 +95,9 @@ describe("NotificationActionHandlers.ts tests", () => {
     AutomationService.createInstanceAsync(
       sprootDB.automations,
       new MemoryEventBus(mockLogger),
+      sinon.createStubInstance(SensorList),
+      sinon.createStubInstance(OutputList),
+      TimeExpressionResolver.createNoop(),
       mockLogger,
     );
 
@@ -412,6 +420,14 @@ describe("NotificationActionHandlers.ts tests", () => {
       const automationService = await createAutomationServiceAsync(sprootDB);
       sprootDB.automations.getAllAsync.resolves([]);
       sprootDB.automations.actions.notification.addAsync.resolves(1);
+      sprootDB.automations.actions.notification.getNotificationActionByIdAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          subject: "Test Subject",
+          content: "Test Content",
+        } as SDBNotificationAction,
+      ]);
 
       const mockRequest = {
         app: {

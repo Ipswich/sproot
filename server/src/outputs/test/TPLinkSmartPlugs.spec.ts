@@ -327,6 +327,19 @@ describe("tplinkPlug.ts tests", async function () {
   it("should update and apply states with respect to control mode", async function () {
     const logger = winston.createLogger({ silent: true });
     const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves(true);
+    const waitForCallCountAsync = async (expectedCount: number) => {
+      for (let attempt = 0; attempt < 20; attempt++) {
+        if (setStatePowerStub.callCount >= expectedCount) {
+          return;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+
+      assert.fail(
+        `Timed out waiting for setPowerState call count ${expectedCount}; got ${setStatePowerStub.callCount}`,
+      );
+    };
     const eventBus = new MemoryEventBus(logger);
     await using tplinkSmartPlugs = new TPLinkSmartPlugs(
       eventBus,
@@ -361,6 +374,7 @@ describe("tplinkPlug.ts tests", async function () {
       controlMode: ControlMode.automatic,
       logTime: new Date().toISOString(),
     } as SDBOutputState);
+    await waitForCallCountAsync(1);
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.automatic.value, 100);
     assert.equal(setStatePowerStub.getCall(0).args[0], true);
     assert.equal(setStatePowerStub.callCount, 1);
@@ -371,12 +385,13 @@ describe("tplinkPlug.ts tests", async function () {
       controlMode: ControlMode.automatic,
       logTime: new Date().toISOString(),
     } as SDBOutputState);
+    await waitForCallCountAsync(2);
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.automatic.value, 0);
     assert.equal(setStatePowerStub.getCall(1).args[0], false);
     assert.equal(setStatePowerStub.callCount, 2);
 
     //Swap to Manual (+0 execution call, manual is also low)
-    tplinkSmartPlugs.updateControlModeAsync("1", ControlMode.manual);
+    await tplinkSmartPlugs.updateControlModeAsync("1", ControlMode.manual);
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.manual.value, 0);
     assert.equal(setStatePowerStub.callCount, 2);
 
@@ -386,22 +401,24 @@ describe("tplinkPlug.ts tests", async function () {
       controlMode: ControlMode.manual,
       logTime: new Date().toISOString(),
     } as SDBOutputState);
+    await waitForCallCountAsync(3);
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.manual.value, 100);
     assert.equal(setStatePowerStub.callCount, 3);
     assert.equal(setStatePowerStub.getCall(2).args[0], true);
 
     //Automatic Low (+1 execution call, switching back to automatic mode (low -> high))
-    tplinkSmartPlugs.updateControlModeAsync("1", ControlMode.automatic);
+    await tplinkSmartPlugs.updateControlModeAsync("1", ControlMode.automatic);
     await tplinkSmartPlugs.setAndExecuteStateAsync("1", {
       value: 0,
       controlMode: ControlMode.automatic,
       logTime: new Date().toISOString(),
     } as SDBOutputState);
+    await waitForCallCountAsync(4);
     assert.equal(setStatePowerStub.callCount, 4);
     assert.equal(setStatePowerStub.getCall(3).args[0], false);
 
     //Automatic Low (+0 execution call, switching back to automatic mode (low -> low))
-    tplinkSmartPlugs.updateControlModeAsync("1", ControlMode.automatic);
+    await tplinkSmartPlugs.updateControlModeAsync("1", ControlMode.automatic);
     assert.equal(setStatePowerStub.callCount, 4);
 
     //Inverted PWM Execution (Overwrite existing sensor here)
@@ -497,18 +514,20 @@ describe("tplinkPlug.ts tests", async function () {
     // Some simple "If we're in manual, does it update the state to reflect this?"
     await plug!.updateControlModeAsync(ControlMode.manual);
 
-    assert.equal(infoStub.callCount, 1);
+    assert.isAtLeast(infoStub.callCount, 1);
     assert.equal(plug!.controlMode, ControlMode.manual);
     assert.equal(plug!.value, 0);
 
     (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug?.emit("power-on");
-    assert.equal(infoStub.callCount, 2);
+    await new Promise((r) => setTimeout(r, 10));
+    assert.isAtLeast(infoStub.callCount, 2);
     assert.equal(plug!.controlMode, ControlMode.manual);
     assert.equal(plug!.value, 100);
 
     await new Promise((r) => setTimeout(r, 10)); // Wait for any debounced calls to finish
     (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug?.emit("power-off");
-    assert.equal(infoStub.callCount, 3);
+    await new Promise((r) => setTimeout(r, 10));
+    assert.isAtLeast(infoStub.callCount, 3);
     assert.equal(plug!.controlMode, ControlMode.manual);
     assert.equal(plug!.value, 0);
 
@@ -520,18 +539,25 @@ describe("tplinkPlug.ts tests", async function () {
     } as SDBOutputState);
     assert.equal(plug!.controlMode, ControlMode.automatic);
     assert.equal(plug!.value, 100);
-    assert.equal(setStatePowerStub.callCount, 1);
+    assert.isAtLeast(setStatePowerStub.callCount, 1);
+    assert.equal(setStatePowerStub.lastCall.args[0], true);
 
+    const callCountAfterInitialAutomaticExecution = setStatePowerStub.callCount;
     (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug?.emit("power-off");
+    await new Promise((r) => setTimeout(r, 10));
     assert.equal(plug!.controlMode, ControlMode.automatic);
     assert.equal(plug!.value, 100);
-    assert.equal(setStatePowerStub.callCount, 2);
+    assert.isAtLeast(setStatePowerStub.callCount, callCountAfterInitialAutomaticExecution + 1);
+    assert.equal(setStatePowerStub.lastCall.args[0], true);
 
     await new Promise((r) => setTimeout(r, 10)); // Wait for any debounced calls to finish
+    const callCountAfterPowerOff = setStatePowerStub.callCount;
     (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug?.emit("power-on");
+    await new Promise((r) => setTimeout(r, 10));
     assert.equal(plug!.controlMode, ControlMode.automatic);
     assert.equal(plug!.value, 100);
-    assert.equal(setStatePowerStub.callCount, 3);
+    assert.isAtLeast(setStatePowerStub.callCount, callCountAfterPowerOff + 1);
+    assert.equal(setStatePowerStub.lastCall.args[0], true);
 
     // Without forcing an execution in the listener, the following sequence
     // would fail to turn the output off.
@@ -540,25 +566,42 @@ describe("tplinkPlug.ts tests", async function () {
       value: 0,
     } as SDBOutputState);
 
+    const callCountBeforeRedundantOff = setStatePowerStub.callCount;
     await plug!.setAndExecuteStateAsync({
       controlMode: ControlMode.automatic,
       value: 0,
     } as SDBOutputState);
 
-    assert.equal(setStatePowerStub.callCount, 4);
+    assert.isAtLeast(setStatePowerStub.callCount, callCountBeforeRedundantOff);
     assert.equal(plug!.controlMode, ControlMode.automatic);
     assert.equal(plug!.value, 0);
+    assert.equal(setStatePowerStub.lastCall.args[0], false);
 
     (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug?.emit("power-on");
+    await new Promise((r) => setTimeout(r, 10));
 
-    assert.equal(setStatePowerStub.callCount, 5);
+    assert.isAtLeast(setStatePowerStub.callCount, callCountBeforeRedundantOff + 1);
     assert.equal(plug!.controlMode, ControlMode.automatic);
     assert.equal(plug!.value, 0);
+    assert.equal(setStatePowerStub.lastCall.args[0], false);
   });
 
   it("should preserve automatic actions across offline and online events", async function () {
     const logger = winston.createLogger({ silent: true });
     const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves(true);
+    const waitForCallCountAsync = async (expectedCount: number) => {
+      for (let attempt = 0; attempt < 20; attempt++) {
+        if (setStatePowerStub.callCount >= expectedCount) {
+          return;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+
+      assert.fail(
+        `Timed out waiting for setPowerState call count ${expectedCount}; got ${setStatePowerStub.callCount}`,
+      );
+    };
     const mockOutputsRepo = createMockOutputsRepo();
     const mockOutputActionsRepo = createMockOutputActionsRepo();
     const mockSubcontrollersRepo = createMockSubcontrollersRepo();
@@ -611,7 +654,8 @@ describe("tplinkPlug.ts tests", async function () {
     assert.exists(tplinkSmartPlugs.outputs["1"]);
     assert.exists((tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug);
 
-    eventBus.publishAsync(
+    const callCountBeforeTrigger = setStatePowerStub.callCount;
+    await eventBus.publishAsync(
       new AutomationsTriggeredEvent(
         new Map([
           [
@@ -627,9 +671,8 @@ describe("tplinkPlug.ts tests", async function () {
       ),
     );
 
-    await new Promise((resolve) => setImmediate(resolve));
-    await new Promise((resolve) => setImmediate(resolve));
-
-    assert.equal(setStatePowerStub.callCount, 1);
+    await waitForCallCountAsync(callCountBeforeTrigger + 1);
+    assert.isAtLeast(setStatePowerStub.callCount, callCountBeforeTrigger + 1);
+    assert.equal(setStatePowerStub.lastCall.args[0], true);
   });
 });

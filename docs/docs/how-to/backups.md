@@ -17,7 +17,7 @@ To download a backup, navigate to `Settings -> System` and expand the `Backups` 
 
 ## Restoring from a backup
 
-To restore from a backup, navigate to `Settings -> System` and expand the `Backups` section. Towards the bottom of the section, there's an input labeled `Restore`. Click this input, and locate your backup. Once you've located it, click `Upload`. Please note that this process will result in downtime - Sproot will halt and process the backup before restarting.
+To restore from a backup, navigate to `Settings -> System` and expand the `Backups` section. Towards the bottom of the section, there's an input labeled `Restore`. Click this input, and locate your backup. Once you've located it and listed it in the file picker, click `Upload` and confirm in the modal. Please note that this process will result in downtime - Sproot will halt and process the backup before restarting.
 
 ## Creating a backup
 

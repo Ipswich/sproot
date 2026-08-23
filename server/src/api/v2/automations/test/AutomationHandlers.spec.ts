@@ -12,6 +12,9 @@ import {
 import { assert } from "chai";
 import sinon from "sinon";
 import { AutomationService } from "../../../../automation/AutomationService";
+import { TimeExpressionResolver } from "../../../../automation/conditions/TimeExpressionResolver";
+import { OutputList } from "../../../../outputs/list/OutputList";
+import { SensorList } from "../../../../sensors/list/SensorList";
 import winston from "winston";
 import { MemoryEventBus } from "../../../../eventbus/MemoryEventBus";
 import type { IAutomationsRepository } from "../../../../database/repositories/automations/IAutomationsRepository";
@@ -48,6 +51,7 @@ const createMockSensorConditionsRepo = (): ISensorConditionsRepository => ({
   getAsync: async () => [],
   addAsync: async () => 0,
   updateAsync: async () => {},
+  getMostRecentViolationAsync: async () => null,
   deleteAsync: async () => {},
 });
 
@@ -55,6 +59,7 @@ const createMockOutputConditionsRepo = (): IOutputConditionsRepository => ({
   getAsync: async () => [],
   addAsync: async () => 0,
   updateAsync: async () => {},
+  getMostRecentViolationAsync: async () => null,
   deleteAsync: async () => {},
 });
 
@@ -117,7 +122,7 @@ const createStubSprootDB = (): any => {
   const notificationActions = createMockNotificationActionsRepo();
 
   sinon.stub(automations, "getAllAsync");
-  sinon.stub(automations, "getByIdAsync");
+  sinon.stub(automations, "getByIdAsync").resolves([]);
   sinon.stub(automations, "addAsync");
   sinon.stub(automations, "updateAsync");
   sinon.stub(automations, "deleteAsync");
@@ -125,11 +130,13 @@ const createStubSprootDB = (): any => {
   sinon.stub(sensorConditions, "getAsync").resolves([]);
   sinon.stub(sensorConditions, "addAsync");
   sinon.stub(sensorConditions, "updateAsync");
+  sinon.stub(sensorConditions, "getMostRecentViolationAsync").resolves(null);
   sinon.stub(sensorConditions, "deleteAsync");
 
   sinon.stub(outputConditions, "getAsync").resolves([]);
   sinon.stub(outputConditions, "addAsync");
   sinon.stub(outputConditions, "updateAsync");
+  sinon.stub(outputConditions, "getMostRecentViolationAsync").resolves(null);
   sinon.stub(outputConditions, "deleteAsync");
 
   sinon.stub(timeConditions, "getAsync").resolves([]);
@@ -177,6 +184,9 @@ describe("AutomationHandlers", () => {
     AutomationService.createInstanceAsync(
       sprootDB.automations,
       new MemoryEventBus(mockLogger),
+      sinon.createStubInstance(SensorList),
+      sinon.createStubInstance(OutputList),
+      TimeExpressionResolver.createNoop(),
       mockLogger,
     );
 
@@ -217,6 +227,7 @@ describe("AutomationHandlers", () => {
         { id: 1, name: "automation1", operator: "or" } as SDBAutomation,
         { id: 2, name: "automation2", operator: "and" } as SDBAutomation,
       ]);
+      const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
         app: {
@@ -224,6 +235,8 @@ describe("AutomationHandlers", () => {
             switch (_dependency) {
               case "sprootDB":
                 return sprootDB;
+              case "automationService":
+                return automationService;
               default:
                 return null;
             }
@@ -236,6 +249,7 @@ describe("AutomationHandlers", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.content?.data.length, 2);
+      assert.isFalse(success.content?.data[0]?.triggered);
     });
 
     it("should return a 503 and an error message", async () => {
@@ -288,6 +302,9 @@ describe("AutomationHandlers", () => {
         },
       } as unknown as Response;
       const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAllAsync.resolves([
+        { id: 1, name: "automation1", operator: "or" } as SDBAutomation,
+      ]);
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "automation1", operator: "or" } as SDBAutomation,
       ]);
@@ -313,6 +330,7 @@ describe("AutomationHandlers", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.content?.data.id, 1);
+      assert.isFalse(success.content?.data.triggered);
     });
 
     it("should return a 400 and an error message", async () => {
@@ -437,6 +455,9 @@ describe("AutomationHandlers", () => {
       sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
       sprootDB.automations.addAsync.resolves(1);
+      sprootDB.automations.getByIdAsync.resolves([
+        { id: 1, name: "automation1", operator: "or", enabled: true } as SDBAutomation,
+      ]);
 
       const mockRequest = {
         app: {

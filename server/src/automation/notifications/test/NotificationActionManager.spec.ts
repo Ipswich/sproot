@@ -5,7 +5,7 @@ import sinon from "sinon";
 import winston from "winston";
 import { MemoryEventBus } from "../../../eventbus/MemoryEventBus";
 import { AutomationsTriggeredEvent } from "../../../eventbus/events/automations/AutomationsTriggeredEvent";
-import { NotificationActionsModifiedEvent } from "../../../eventbus/events/actions/NotificationActionsModifiedEvent";
+import { NotificationActionAddedEvent } from "../../../eventbus/events/actions/NotificationActionEvents";
 import type { INotificationActionsRepository } from "../../../database/repositories/automations/actions/INotificationActionsRepository";
 
 const createStubNotificationActionsRepository = (): INotificationActionsRepository =>
@@ -308,16 +308,16 @@ describe("NotificationActionManager.ts tests", () => {
       const notif1 = manager.activeNotifications.notifications[0]!;
       assert.equal(notif1.subject, "Original Subject");
 
-      notificationActions.getAllAsync.resolves([
-        {
-          id: 1,
-          automationId: 1,
-          subject: "Updated Subject",
-          content: "Updated Content",
-        },
-      ]);
-
-      await eventBus.publishAsync(new NotificationActionsModifiedEvent({}));
+      await eventBus.publishAsync(
+        new NotificationActionAddedEvent({
+          action: {
+            id: 1,
+            automationId: 1,
+            subject: "Updated Subject",
+            content: "Updated Content",
+          },
+        }),
+      );
       await new Promise((resolve) => setImmediate(resolve));
 
       await publishAutomationEventAsync(eventBus, triggeredAutomations);

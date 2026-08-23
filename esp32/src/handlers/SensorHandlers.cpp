@@ -51,6 +51,7 @@ void handleBme280Get(AsyncWebServerRequest *request)
   {
     String error_json = "{\"error\":\"Invalid " + deviceName + " address format\"}";
     request->send(400, "application/json", error_json);
+    return;
   }
 
   Adafruit_BME280 *bme280 = getBME280(address);

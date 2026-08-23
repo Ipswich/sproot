@@ -3,9 +3,9 @@ import { Box, Button, Flex, Group, Paper, Switch } from "@mantine/core";
 import { ReadingType, Units } from "@sproot/common/sensors/ReadingType";
 import type { Aggregate } from "../../requests/queryTypes";
 import { useLoaderData } from "react-router-dom";
-import ReadingsChartContainer from "./components/ReadingsChartContainer";
 import SensorTableAccordion from "./components/SensorTableAccordion";
 import ChartQueryControls from "../common/ChartQueryControls";
+import ReadingsChartContainer from "./components/ReadingsChartContainer";
 import {
   sensorsToggledKey,
   sensorToggledDeviceZonesKey,
@@ -77,6 +77,7 @@ export default function SensorData() {
                 size="md"
                 offLabel={Units[readingTypeString as ReadingType]}
                 onLabel="°F"
+                withThumbIndicator={false}
                 checked={useAlternateUnits}
                 onChange={(event) => {
                   localStorage.setItem(

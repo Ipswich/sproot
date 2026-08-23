@@ -143,7 +143,7 @@ Finally, you might want to have a system that ensures that you're only ever powe
   <img src="/docs/img/Automations.png" alt="Automations" style={{ width: '30%', maxWidth: '100%', height: 'auto' }} />
   <img src="/docs/img/AutomationsEdit.png" alt="New Automation" style={{ width: '30%', maxWidth: '100%', height: 'auto' }} />
 </p>
-Navigate to `Automations` from the nav bar. Click the big blue `Add New` button at the bottom, give your new automation a name, and click `Next`.
+Navigate to `Automations` from the nav bar. Click the big blue `Add Automation` button at the bottom, give your new automation a name, and click `Next`.
 
 ## Editing an Automation
 
@@ -155,7 +155,7 @@ As explained [above](#automation-evaluation), you must decide whether your autom
 
 ### Conditions
 
-You can add or remove conditions by expanding the `Conditions` drop down to reveal your conditions and the `Add Condition` button. To remove a condition, simply click the `Trashcan` icon next to the condition you wish to delete. To add a condition, click the `Add Condition` button. This will reveal two drop downs:
+You can add or remove conditions by expanding the `Conditions` accordion to reveal your conditions and the `Add Condition` button. To remove a condition, simply click the `Trashcan` icon next to the condition you wish to delete. To add a condition, click the `Add Condition` button. This will reveal two drop downs:
 
 - Condition Type
 - Group
@@ -173,15 +173,18 @@ The `Condition Type` drop down will give you the options for the variety of cond
 - Date Range
   - Evaluates to true between the start date and end date.
 - Time
+  - Supports continuous intervals, and periodically across an interval. Also dynamic time points, like `Sunrise` or `Moonset`.
   - Can evaluate to true between the start time and end time.
   - Can evaluate to true always
   - Can evaluate to true during a provided minute.
+  - Can evaluate to true for the first N number of minutes in an M minute long interval.
+    - Configurable period anchor allows you to run this "always" or "between" with consistent behavior using a fixed date and time or a daily time.
 
 The `Group` drop down will let you select which [condition group](#condition-groups) this particular condition will be added to.
 
 ### Actions
 
-You can add or remove actions by expanding the `Actions` drop down to reveal your actions and the `Add Action` button. To remove an action, simply click the `Trashcan` icon next to the action you wish to delete. To add an action, click the `Add Action` button. Currently, there are two types of actions:
+You can add or remove actions by expanding the `Actions` accordion to reveal your actions and the `Add Action` button. To remove an action, simply click the `Trashcan` icon next to the action you wish to delete. To add an action, click the `Add Action` button. Currently, there are two types of actions:
 
 - Output Actions, used to trigger output changes
   - Selecting this action type will reveal a list of outputs to choose from.

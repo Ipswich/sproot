@@ -141,7 +141,7 @@ describe("Backups.ts", () => {
   });
 
   describe("runRetentionPolicyAsync", () => {
-    it("should delete files older than retention days", async () => {
+    it("should delete files older than the configured retention duration", async () => {
       const tempDir = await mkdtemp(path.join(tmpdir(), "test-backup-"));
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir);
@@ -156,7 +156,7 @@ describe("Backups.ts", () => {
       oldDate.setDate(oldDate.getDate() - 31);
       fs.utimesSync(oldFile, oldDate, oldDate);
 
-      await Backups.runRetentionPolicyAsync(logger, tempDir, "30");
+      await Backups.runRetentionPolicyAsync(logger, tempDir, "30 days");
 
       assert.isFalse(fs.existsSync(oldFile), "Old backup file should be deleted");
       assert.isTrue(fs.existsSync(newFile), "New backup file should not be deleted");

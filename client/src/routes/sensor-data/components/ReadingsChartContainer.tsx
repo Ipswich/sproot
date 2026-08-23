@@ -17,6 +17,7 @@ import {
   getChartIntervalMs,
   getEffectiveEndDate,
   getEffectiveDisplayEndDate,
+  getLastCompleteBucketEnd,
   mergeDataIntoTimeline,
   scalePercentile,
 } from "../../../requests/chartDataTypes";
@@ -91,7 +92,27 @@ export default function ReadingsChartContainer({
   }, [chartInterval, customTimeRange]);
 
   const effectiveEnd = getEffectiveEndDate(timeRange[1]);
-  const durationMs = effectiveEnd.getTime() - timeRange[0].getTime();
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const selectedDayStart = new Date(
+    effectiveEnd.getFullYear(),
+    effectiveEnd.getMonth(),
+    effectiveEnd.getDate(),
+  );
+  const isEndToday = selectedDayStart.getTime() === todayStart.getTime();
+
+  const queryEnd = isEndToday
+    ? getLastCompleteBucketEnd(
+        now,
+        resolveSelectedDownsample(
+          downsampleSelection,
+          effectiveEnd.getTime() - timeRange[0].getTime(),
+        ),
+      )
+    : effectiveEnd;
+  const effectiveEndForQuery = queryEnd;
+
+  const durationMs = effectiveEndForQuery.getTime() - timeRange[0].getTime();
   const downsample = resolveSelectedDownsample(downsampleSelection, durationMs);
   const queryLimit = getQueryPointLimit(durationMs, downsample);
 
@@ -118,7 +139,7 @@ export default function ReadingsChartContainer({
       "sensorData",
       readingType,
       timeRange[0].toISOString(),
-      effectiveEnd.toISOString(),
+      effectiveEndForQuery.toISOString(),
       downsample,
       aggregate,
       percentile,
@@ -128,7 +149,7 @@ export default function ReadingsChartContainer({
       const request: SensorDataQueryRequest = {
         timeRange: {
           start: timeRange[0].toISOString(),
-          end: effectiveEnd.toISOString(),
+          end: effectiveEndForQuery.toISOString(),
         },
         readingTypes: [readingType],
         downsample,

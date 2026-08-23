@@ -85,7 +85,7 @@ export async function updateAsync(
   const sprootDB: ISprootDB = req.app.get(DI_KEYS.SprootDB);
   let response: SuccessResponse | ErrorResponse;
   try {
-    const { deviceZoneId } = req.params;
+    const { deviceZoneId } = req.params as { deviceZoneId: string | undefined };
     const deviceZoneData: Partial<SDBDeviceZone> = req.body;
     const errorMessages: string[] = [];
 
@@ -159,8 +159,8 @@ export async function deleteAsync(
   const sprootDB: ISprootDB = req.app.get(DI_KEYS.SprootDB);
   let response: SuccessResponse | ErrorResponse;
   try {
-    const { deviceZoneId } = req.params;
-    if (deviceZoneId == null || isNaN(parseInt(deviceZoneId, 10))) {
+    const { deviceZoneId } = req.params as { deviceZoneId: string | undefined };
+    if (deviceZoneId == null || isNaN(parseInt(deviceZoneId as string, 10))) {
       response = {
         statusCode: 400,
         error: {
@@ -172,7 +172,7 @@ export async function deleteAsync(
       };
       return response;
     }
-    const id = parseInt(deviceZoneId, 10);
+    const id = parseInt(deviceZoneId as string, 10);
     await sprootDB.deviceZones.deleteAsync(id);
     response = {
       statusCode: 200,

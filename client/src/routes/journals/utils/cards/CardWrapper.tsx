@@ -24,8 +24,14 @@ export function CardWrapper({
       style={{
         cursor: onClick ? "pointer" : "default",
         transition: "transform 150ms, box-shadow 150ms",
-        background: "var(--mantine-color-white, #fff)",
-        borderColor: "rgba(15, 23, 42, 0.06)",
+        background:
+          "light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))",
+        borderColor:
+          "light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4))",
+        width: "100%",
+        maxWidth: "100%",
+        minWidth: 0,
+        overflow: "hidden",
         ...style,
       }}
       onClick={onClick}

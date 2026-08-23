@@ -1,27 +1,36 @@
+import { Box, Center, Text } from "@mantine/core";
 import {
   getLatestImageAsync,
   getLivestreamAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
+import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { useQuery } from "@tanstack/react-query";
 import { Fragment } from "react/jsx-runtime";
 import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 
-export default function ImageOrVideoDisplay() {
+export default function ImageOrVideoDisplay({
+  camera,
+}: {
+  camera: SDBCameraSettings;
+}) {
+  const hasCaptureUrl = camera.captureUrl.trim() !== "";
+  const hasStreamUrl = camera.streamUrl.trim() !== "";
   const [showStream, setShowStream] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const latestImageObjectUrlRef = useRef<string | null>(null);
 
   const imageQuery = useQuery({
-    queryKey: ["latest-image"],
-    queryFn: () => getLatestImageAsync(),
+    queryKey: ["latest-image", camera.id],
+    queryFn: () => getLatestImageAsync(camera.id),
     refetchInterval: showStream ? false : 60000,
+    enabled: hasCaptureUrl,
   });
 
   const streamQuery = useQuery({
-    queryKey: ["livestream"],
-    queryFn: () => getLivestreamAsync(),
-    enabled: showStream,
+    queryKey: ["livestream", camera.id],
+    queryFn: () => getLivestreamAsync(camera.id),
+    enabled: showStream && hasStreamUrl,
   });
 
   useEffect(() => {
@@ -53,29 +62,53 @@ export default function ImageOrVideoDisplay() {
   const stopStream = async () => {
     imgRef.current?.removeAttribute("src");
     setShowStream(false);
-    await imageQuery.refetch();
+    if (hasCaptureUrl) {
+      await imageQuery.refetch();
+    }
   };
 
   const displaySource =
-    showStream && typeof streamQuery.data === "string"
+    showStream && hasStreamUrl && typeof streamQuery.data === "string"
       ? streamQuery.data
-      : typeof imageQuery.data === "string"
+      : hasCaptureUrl && typeof imageQuery.data === "string"
         ? imageQuery.data
         : undefined;
+  const shouldShowPlaceholder = displaySource === undefined;
+  const canToggleStream = hasStreamUrl;
+  const placeholderLabel = hasStreamUrl
+    ? `Start ${camera.name} live stream`
+    : "Waiting for latest capture";
 
   return (
     <Fragment>
-      <div style={{ position: "relative" }}>
-        <img
-          ref={imgRef}
-          src={displaySource}
-          alt="Camera stream"
-          style={{
-            display: "block",
-            width: "100%",
-            borderRadius: "var(--mantine-radius-sm)",
-          }}
-        />
+      <Box style={{ position: "relative" }}>
+        {shouldShowPlaceholder ? (
+          <Center
+            style={{
+              display: "flex",
+              width: "100%",
+              minHeight: 320,
+              background: "#111",
+              borderRadius: "var(--mantine-radius-sm)",
+            }}
+          >
+            <Text c="dimmed">{placeholderLabel}</Text>
+          </Center>
+        ) : (
+          <img
+            ref={imgRef}
+            src={displaySource}
+            alt={`${camera.name} stream`}
+            style={{
+              display: "block",
+              width: "100%",
+              minHeight: 320,
+              objectFit: "cover",
+              background: "#111",
+              borderRadius: "var(--mantine-radius-sm)",
+            }}
+          />
+        )}
         <div
           style={{
             position: "absolute",
@@ -83,9 +116,13 @@ export default function ImageOrVideoDisplay() {
             left: 0,
             width: "100%",
             height: "100%",
-            cursor: "pointer",
+            cursor: canToggleStream ? "pointer" : "default",
           }}
           onClick={async () => {
+            if (!canToggleStream) {
+              return;
+            }
+
             if (showStream) {
               await stopStream();
               return;
@@ -94,7 +131,7 @@ export default function ImageOrVideoDisplay() {
             setShowStream(true);
           }}
         >
-          {showStream ? (
+          {canToggleStream && showStream ? (
             <IconPlayerPause
               style={{
                 position: "absolute",
@@ -105,7 +142,7 @@ export default function ImageOrVideoDisplay() {
               }}
               color="var(--mantine-color-blue-filled)"
             />
-          ) : (
+          ) : canToggleStream ? (
             <IconPlayerPlay
               style={{
                 position: "absolute",
@@ -115,9 +152,9 @@ export default function ImageOrVideoDisplay() {
               }}
               color="var(--mantine-color-blue-filled)"
             />
-          )}
+          ) : null}
         </div>
-      </div>
+      </Box>
     </Fragment>
   );
 }

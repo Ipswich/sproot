@@ -9,7 +9,30 @@ export class CameraRepository extends BaseKnexRepository implements ICameraRepos
   }
 
   async getAllAsync(): Promise<SDBCameraSettings[]> {
-    return this.connection("camera_settings").select("*");
+    return this.connection("camera_settings").select("*").orderBy("id", "asc");
+  }
+
+  async getByIdAsync(id: number): Promise<SDBCameraSettings | null> {
+    const camera = await this.connection("camera_settings").where("id", id).first();
+    return camera ?? null;
+  }
+
+  async addAsync(cameraSettings: Omit<SDBCameraSettings, "id">): Promise<number> {
+    return this.insertAndGetIdAsync("camera_settings", {
+      enabled: cameraSettings.enabled,
+      name: cameraSettings.name,
+      captureUrl: cameraSettings.captureUrl,
+      streamUrl: cameraSettings.streamUrl,
+      healthUrl: cameraSettings.healthUrl,
+      timelapseEnabled: cameraSettings.timelapseEnabled,
+      imageRetentionDays: cameraSettings.imageRetentionDays,
+      imageRetentionSize: cameraSettings.imageRetentionSize,
+      timelapseInterval: cameraSettings.timelapseInterval,
+      timelapseStartTime: cameraSettings.timelapseStartTime,
+      timelapseStartOffsetSeconds: cameraSettings.timelapseStartOffsetSeconds,
+      timelapseEndTime: cameraSettings.timelapseEndTime,
+      timelapseEndOffsetSeconds: cameraSettings.timelapseEndOffsetSeconds,
+    });
   }
 
   async updateAsync(cameraSettings: SDBCameraSettings): Promise<void> {
@@ -17,17 +40,21 @@ export class CameraRepository extends BaseKnexRepository implements ICameraRepos
       id: cameraSettings.id,
       enabled: cameraSettings.enabled,
       name: cameraSettings.name,
-      xVideoResolution: cameraSettings.xVideoResolution,
-      yVideoResolution: cameraSettings.yVideoResolution,
-      videoFps: cameraSettings.videoFps,
-      xImageResolution: cameraSettings.xImageResolution,
-      yImageResolution: cameraSettings.yImageResolution,
+      captureUrl: cameraSettings.captureUrl,
+      streamUrl: cameraSettings.streamUrl,
+      healthUrl: cameraSettings.healthUrl,
       timelapseEnabled: cameraSettings.timelapseEnabled,
       imageRetentionDays: cameraSettings.imageRetentionDays,
       imageRetentionSize: cameraSettings.imageRetentionSize,
       timelapseInterval: cameraSettings.timelapseInterval,
       timelapseStartTime: cameraSettings.timelapseStartTime,
+      timelapseStartOffsetSeconds: cameraSettings.timelapseStartOffsetSeconds,
       timelapseEndTime: cameraSettings.timelapseEndTime,
+      timelapseEndOffsetSeconds: cameraSettings.timelapseEndOffsetSeconds,
     });
+  }
+
+  async deleteAsync(cameraId: number): Promise<void> {
+    await this.connection("camera_settings").where("id", cameraId).delete();
   }
 }

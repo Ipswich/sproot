@@ -17,6 +17,187 @@ import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 import { DateRangeCondition } from "../../../../automation/conditions/DateRangeCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
+import { TimeConditionPhaseAnchorType } from "@sproot/common/automation/ITimeCondition";
+import { isDynamicTimePoint } from "@sproot/common/automation/TimeConditionTimePoints";
+import { SettingsService } from "../../../../settings/SettingsService";
+import { SETTINGS } from "../../../../database/settings/SettingsSchema";
+
+const TIME_REGEX = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
+const TIME_CONDITION_PHASE_ANCHOR_TYPES: TimeConditionPhaseAnchorType[] = [
+  "default",
+  "epoch",
+  "window",
+  "clock",
+  "fixed",
+];
+
+type TimeConditionConfig = {
+  startTime: string | null;
+  startOffsetSeconds: number | null;
+  endTime: string | null;
+  endOffsetSeconds: number | null;
+  repeatInterval: number | null;
+  repeatDuration: number | null;
+  phaseAnchorType: TimeConditionPhaseAnchorType | null;
+  phaseAnchorValue: string | null;
+};
+
+function isValidOffsetSeconds(value: number | null): boolean {
+  return value == null || Number.isInteger(value);
+}
+
+function validateTimeConditionConfig(config: TimeConditionConfig, invalidFields: string[]): void {
+  if (config.startTime != null && !isValidTimeExpression(config.startTime)) {
+    invalidFields.push("Invalid or missing start time.");
+  }
+  if (config.endTime != null && !isValidTimeExpression(config.endTime)) {
+    invalidFields.push("Invalid or missing end time.");
+  }
+  if (config.startTime == null && config.endTime != null) {
+    invalidFields.push("End time requires a start time.");
+  }
+  if (!isValidOffsetSeconds(config.startOffsetSeconds)) {
+    invalidFields.push("Start offset must be a whole number of seconds.");
+  }
+  if (!isValidOffsetSeconds(config.endOffsetSeconds)) {
+    invalidFields.push("End offset must be a whole number of seconds.");
+  }
+  if (config.startOffsetSeconds != null) {
+    if (config.startTime == null) {
+      invalidFields.push("Start offset requires a start time.");
+    } else if (!isDynamicTimePoint(config.startTime)) {
+      invalidFields.push("Start offset is only supported for solar/lunar time points.");
+    }
+  }
+  if (config.endOffsetSeconds != null) {
+    if (config.endTime == null) {
+      invalidFields.push("End offset requires an end time.");
+    } else if (!isDynamicTimePoint(config.endTime)) {
+      invalidFields.push("End offset is only supported for solar/lunar time points.");
+    }
+  }
+
+  const hasRepeatInterval = config.repeatInterval != null;
+  const hasRepeatDuration = config.repeatDuration != null;
+  if (hasRepeatInterval !== hasRepeatDuration) {
+    invalidFields.push(
+      "Repeat interval and repeat duration must either both be set or both be null.",
+    );
+  }
+
+  if (!hasRepeatInterval) {
+    if (config.phaseAnchorType != null || config.phaseAnchorValue != null) {
+      invalidFields.push("Phase anchor requires a repeat pattern.");
+    }
+    return;
+  }
+
+  if (!Number.isInteger(config.repeatInterval) || config.repeatInterval! <= 0) {
+    invalidFields.push("Repeat interval must be a positive integer number of minutes.");
+  }
+  if (!Number.isInteger(config.repeatDuration) || config.repeatDuration! <= 0) {
+    invalidFields.push("Repeat duration must be a positive integer number of minutes.");
+  }
+  if (
+    config.repeatInterval != null &&
+    config.repeatDuration != null &&
+    config.repeatDuration >= config.repeatInterval
+  ) {
+    invalidFields.push("Repeat duration must be less than repeat interval.");
+  }
+  if (config.startTime != null && config.endTime == null) {
+    invalidFields.push("Once schedules do not support repeat patterns.");
+  }
+
+  if (
+    config.phaseAnchorType != null &&
+    !TIME_CONDITION_PHASE_ANCHOR_TYPES.includes(config.phaseAnchorType)
+  ) {
+    invalidFields.push("Invalid phase anchor type.");
+    return;
+  }
+
+  switch (config.phaseAnchorType) {
+    case "clock":
+      if (config.phaseAnchorValue == null || !isValidTimeExpression(config.phaseAnchorValue)) {
+        invalidFields.push(
+          "Time-point phase anchors require either an HH:MM value or a supported solar/lunar point.",
+        );
+      }
+      return;
+    case "fixed":
+      if (
+        config.phaseAnchorValue == null ||
+        Number.isNaN(new Date(config.phaseAnchorValue).getTime())
+      ) {
+        invalidFields.push("Fixed phase anchors require a valid absolute timestamp.");
+      }
+      return;
+    case "window":
+      if (config.startTime == null || config.endTime == null) {
+        invalidFields.push("Window phase anchors require a between window.");
+      }
+      if (config.phaseAnchorValue != null) {
+        invalidFields.push("Window phase anchors do not accept a phase anchor value.");
+      }
+      return;
+    case "epoch":
+    case "default":
+    case null:
+      if (config.phaseAnchorValue != null) {
+        invalidFields.push("This phase anchor type does not accept a phase anchor value.");
+      }
+      return;
+  }
+}
+
+function isValidTimeExpression(value: string): boolean {
+  return TIME_REGEX.test(value) || isDynamicTimePoint(value);
+}
+
+async function validateDynamicTimeDependenciesAsync(
+  settingsService: SettingsService,
+  config: TimeConditionConfig,
+  invalidFields: string[],
+): Promise<void> {
+  const usesDynamicPoint = [config.startTime, config.endTime, config.phaseAnchorValue].some(
+    (value): value is string => value != null && isDynamicTimePoint(value),
+  );
+  if (!usesDynamicPoint) {
+    return;
+  }
+
+  const settings = await settingsService.getManyAsync([
+    SETTINGS.system.latitude,
+    SETTINGS.system.longitude,
+  ]);
+
+  if (typeof settings[SETTINGS.system.latitude] !== "string") {
+    invalidFields.push("Dynamic solar/lunar time points require system.latitude to be configured.");
+  }
+  if (typeof settings[SETTINGS.system.longitude] !== "string") {
+    invalidFields.push(
+      "Dynamic solar/lunar time points require system.longitude to be configured.",
+    );
+  }
+}
+
+function normalizeTimeConditionConfig(partial: Partial<TimeConditionConfig>): TimeConditionConfig {
+  return {
+    startTime: partial.startTime ?? null,
+    startOffsetSeconds: partial.startOffsetSeconds ?? null,
+    endTime: partial.endTime ?? null,
+    endOffsetSeconds: partial.endOffsetSeconds ?? null,
+    repeatInterval: partial.repeatInterval ?? null,
+    repeatDuration: partial.repeatDuration ?? null,
+    phaseAnchorType: partial.phaseAnchorType ?? null,
+    phaseAnchorValue: partial.phaseAnchorValue ?? null,
+  };
+}
+
+function getDefinedOrFallback<T>(value: T | undefined, fallback: T): T {
+  return value === undefined ? fallback : value;
+}
 
 /**
  * Possible statusCodes: 200, 400, 401, 404, 503
@@ -30,7 +211,7 @@ export async function getAllAsync(
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let getAllConditionsResponse: SuccessResponse | ErrorResponse;
 
-  const automationId = parseInt(request.params["automationId"] ?? "");
+  const automationId = parseInt(request.params["automationId"] as string);
 
   const invalidFields = [];
   if (isNaN(automationId)) {
@@ -137,8 +318,8 @@ export async function getByTypeAsync(
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let getConditionResponse: SuccessResponse | ErrorResponse;
 
-  const automationId = parseInt(request.params["automationId"] ?? "");
-  const type = request.params["type"] ?? "";
+  const automationId = parseInt(request.params["automationId"] as string);
+  const type = request.params["type"] as string;
 
   const invalidFields = [];
   if (isNaN(automationId)) {
@@ -242,9 +423,9 @@ export async function getOneOfByTypeAsync(
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let getConditionResponse: SuccessResponse | ErrorResponse;
 
-  const automationId = parseInt(request.params["automationId"] ?? "");
-  const type = request.params["type"] ?? "";
-  const conditionId = parseInt(request.params["conditionId"] ?? "");
+  const automationId = parseInt(request.params["automationId"] as string);
+  const type = request.params["type"] as string;
+  const conditionId = parseInt(request.params["conditionId"] as string);
 
   const invalidFields = [];
   if (isNaN(automationId)) {
@@ -369,10 +550,11 @@ export async function addAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
+  const settingsService = request.app.get(DI_KEYS.SettingsService) as SettingsService;
   let addConditionResponse: SuccessResponse | ErrorResponse;
 
-  const automationId = parseInt(request.params["automationId"] ?? "");
-  const conditionType = request.params["type"] as
+  const automationId = parseInt(request.params["automationId"] as string);
+  const conditionType = request.params["type"] as string as
     "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
 
   const invalidDetails = [];
@@ -506,27 +688,45 @@ export async function addAsync(
         );
         break;
       case "time": {
-        const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
-        if (request.body.startTime != null && !regex.test(request.body.startTime)) {
-          invalidFields.push("Invalid or missing start time.");
-        }
-        if (request.body.endTime != null && !regex.test(request.body.endTime)) {
-          invalidFields.push("Invalid or missing end time.");
-        }
+        const config = normalizeTimeConditionConfig({
+          startTime: request.body.startTime,
+          startOffsetSeconds: request.body.startOffsetSeconds,
+          endTime: request.body.endTime,
+          endOffsetSeconds: request.body.endOffsetSeconds,
+          repeatInterval: request.body.repeatInterval,
+          repeatDuration: request.body.repeatDuration,
+          phaseAnchorType: request.body.phaseAnchorType,
+          phaseAnchorValue: request.body.phaseAnchorValue,
+        });
+        validateTimeConditionConfig(config, invalidFields);
+        await validateDynamicTimeDependenciesAsync(settingsService, config, invalidFields);
         if (invalidFields.length > 0) {
           break;
         }
         resultId = await automationService.addTimeConditionAsync(
           automationId,
           request.body.groupType,
-          request.body.startTime ?? null,
-          request.body.endTime ?? null,
+          config.startTime,
+          config.startOffsetSeconds,
+          config.endTime,
+          config.endOffsetSeconds,
+          config.repeatInterval,
+          config.repeatDuration,
+          config.phaseAnchorType,
+          config.phaseAnchorValue,
         );
         creationResult = new TimeCondition(
           resultId,
           request.body.groupType,
-          request.body.startTime ?? null,
-          request.body.endTime ?? null,
+          config.startTime,
+          config.endTime,
+          config.repeatInterval,
+          config.repeatDuration,
+          config.phaseAnchorType,
+          config.phaseAnchorValue,
+          automationService.timeExpressionResolver,
+          config.startOffsetSeconds,
+          config.endOffsetSeconds,
         );
         break;
       }
@@ -671,11 +871,12 @@ export async function updateAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
+  const settingsService = request.app.get(DI_KEYS.SettingsService) as SettingsService;
   let updateConditionResponse: SuccessResponse | ErrorResponse;
 
-  const automationId = parseInt(request.params["automationId"] ?? "");
-  const conditionId = parseInt(request.params["conditionId"] ?? "");
-  const conditionType = request.params["type"] ?? "";
+  const automationId = parseInt(request.params["automationId"] as string);
+  const conditionId = parseInt(request.params["conditionId"] as string);
+  const conditionType = request.params["type"] as string;
 
   const invalidDetails = [];
   if (isNaN(automationId)) {
@@ -863,26 +1064,50 @@ export async function updateAsync(
       }
       case "time": {
         const sdbTimeCondition = sdbcondition as SDBTimeCondition;
+        const config = normalizeTimeConditionConfig({
+          startTime: getDefinedOrFallback(request.body.startTime, sdbTimeCondition.startTime),
+          startOffsetSeconds: getDefinedOrFallback(
+            request.body.startOffsetSeconds,
+            sdbTimeCondition.startOffsetSeconds,
+          ),
+          endTime: getDefinedOrFallback(request.body.endTime, sdbTimeCondition.endTime),
+          endOffsetSeconds: getDefinedOrFallback(
+            request.body.endOffsetSeconds,
+            sdbTimeCondition.endOffsetSeconds,
+          ),
+          repeatInterval: getDefinedOrFallback(
+            request.body.repeatInterval,
+            sdbTimeCondition.repeatInterval,
+          ),
+          repeatDuration: getDefinedOrFallback(
+            request.body.repeatDuration,
+            sdbTimeCondition.repeatDuration,
+          ),
+          phaseAnchorType: getDefinedOrFallback(
+            request.body.phaseAnchorType,
+            sdbTimeCondition.phaseAnchorType,
+          ),
+          phaseAnchorValue: getDefinedOrFallback(
+            request.body.phaseAnchorValue,
+            sdbTimeCondition.phaseAnchorValue,
+          ),
+        });
 
         condition = new TimeCondition(
           sdbTimeCondition.id,
           sdbTimeCondition.groupType,
-          sdbTimeCondition.startTime,
-          sdbTimeCondition.endTime,
+          config.startTime,
+          config.endTime,
+          config.repeatInterval,
+          config.repeatDuration,
+          config.phaseAnchorType,
+          config.phaseAnchorValue,
+          automationService.timeExpressionResolver,
+          config.startOffsetSeconds,
+          config.endOffsetSeconds,
         );
-        if (request.body.startTime !== undefined) {
-          condition.startTime = request.body.startTime;
-        }
-        if (request.body.endTime !== undefined) {
-          condition.endTime = request.body.endTime;
-        }
-        const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
-        if (condition.startTime != null && !regex.test(condition.startTime)) {
-          invalidDetails.push("Invalid start time.");
-        }
-        if (condition.endTime != null && !regex.test(condition.endTime)) {
-          invalidDetails.push("Invalid end time.");
-        }
+        validateTimeConditionConfig(config, invalidDetails);
+        await validateDynamicTimeDependenciesAsync(settingsService, config, invalidDetails);
         if (invalidDetails.length > 0) {
           break;
         }
@@ -1030,9 +1255,9 @@ export async function deleteAsync(
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   let deleteConditionResponse: SuccessResponse | ErrorResponse;
 
-  const automationId = parseInt(request.params["automationId"] ?? "");
-  const conditionId = parseInt(request.params["conditionId"] ?? "");
-  const conditionType = request.params["type"] as
+  const automationId = parseInt(request.params["automationId"] as string);
+  const conditionId = parseInt(request.params["conditionId"] as string);
+  const conditionType = request.params["type"] as string as
     "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
 
   const invalidDetails = [];
@@ -1122,22 +1347,22 @@ export async function deleteAsync(
     }
 
     if (conditionType === "sensor") {
-      await automationService.deleteSensorConditionAsync(conditionId);
+      await automationService.deleteSensorConditionAsync(automationId, conditionId);
     }
     if (conditionType === "output") {
-      await automationService.deleteOutputConditionAsync(conditionId);
+      await automationService.deleteOutputConditionAsync(automationId, conditionId);
     }
     if (conditionType === "time") {
-      await automationService.deleteTimeConditionAsync(conditionId);
+      await automationService.deleteTimeConditionAsync(automationId, conditionId);
     }
     if (conditionType === "weekday") {
-      await automationService.deleteWeekdayConditionAsync(conditionId);
+      await automationService.deleteWeekdayConditionAsync(automationId, conditionId);
     }
     if (conditionType === "month") {
-      await automationService.deleteMonthConditionAsync(conditionId);
+      await automationService.deleteMonthConditionAsync(automationId, conditionId);
     }
     if (conditionType === "date-range") {
-      await automationService.deleteDateRangeConditionAsync(conditionId);
+      await automationService.deleteDateRangeConditionAsync(automationId, conditionId);
     }
 
     deleteConditionResponse = {

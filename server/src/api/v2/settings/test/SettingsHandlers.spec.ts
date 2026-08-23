@@ -22,6 +22,9 @@ describe("SettingsHandlers", () => {
         [SETTINGS.sensors.data_retention]: "30 days",
         [SETTINGS.outputs.data_retention]: "60 days",
         [SETTINGS.system.backup_retention]: "30 days",
+        [SETTINGS.system.log_debug]: false,
+        [SETTINGS.system.latitude]: "40.7128",
+        [SETTINGS.system.longitude]: "-74.0060",
       }),
       setAsync: sandbox.stub().resolves(),
     };
@@ -258,18 +261,35 @@ describe("SettingsHandlers", () => {
         assert.equal((mockService.setAsync as any).callCount, 2);
       });
 
-      it("should NOT validate duration for system.backup_retention", async () => {
+      it("should validate duration for system.backup_retention", async () => {
         mockRequest.body = { [SETTINGS.system.backup_retention]: "not a duration" };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
+
+        assert.equal(result.statusCode, 400);
+        assert.include(result.error!.details[0], "does not match expected format");
+        assert.isTrue((mockService.setAsync as any).notCalled);
+      });
+
+      it("should accept boolean values for system.log_debug", async () => {
+        mockRequest.body = { [SETTINGS.system.log_debug]: true };
 
         const result = (await updateSettingsAsync(mockRequest, mockResponse)) as SuccessResponse;
 
         assert.equal(result.statusCode, 200);
         assert.isTrue(
-          (mockService.setAsync as any).calledOnceWith(
-            SETTINGS.system.backup_retention,
-            "not a duration",
-          ),
+          (mockService.setAsync as any).calledOnceWith(SETTINGS.system.log_debug, true),
         );
+      });
+
+      it("should reject non-boolean values for system.log_debug", async () => {
+        mockRequest.body = { [SETTINGS.system.log_debug]: "true" };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
+
+        assert.equal(result.statusCode, 400);
+        assert.include(result.error!.details[0], "expected boolean");
+        assert.isTrue((mockService.setAsync as any).notCalled);
       });
 
       it("should return 400 with errors from multiple retention keys", async () => {
@@ -304,6 +324,36 @@ describe("SettingsHandlers", () => {
         assert.equal(result.statusCode, 400);
         assert.include(result.error!.details[0], "empty");
         assert.isTrue((mockService.setAsync as any).notCalled);
+      });
+
+      it("should accept valid latitude and longitude settings", async () => {
+        mockRequest.body = {
+          [SETTINGS.system.latitude]: "40.7128",
+          [SETTINGS.system.longitude]: "-74.0060",
+        };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+        assert.equal(result.statusCode, 200);
+        assert.equal((mockService.setAsync as any).callCount, 2);
+      });
+
+      it("should reject an invalid latitude", async () => {
+        mockRequest.body = { [SETTINGS.system.latitude]: "100.0" };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
+
+        assert.equal(result.statusCode, 400);
+        assert.include(result.error!.details[0], "must be between -90 and 90");
+      });
+
+      it("should reject an invalid longitude", async () => {
+        mockRequest.body = { [SETTINGS.system.longitude]: "nope" };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
+
+        assert.equal(result.statusCode, 400);
+        assert.include(result.error!.details[0], "must be a valid number");
       });
     });
   });

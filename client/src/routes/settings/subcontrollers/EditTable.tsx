@@ -1,10 +1,12 @@
 import {
+  Button,
   Modal,
   TextInput,
   ScrollArea,
   Group,
+  Paper,
   Stack,
-  ActionIcon,
+  Text,
 } from "@mantine/core";
 import { Fragment, useState } from "react";
 import {
@@ -22,23 +24,68 @@ import { SubcontrollerFormValues } from "./NewSubcontrollerModal";
 import {
   IconAntennaBars5,
   IconAntennaBarsOff,
-  IconDeviceFloppy,
   IconLoader,
 } from "@tabler/icons-react";
 import UpdateFirmwareContainer from "./UpdateFirmwareContainer";
 import ConfirmDeleteButton from "../../../components/ConfirmDeleteButton";
+import { useMediaQuery } from "@mantine/hooks";
 
 interface EditTableProps {
   subcontrollers: ISubcontroller[];
   setIsStale: (isStale: boolean) => void;
+  sortBy?: "name" | "id";
+  sortDir?: "asc" | "desc";
+}
+
+function SubcontrollerConnectionIndicator({
+  deviceId,
+}: {
+  deviceId: number | undefined;
+}) {
+  const connectionStatusQuery = useQuery<{
+    online: boolean;
+    version?: string;
+  }>({
+    queryKey: ["subcontroller-connection-status", deviceId],
+    queryFn: async () => {
+      if (typeof deviceId === "undefined" || deviceId === null) {
+        return { online: false };
+      }
+      return await getSubcontrollerConnectionStatusAsync(deviceId);
+    },
+  });
+
+  const isConnected =
+    connectionStatusQuery.data?.online === true &&
+    !connectionStatusQuery.isError;
+
+  if (connectionStatusQuery.isLoading) {
+    return (
+      <IconLoader
+        size="28px"
+        className="animate-spin"
+        color="var(--mantine-color-gray-filled)"
+      />
+    );
+  }
+
+  return isConnected ? (
+    <IconAntennaBars5 size="28px" color="var(--mantine-color-green-filled)" />
+  ) : (
+    <IconAntennaBarsOff size="28px" color="var(--mantine-color-red-filled)" />
+  );
 }
 
 export default function EditTable({
   subcontrollers: subcontrollers,
   setIsStale,
+  sortBy,
+  sortDir,
 }: EditTableProps) {
+  const isMobile = useMediaQuery("(max-width: 48em)");
   const revalidator = useRevalidator();
   const [selectedDevice, setSelectedDevice] = useState({} as ISubcontroller);
+  const [shouldResetAfterClose, setShouldResetAfterClose] = useState(false);
   const [
     newSubcontrollerModalOpened,
     { open: newSubcontrollerOpenModal, close: newSubcontrollerCloseModal },
@@ -93,6 +140,7 @@ export default function EditTable({
   });
 
   const editTableOnClick = function (device: ISubcontroller) {
+    setShouldResetAfterClose(false);
     setSelectedDevice(device);
     updateDeviceForm.setFieldValue("name", device.name ?? "");
     updateDeviceForm.setFieldValue("id", device.id);
@@ -106,15 +154,23 @@ export default function EditTable({
           backgroundOpacity: 0.55,
           blur: 3,
         }}
+        fullScreen={isMobile}
         scrollAreaComponent={ScrollArea.Autosize}
         centered
-        size="xs"
+        size="md"
+        padding={isMobile ? "md" : "lg"}
         opened={newSubcontrollerModalOpened}
-        onClose={() => {
+        onExitTransitionEnd={() => {
+          if (!shouldResetAfterClose) return;
+          setSelectedDevice({} as ISubcontroller);
           updateDeviceForm.reset();
+          setShouldResetAfterClose(false);
+        }}
+        onClose={() => {
+          setShouldResetAfterClose(true);
           newSubcontrollerCloseModal();
         }}
-        title="Edit"
+        title="Edit Subcontroller"
       >
         <form
           onSubmit={updateDeviceForm.onSubmit(async (values) => {
@@ -125,8 +181,7 @@ export default function EditTable({
               hostName: selectedDevice.hostName,
             });
             setIsUpdating(false);
-            setSelectedDevice({} as ISubcontroller);
-            updateDeviceForm.reset();
+            setShouldResetAfterClose(true);
             newSubcontrollerCloseModal();
           })}
         >
@@ -135,39 +190,56 @@ export default function EditTable({
             required
             {...updateDeviceForm.getInputProps("id")}
           />
-          <Stack>
-            <TextInput
-              maxLength={64}
-              label="Name"
-              placeholder={selectedDevice.name || ""}
-              rightSection={
-                selectedDevice == null ? null : (
-                  <ActionIcon type="submit">
-                    <IconDeviceFloppy />
-                  </ActionIcon>
-                )
-              }
-              {...updateDeviceForm.getInputProps("name")}
-            />
+          <Stack gap="md">
+            <Paper withBorder radius="lg" p={isMobile ? "md" : "lg"}>
+              <Stack gap="xs">
+                <Text fw={600}>
+                  {selectedDevice.name ?? "Subcontroller details"}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  Rename this device and manage firmware updates from the same
+                  place.
+                </Text>
+              </Stack>
+            </Paper>
+            <Paper withBorder radius="md" p="md">
+              <Stack gap="md">
+                <TextInput
+                  maxLength={64}
+                  label="Name"
+                  placeholder={selectedDevice.name || ""}
+                  {...updateDeviceForm.getInputProps("name")}
+                />
+              </Stack>
+            </Paper>
 
             <UpdateFirmwareContainer id={selectedDevice.id} />
+
+            <Group justify="space-between" mt="xs" wrap="wrap">
+              <Button
+                variant="light"
+                type="submit"
+                disabled={isUpdating}
+                fullWidth={isMobile}
+              >
+                Save Changes
+              </Button>
+              <ConfirmDeleteButton
+                disabled={isUpdating}
+                buttonProps={{ variant: "light", fullWidth: isMobile }}
+                onConfirm={async () => {
+                  setIsUpdating(true);
+                  await deleteSubcontrollerMutation.mutateAsync(
+                    selectedDevice.id,
+                  );
+                  delete subcontrollers[selectedDevice.id];
+                  setIsUpdating(false);
+                  setShouldResetAfterClose(true);
+                  newSubcontrollerCloseModal();
+                }}
+              />
+            </Group>
           </Stack>
-          <Group justify="space-between" mt="md">
-            <ConfirmDeleteButton
-              disabled={isUpdating}
-              onConfirm={async () => {
-                setIsUpdating(true);
-                await deleteSubcontrollerMutation.mutateAsync(
-                  selectedDevice.id,
-                );
-                delete subcontrollers[selectedDevice.id];
-                setIsUpdating(false);
-                setSelectedDevice({} as ISubcontroller);
-                updateDeviceForm.reset();
-                newSubcontrollerCloseModal();
-              }}
-            />
-          </Group>
         </form>
       </Modal>
       {
@@ -177,52 +249,15 @@ export default function EditTable({
             onEditClick={(item) => {
               editTableOnClick(item as ISubcontroller);
             }}
+            sortBy={sortBy}
+            sortDir={sortDir}
+            showSortControl={false}
             tableLeftComponent={{
               label: "",
               Component: (editable: unknown) => {
                 const device = editable as ISubcontroller;
-                const connectionStatusQuery = useQuery<{
-                  online: boolean;
-                  version?: string;
-                }>({
-                  queryKey: ["subcontroller-connection-status", device.id],
-                  queryFn: async () => {
-                    if (
-                      typeof device.id === "undefined" ||
-                      device.id === null
-                    ) {
-                      return { online: false };
-                    }
-                    return await getSubcontrollerConnectionStatusAsync(
-                      device.id,
-                    );
-                  },
-                });
-
-                const isConnected =
-                  connectionStatusQuery.data?.online === true &&
-                  !connectionStatusQuery.isError;
-
                 return (
-                  <Fragment>
-                    {connectionStatusQuery.isLoading ? (
-                      <IconLoader
-                        size="28px"
-                        className="animate-spin"
-                        color="var(--mantine-color-gray-filled)"
-                      />
-                    ) : isConnected ? (
-                      <IconAntennaBars5
-                        size="28px"
-                        color="var(--mantine-color-green-filled)"
-                      />
-                    ) : (
-                      <IconAntennaBarsOff
-                        size="28px"
-                        color="var(--mantine-color-red-filled)"
-                      />
-                    )}
-                  </Fragment>
+                  <SubcontrollerConnectionIndicator deviceId={device.id} />
                 );
               },
             }}

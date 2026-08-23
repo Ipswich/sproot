@@ -1,4 +1,4 @@
-import { Table } from "@mantine/core";
+import { Group, Paper, Stack } from "@mantine/core";
 import { ReactNode } from "react";
 import ConfirmDeleteButton from "../../components/ConfirmDeleteButton";
 
@@ -16,33 +16,25 @@ export default function DeletablesTable({
   readOnly = false,
 }: DeletablesTableProps) {
   return (
-    <Table
-      highlightOnHover
-      style={{
-        marginLeft: "auto",
-        marginRight: "auto",
-      }}
-    >
-      <Table.Thead>
-        <Table.Tr></Table.Tr>
-      </Table.Thead>
-      <Table.Tbody>
-        {Object.values(deletables).map((deletable) => (
-          <Table.Tr key={deletable.id}>
-            <Table.Td px="0px" align="center">
-              {deletable.displayLabel}
-            </Table.Td>
+    <Stack gap="sm">
+      {Object.values(deletables).map((deletable) => (
+        <Paper key={deletable.id} withBorder radius="md" p="sm">
+          <Group align="center" justify="space-between" wrap="nowrap">
+            <div style={{ flex: 1, minWidth: 0 }}>{deletable.displayLabel}</div>
             {!readOnly && (
-              <Table.Td align="center" w={"40px"}>
-                <ConfirmDeleteButton
-                  kind="icon"
-                  onConfirm={() => deletable.deleteFn(deletable.id)}
-                />
-              </Table.Td>
+              <ConfirmDeleteButton
+                kind="icon"
+                actionIconProps={{
+                  variant: "light",
+                  size: "lg",
+                  radius: "xl",
+                }}
+                onConfirm={() => deletable.deleteFn(deletable.id)}
+              />
             )}
-          </Table.Tr>
-        ))}
-      </Table.Tbody>
-    </Table>
+          </Group>
+        </Paper>
+      ))}
+    </Stack>
   );
 }

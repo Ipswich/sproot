@@ -13,6 +13,7 @@ export const DI_KEYS = {
   LogHistoryService: "logHistoryService",
   SettingsService: "settingsService",
   RetentionService: "retentionService",
+  DebugLoggingService: "debugLoggingService",
 
   // Infrastructure
   KnexConnection: "knexConnection",

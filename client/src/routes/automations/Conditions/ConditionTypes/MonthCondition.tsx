@@ -6,7 +6,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "@mantine/form";
 import { Fragment } from "react/jsx-runtime";
-import { Group, Button, Stack, Space, Chip } from "@mantine/core";
+import { Button, Chip, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
 
 export interface MonthConditionProps {
   toggleAddNewCondition: () => void;
@@ -80,121 +80,123 @@ export default function MonthCondition({
           toggleAddNewCondition();
         })}
       >
-        <Stack>
-          <Group justify="center" gap={"0px"}>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={monthConditionForm.values["january"]}
-              {...monthConditionForm.getInputProps("january")}
-            >
-              Jan
-            </Chip>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={monthConditionForm.values["february"]}
-              {...monthConditionForm.getInputProps("february")}
-            >
-              Feb
-            </Chip>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={monthConditionForm.values["march"]}
-              {...monthConditionForm.getInputProps("march")}
-            >
-              Mar
-            </Chip>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={monthConditionForm.values["april"]}
-              {...monthConditionForm.getInputProps("april")}
-            >
-              Apr
-            </Chip>
-          </Group>
-          <Group justify="center" gap={"0px"}>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={monthConditionForm.values["may"]}
-              {...monthConditionForm.getInputProps("may")}
-            >
-              May
-            </Chip>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={monthConditionForm.values["june"]}
-              {...monthConditionForm.getInputProps("june")}
-            >
-              Jun
-            </Chip>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={monthConditionForm.values["july"]}
-              {...monthConditionForm.getInputProps("july")}
-            >
-              Jul
-            </Chip>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={monthConditionForm.values["august"]}
-              {...monthConditionForm.getInputProps("august")}
-            >
-              Aug
-            </Chip>
-          </Group>
-          <Group justify="center" gap={"0px"}>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={monthConditionForm.values["september"]}
-              {...monthConditionForm.getInputProps("september")}
-            >
-              Sep
-            </Chip>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={monthConditionForm.values["october"]}
-              {...monthConditionForm.getInputProps("october")}
-            >
-              Oct
-            </Chip>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={monthConditionForm.values["november"]}
-              {...monthConditionForm.getInputProps("november")}
-            >
-              Nov
-            </Chip>
-            <Chip
-              size="xs"
-              px="0px"
-              checked={monthConditionForm.values["december"]}
-              {...monthConditionForm.getInputProps("december")}
-            >
-              Dec
-            </Chip>
-          </Group>
-          <Group pt="xs" justify="center">
-            <Button
-              type="submit"
-              disabled={Object.values(monthConditionForm.values).every(
-                (month) => month == false,
-              )}
-            >
-              Save
-            </Button>
-          </Group>
+        <Stack gap="md">
+          <Paper withBorder radius="md" p="md">
+            <Stack gap="md">
+              <Text size="sm" c="dimmed">
+                Choose the months when this automation is allowed to run.
+              </Text>
+              <SimpleGrid cols={{ base: 2, xs: 3, sm: 4 }} spacing="xs">
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={monthConditionForm.values["january"]}
+                  {...monthConditionForm.getInputProps("january")}
+                >
+                  Jan
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={monthConditionForm.values["february"]}
+                  {...monthConditionForm.getInputProps("february")}
+                >
+                  Feb
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={monthConditionForm.values["march"]}
+                  {...monthConditionForm.getInputProps("march")}
+                >
+                  Mar
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={monthConditionForm.values["april"]}
+                  {...monthConditionForm.getInputProps("april")}
+                >
+                  Apr
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={monthConditionForm.values["may"]}
+                  {...monthConditionForm.getInputProps("may")}
+                >
+                  May
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={monthConditionForm.values["june"]}
+                  {...monthConditionForm.getInputProps("june")}
+                >
+                  Jun
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={monthConditionForm.values["july"]}
+                  {...monthConditionForm.getInputProps("july")}
+                >
+                  Jul
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={monthConditionForm.values["august"]}
+                  {...monthConditionForm.getInputProps("august")}
+                >
+                  Aug
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={monthConditionForm.values["september"]}
+                  {...monthConditionForm.getInputProps("september")}
+                >
+                  Sep
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={monthConditionForm.values["october"]}
+                  {...monthConditionForm.getInputProps("october")}
+                >
+                  Oct
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={monthConditionForm.values["november"]}
+                  {...monthConditionForm.getInputProps("november")}
+                >
+                  Nov
+                </Chip>
+                <Chip
+                  size="sm"
+                  radius="md"
+                  checked={monthConditionForm.values["december"]}
+                  {...monthConditionForm.getInputProps("december")}
+                >
+                  Dec
+                </Chip>
+              </SimpleGrid>
+            </Stack>
+          </Paper>
+          <Button
+            variant="light"
+            type="submit"
+            fullWidth
+            disabled={Object.values(monthConditionForm.values).every(
+              (month) => month == false,
+            )}
+          >
+            Save Condition
+          </Button>
         </Stack>
-        <Space h={"12px"} />
       </form>
     </Fragment>
   );

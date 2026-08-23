@@ -8,8 +8,24 @@ import {
   deleteMonthConditionAsync,
   deleteDateRangeConditionAsync,
   getConditionsAsync,
+  getApplicationSettingsAsync,
 } from "../../../requests/requests_v2";
-import { Button, Code, Collapse, Group, Space, Title } from "@mantine/core";
+import {
+  Alert,
+  Badge,
+  Box,
+  Button,
+  Code,
+  Collapse,
+  Group,
+  Paper,
+  Space,
+  Stack,
+  ThemeIcon,
+  Title,
+  Text,
+  LoadingOverlay,
+} from "@mantine/core";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
@@ -20,10 +36,23 @@ import { ConditionOperator } from "@sproot/automation/ConditionTypes";
 import { ReadingType, Units } from "@sproot/common/sensors/ReadingType";
 import { ReactNode, useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
+import type { SolarLunarTimesMap } from "./ConditionTypes/useSolarLunarTimes";
 import DeletablesTable from "../../common/DeletablesTable";
 import NewConditionWidget from "./NewConditionWidget";
 import { convertCelsiusToFahrenheit } from "@sproot/common/utility/DisplayFormats";
-import { formatMilitaryTime } from "@sproot/common/utility/TimeMethods";
+import {
+  formatMilitaryTime,
+  formatDateTime,
+} from "@sproot/common/utility/TimeMethods";
+import { getDynamicTimePointLabel } from "@sproot/common/automation/TimeConditionTimePoints";
+import { useSolarLunarTimes } from "./ConditionTypes/useSolarLunarTimes";
+import {
+  IconLogicAnd,
+  IconLogicOr,
+  IconX,
+  IconLogicXor,
+  IconPlus,
+} from "@tabler/icons-react";
 
 export interface ConditionsTableProps {
   automationId: number;
@@ -36,6 +65,14 @@ export default function ConditionsTable({
 }: ConditionsTableProps) {
   const [addNewConditionOpened, { toggle: toggleAddNewCondition }] =
     useDisclosure(false);
+  const settingsQuery = useQuery({
+    queryKey: ["applicationSettings"],
+    queryFn: () => getApplicationSettingsAsync(),
+  });
+  const solarLunarTimes = useSolarLunarTimes(
+    settingsQuery.data?.["system.latitude"] ?? null,
+    settingsQuery.data?.["system.longitude"] ?? null,
+  );
   const conditionsQueryFn = useQuery({
     queryKey: ["conditions", automationId],
     queryFn: async () => {
@@ -154,95 +191,199 @@ export default function ConditionsTable({
   const oneOfConditions = Object.values(conditionsQueryFn.data ?? {})
     .map((conditionType) => conditionType.oneOf)
     .flat();
+
   return (
     <Fragment>
       {conditionsQueryFn.isLoading ? (
-        <Fragment>Loading...</Fragment>
+        <LoadingOverlay
+          style={{ height: "100%", pointerEvents: "none" }}
+          visible={conditionsQueryFn.isLoading}
+          zIndex={90}
+          overlayProps={{
+            backgroundOpacity: 0.92,
+            color: "var(--mantine-color-body)",
+          }}
+          loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+        />
       ) : (
-        <Fragment>
-          {allOfConditions.length != 0 && (
-            <Fragment>
-              <Title order={6}>All Of</Title>
-              <DeletablesTable
-                deletables={allOfConditions
-                  .sort((a, b) => sortTypes(a, b))
-                  .map((condition) => {
-                    return {
-                      displayLabel: mapToType(condition),
-                      id: condition.id,
-                      deleteFn: mapToDeleteConditionMutationAsync(condition),
-                    };
-                  })}
-                readOnly={readOnly ?? false}
-              />
-            </Fragment>
-          )}
-          {anyOfConditions.length != 0 && (
-            <Fragment>
-              <Title order={6}>Any Of</Title>
-              <DeletablesTable
-                deletables={anyOfConditions
-                  .sort((a, b) => sortTypes(a, b))
-                  .map((condition) => {
-                    return {
-                      displayLabel: mapToType(condition),
-                      id: condition.id,
-                      deleteFn: mapToDeleteConditionMutationAsync(condition),
-                    };
-                  })}
-                readOnly={readOnly ?? false}
-              />
-            </Fragment>
-          )}
-          {oneOfConditions.length != 0 && (
-            <Fragment>
-              <Title order={6}>One Of</Title>
-              <DeletablesTable
-                deletables={oneOfConditions
-                  .sort((a, b) => sortTypes(a, b))
-                  .map((condition) => {
-                    return {
-                      displayLabel: mapToType(condition),
-                      id: condition.id,
-                      deleteFn: mapToDeleteConditionMutationAsync(condition),
-                    };
-                  })}
-                readOnly={readOnly ?? false}
-              />
-            </Fragment>
-          )}
+        <Stack gap="xs">
+          {renderConditionGroup({
+            title: "All Of",
+            description: "Every condition must match.",
+            color: "cyan",
+            icon: <IconLogicAnd size={16} />,
+            conditions: allOfConditions,
+            solarLunarTimes,
+            readOnly: readOnly ?? false,
+            mapToDeleteConditionMutationAsync,
+          })}
+          {renderConditionGroup({
+            title: "Any Of",
+            description: "At least one condition must match.",
+            color: "teal",
+            icon: <IconLogicOr size={16} />,
+            conditions: anyOfConditions,
+            solarLunarTimes,
+            readOnly: readOnly ?? false,
+            mapToDeleteConditionMutationAsync,
+          })}
+          {renderConditionGroup({
+            title: "One Of",
+            description: "Exactly one condition must match.",
+            color: "grape",
+            icon: <IconLogicXor size={16} />,
+            conditions: oneOfConditions,
+            solarLunarTimes,
+            readOnly: readOnly ?? false,
+            mapToDeleteConditionMutationAsync,
+          })}
           {allOfConditions.length == 0 &&
             anyOfConditions.length == 0 &&
-            oneOfConditions.length == 0 &&
-            readOnly && <div>None</div>}
+            oneOfConditions.length == 0 && (
+              <Alert color="gray" variant="light" title="No conditions yet">
+                {readOnly
+                  ? "This automation does not have any conditions configured."
+                  : "Add a condition group below to start defining when this automation should run."}
+              </Alert>
+            )}
           {readOnly ? null : (
-            <Fragment>
-              <Group justify="center">
+            <Paper withBorder radius="md" p="md">
+              <Stack gap="sm">
                 <Button
-                  size="sm"
-                  w={"100%"}
                   color="green"
+                  variant="light"
+                  size="sm"
+                  fullWidth
+                  leftSection={
+                    <BuilderToggleIcon opened={addNewConditionOpened} />
+                  }
                   onClick={() => {
                     toggleAddNewCondition();
                   }}
                 >
-                  Add Condition
+                  {addNewConditionOpened
+                    ? "Hide Condition Builder"
+                    : "Show Condition Builder"}
                 </Button>
-              </Group>
-              <Collapse in={addNewConditionOpened} transitionDuration={300}>
-                <Space h={12} />
-                <NewConditionWidget
-                  automationId={automationId}
-                  toggleAddNewCondition={toggleAddNewCondition}
-                />
-              </Collapse>
-            </Fragment>
+                <Collapse
+                  expanded={addNewConditionOpened}
+                  transitionDuration={300}
+                >
+                  <Space h={12} />
+                  <NewConditionWidget
+                    automationId={automationId}
+                    toggleAddNewCondition={toggleAddNewCondition}
+                  />
+                </Collapse>
+              </Stack>
+            </Paper>
           )}
-        </Fragment>
+        </Stack>
       )}
     </Fragment>
   );
 }
+
+function BuilderToggleIcon({ opened }: { opened: boolean }) {
+  return (
+    <Box style={{ position: "relative", width: 16, height: 16 }}>
+      <IconPlus
+        size={16}
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: opened ? 0 : 1,
+          transform: `rotate(${opened ? 90 : 0}deg) scale(${opened ? 0.7 : 1})`,
+          transition: "opacity 300ms ease, transform 300ms ease",
+        }}
+      />
+      <IconX
+        size={16}
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: opened ? 1 : 0,
+          transform: `rotate(${opened ? 0 : -90}deg) scale(${opened ? 1 : 0.7})`,
+          transition: "opacity 150ms ease, transform 150ms ease",
+        }}
+      />
+    </Box>
+  );
+}
+
+function renderConditionGroup({
+  title,
+  description,
+  color,
+  icon,
+  conditions,
+  solarLunarTimes,
+  readOnly,
+  mapToDeleteConditionMutationAsync,
+}: {
+  title: string;
+  description: string;
+  color: string;
+  icon: ReactNode;
+  conditions: (
+    | SDBSensorCondition
+    | SDBOutputCondition
+    | SDBTimeCondition
+    | SDBWeekdayCondition
+    | SDBMonthCondition
+    | SDBDateRangeCondition
+  )[];
+  solarLunarTimes: SolarLunarTimesMap | null;
+  readOnly: boolean;
+  mapToDeleteConditionMutationAsync: ConditionsTableDeleteMapper;
+}) {
+  if (conditions.length === 0) {
+    return null;
+  }
+
+  return (
+    <Paper withBorder radius="md" py="md" p="xs">
+      <Stack gap="sm">
+        <Group justify="space-between" align="center" wrap="wrap">
+          <Group gap="xs" wrap="nowrap">
+            <ThemeIcon variant="light" color={color} radius="xl">
+              {icon}
+            </ThemeIcon>
+            <div>
+              <Title order={6}>{title}</Title>
+              <Text size="sm" c="dimmed">
+                {description}
+              </Text>
+            </div>
+          </Group>
+          <Badge variant="light" color={color} radius="sm">
+            {conditions.length}
+          </Badge>
+        </Group>
+        <DeletablesTable
+          deletables={conditions
+            .sort((a, b) => sortTypes(a, b))
+            .map((condition) => ({
+              displayLabel: mapToType(condition, solarLunarTimes),
+              id: condition.id,
+              deleteFn: mapToDeleteConditionMutationAsync(condition),
+            }))}
+          readOnly={readOnly}
+        />
+      </Stack>
+    </Paper>
+  );
+}
+
+type ConditionsTableDeleteMapper = (
+  condition:
+    | SDBSensorCondition
+    | SDBOutputCondition
+    | SDBTimeCondition
+    | SDBWeekdayCondition
+    | SDBMonthCondition
+    | SDBDateRangeCondition,
+) => (id: number) => Promise<void>;
 
 function sortTypes(
   a:
@@ -319,13 +460,19 @@ function mapToType(
     | SDBWeekdayCondition
     | SDBMonthCondition
     | SDBDateRangeCondition,
+  solarLunarTimes: SolarLunarTimesMap | null,
 ): ReactNode {
   if ("sensorId" in condition && "readingType" in condition) {
     return <SensorConditionRow {...(condition as SDBSensorCondition)} />;
   } else if ("outputId" in condition) {
     return <OutputConditionRow {...(condition as SDBOutputCondition)} />;
   } else if ("startTime" in condition && "endTime" in condition) {
-    return <TimeConditionRow {...(condition as SDBTimeCondition)} />;
+    return (
+      <TimeConditionRow
+        solarLunarTimes={solarLunarTimes}
+        {...(condition as SDBTimeCondition)}
+      />
+    );
   } else if ("weekdays" in condition) {
     return <WeekdayConditionRow {...(condition as SDBWeekdayCondition)} />;
   } else if ("months" in condition) {
@@ -339,6 +486,191 @@ function mapToType(
     return <DateRangeConditionRow {...(condition as SDBDateRangeCondition)} />;
   }
   return <></>;
+}
+
+function TimeConditionRow({
+  solarLunarTimes,
+  ...timeCondition
+}: SDBTimeCondition & {
+  solarLunarTimes: SolarLunarTimesMap | null;
+}): ReactNode {
+  const labelStart = formatTimeLabel(timeCondition.startTime);
+  const labelEnd = formatTimeLabel(timeCondition.endTime);
+  const windowStartLabel =
+    `${formatOffsetSummary(timeCondition.startOffsetSeconds)}${labelStart ?? ""}`.trim();
+  const windowEndLabel =
+    `${formatOffsetSummary(timeCondition.endOffsetSeconds)}${labelEnd ?? ""}`.trim();
+  const timeStart = formatTimeDisplay(
+    timeCondition.startTime,
+    timeCondition.startOffsetSeconds,
+    solarLunarTimes,
+  );
+  const timeEnd = formatTimeDisplay(
+    timeCondition.endTime,
+    timeCondition.endOffsetSeconds,
+    solarLunarTimes,
+  );
+
+  const windowSummary =
+    !windowStartLabel && !windowEndLabel
+      ? "Always"
+      : windowStartLabel && !windowEndLabel
+        ? `At ${windowStartLabel}`
+        : `Between ${windowStartLabel} and ${windowEndLabel}`;
+
+  const timeSummary =
+    timeStart && timeEnd
+      ? `${timeStart} and ${timeEnd}`
+      : (timeStart ?? timeEnd ?? null);
+
+  const repeatSummary = formatRepeatSummary(timeCondition, solarLunarTimes);
+
+  return (
+    <Group gap={0}>
+      <div>
+        <Text ta="left">{windowSummary}</Text>
+        {timeSummary && (
+          <Text ta="left" size="sm" c="dimmed">
+            ↳ {timeSummary}
+          </Text>
+        )}
+        {repeatSummary && (
+          <Text ta="left" size="sm" c="dimmed">
+            ↳ {repeatSummary}
+          </Text>
+        )}
+      </div>
+    </Group>
+  );
+}
+
+function formatTimeLabel(value: string | null): string | undefined {
+  const dynamicLabel = getDynamicTimePointLabel(value);
+  if (dynamicLabel) {
+    return dynamicLabel;
+  }
+  return formatMilitaryTime(value);
+}
+
+function formatTimeDisplay(
+  value: string | null,
+  offsetSeconds: number | null | undefined,
+  solarLunarTimes: SolarLunarTimesMap | null,
+): string | null {
+  const dynamicLabel = getDynamicTimePointLabel(value);
+  if (dynamicLabel && solarLunarTimes) {
+    const time = solarLunarTimes[value as keyof SolarLunarTimesMap] as
+      Date | null | undefined;
+    if (time) {
+      return formatTime(new Date(time.getTime() + (offsetSeconds ?? 0) * 1000));
+    }
+  }
+  return null;
+}
+
+function formatOffsetSummary(offsetSeconds: number | null | undefined): string {
+  if (offsetSeconds == null || offsetSeconds === 0) {
+    return "";
+  }
+
+  const sign = offsetSeconds > 0 ? "after" : "before";
+  let remainingSeconds = Math.abs(offsetSeconds);
+  const hours = Math.floor(remainingSeconds / 3600);
+  remainingSeconds -= hours * 3600;
+  const minutes = Math.floor(remainingSeconds / 60);
+  remainingSeconds -= minutes * 60;
+  const parts: string[] = [];
+
+  if (hours > 0) {
+    parts.push(`${hours}h`);
+  }
+  if (minutes > 0) {
+    parts.push(`${minutes}m`);
+  }
+  if (remainingSeconds > 0) {
+    parts.push(`${remainingSeconds}s`);
+  }
+
+  return parts.length > 0 ? `${parts.join(" ")} ${sign} ` : "";
+}
+
+function formatTime(date: Date): string {
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+  return formatMilitaryTime(`${hh}:${mm}`) ?? "";
+}
+
+function formatRepeatSummary(
+  timeCondition: SDBTimeCondition,
+  solarLunarTimes: SolarLunarTimesMap | null,
+): ReactNode {
+  if (
+    timeCondition.repeatInterval == null ||
+    timeCondition.repeatDuration == null
+  ) {
+    return null;
+  }
+
+  const anchorSummary = formatAnchorSummary(timeCondition, solarLunarTimes);
+
+  return (
+    <>
+      {`Every ${timeCondition.repeatInterval} min • Active first ${timeCondition.repeatDuration} min${timeCondition.repeatDuration === 1 ? "" : "s"}`}
+      {anchorSummary && (
+        <Text ta="left" size="sm" c="dimmed">
+          ↳ {anchorSummary}
+        </Text>
+      )}
+    </>
+  );
+}
+
+function formatAnchorSummary(
+  timeCondition: SDBTimeCondition,
+  solarLunarTimes: SolarLunarTimesMap | null,
+): ReactNode {
+  switch (timeCondition.phaseAnchorType) {
+    case "epoch":
+      return "Global reference";
+
+    case "window":
+      return "Period anchor: Window start";
+
+    case "clock": {
+      const dynamicLabel = getDynamicTimePointLabel(
+        timeCondition.phaseAnchorValue,
+      );
+      if (dynamicLabel) {
+        const time = solarLunarTimes?.[
+          timeCondition.phaseAnchorValue as keyof SolarLunarTimesMap
+        ] as Date | null | undefined;
+        const timeStr = time ? formatTime(time) : null;
+        if (timeStr) {
+          return (
+            <>
+              Period anchor: {dynamicLabel}
+              <Text span color="dimmed" size="sm">
+                {" "}
+                ({timeStr})
+              </Text>
+            </>
+          );
+        }
+        return `Period anchor: ${dynamicLabel}`;
+      }
+
+      const formatted = formatMilitaryTime(timeCondition.phaseAnchorValue);
+      return formatted ? `Period anchor: Daily at ${formatted}` : "";
+    }
+
+    case "fixed": {
+      const formatted = formatDateTime(timeCondition.phaseAnchorValue);
+      return formatted ? `Period anchor: ${formatted}` : "";
+    }
+
+    default:
+      return "";
+  }
 }
 
 function mapOperatorToText(operator: ConditionOperator) {
@@ -396,56 +728,46 @@ function SensorConditionRow(sensorCondition: SDBSensorCondition): ReactNode {
   }
 
   return (
-    <Group>
-      {sensorCondition.sensorName} is{" "}
-      {mapOperatorToText(sensorCondition.operator)} {String(comparisonValue)}
-      {readingType}
+    <Stack gap={4}>
+      <Text fw={500} ta="left">
+        {sensorCondition.sensorName}
+      </Text>
+      <Group gap="xs">
+        <Text size="sm">is</Text>
+        {mapOperatorToText(sensorCondition.operator)}
+        <Text size="sm">
+          {String(comparisonValue)}
+          {readingType}
+        </Text>
+      </Group>
       {sensorCondition.comparisonLookback != null ? (
-        <Fragment>
-          <Code mx={"-10px"} fw={700}>
-            for
-          </Code>
-          {` ${sensorCondition.comparisonLookback} ${sensorCondition.comparisonLookback === 1 ? " minute" : " minutes"}`}
-        </Fragment>
-      ) : (
-        ""
-      )}
-    </Group>
+        <Text size="sm" c="dimmed" ta="left">
+          Held for {sensorCondition.comparisonLookback}{" "}
+          {sensorCondition.comparisonLookback === 1 ? "minute" : "minutes"}
+        </Text>
+      ) : null}
+    </Stack>
   );
 }
 
 function OutputConditionRow(outputCondition: SDBOutputCondition): ReactNode {
   return (
-    <Group>
-      {outputCondition.outputName} is{" "}
-      {mapOperatorToText(outputCondition.operator)}{" "}
-      {String(outputCondition.comparisonValue)}%
+    <Stack gap={4}>
+      <Text fw={500} ta="left">
+        {outputCondition.outputName}
+      </Text>
+      <Group gap="xs">
+        <Text size="sm">is</Text>
+        {mapOperatorToText(outputCondition.operator)}
+        <Text size="sm">{String(outputCondition.comparisonValue)}%</Text>
+      </Group>
       {outputCondition.comparisonLookback != null ? (
-        <Fragment>
-          <Code mx={"-10px"} fw={700}>
-            for
-          </Code>
-          {` ${outputCondition.comparisonLookback} ${outputCondition.comparisonLookback === 1 ? " minute" : " minutes"}`}
-        </Fragment>
-      ) : (
-        ""
-      )}
-    </Group>
-  );
-}
-
-function TimeConditionRow(timeCondition: SDBTimeCondition): ReactNode {
-  const formattedStart = formatMilitaryTime(timeCondition.startTime);
-  const formattedEnd = formatMilitaryTime(timeCondition.endTime);
-
-  return (
-    <Group>
-      {!formattedStart && !formattedEnd && "Always"}
-      {formattedStart && !formattedEnd && `Time is ${formattedStart}`}
-      {formattedStart &&
-        formattedEnd &&
-        `Time is between ${formattedStart} and ${formattedEnd}`}
-    </Group>
+        <Text size="sm" c="dimmed" ta="left">
+          Held for {outputCondition.comparisonLookback}{" "}
+          {outputCondition.comparisonLookback === 1 ? "minute" : "minutes"}
+        </Text>
+      ) : null}
+    </Stack>
   );
 }
 
@@ -475,7 +797,7 @@ function WeekdayConditionRow(weekdayCondition: SDBWeekdayCondition): ReactNode {
   } else {
     response = days.slice(0, -1).join(", ") + ", or " + days.slice(-1);
   }
-  return <Group>{`Day is ${response}`}</Group>;
+  return <Text ta="left">{`Day is ${response}`}</Text>;
 }
 
 function MonthConditionRow(monthCondition: SDBMonthCondition): ReactNode {
@@ -509,7 +831,7 @@ function MonthConditionRow(monthCondition: SDBMonthCondition): ReactNode {
   } else {
     response = months.slice(0, -1).join(", ") + ", or " + months.slice(-1);
   }
-  return <Group>{`Month is ${response}`}</Group>;
+  return <Text ta="left">{`Month is ${response}`}</Text>;
 }
 
 function DateRangeConditionRow(dateRangeCondition: {
@@ -546,7 +868,7 @@ function DateRangeConditionRow(dateRangeCondition: {
   const startMonth = months[dateRangeCondition.startMonth - 1];
   const endMonth = months[dateRangeCondition.endMonth - 1];
   return (
-    <Group>
+    <Text ta="left">
       {startMonth == endMonth &&
       dateRangeCondition.startDate == dateRangeCondition.endDate ? (
         <Fragment>
@@ -561,6 +883,6 @@ function DateRangeConditionRow(dateRangeCondition: {
           {getOrdinalSuffix(dateRangeCondition.endDate)}
         </Fragment>
       )}
-    </Group>
+    </Text>
   );
 }
