@@ -5,6 +5,8 @@ import { SensorList } from "../sensors/list/SensorList";
 import * as Constants from "@sproot/common/utility/Constants";
 import { Backups } from "./Backups";
 import { ISystemRepository } from "../database/repositories/system/ISystemRepository";
+import { ISettingsRepository } from "../database/settings/ISettingsRepository";
+import { SETTINGS } from "../database/settings/SettingsSchema";
 import { AutomationService } from "../automation/AutomationService";
 
 export function createAutomationsCronJob(
@@ -81,7 +83,11 @@ export function createDatabaseUpdateCronJob(
   );
 }
 
-export function createBackupCronJob(systemRepository: ISystemRepository, logger: winston.Logger) {
+export function createBackupCronJob(
+  systemRepository: ISystemRepository,
+  settingsRepository: ISettingsRepository,
+  logger: winston.Logger,
+) {
   let running = false;
   return new CronJob(
     Constants.CRON.DAILY_AT_MIDNIGHT,
@@ -95,11 +101,10 @@ export function createBackupCronJob(systemRepository: ISystemRepository, logger:
       try {
         logger.info("Starting scheduled backup...");
         await Backups.createAsync(systemRepository, logger);
-        await Backups.runRetentionPolicyAsync(
-          logger,
-          Constants.BACKUP_DIRECTORY,
-          process.env["BACKUP_RETENTION_DAYS"]!,
+        const retentionSetting = await settingsRepository.getAsync(
+          SETTINGS.system.backup_retention,
         );
+        await Backups.runRetentionPolicyAsync(logger, Constants.BACKUP_DIRECTORY, retentionSetting);
       } catch (e) {
         logger.error(`Exception in backup loop: ${e}`);
       } finally {

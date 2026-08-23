@@ -3,7 +3,7 @@ import { get as httpGet } from "http";
 import sinon from "sinon";
 import request from "supertest";
 import { validateMiddlewareValues } from "./utils";
-import { app, server } from "./setup";
+import { app, server, baseUrl } from "./setup";
 import fs from "fs";
 import { CameraManager } from "../camera/CameraManager";
 import { FrameBuffer } from "../camera/FrameBuffer";
@@ -1676,7 +1676,7 @@ describe("API Tests", async function () {
           try {
             await new Promise<void>((resolve, reject) => {
               let settled = false;
-              const req = httpGet("http://127.0.0.1:3000/api/v2/camera/stream", (res) => {
+              const req = httpGet(`${baseUrl}/api/v2/camera/stream`, (res) => {
                 try {
                   assert.equal(res.statusCode, 200);
                   assert.equal(
@@ -1956,15 +1956,16 @@ describe("API Tests", async function () {
 
   describe("Settings Routes", async () => {
     describe("GET", async () => {
-      it("should return 200 with all 5 settings", async () => {
+      it("should return 200 with all 6 settings", async () => {
         const response = await request(server).get("/api/v2/settings").expect(200);
         const content = response.body["content"];
         validateMiddlewareValues(response);
         assert.isObject(content.data);
-        assert.equal(Object.keys(content.data).length, 5);
+        assert.equal(Object.keys(content.data).length, 6);
         assert.exists(content.data["sensors.data_retention"]);
         assert.exists(content.data["outputs.data_retention"]);
         assert.exists(content.data["system.backup_retention"]);
+        assert.strictEqual(content.data["system.log_debug"], false);
         assert.containsAllKeys(content.data, ["system.latitude", "system.longitude"]);
       });
     });
@@ -2010,6 +2011,16 @@ describe("API Tests", async function () {
         validateMiddlewareValues(response);
         assert.include(response.body.error.details[0], "expected string or null");
         assert.include(response.body.error.details[0], "got number");
+      });
+
+      it("should accept boolean updates for system.log_debug", async () => {
+        const response = await request(server)
+          .patch("/api/v2/settings")
+          .send({ "system.log_debug": true })
+          .expect(200);
+
+        validateMiddlewareValues(response);
+        assert.strictEqual(response.body.content.data["system.log_debug"], true);
       });
 
       it("should return 200 for null value", async () => {
@@ -2071,7 +2082,7 @@ describe("API Tests", async function () {
       it("should return 200 with SSE headers", async () => {
         await new Promise<void>((resolve, reject) => {
           let settled = false;
-          const req = httpGet("http://127.0.0.1:3000/api/v2/system/logs/stream", (res) => {
+          const req = httpGet(`${baseUrl}/api/v2/system/logs/stream`, (res) => {
             try {
               assert.equal(res.statusCode, 200);
               assert.equal(res.headers["content-type"], "text/event-stream; charset=utf-8");
@@ -2119,7 +2130,7 @@ describe("API Tests", async function () {
         const received: string[] = [];
         await new Promise<void>((resolve, reject) => {
           let settled = false;
-          const req = httpGet("http://127.0.0.1:3000/api/v2/system/logs/stream", (res) => {
+          const req = httpGet(`${baseUrl}/api/v2/system/logs/stream`, (res) => {
             try {
               assert.equal(res.statusCode, 200);
             } catch (error) {

@@ -8,6 +8,73 @@ import "winston-daily-rotate-file";
 import { LiveLogTransport } from "./system/LiveLogTransport";
 import { IEventBus } from "./eventbus/IEventBus";
 
+export class DebugLoggingController {
+  readonly #logger: winston.Logger;
+  #enabled = false;
+  #consoleTransport: winston.transport | undefined;
+  #fileTransport: winston.transport | undefined;
+
+  constructor(loggerInstance: winston.Logger) {
+    this.#logger = loggerInstance;
+    this.#logger.level = "info";
+  }
+
+  get isEnabled(): boolean {
+    return this.#enabled;
+  }
+
+  setEnabled(enabled: boolean): boolean {
+    if (this.#enabled === enabled) {
+      return false;
+    }
+
+    this.#enabled = enabled;
+    this.#logger.level = enabled ? "debug" : "info";
+
+    if (enabled) {
+      this.#consoleTransport = new winston.transports.Console({
+        level: "debug",
+        format: winston.format.combine(
+          winston.format.errors({ stack: true }),
+          winston.format.colorize(),
+          winston.format.printf(formatForDebug),
+        ),
+      });
+      this.#fileTransport = new winston.transports.DailyRotateFile({
+        filename: "logs/debug-%DATE%.log",
+        datePattern: "YYYY-MM-DD",
+        level: "debug",
+        format: winston.format.combine(
+          winston.format.errors({ stack: true }),
+          winston.format.colorize(),
+          winston.format.printf(formatForDebug),
+        ),
+        maxFiles: "30d",
+      });
+      this.#logger.add(this.#consoleTransport);
+      this.#logger.add(this.#fileTransport);
+      return true;
+    }
+
+    if (this.#consoleTransport) {
+      this.#logger.remove(this.#consoleTransport);
+      this.#consoleTransport = undefined;
+    }
+
+    if (this.#fileTransport) {
+      this.#logger.remove(this.#fileTransport);
+      this.#fileTransport = undefined;
+    }
+
+    return true;
+  }
+}
+
+export interface LoggerSetupResult {
+  logger: winston.Logger;
+  debugLoggingController: DebugLoggingController;
+}
+
 const testLogger = winston.createLogger({
   transports: [
     new winston.transports.Stream({
@@ -51,48 +118,29 @@ const productionLogger = winston.createLogger({
 export const logger =
   process.env["NODE_ENV"]?.toLowerCase() === "test" ? testLogger : productionLogger;
 
-export default function setupLogger(app: Express): winston.Logger {
+export default function setupLogger(app: Express): LoggerSetupResult {
   if (process.env["NODE_ENV"]?.toLowerCase() === "test") {
-    return testLogger;
+    return {
+      logger: testLogger,
+      debugLoggingController: new DebugLoggingController(testLogger),
+    };
   }
 
-  if (
-    process.env["NODE_ENV"]?.toLowerCase() !== "production" ||
-    process.env["LOG_DEBUG"]?.toLowerCase() === "true"
-  ) {
-    productionLogger.add(
-      new winston.transports.Console({
-        level: "debug",
-        format: winston.format.combine(
-          winston.format.errors({ stack: true }),
-          winston.format.colorize(),
-          winston.format.printf(formatForDebug),
-        ),
-      }),
-    );
-    productionLogger.add(
-      new winston.transports.DailyRotateFile({
-        filename: "logs/debug-%DATE%.log",
-        datePattern: "YYYY-MM-DD",
-        level: "debug",
-        format: winston.format.combine(
-          winston.format.errors({ stack: true }),
-          winston.format.colorize(),
-          winston.format.printf(formatForDebug),
-        ),
-        maxFiles: "30d",
-      }),
-    );
-    app.use(
-      morgan("dev", {
-        stream: {
-          write: (message: string) => productionLogger.http(message.trim()),
-        },
-      }),
-    );
-  }
+  const debugLoggingController = new DebugLoggingController(productionLogger);
 
-  return productionLogger;
+  app.use(
+    morgan("dev", {
+      skip: () => !debugLoggingController.isEnabled,
+      stream: {
+        write: (message: string) => productionLogger.http(message.trim()),
+      },
+    }),
+  );
+
+  return {
+    logger: productionLogger,
+    debugLoggingController,
+  };
 }
 
 function formatForDebug(info: winston.Logform.TransformableInfo): string {

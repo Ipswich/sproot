@@ -4,6 +4,7 @@ import type { IOutputConditionsRepository } from "./IOutputConditionsRepository"
 import { SDBOutputCondition } from "@sproot/common/database/SDBOutputCondition";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../../utils/BaseKnexRepository";
+import { getLookbackDate } from "../../../databaseQueryUtils";
 
 export class OutputConditionsRepository
   extends BaseKnexRepository
@@ -61,7 +62,43 @@ export class OutputConditionsRepository
       });
   }
 
+  async getMostRecentViolationAsync(
+    outputId: number,
+    operator: ConditionOperator,
+    comparisonValue: number,
+    comparisonLookback: number,
+    now: Date = new Date(),
+  ): Promise<Date | null> {
+    const violationPredicate = buildViolationPredicate("d.value", operator);
+    const row = await this.connection("output_data as d")
+      .select("d.logTime")
+      .where("d.output_id", outputId)
+      .andWhere("d.logTime", ">", getLookbackDate(now, comparisonLookback))
+      .andWhereRaw(violationPredicate, [comparisonValue])
+      .orderBy("d.logTime", "desc")
+      .first();
+
+    return row?.logTime != null ? new Date(row.logTime) : null;
+  }
+
   async deleteAsync(conditionId: number): Promise<void> {
     return this.connection("output_conditions").where("id", conditionId).delete();
+  }
+}
+
+function buildViolationPredicate(valueExpression: string, operator: ConditionOperator): string {
+  switch (operator) {
+    case "equal":
+      return `${valueExpression} <> ?`;
+    case "notEqual":
+      return `${valueExpression} = ?`;
+    case "greater":
+      return `${valueExpression} <= ?`;
+    case "greaterOrEqual":
+      return `${valueExpression} < ?`;
+    case "less":
+      return `${valueExpression} >= ?`;
+    case "lessOrEqual":
+      return `${valueExpression} > ?`;
   }
 }

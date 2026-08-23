@@ -43,6 +43,7 @@ type SettingsFormValues = {
   outputs: RetentionControlValue;
   system: {
     backup_retention: RetentionControlValue;
+    log_debug: boolean;
     latitude: string;
     longitude: string;
   };
@@ -71,6 +72,11 @@ const sections: SettingsSection[] = [
     title: "Output Data",
     description: "Duration to store output state history before deletion.",
     path: "outputs",
+  },
+  {
+    title: "Backups",
+    description: "Duration to store backup files before deletion.",
+    path: "system.backup_retention",
   },
 ];
 
@@ -139,6 +145,7 @@ function toFormValues(settings: ApplicationSettings): SettingsFormValues {
       backup_retention: parseRetentionValue(
         settings["system.backup_retention"],
       ),
+      log_debug: settings["system.log_debug"] === true,
       latitude: settings["system.latitude"] ?? "",
       longitude: settings["system.longitude"] ?? "",
     },
@@ -152,6 +159,7 @@ function toRequestBody(values: SettingsFormValues): ApplicationSettings {
     "system.backup_retention": serializeRetentionValue(
       values.system.backup_retention,
     ),
+    "system.log_debug": values.system.log_debug,
     "system.latitude": serializeCoordinateValue(values.system.latitude),
     "system.longitude": serializeCoordinateValue(values.system.longitude),
   };
@@ -201,6 +209,7 @@ export default function ApplicationSettingsAccordionItem() {
       outputs: createDefaultRetentionValue(),
       system: {
         backup_retention: createDefaultRetentionValue(),
+        log_debug: false,
         latitude: "",
         longitude: "",
       },
@@ -511,6 +520,30 @@ export default function ApplicationSettingsAccordionItem() {
                   </Paper>
                 ))}
               </SimpleGrid>
+
+              <Paper withBorder radius="md" p="lg" shadow="xs">
+                <Stack gap="md">
+                  <div>
+                    <Text fw={600}>Debug Logging</Text>
+                    <Text size="sm" c="dimmed">
+                      Toggle verbose server logging.
+                    </Text>
+                  </div>
+
+                  <SegmentedControl
+                    fullWidth
+                    radius="md"
+                    data={[
+                      { label: "Off", value: "false" },
+                      { label: "On", value: "true" },
+                    ]}
+                    value={form.values.system.log_debug ? "true" : "false"}
+                    onChange={(value) => {
+                      form.setFieldValue("system.log_debug", value === "true");
+                    }}
+                  />
+                </Stack>
+              </Paper>
 
               <Paper withBorder radius="md" p="lg" shadow="xs">
                 <Stack gap="md">

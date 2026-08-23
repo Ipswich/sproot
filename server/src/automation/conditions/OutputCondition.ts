@@ -2,6 +2,7 @@ import { ConditionGroupType, ConditionOperator } from "@sproot/automation/Condit
 import { OutputList } from "../../outputs/list/OutputList";
 import { evaluateNumber } from "./ConditionUtils";
 import { IOutputCondition } from "@sproot/automation/IOutputCondition";
+import type { IOutputConditionsRepository } from "../../database/repositories/automations/conditions/IOutputConditionsRepository";
 
 export class OutputCondition implements IOutputCondition {
   id: number;
@@ -10,6 +11,7 @@ export class OutputCondition implements IOutputCondition {
   operator: ConditionOperator;
   comparisonValue: number;
   comparisonLookback: number | null;
+  #latestViolationAt: number | null = null;
 
   constructor(
     id: number,
@@ -35,22 +37,50 @@ export class OutputCondition implements IOutputCondition {
         : false;
     }
 
-    const outputValues = outputList.outputs[this.outputId]
-      ?.getCachedReadings()
-      .slice(-this.comparisonLookback)
-      .filter(
-        (outputState) =>
-          new Date(outputState.logTime).getTime() >=
-          now.getTime() - this.comparisonLookback! * 60000,
-      )
-      .map((outputState) => outputState.value);
-
-    if (outputValues == null || outputValues.length < this.comparisonLookback) {
-      return false;
+    const lastOutputValue = outputList.outputs[this.outputId]?.value;
+    if (
+      lastOutputValue != null &&
+      !evaluateNumber(lastOutputValue, this.operator, this.comparisonValue)
+    ) {
+      this.#latestViolationAt = now.getTime();
     }
 
-    return outputValues.every((outputValue) => {
-      return evaluateNumber(outputValue, this.operator, this.comparisonValue);
-    });
+    this.#expireViolationIfNeeded(now);
+    return this.#latestViolationAt == null;
+  }
+
+  async initializeLookbackStateAsync(
+    repository: IOutputConditionsRepository,
+    now: Date = new Date(),
+  ): Promise<void> {
+    if (this.comparisonLookback == null || this.comparisonLookback <= 0) {
+      this.#latestViolationAt = null;
+      return;
+    }
+
+    const latestViolation = await repository.getMostRecentViolationAsync(
+      this.outputId,
+      this.operator,
+      this.comparisonValue,
+      this.comparisonLookback,
+      now,
+    );
+
+    this.#latestViolationAt = latestViolation?.getTime() ?? null;
+    this.#expireViolationIfNeeded(now);
+  }
+
+  #expireViolationIfNeeded(now: Date): void {
+    if (
+      this.#latestViolationAt == null ||
+      this.comparisonLookback == null ||
+      this.comparisonLookback <= 0
+    ) {
+      return;
+    }
+
+    if (now.getTime() - this.#latestViolationAt >= this.comparisonLookback * 60000) {
+      this.#latestViolationAt = null;
+    }
   }
 }

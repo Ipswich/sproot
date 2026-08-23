@@ -3,7 +3,7 @@ import sinon from "sinon";
 import { OutputBase } from "../../../outputs/base/OutputBase";
 import { OutputList } from "../../../outputs/list/OutputList";
 import { OutputCondition } from "../OutputCondition";
-import { ControlMode } from "@sproot/common/outputs/IOutputBase";
+import type { IOutputConditionsRepository } from "../../../database/repositories/automations/conditions/IOutputConditionsRepository";
 
 describe("OutputCondition.ts tests", () => {
   describe("evaluateNumber", () => {
@@ -48,87 +48,26 @@ describe("OutputCondition.ts tests", () => {
       assert.isTrue(outputCondition.evaluate(outputListMock));
     });
 
-    it("should return the result of the condition for all readings in the lookback period", () => {
+    it("tracks the most recent violation for lookback evaluation", async () => {
       const outputCondition = new OutputCondition(1, "allOf", 1, "greater", 50, 3);
       const outputListMock = sinon.createStubInstance(OutputList);
       const outputMock = sinon.createStubInstance(OutputBase);
       const now = new Date();
       sinon.stub(outputListMock, "outputs").value({ 1: outputMock });
+      const repository = {
+        getMostRecentViolationAsync: sinon.stub().resolves(new Date(now.getTime() - 60_000)),
+      } as Partial<IOutputConditionsRepository> as IOutputConditionsRepository;
 
-      outputMock.getCachedReadings.returns([
-        {
-          logTime: now.toISOString(),
-          controlMode: ControlMode.automatic,
-          value: 51,
-        },
-        {
-          logTime: now.toISOString(),
-          controlMode: ControlMode.automatic,
-          value: 52,
-        },
-        {
-          logTime: now.toISOString(),
-          controlMode: ControlMode.automatic,
-          value: 53,
-        },
-      ]);
-      assert.isTrue(outputCondition.evaluate(outputListMock, now));
+      await outputCondition.initializeLookbackStateAsync(repository, now);
 
-      // One reading is not greater than comparison value
-      outputMock.getCachedReadings.returns([
-        {
-          logTime: now.toISOString(),
-          controlMode: ControlMode.automatic,
-          value: 49,
-        },
-        {
-          logTime: now.toISOString(),
-          controlMode: ControlMode.automatic,
-          value: 52,
-        },
-        {
-          logTime: now.toISOString(),
-          controlMode: ControlMode.automatic,
-          value: 53,
-        },
-      ]);
+      sinon.stub(outputMock, "value").value(51);
       assert.isFalse(outputCondition.evaluate(outputListMock, now));
 
-      // Not enough readings in the lookback period
-      outputMock.getCachedReadings.returns([
-        {
-          logTime: now.toISOString(),
-          controlMode: ControlMode.automatic,
-          value: 52,
-        },
-        {
-          logTime: now.toISOString(),
-          controlMode: ControlMode.automatic,
-          value: 53,
-        },
-      ]);
-      assert.isFalse(outputCondition.evaluate(outputListMock, now));
+      const expiredNow = new Date(now.getTime() + 4 * 60000);
+      assert.isTrue(outputCondition.evaluate(outputListMock, expiredNow));
 
-      // One reading is outside the lookback period
-      const oldReading = new Date(now.getTime() - 4 * 60000);
-      outputMock.getCachedReadings.returns([
-        {
-          logTime: oldReading.toISOString(),
-          controlMode: ControlMode.automatic,
-          value: 51,
-        },
-        {
-          logTime: now.toISOString(),
-          controlMode: ControlMode.automatic,
-          value: 52,
-        },
-        {
-          logTime: now.toISOString(),
-          controlMode: ControlMode.automatic,
-          value: 53,
-        },
-      ]);
-      assert.isFalse(outputCondition.evaluate(outputListMock, now));
+      (outputMock.value as number) = 49;
+      assert.isFalse(outputCondition.evaluate(outputListMock, expiredNow));
     });
   });
 });

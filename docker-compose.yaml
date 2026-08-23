@@ -29,7 +29,6 @@ x-client-args: &client_env
 x-server-environment: &server_env
   <<: 
     - *base_env
-  LOG_DEBUG: "false"
   DEFAULT_USER: *default_user_name
   DEFAULT_USER_EMAIL: *default_user_email
   DEFAULT_USER_PASSWORD: *default_user_password
@@ -41,7 +40,6 @@ x-server-environment: &server_env
   DATABASE_USER: "postgres"
   DATABASE_PASSWORD: *db_password
   INTERSERVICE_AUTHENTICATION_KEY: *interservice_authentication_key
-  BACKUP_RETENTION_DAYS: "30"
 
 services:
   server:

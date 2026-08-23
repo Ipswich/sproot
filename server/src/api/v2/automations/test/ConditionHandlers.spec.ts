@@ -30,41 +30,43 @@ const createStubSprootDB = () => {
   const sprootDB = createMockSprootDB() as any;
   sprootDB.automations = {
     getAllAsync: sinon.stub(),
-    getByIdAsync: sinon.stub(),
+    getByIdAsync: sinon.stub().resolves([]),
   } as any;
   sprootDB.automations.conditions = {
     sensor: {
-      getAsync: sinon.stub(),
+      getAsync: sinon.stub().resolves([]),
       addAsync: sinon.stub(),
       updateAsync: sinon.stub(),
+      getMostRecentViolationAsync: sinon.stub().resolves(null),
       deleteAsync: sinon.stub(),
     },
     output: {
-      getAsync: sinon.stub(),
+      getAsync: sinon.stub().resolves([]),
       addAsync: sinon.stub(),
       updateAsync: sinon.stub(),
+      getMostRecentViolationAsync: sinon.stub().resolves(null),
       deleteAsync: sinon.stub(),
     },
     time: {
-      getAsync: sinon.stub(),
+      getAsync: sinon.stub().resolves([]),
       addAsync: sinon.stub(),
       updateAsync: sinon.stub(),
       deleteAsync: sinon.stub(),
     },
     weekday: {
-      getAsync: sinon.stub(),
+      getAsync: sinon.stub().resolves([]),
       addAsync: sinon.stub(),
       updateAsync: sinon.stub(),
       deleteAsync: sinon.stub(),
     },
     month: {
-      getAsync: sinon.stub(),
+      getAsync: sinon.stub().resolves([]),
       addAsync: sinon.stub(),
       updateAsync: sinon.stub(),
       deleteAsync: sinon.stub(),
     },
     dateRange: {
-      getAsync: sinon.stub(),
+      getAsync: sinon.stub().resolves([]),
       addAsync: sinon.stub(),
       updateAsync: sinon.stub(),
       deleteAsync: sinon.stub(),

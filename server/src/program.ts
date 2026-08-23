@@ -35,10 +35,11 @@ import { SettingsService } from "./settings/SettingsService";
 import { RetentionService } from "./retention/RetentionService";
 import { addLogStreamingTransport } from "./logger";
 import { TimeExpressionResolver } from "./automation/conditions/TimeExpressionResolver";
+import { DebugLoggingService } from "./system/DebugLoggingService";
 
 export default async function setupAsync(): Promise<Express> {
   const app = express();
-  const logger = setupLogger(app);
+  const { logger, debugLoggingController } = setupLogger(app);
   const profiler = logger.startTimer();
   logger.info("Initializing sproot app. . .");
   const knexConnection = await getKnexConnectionAsync();
@@ -67,6 +68,13 @@ export default async function setupAsync(): Promise<Express> {
   app.set(DI_KEYS.SettingsService, settingsService);
 
   await settingsService.syncDefaultsAsync();
+  const debugLoggingService = await DebugLoggingService.createInstanceAsync(
+    sprootDB.settings,
+    eventBus,
+    debugLoggingController,
+    logger,
+  );
+  app.set(DI_KEYS.DebugLoggingService, debugLoggingService);
 
   const timeExpressionResolver = await TimeExpressionResolver.createInstanceAsync(
     sprootDB.settings,
@@ -89,7 +97,7 @@ export default async function setupAsync(): Promise<Express> {
     mdnsService,
     Constants.MAX_CACHE_SIZE,
     Constants.INITIAL_CACHE_LOOKBACK,
-    5,
+    Constants.CACHE_BUCKET_MINUTES,
     logger,
   );
   app.set(DI_KEYS.SensorList, sensorList);
@@ -101,7 +109,7 @@ export default async function setupAsync(): Promise<Express> {
     mdnsService,
     Constants.MAX_CACHE_SIZE,
     Constants.INITIAL_CACHE_LOOKBACK,
-    5,
+    Constants.CACHE_BUCKET_MINUTES,
     logger,
   );
   app.set(DI_KEYS.OutputList, outputList);
@@ -145,7 +153,7 @@ export default async function setupAsync(): Promise<Express> {
   const updateDatabaseCronJob = createDatabaseUpdateCronJob(sensorList, outputList, logger);
   app.set(DI_KEYS.DatabaseUpdateCronJob, updateDatabaseCronJob);
 
-  const backupCronJob = createBackupCronJob(sprootDB.system, logger);
+  const backupCronJob = createBackupCronJob(sprootDB.system, sprootDB.settings, logger);
   app.set(DI_KEYS.BackupCronJob, backupCronJob);
 
   app.use(cors());
@@ -195,6 +203,9 @@ export async function gracefulHaltAsync(
 
       // Cleanup log history service (unsubscribes from event bus)
       app.get(DI_KEYS.LogHistoryService)[Symbol.dispose]();
+
+      // Cleanup debug logging settings service (unsubscribes from event bus)
+      app.get(DI_KEYS.DebugLoggingService)[Symbol.dispose]();
 
       // Cleanup retention service (unsubscribes from event bus)
       app.get(DI_KEYS.RetentionService)[Symbol.dispose]();

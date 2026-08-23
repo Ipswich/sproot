@@ -51,6 +51,7 @@ const createMockSensorConditionsRepo = (): ISensorConditionsRepository => ({
   getAsync: async () => [],
   addAsync: async () => 0,
   updateAsync: async () => {},
+  getMostRecentViolationAsync: async () => null,
   deleteAsync: async () => {},
 });
 
@@ -58,6 +59,7 @@ const createMockOutputConditionsRepo = (): IOutputConditionsRepository => ({
   getAsync: async () => [],
   addAsync: async () => 0,
   updateAsync: async () => {},
+  getMostRecentViolationAsync: async () => null,
   deleteAsync: async () => {},
 });
 
@@ -120,7 +122,7 @@ const createStubSprootDB = (): any => {
   const notificationActions = createMockNotificationActionsRepo();
 
   sinon.stub(automations, "getAllAsync");
-  sinon.stub(automations, "getByIdAsync");
+  sinon.stub(automations, "getByIdAsync").resolves([]);
   sinon.stub(automations, "addAsync");
   sinon.stub(automations, "updateAsync");
   sinon.stub(automations, "deleteAsync");
@@ -128,11 +130,13 @@ const createStubSprootDB = (): any => {
   sinon.stub(sensorConditions, "getAsync").resolves([]);
   sinon.stub(sensorConditions, "addAsync");
   sinon.stub(sensorConditions, "updateAsync");
+  sinon.stub(sensorConditions, "getMostRecentViolationAsync").resolves(null);
   sinon.stub(sensorConditions, "deleteAsync");
 
   sinon.stub(outputConditions, "getAsync").resolves([]);
   sinon.stub(outputConditions, "addAsync");
   sinon.stub(outputConditions, "updateAsync");
+  sinon.stub(outputConditions, "getMostRecentViolationAsync").resolves(null);
   sinon.stub(outputConditions, "deleteAsync");
 
   sinon.stub(timeConditions, "getAsync").resolves([]);
@@ -451,6 +455,9 @@ describe("AutomationHandlers", () => {
       sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
       sprootDB.automations.addAsync.resolves(1);
+      sprootDB.automations.getByIdAsync.resolves([
+        { id: 1, name: "automation1", operator: "or", enabled: true } as SDBAutomation,
+      ]);
 
       const mockRequest = {
         app: {

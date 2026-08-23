@@ -5,7 +5,7 @@ import sinon from "sinon";
 import winston from "winston";
 import { MemoryEventBus } from "../../../eventbus/MemoryEventBus";
 import { AutomationsTriggeredEvent } from "../../../eventbus/events/automations/AutomationsTriggeredEvent";
-import { OutputActionsModifiedEvent } from "../../../eventbus/events/actions/OutputActionsModifiedEvent";
+import { OutputActionAddedEvent } from "../../../eventbus/events/actions/OutputActionEvents";
 import { IOutputActionsRepository } from "../../../database/repositories/automations/actions/IOutputActionsRepository";
 
 const mockOutputActionsRepo: IOutputActionsRepository = {
@@ -763,7 +763,17 @@ describe("OutputActionManager.ts tests", () => {
       ]);
 
       // Second call should see updated value
-      await eventBus.publishAsync(new OutputActionsModifiedEvent({}));
+      await eventBus.publishAsync(
+        new OutputActionAddedEvent({
+          action: {
+            id: 1,
+            automationId: 1,
+            outputId: 1,
+            value: 75,
+            precedence: "Normal",
+          },
+        }),
+      );
       await new Promise((resolve) => setImmediate(resolve));
       await publishAutomationEventAsync(eventBus, triggeredAutomations);
       assert.equal(manager.lastResult, 75);

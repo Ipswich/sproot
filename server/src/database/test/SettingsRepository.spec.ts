@@ -147,14 +147,15 @@ describe("SettingsRepository", () => {
       const result = await repo.getAllAsync();
 
       assert.equal(result[SETTINGS.sensors.data_retention], "30 days");
-      // Verify the result has exactly the expected known keys (3 total), not unknown ones
+      // Verify the result has exactly the expected known keys, not unknown ones.
       const keys = Object.keys(result) as SettingsKey[];
-      assert.equal(keys.length, 5);
+      assert.equal(keys.length, 6);
       assert.deepEqual(keys.sort(), [
         SETTINGS.outputs.data_retention,
         SETTINGS.sensors.data_retention,
         SETTINGS.system.backup_retention,
         SETTINGS.system.latitude,
+        SETTINGS.system.log_debug,
         SETTINGS.system.longitude,
       ]);
     });
@@ -180,7 +181,7 @@ describe("SettingsRepository", () => {
       // this assertion fails, surfacing the mismatch early.
       assert.equal(
         Object.keys(result).length,
-        5,
+        6,
         "getAll must return exactly all known setting keys",
       );
     });
@@ -241,6 +242,19 @@ describe("SettingsRepository", () => {
       const insertArgs = builder.insert.firstCall.args[0];
       assert.equal(insertArgs.key, SETTINGS.system.latitude);
       assert.equal(insertArgs.value.toQuery(), "'null'::jsonb");
+    });
+
+    it("should store boolean values without stringifying them", async () => {
+      const knex = createKnexStub([]);
+      const repo = new SettingsRepository(knex as any);
+
+      await repo.setAsync(SETTINGS.system.log_debug, true);
+
+      const builder = (knex as any)("settings");
+      assert.isTrue(builder.insert.calledOnce);
+      const insertArgs = builder.insert.firstCall.args[0];
+      assert.equal(insertArgs.key, SETTINGS.system.log_debug);
+      assert.strictEqual(insertArgs.value, true);
     });
   });
 
