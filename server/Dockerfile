@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM node:24.13.1-bookworm-slim AS build
+FROM node:24.13.1-bookworm-slim AS build
 
 ENV DEBIAN_FRONTEND=noninteractive
 
