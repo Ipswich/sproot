@@ -73,6 +73,7 @@ jobs:
         with:
           tag: ${{ github.ref_name }}
           generateReleaseNotes: true
+          skipIfReleaseExists: true
 
   build-and-push-images:
     needs:
