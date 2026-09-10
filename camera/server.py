@@ -25,6 +25,7 @@ from picamera2.outputs import FileOutput
 DEFAULT_VIDEO_RESOLUTION = "1280x960"
 DEFAULT_FPS = 30
 DEFAULT_PORT = 3002
+DEFAULT_DISABLE_STREAM = False
 DEFAULT_SHUTDOWN_TIMEOUT_SECONDS = 10
 DEFAULT_STALL_TIMEOUT_SECONDS = 8
 DEFAULT_WATCHDOG_INTERVAL_SECONDS = 1
@@ -77,6 +78,18 @@ def parse_positive_int(value: str, name: str, minimum: int, maximum: int) -> int
     return parsed
 
 
+def parse_bool(value: str, name: str) -> bool:
+    normalized = value.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+
+    raise argparse.ArgumentTypeError(
+        f"{name} must be one of true/false, yes/no, on/off, or 1/0."
+    )
+
+
 def get_env_or_default(name: str, default: Optional[str]) -> Optional[str]:
     value = os.environ.get(name)
     if value is None:
@@ -115,6 +128,17 @@ def build_argument_parser() -> argparse.ArgumentParser:
             get_env_or_default("CAMERA_PORT", str(DEFAULT_PORT)), "port", 1, 65535
         ),
         help="HTTP port.",
+    )
+    parser.add_argument(
+        "--disableStream",
+        type=lambda value: parse_bool(value, "disableStream"),
+        default=parse_bool(
+            get_env_or_default(
+                "CAMERA_DISABLE_STREAM", str(DEFAULT_DISABLE_STREAM).lower()
+            ),
+            "disableStream",
+        ),
+        help="Disable the MJPEG livestream and only keep still capture enabled.",
     )
     parser.add_argument(
         "--shutdownTimeoutSeconds",
@@ -185,6 +209,7 @@ class CameraSettings:
     video_resolution: tuple[int, int]
     fps: int
     port: int
+    disable_stream: bool
     shutdown_timeout_seconds: int
     stall_timeout_seconds: int
     watchdog_interval_seconds: int
@@ -198,6 +223,7 @@ def load_settings() -> CameraSettings:
         video_resolution=args.videoResolution,
         fps=args.fps,
         port=args.port,
+        disable_stream=args.disableStream,
         shutdown_timeout_seconds=args.shutdownTimeoutSeconds,
         stall_timeout_seconds=args.stallTimeoutSeconds,
         watchdog_interval_seconds=args.watchdogIntervalSeconds,
@@ -285,6 +311,7 @@ class CameraService:
         self.output = LatestFrameBuffer()
         self._lock = RLock()
         self._picam2: Optional[Picamera2] = None
+        self._camera_started = False
         self._recording_started = False
         self._main_resolution: Optional[tuple[int, int]] = None
         self._pipeline_started_at: Optional[datetime] = None
@@ -298,7 +325,7 @@ class CameraService:
     @property
     def is_running(self) -> bool:
         with self._lock:
-            return self._picam2 is not None and self._recording_started
+            return self._picam2 is not None and self._camera_started
 
     @property
     def main_resolution(self) -> Optional[tuple[int, int]]:
@@ -320,18 +347,28 @@ class CameraService:
             frame_duration = int(1_000_000 / self.settings.fps)
             exposure_time = 8333
             main_stream = {"size": main_resolution, "format": "RGB888"}
-            lores_stream = {"size": self.settings.video_resolution}
-            video_config = picam2.create_video_configuration(
-                main_stream,
-                lores_stream,
-                encode="lores",
-                controls={
-                    "FrameDurationLimits": (frame_duration, frame_duration),
-                    "ExposureTime": exposure_time,
-                },
-            )
+            controls = {
+                "FrameDurationLimits": (frame_duration, frame_duration),
+                "ExposureTime": exposure_time,
+            }
+            if self.settings.disable_stream:
+                video_config = picam2.create_video_configuration(
+                    main=main_stream,
+                    controls=controls,
+                )
+            else:
+                lores_stream = {"size": self.settings.video_resolution}
+                video_config = picam2.create_video_configuration(
+                    main=main_stream,
+                    lores=lores_stream,
+                    encode="lores",
+                    controls=controls,
+                )
             picam2.configure(video_config)
-            picam2.start_recording(MJPEGEncoder(), FileOutput(self.output))
+            if self.settings.disable_stream:
+                picam2.start()
+            else:
+                picam2.start_recording(MJPEGEncoder(), FileOutput(self.output))
         except Exception:
             try:
                 picam2.close()
@@ -340,15 +377,17 @@ class CameraService:
             raise
 
         self._picam2 = picam2
-        self._recording_started = True
+        self._camera_started = True
+        self._recording_started = not self.settings.disable_stream
         self._main_resolution = main_resolution
         self._pipeline_started_at = datetime.now(timezone.utc)
         self._state = "healthy"
         self._last_recovery_error = None
         logging.info(
-            "Camera pipeline started (main=%sx%s, lores=%sx%s, fps=%s)",
+            "Camera pipeline started (main=%sx%s, stream=%s, lores=%sx%s, fps=%s)",
             main_resolution[0],
             main_resolution[1],
+            not self.settings.disable_stream,
             self.settings.video_resolution[0],
             self.settings.video_resolution[1],
             self.settings.fps,
@@ -362,6 +401,7 @@ class CameraService:
 
     def _stop_pipeline_locked(self) -> None:
         if self._picam2 is None:
+            self._camera_started = False
             self._recording_started = False
             self._main_resolution = None
             self._pipeline_started_at = None
@@ -371,11 +411,14 @@ class CameraService:
         try:
             if self._recording_started:
                 self._picam2.stop_recording()
+            elif self._camera_started:
+                self._picam2.stop()
         finally:
             try:
                 self._picam2.close()
             finally:
                 self._picam2 = None
+                self._camera_started = False
                 self._recording_started = False
                 self._main_resolution = None
                 self._pipeline_started_at = None
@@ -391,10 +434,16 @@ class CameraService:
         return (datetime.now(timezone.utc) - value).total_seconds()
 
     def _get_last_activity_at_locked(self) -> Optional[datetime]:
+        if self.settings.disable_stream:
+            return None
+
         return self.output.last_frame_at or self._pipeline_started_at
 
     def is_stalled(self) -> bool:
         with self._lock:
+            if self.settings.disable_stream:
+                return False
+
             if self._picam2 is None or not self._recording_started:
                 return False
 
@@ -474,6 +523,7 @@ class CameraService:
                 "status": self._state,
                 "camera": {
                     "initialized": self._picam2 is not None,
+                    "started": self._camera_started,
                     "recording": self._recording_started,
                     "imageResolution": self._main_resolution,
                     "videoResolution": self.settings.video_resolution,
@@ -483,6 +533,7 @@ class CameraService:
                     ),
                 },
                 "stream": {
+                    "enabled": not self.settings.disable_stream,
                     "hasFrame": self.output.frame is not None,
                     "frameCount": self.output.frame_count,
                     "lastFrameAt": self._format_timestamp(self.output.last_frame_at),
@@ -508,6 +559,7 @@ class CameraService:
                     "lastError": self._last_recovery_error,
                 },
                 "watchdog": {
+                    "enabled": not self.settings.disable_stream,
                     "intervalSeconds": self.settings.watchdog_interval_seconds,
                     "stallTimeoutSeconds": self.settings.stall_timeout_seconds,
                 },
@@ -553,7 +605,8 @@ async def lifespan(app: FastAPI):
     watchdog_task: Optional[asyncio.Task[None]] = None
     try:
         camera_service.start()
-        watchdog_task = asyncio.create_task(camera_watchdog_loop())
+        if not settings.disable_stream:
+            watchdog_task = asyncio.create_task(camera_watchdog_loop())
         yield
     finally:
         if watchdog_task is not None:
@@ -609,6 +662,9 @@ async def capture(_authenticated: bool = Depends(verify_auth)):
 
 @app.get("/stream.mjpg")
 async def stream(_authenticated: bool = Depends(verify_auth)):
+    if settings.disable_stream:
+        raise HTTPException(status_code=404, detail="Livestream is disabled")
+
     return StreamingResponse(
         generate_mjpeg_stream(), media_type="multipart/x-mixed-replace; boundary=FRAME"
     )

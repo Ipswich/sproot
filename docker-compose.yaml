@@ -45,6 +45,7 @@ x-camera-environment: &camera_env
   <<:
     - *base_env
   INTERSERVICE_AUTHENTICATION_KEY: *interservice_authentication_key
+  CAMERA_DISABLE_STREAM: "false"
   CAMERA_PORT: "3002"
   CAMERA_VIDEO_RESOLUTION: "1280x960"
   CAMERA_FPS: "30"

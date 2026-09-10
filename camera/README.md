@@ -4,7 +4,7 @@ Standalone HTTP camera service for Picamera2/libcamera hardware.
 
 ## Endpoints
 
-- `GET /stream.mjpg`
+- `GET /stream.mjpg` returns `404` when livestreaming is disabled
 - `GET /capture`
 - `GET /health`
 
@@ -17,6 +17,7 @@ All endpoints require the `X-Interservice-Authentication-Token` header.
 - `CAMERA_VIDEO_RESOLUTION` in `WIDTHxHEIGHT` format
 - `CAMERA_FPS`
 - `CAMERA_PORT`
+- `CAMERA_DISABLE_STREAM` as `true` or `false`
 - `CAMERA_GRACEFUL_SHUTDOWN_TIMEOUT`
 - `CAMERA_STALL_TIMEOUT_SECONDS`
 - `CAMERA_WATCHDOG_INTERVAL_SECONDS`
@@ -24,16 +25,17 @@ All endpoints require the `X-Interservice-Authentication-Token` header.
 
 ## Health and Recovery
 
-The service tracks when the MJPEG encoder last produced a frame. If the camera stops producing
-frames for longer than `CAMERA_STALL_TIMEOUT_SECONDS`, a watchdog fully recreates the Picamera2
-pipeline while preserving the existing dual-stream layout:
+When livestreaming is enabled, the service tracks when the MJPEG encoder last produced a frame.
+If the camera stops producing frames for longer than `CAMERA_STALL_TIMEOUT_SECONDS`, a watchdog
+fully recreates the Picamera2 pipeline while preserving the existing dual-stream layout:
 
 - main stream for `/capture`
 - lores stream for `/stream.mjpg`
 
 `GET /health` reports `starting`, `healthy`, `recovering`, or `failed`, plus the last frame time
-and recovery counters. If recovery fails `CAMERA_MAX_RECOVERY_FAILURES` times in a row, the
-process terminates so a container supervisor such as Docker can restart it.
+and recovery counters. It also reports whether livestreaming and the watchdog are enabled. If
+recovery fails `CAMERA_MAX_RECOVERY_FAILURES` times in a row, the process terminates so a
+container supervisor such as Docker can restart it.
 
 ## Package Policy
 
