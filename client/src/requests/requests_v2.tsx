@@ -58,6 +58,14 @@ export type ApplicationSettings = Partial<{
   "system.longitude": string | null;
 }>;
 
+export type CameraHealthTestResult = {
+  ok: boolean;
+  statusCode: number;
+  statusText: string;
+  contentType: string | null;
+  bodyPreview: string;
+};
+
 function getErrorMessage(
   response: ErrorResponse,
   fallbackMessage: string,
@@ -73,6 +81,18 @@ function getErrorMessage(
 
 export function getSystemLogStreamUrl(): string {
   return `${SERVER_URL}/api/v2/system/logs/stream`;
+}
+
+function buildCameraTestUrl(
+  path: "latest-image" | "stream" | "health",
+  queryKey: "captureUrl" | "streamUrl" | "healthUrl",
+  url: string,
+): string {
+  const params = new URLSearchParams({
+    [queryKey]: url.trim(),
+  });
+
+  return `${SERVER_URL}/api/v2/camera/test/${path}?${params.toString()}`;
 }
 
 export async function getReadingTypesAsync(): Promise<
@@ -1278,10 +1298,19 @@ export async function getAvailableSensorDevicesAsync(
 
 export type NewCameraSettings = Omit<SDBCameraSettings, "id">;
 
-export async function getLatestImageAsync(cameraId: number) {
+export async function getLatestImageAsync(
+  cameraId: number,
+  captureNew: boolean = false,
+) {
   try {
+    const params = new URLSearchParams();
+    if (captureNew) {
+      params.set("captureNew", "true");
+    }
+
+    const suffix = params.size > 0 ? `?${params.toString()}` : "";
     const response = await fetch(
-      `${SERVER_URL}/api/v2/camera/${cameraId}/latest-image`,
+      `${SERVER_URL}/api/v2/camera/${cameraId}/latest-image${suffix}`,
       {
         method: "GET",
         headers: {},
@@ -1298,6 +1327,54 @@ export async function getLatestImageAsync(cameraId: number) {
     console.error(`Error fetching latest image: ${e}`);
     return;
   }
+}
+
+export async function testCameraLatestImageAsync(
+  captureUrl: string,
+): Promise<string> {
+  const response = await fetch(
+    buildCameraTestUrl("latest-image", "captureUrl", captureUrl),
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+    },
+  );
+
+  if (!response.ok) {
+    const errorResponse = (await response.json()) as ErrorResponse;
+    throw new Error(
+      getErrorMessage(errorResponse, "Failed to fetch test camera image."),
+    );
+  }
+
+  return URL.createObjectURL(await response.blob());
+}
+
+export function getCameraStreamTestUrl(streamUrl: string): string {
+  return buildCameraTestUrl("stream", "streamUrl", streamUrl);
+}
+
+export async function testCameraHealthAsync(
+  healthUrl: string,
+): Promise<CameraHealthTestResult> {
+  const response = await fetch(
+    buildCameraTestUrl("health", "healthUrl", healthUrl),
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+    },
+  );
+
+  const json = (await response.json()) as SuccessResponse | ErrorResponse;
+  if (!response.ok) {
+    throw new Error(
+      getErrorMessage(json as ErrorResponse, "Failed to check camera health."),
+    );
+  }
+
+  return (json as SuccessResponse).content?.data as CameraHealthTestResult;
 }
 
 export async function getTimelapseArchiveAsync(cameraId: number) {

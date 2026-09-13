@@ -96,6 +96,22 @@ describe("CameraManager", () => {
     assert.isTrue(getLatestImageAsyncStub.calledOnce);
   });
 
+  it("captures a fresh image on demand and returns it", async () => {
+    const latestImage = Buffer.from("latest-image");
+    const captureLatestImageAsyncStub = ImageCapture.prototype
+      .captureLatestImageAsync as sinon.SinonStub;
+    captureLatestImageAsyncStub.resolves(true);
+    const getLatestImageAsyncStub = sandbox
+      .stub(ImageCapture.prototype, "getLatestImageAsync")
+      .resolves(latestImage);
+
+    const manager = (await createManager([cameraSettings])).manager;
+
+    assert.equal(await manager.captureLatestImageAsync(1), latestImage);
+    assert.isTrue(captureLatestImageAsyncStub.calledWithExactly(cameraSettings.captureUrl, {}));
+    assert.isTrue(getLatestImageAsyncStub.called);
+  });
+
   it("returns per-camera timelapse progress", async () => {
     const progress = { isGenerating: true, archiveProgress: 42 };
     sandbox.stub(ImageCapture.prototype, "getTimelapseGenerationStatus").returns(progress);
