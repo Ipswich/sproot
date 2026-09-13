@@ -11,7 +11,7 @@ import io
 import logging
 import os
 import signal
-from threading import Condition, RLock
+from threading import Condition, Lock, RLock
 from typing import Optional
 
 import uvicorn
@@ -310,6 +310,7 @@ class CameraService:
         self.settings = settings
         self.output = LatestFrameBuffer()
         self._lock = RLock()
+        self._camera_operation_lock = Lock()
         self._picam2: Optional[Picamera2] = None
         self._camera_started = False
         self._recording_started = False
@@ -322,6 +323,11 @@ class CameraService:
         self._last_recovery_succeeded_at: Optional[datetime] = None
         self._last_recovery_error: Optional[str] = None
         self._last_camera_activity_at: Optional[datetime] = None
+        self._active_operation_name: Optional[str] = None
+        self._active_operation_started_at: Optional[datetime] = None
+        self._last_capture_started_at: Optional[datetime] = None
+        self._last_capture_completed_at: Optional[datetime] = None
+        self._last_capture_error: Optional[str] = None
 
     def _record_camera_activity(self, request) -> None:
         del request
@@ -338,11 +344,40 @@ class CameraService:
         with self._lock:
             return self._main_resolution
 
-    def start(self) -> None:
+    def _mark_operation_started(self, name: str) -> datetime:
+        started_at = datetime.now(timezone.utc)
         with self._lock:
-            self.output.open_stream()
-            self.output.reset_activity(clear_frame=True)
-            self._state = "starting"
+            self._active_operation_name = name
+            self._active_operation_started_at = started_at
+            if name == "capture":
+                self._last_capture_started_at = started_at
+                self._last_capture_error = None
+        return started_at
+
+    def _mark_operation_finished(
+        self,
+        name: str,
+        *,
+        completed_at: Optional[datetime] = None,
+        error: Optional[Exception] = None,
+    ) -> None:
+        with self._lock:
+            if self._active_operation_name == name:
+                self._active_operation_name = None
+                self._active_operation_started_at = None
+
+            if name == "capture":
+                if completed_at is not None:
+                    self._last_capture_completed_at = completed_at
+                if error is not None:
+                    self._last_capture_error = str(error)
+
+    def start(self) -> None:
+        with self._camera_operation_lock:
+            with self._lock:
+                self.output.open_stream()
+                self.output.reset_activity(clear_frame=True)
+                self._state = "starting"
             self._start_pipeline_locked()
 
     def _start_pipeline_locked(self) -> None:
@@ -402,10 +437,11 @@ class CameraService:
         )
 
     def stop(self) -> None:
-        with self._lock:
+        with self._camera_operation_lock:
             self.output.close_stream()
             self._stop_pipeline_locked()
-            self._state = "stopped"
+            with self._lock:
+                self._state = "stopped"
 
     def _stop_pipeline_locked(self) -> None:
         if self._picam2 is None:
@@ -450,6 +486,15 @@ class CameraService:
             if self._picam2 is None or not self._camera_started:
                 return False
 
+            active_operation_started_at = self._active_operation_started_at
+            if active_operation_started_at is not None and (
+                datetime.now(timezone.utc) - active_operation_started_at
+            ).total_seconds() >= self.settings.stall_timeout_seconds:
+                return True
+
+            if self.settings.disable_stream:
+                return False
+
             last_activity_at = self._get_last_activity_at_locked()
             if last_activity_at is None:
                 return False
@@ -459,15 +504,16 @@ class CameraService:
             ).total_seconds() >= self.settings.stall_timeout_seconds
 
     def recover(self, reason: str) -> bool:
-        with self._lock:
-            self._state = "recovering"
-            self._recovery_attempts += 1
-            self._last_recovery_started_at = datetime.now(timezone.utc)
-            logging.warning(
-                "Camera recovery attempt %s started: %s",
-                self._recovery_attempts,
-                reason,
-            )
+        with self._camera_operation_lock:
+            with self._lock:
+                self._state = "recovering"
+                self._recovery_attempts += 1
+                self._last_recovery_started_at = datetime.now(timezone.utc)
+                logging.warning(
+                    "Camera recovery attempt %s started: %s",
+                    self._recovery_attempts,
+                    reason,
+                )
 
             self._stop_pipeline_locked()
             self.output.reset_activity(clear_frame=True)
@@ -475,20 +521,24 @@ class CameraService:
             try:
                 self._start_pipeline_locked()
             except Exception as exc:
-                self._consecutive_recovery_failures += 1
-                self._state = "failed"
-                self._last_recovery_error = str(exc)
-                logging.exception(
-                    "Camera recovery attempt %s failed (%s/%s consecutive failures)",
-                    self._recovery_attempts,
-                    self._consecutive_recovery_failures,
-                    self.settings.max_recovery_failures,
-                )
+                with self._lock:
+                    self._consecutive_recovery_failures += 1
+                    self._state = "failed"
+                    self._last_recovery_error = str(exc)
+                    logging.exception(
+                        "Camera recovery attempt %s failed (%s/%s consecutive failures)",
+                        self._recovery_attempts,
+                        self._consecutive_recovery_failures,
+                        self.settings.max_recovery_failures,
+                    )
                 return False
 
-            self._consecutive_recovery_failures = 0
-            self._last_recovery_succeeded_at = datetime.now(timezone.utc)
-            logging.info("Camera recovery attempt %s succeeded", self._recovery_attempts)
+            with self._lock:
+                self._consecutive_recovery_failures = 0
+                self._last_recovery_succeeded_at = datetime.now(timezone.utc)
+                logging.info(
+                    "Camera recovery attempt %s succeeded", self._recovery_attempts
+                )
             return True
 
     def should_terminate_process(self) -> bool:
@@ -506,19 +556,29 @@ class CameraService:
         os.kill(os.getpid(), signal.SIGTERM)
 
     def capture_jpeg(self) -> bytes:
-        with self._lock:
-            if self._picam2 is None:
-                raise RuntimeError("Camera is not initialized")
+        self._mark_operation_started("capture")
+        try:
+            with self._camera_operation_lock:
+                with self._lock:
+                    if self._picam2 is None:
+                        raise RuntimeError("Camera is not initialized")
+                    picam2 = self._picam2
 
-            buffer = io.BytesIO()
-            request = self._picam2.capture_request()
-            try:
-                request.save("main", buffer, format="jpeg")
-                self._last_camera_activity_at = datetime.now(timezone.utc)
-            finally:
-                request.release()
+                buffer = io.BytesIO()
+                request = picam2.capture_request()
+                try:
+                    request.save("main", buffer, format="jpeg")
+                finally:
+                    request.release()
 
+            completed_at = datetime.now(timezone.utc)
+            with self._lock:
+                self._last_camera_activity_at = completed_at
+            self._mark_operation_finished("capture", completed_at=completed_at)
             return buffer.getvalue()
+        except Exception as exc:
+            self._mark_operation_finished("capture", error=exc)
+            raise
 
     def get_health(self) -> dict:
         with self._lock:
@@ -561,6 +621,19 @@ class CameraService:
                         self._last_recovery_succeeded_at
                     ),
                     "lastError": self._last_recovery_error,
+                },
+                "capture": {
+                    "activeOperation": self._active_operation_name,
+                    "activeOperationStartedAt": self._format_timestamp(
+                        self._active_operation_started_at
+                    ),
+                    "lastStartedAt": self._format_timestamp(
+                        self._last_capture_started_at
+                    ),
+                    "lastCompletedAt": self._format_timestamp(
+                        self._last_capture_completed_at
+                    ),
+                    "lastError": self._last_capture_error,
                 },
                 "watchdog": {
                     "intervalSeconds": self.settings.watchdog_interval_seconds,
@@ -630,7 +703,8 @@ async def generate_mjpeg_stream():
     frame_count = 0
     while True:
         try:
-            frame_count, frame, stream_closed = camera_service.output.wait_for_next_frame(
+            frame_count, frame, stream_closed = await asyncio.to_thread(
+                camera_service.output.wait_for_next_frame,
                 frame_count,
                 FRAME_WAIT_TIMEOUT_SECONDS,
             )
@@ -656,7 +730,8 @@ async def generate_mjpeg_stream():
 @app.get("/capture")
 async def capture(_authenticated: bool = Depends(verify_auth)):
     try:
-        return Response(content=camera_service.capture_jpeg(), media_type="image/jpeg")
+        image = await asyncio.to_thread(camera_service.capture_jpeg)
+        return Response(content=image, media_type="image/jpeg")
     except Exception as exc:
         logging.exception("Capture failed")
         raise HTTPException(status_code=500, detail=f"Capture failed: {exc}") from exc
