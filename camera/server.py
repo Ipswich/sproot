@@ -321,6 +321,12 @@ class CameraService:
         self._last_recovery_started_at: Optional[datetime] = None
         self._last_recovery_succeeded_at: Optional[datetime] = None
         self._last_recovery_error: Optional[str] = None
+        self._last_camera_activity_at: Optional[datetime] = None
+
+    def _record_camera_activity(self, request) -> None:
+        del request
+        with self._lock:
+            self._last_camera_activity_at = datetime.now(timezone.utc)
 
     @property
     def is_running(self) -> bool:
@@ -342,6 +348,7 @@ class CameraService:
     def _start_pipeline_locked(self) -> None:
         logging.info("Initializing Picamera2")
         picam2 = Picamera2()
+        picam2.post_callback = self._record_camera_activity
         try:
             main_resolution = self.settings.image_resolution or tuple(picam2.sensor_resolution)
             frame_duration = int(1_000_000 / self.settings.fps)
@@ -381,6 +388,7 @@ class CameraService:
         self._recording_started = not self.settings.disable_stream
         self._main_resolution = main_resolution
         self._pipeline_started_at = datetime.now(timezone.utc)
+        self._last_camera_activity_at = self._pipeline_started_at
         self._state = "healthy"
         self._last_recovery_error = None
         logging.info(
@@ -422,6 +430,7 @@ class CameraService:
                 self._recording_started = False
                 self._main_resolution = None
                 self._pipeline_started_at = None
+                self._last_camera_activity_at = None
 
     def _format_timestamp(self, value: Optional[datetime]) -> Optional[str]:
         if value is None:
@@ -434,17 +443,11 @@ class CameraService:
         return (datetime.now(timezone.utc) - value).total_seconds()
 
     def _get_last_activity_at_locked(self) -> Optional[datetime]:
-        if self.settings.disable_stream:
-            return None
-
-        return self.output.last_frame_at or self._pipeline_started_at
+        return self._last_camera_activity_at
 
     def is_stalled(self) -> bool:
         with self._lock:
-            if self.settings.disable_stream:
-                return False
-
-            if self._picam2 is None or not self._recording_started:
+            if self._picam2 is None or not self._camera_started:
                 return False
 
             last_activity_at = self._get_last_activity_at_locked()
@@ -511,6 +514,7 @@ class CameraService:
             request = self._picam2.capture_request()
             try:
                 request.save("main", buffer, format="jpeg")
+                self._last_camera_activity_at = datetime.now(timezone.utc)
             finally:
                 request.release()
 
@@ -543,7 +547,7 @@ class CameraService:
                     ),
                     "secondsSinceLastActivity": self._seconds_since(last_activity_at),
                     "stalled": self._picam2 is not None
-                    and self._recording_started
+                    and self._camera_started
                     and self.is_stalled(),
                 },
                 "recovery": {
@@ -559,7 +563,6 @@ class CameraService:
                     "lastError": self._last_recovery_error,
                 },
                 "watchdog": {
-                    "enabled": not self.settings.disable_stream,
                     "intervalSeconds": self.settings.watchdog_interval_seconds,
                     "stallTimeoutSeconds": self.settings.stall_timeout_seconds,
                 },
@@ -605,8 +608,7 @@ async def lifespan(app: FastAPI):
     watchdog_task: Optional[asyncio.Task[None]] = None
     try:
         camera_service.start()
-        if not settings.disable_stream:
-            watchdog_task = asyncio.create_task(camera_watchdog_loop())
+        watchdog_task = asyncio.create_task(camera_watchdog_loop())
         yield
     finally:
         if watchdog_task is not None:
