@@ -2,7 +2,9 @@
 
 import argparse
 import asyncio
+from concurrent.futures import TimeoutError as FuturesTimeoutError
 from contextlib import asynccontextmanager
+from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import hashlib
@@ -32,6 +34,10 @@ DEFAULT_WATCHDOG_INTERVAL_SECONDS = 1
 DEFAULT_MAX_RECOVERY_FAILURES = 3
 FRAME_WAIT_TIMEOUT_SECONDS = 5
 HEADER_NAME = "X-Interservice-Authentication-Token"
+
+
+class CameraOperationTimeoutError(RuntimeError):
+    pass
 
 
 def parse_resolution(value: Optional[str]) -> Optional[tuple[int, int]]:
@@ -565,11 +571,22 @@ class CameraService:
                     picam2 = self._picam2
 
                 buffer = io.BytesIO()
-                request = picam2.capture_request()
                 try:
-                    request.save("main", buffer, format="jpeg")
-                finally:
-                    request.release()
+                    picam2.capture_file(
+                        buffer,
+                        name="main",
+                        format="jpeg",
+                        wait=self.settings.stall_timeout_seconds,
+                    )
+                except FuturesTimeoutError as exc:
+                    logging.error(
+                        "Capture timed out after %s seconds; cancelling outstanding jobs",
+                        self.settings.stall_timeout_seconds,
+                    )
+                    picam2.cancel_all_and_flush()
+                    raise CameraOperationTimeoutError(
+                        f"capture timed out after {self.settings.stall_timeout_seconds} seconds"
+                    ) from exc
 
             completed_at = datetime.now(timezone.utc)
             with self._lock:
@@ -647,6 +664,13 @@ auth = InterserviceAuthentication(os.environ.get("INTERSERVICE_AUTHENTICATION_KE
 camera_service = CameraService(settings)
 
 
+async def recover_camera(reason: str) -> bool:
+    recovered = await asyncio.to_thread(camera_service.recover, reason)
+    if not recovered and camera_service.should_terminate_process():
+        camera_service.terminate_process()
+    return recovered
+
+
 async def verify_auth(
     x_interservice_authentication_token: Optional[str] = Header(None),
 ) -> bool:
@@ -664,11 +688,9 @@ async def camera_watchdog_loop() -> None:
             if not camera_service.is_stalled():
                 continue
 
-            recovered = camera_service.recover(
+            recovered = await recover_camera(
                 f"no frame received for at least {settings.stall_timeout_seconds} seconds"
             )
-            if not recovered and camera_service.should_terminate_process():
-                camera_service.terminate_process()
         except asyncio.CancelledError:
             return
         except Exception:
@@ -732,6 +754,10 @@ async def capture(_authenticated: bool = Depends(verify_auth)):
     try:
         image = await asyncio.to_thread(camera_service.capture_jpeg)
         return Response(content=image, media_type="image/jpeg")
+    except CameraOperationTimeoutError as exc:
+        logging.warning("Capture pipeline timed out, attempting recovery")
+        await recover_camera(str(exc))
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         logging.exception("Capture failed")
         raise HTTPException(status_code=500, detail=f"Capture failed: {exc}") from exc
@@ -757,11 +783,21 @@ def main() -> None:
         level=os.environ.get("CAMERA_LOG_LEVEL", "INFO").upper(),
         format="%(asctime)s %(levelname)s %(message)s",
     )
+    log_config = deepcopy(uvicorn.config.LOGGING_CONFIG)
+    log_config["formatters"]["default"]["fmt"] = (
+        "%(asctime)s %(levelprefix)s %(message)s"
+    )
+    log_config["formatters"]["access"]["fmt"] = (
+        '%(asctime)s %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s'
+    )
+    log_config["formatters"]["default"]["datefmt"] = "%Y-%m-%d %H:%M:%S"
+    log_config["formatters"]["access"]["datefmt"] = "%Y-%m-%d %H:%M:%S"
     config = uvicorn.Config(
         app,
         host="0.0.0.0",
         port=settings.port,
         timeout_graceful_shutdown=settings.shutdown_timeout_seconds,
+        log_config=log_config,
     )
     try:
         uvicorn.Server(config).run()
