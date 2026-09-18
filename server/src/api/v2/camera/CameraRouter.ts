@@ -3,6 +3,9 @@ import {
   getLatestImageAsync,
   streamHandlerAsync,
   clearAllImagesHandlerAsync,
+  testHealthHandlerAsync,
+  testLatestImageHandlerAsync,
+  testStreamHandlerAsync,
 } from "./handlers/CameraHandlers";
 import {
   createCameraSettingsAsync,
@@ -42,6 +45,18 @@ router.patch("/:cameraId/settings", async (req: Request, res: Response) => {
 router.delete("/:cameraId", async (req: Request, res: Response) => {
   const response = await deleteCameraSettingsAsync(req, res);
   res.status(response.statusCode).json(response);
+});
+
+router.get("/test/latest-image", async (req: Request, res: Response) => {
+  await testLatestImageHandlerAsync(req, res);
+});
+
+router.get("/test/stream", async (req: Request, res: Response) => {
+  await testStreamHandlerAsync(req, res);
+});
+
+router.get("/test/health", async (req: Request, res: Response) => {
+  await testHealthHandlerAsync(req, res);
 });
 
 router.get("/:cameraId/stream", async (req: Request, res: Response) => {

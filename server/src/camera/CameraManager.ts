@@ -103,6 +103,23 @@ class CameraManager {
     );
   }
 
+  async captureLatestImageAsync(cameraId: number): Promise<Buffer | null> {
+    const camera = this.#managedCameras.get(cameraId);
+    if (!camera || camera.settings.captureUrl.trim() === "") {
+      return null;
+    }
+
+    const captured = await camera.imageCapture.captureLatestImageAsync(
+      camera.settings.captureUrl,
+      {},
+    );
+    if (!captured) {
+      return null;
+    }
+
+    return camera.imageCapture.getLatestImageAsync();
+  }
+
   getTimelapseArchiveProgress(cameraId: number) {
     return (
       this.#managedCameras.get(cameraId)?.imageCapture.getTimelapseGenerationStatus() ?? {

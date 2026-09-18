@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Accordion,
@@ -31,11 +31,15 @@ import { formatMilitaryTime } from "@sproot/common/utility/TimeMethods";
 import ConfirmDeleteButton from "../../../components/ConfirmDeleteButton";
 import {
   getApplicationSettingsAsync,
+  getCameraStreamTestUrl,
   NewCameraSettings,
+  CameraHealthTestResult,
   clearAllImagesAsync,
   createCameraSettingsAsync,
   deleteCameraSettingsAsync,
   getCameraSettingsListAsync,
+  testCameraHealthAsync,
+  testCameraLatestImageAsync,
   updateCameraSettingsAsync,
 } from "../../../requests/requests_v2";
 import { useSolarLunarTimes } from "../../automations/Conditions/ConditionTypes/useSolarLunarTimes";
@@ -47,6 +51,26 @@ type CameraDraft = NewCameraSettings & {
   id?: number;
   key: string;
 };
+
+type CameraPreviewMode = "image" | "stream";
+
+type CameraTestState = {
+  activeTest: "capture" | "stream" | "health" | null;
+  error: string | null;
+  healthResult: CameraHealthTestResult | null;
+  previewMode: CameraPreviewMode | null;
+  previewSrc: string | null;
+};
+
+function createDefaultCameraTestState(): CameraTestState {
+  return {
+    activeTest: null,
+    error: null,
+    healthResult: null,
+    previewMode: null,
+    previewSrc: null,
+  };
+}
 
 function createDraftKey() {
   if (typeof globalThis.crypto?.randomUUID === "function") {
@@ -258,6 +282,10 @@ export default function CameraSettingsAccordionItem() {
   const [activeSaveKey, setActiveSaveKey] = useState<string | null>(null);
   const [activeDeleteKey, setActiveDeleteKey] = useState<string | null>(null);
   const [activeClearKey, setActiveClearKey] = useState<string | null>(null);
+  const [cameraTestStateByKey, setCameraTestStateByKey] = useState<
+    Record<string, CameraTestState>
+  >({});
+  const previewObjectUrlsRef = useRef<Record<string, string>>({});
 
   const cameraSettingsQuery = useQuery({
     queryKey: ["cameraSettingsList"],
@@ -291,6 +319,14 @@ export default function CameraSettingsAccordionItem() {
       return nextKeys;
     });
   }, [cameraSettingsQuery.data]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(previewObjectUrlsRef.current).forEach((previewUrl) => {
+        URL.revokeObjectURL(previewUrl);
+      });
+    };
+  }, []);
 
   const draftErrors = useMemo(() => {
     return Object.fromEntries(
@@ -405,6 +441,116 @@ export default function CameraSettingsAccordionItem() {
     });
   };
 
+  const updateCameraTestState = (
+    key: string,
+    updater: (state: CameraTestState) => CameraTestState,
+  ) => {
+    setCameraTestStateByKey((currentState) => {
+      const nextState = updater(
+        currentState[key] ?? createDefaultCameraTestState(),
+      );
+      return {
+        ...currentState,
+        [key]: nextState,
+      };
+    });
+  };
+
+  const replacePreviewForDraft = (
+    draftKey: string,
+    previewMode: CameraPreviewMode,
+    previewSrc: string,
+  ) => {
+    const existingObjectUrl = previewObjectUrlsRef.current[draftKey];
+    if (existingObjectUrl && existingObjectUrl !== previewSrc) {
+      URL.revokeObjectURL(existingObjectUrl);
+      delete previewObjectUrlsRef.current[draftKey];
+    }
+
+    if (previewSrc.startsWith("blob:")) {
+      previewObjectUrlsRef.current[draftKey] = previewSrc;
+    }
+
+    updateCameraTestState(draftKey, (currentState) => ({
+      ...currentState,
+      activeTest: null,
+      error: null,
+      previewMode,
+      previewSrc,
+    }));
+  };
+
+  const handleLatestImageTestAsync = async (draft: CameraDraft) => {
+    updateCameraTestState(draft.key, (currentState) => ({
+      ...currentState,
+      activeTest: "capture",
+      error: null,
+    }));
+
+    try {
+      const previewSrc = await testCameraLatestImageAsync(draft.captureUrl);
+      replacePreviewForDraft(draft.key, "image", previewSrc);
+    } catch (error) {
+      updateCameraTestState(draft.key, (currentState) => ({
+        ...currentState,
+        activeTest: null,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch a test camera image.",
+      }));
+    }
+  };
+
+  const handleStreamTest = (draft: CameraDraft) => {
+    replacePreviewForDraft(
+      draft.key,
+      "stream",
+      getCameraStreamTestUrl(draft.streamUrl),
+    );
+  };
+
+  const handleHealthTestAsync = async (draft: CameraDraft) => {
+    updateCameraTestState(draft.key, (currentState) => ({
+      ...currentState,
+      activeTest: "health",
+      error: null,
+    }));
+
+    try {
+      const healthResult = await testCameraHealthAsync(draft.healthUrl);
+      updateCameraTestState(draft.key, (currentState) => ({
+        ...currentState,
+        activeTest: null,
+        error: null,
+        healthResult,
+      }));
+    } catch (error) {
+      updateCameraTestState(draft.key, (currentState) => ({
+        ...currentState,
+        activeTest: null,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to check camera health.",
+      }));
+    }
+  };
+
+  const clearPreviewForDraft = (draftKey: string) => {
+    const existingObjectUrl = previewObjectUrlsRef.current[draftKey];
+    if (existingObjectUrl) {
+      URL.revokeObjectURL(existingObjectUrl);
+      delete previewObjectUrlsRef.current[draftKey];
+    }
+
+    updateCameraTestState(draftKey, (currentState) => ({
+      ...currentState,
+      previewMode: null,
+      previewSrc: null,
+    }));
+  };
+
   return (
     <Accordion.Item value="camera-settings">
       <Accordion.Control>
@@ -470,6 +616,15 @@ export default function CameraSettingsAccordionItem() {
                 const isPending = activeSaveKey === draft.key;
                 const isDeleting = activeDeleteKey === draft.key;
                 const isClearing = activeClearKey === draft.key;
+                const cameraTestState =
+                  cameraTestStateByKey[draft.key] ??
+                  createDefaultCameraTestState();
+                const isTestingCapture =
+                  cameraTestState.activeTest === "capture";
+                const isTestingHealth = cameraTestState.activeTest === "health";
+                const isStreamPreviewVisible =
+                  cameraTestState.previewMode === "stream" &&
+                  cameraTestState.previewSrc !== null;
 
                 return (
                   <Accordion.Item key={draft.key} value={draft.key}>
@@ -654,6 +809,119 @@ export default function CameraSettingsAccordionItem() {
                               disabled={!draft.timelapseEnabled}
                             />
                           </SimpleGrid>
+
+                          <Stack gap="xs">
+                            <Text size="sm" fw={500}>
+                              Connection Tests
+                            </Text>
+                            <Group>
+                              <Button
+                                size="xs"
+                                variant="light"
+                                disabled={!hasConfiguredUrl(draft.captureUrl)}
+                                loading={isTestingCapture}
+                                onClick={() => {
+                                  void handleLatestImageTestAsync(draft);
+                                }}
+                              >
+                                Test Latest Image
+                              </Button>
+                              <Button
+                                size="xs"
+                                variant="light"
+                                disabled={!hasConfiguredUrl(draft.streamUrl)}
+                                onClick={() => {
+                                  handleStreamTest(draft);
+                                }}
+                              >
+                                Preview Stream
+                              </Button>
+                              <Button
+                                size="xs"
+                                variant="light"
+                                disabled={!hasConfiguredUrl(draft.healthUrl)}
+                                loading={isTestingHealth}
+                                onClick={() => {
+                                  void handleHealthTestAsync(draft);
+                                }}
+                              >
+                                Check Health
+                              </Button>
+                              {cameraTestState.previewSrc ? (
+                                <Button
+                                  size="xs"
+                                  variant="subtle"
+                                  onClick={() => {
+                                    clearPreviewForDraft(draft.key);
+                                  }}
+                                >
+                                  Close Preview
+                                </Button>
+                              ) : null}
+                            </Group>
+                            <Text size="xs" c="dimmed">
+                              These tests run through the server so you can
+                              verify external camera URLs from the same network
+                              path used in production.
+                            </Text>
+                            {cameraTestState.error ? (
+                              <Alert color="red" title="Camera test failed">
+                                {cameraTestState.error}
+                              </Alert>
+                            ) : null}
+                            {cameraTestState.healthResult ? (
+                              <Alert
+                                color="green"
+                                title="Health endpoint responded"
+                              >
+                                {`${cameraTestState.healthResult.statusCode} ${cameraTestState.healthResult.statusText}`}
+                                {cameraTestState.healthResult.contentType
+                                  ? ` • ${cameraTestState.healthResult.contentType}`
+                                  : ""}
+                                {cameraTestState.healthResult.bodyPreview
+                                  ? ` • ${cameraTestState.healthResult.bodyPreview}`
+                                  : ""}
+                              </Alert>
+                            ) : null}
+                            {cameraTestState.previewSrc ? (
+                              <Stack gap="xs">
+                                <Text size="sm" fw={500}>
+                                  {isStreamPreviewVisible
+                                    ? "Stream Preview"
+                                    : "Latest Image Preview"}
+                                </Text>
+                                <Box
+                                  style={{
+                                    overflow: "hidden",
+                                    borderRadius: "var(--mantine-radius-sm)",
+                                    background: "#111",
+                                  }}
+                                >
+                                  <img
+                                    alt={`${draft.name} test preview`}
+                                    onError={() => {
+                                      updateCameraTestState(
+                                        draft.key,
+                                        (currentState) => ({
+                                          ...currentState,
+                                          error: isStreamPreviewVisible
+                                            ? "The stream preview could not be loaded through the server."
+                                            : "The latest image preview could not be loaded through the server.",
+                                        }),
+                                      );
+                                    }}
+                                    src={cameraTestState.previewSrc}
+                                    style={{
+                                      display: "block",
+                                      width: "100%",
+                                      maxHeight: 320,
+                                      objectFit: "cover",
+                                    }}
+                                  />
+                                </Box>
+                              </Stack>
+                            ) : null}
+                          </Stack>
 
                           <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
                             <CameraTimeExpressionField

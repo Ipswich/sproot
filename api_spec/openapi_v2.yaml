@@ -5640,15 +5640,15 @@ paths:
                               example:
                                 - "Failed to delete device zone from database."
                                 - "Database connection failed."
-  /api/v2/camera/settings:
+  /api/v2/camera:
     get:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
         - "Camera"
-      summary: Get camera settings.
-      description: Returns the current camera settings.
+      summary: List configured cameras.
+      description: Returns all configured camera definitions.
       responses:
         200:
           description: "Success"
@@ -5658,31 +5658,131 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/SuccessResponse"
                   - properties:
-                      statusCode:
-                        example: 200
                       content:
                         properties:
                           data:
-                            $ref: "#/components/schemas/CameraSettings"
-        401:
-          description: "Unauthorized"
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/CameraSettings"
+    post:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Create a camera.
+      description: Adds a new external camera configuration.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CameraSettings"
+      responses:
+        201:
+          description: "Created"
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
+                  - $ref: "#/components/schemas/SuccessResponse"
                   - properties:
-                      statusCode:
-                        example: 401
-                      error:
+                      content:
                         properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/camera/settings"
-                          details:
-                            items:
-                              example: "Invalid or Missing JWT."
+                          data:
+                            $ref: "#/components/schemas/CameraSettings"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v2/camera/{cameraId}:
+    delete:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Delete a camera.
+      description: Deletes a configured camera.
+      parameters:
+        - in: path
+          name: cameraId
+          required: true
+          description: "Camera Id"
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: "Not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v2/camera/{cameraId}/settings:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Get camera settings.
+      description: Returns one configured camera definition.
+      parameters:
+        - in: path
+          name: cameraId
+          required: true
+          description: "Camera Id"
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/CameraSettings"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: "Not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     patch:
       security:
         - bearerAuth: []
@@ -5690,8 +5790,15 @@ paths:
       tags:
         - "Camera"
       summary: Update camera settings.
-      description: >
-        Updates the camera settings. This operation changes only the fields provided.
+      description: Updates one configured camera definition.
+      parameters:
+        - in: path
+          name: cameraId
+          required: true
+          description: "Camera Id"
+          schema:
+            type: integer
+            minimum: 1
       requestBody:
         required: true
         content:
@@ -5707,8 +5814,6 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/SuccessResponse"
                   - properties:
-                      statusCode:
-                        example: 200
                       content:
                         properties:
                           data:
@@ -5718,62 +5823,21 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 400
-                      error:
-                        properties:
-                          name:
-                            example: "Bad Request"
-                          url:
-                            example: "/api/v2/camera/settings"
-                          details:
-                            items:
-                              example:
-                                - "Missing timelapse enabled"
-                                - "Missing timelapse image retention days"
-                                - "Missing timelapse image retention size"
-        401:
-          description: "Unauthorized"
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: "Not found"
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/camera/settings"
-                          details:
-                            items:
-                              example: "Invalid or Missing JWT."
+                $ref: "#/components/schemas/ErrorResponse"
         503:
           description: "Service unavailable"
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 503
-                      error:
-                        properties:
-                          name:
-                            example: "Service unavailable"
-                          url:
-                            example: "/api/v2/camera/settings"
-                          details:
-                            items:
-                              example: "Failed to update camera settings: database connection failed."
-  /api/v2/camera/stream:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v2/camera/{cameraId}/stream:
     get:
       security:
         - bearerAuth: []
@@ -5781,7 +5845,15 @@ paths:
       tags:
         - "Camera"
       summary: Get a live MJPEG camera stream.
-      description: Returns a live MJPEG stream from the camera.
+      description: Proxies the configured stream URL for one camera.
+      parameters:
+        - in: path
+          name: cameraId
+          required: true
+          description: "Camera Id"
+          schema:
+            type: integer
+            minimum: 1
       responses:
         200:
           description: "Success"
@@ -5790,71 +5862,20 @@ paths:
               schema:
                 type: string
                 format: binary
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         502:
           description: "Bad Gateway"
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 502
-                      error:
-                        properties:
-                          name:
-                            example: "Bad Gateway"
-                          url:
-                            example: "/api/v2/camera/stream"
-                          details:
-                            items:
-                              example: "Failed to connect to camera stream"
-  /api/v2/camera/reconnect:
-    post:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Camera"
-      summary: Reconnect to the camera.
-      description: >
-        Attempts to reconnect to the camera. This is useful if the camera has lost connection or 
-        is not responding.
-      responses:
-        200:
-          description: "Success"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            example: "Livestream successfully reconnected"
-        502:
-          description: "Bad Gateway"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 502
-                      error:
-                        properties:
-                          name:
-                            example: "Bad Gateway"
-                          url:
-                            example: "/api/v2/camera/reconnect"
-                          details:
-                            items:
-                              example: "Could not connect to camera server"
-  /api/v2/camera/latest-image:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v2/camera/{cameraId}/latest-image:
     get:
       security:
         - bearerAuth: []
@@ -5862,7 +5883,23 @@ paths:
       tags:
         - "Camera"
       summary: Get the latest image.
-      description: Returns the most recently taken image.
+      description: >
+        Returns the most recently cached image for a camera. Set `captureNew=true`
+        to trigger an immediate fresh capture before returning the image.
+      parameters:
+        - in: path
+          name: cameraId
+          required: true
+          description: "Camera Id"
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: captureNew
+          required: false
+          description: "Trigger an immediate capture before returning the image."
+          schema:
+            type: boolean
       responses:
         200:
           description: "Success"
@@ -5871,26 +5908,26 @@ paths:
               schema:
                 type: string
                 format: binary
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         404:
           description: "Image not found"
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/camera/latest-image"
-                          details:
-                            items:
-                              example: "No latest image"
-  /api/v2/camera/timelapse/images:
+                $ref: "#/components/schemas/ErrorResponse"
+        502:
+          description: "Bad Gateway"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v2/camera/{cameraId}/timelapse/images:
     delete:
       security:
         - bearerAuth: []
@@ -5898,63 +5935,42 @@ paths:
       tags:
         - "Camera"
       summary: Clear all timelapse images.
-      description: Removes all images from the timelapse directory.
+      description: Removes all timelapse images for one camera.
+      parameters:
+        - in: path
+          name: cameraId
+          required: true
+          description: "Camera Id"
+          schema:
+            type: integer
+            minimum: 1
       responses:
         200:
           description: "Success"
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        type: integer
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            type: string
-                            example: "All images cleared successfully"
+                $ref: "#/components/schemas/SuccessResponse"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         409:
           description: "Conflict"
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 409
-                      error:
-                        properties:
-                          name:
-                            example: "Conflict"
-                          url:
-                            example: "/api/v2/camera/timelapse/images"
-                          details:
-                            items:
-                              example: "Could not clear images at this time. Please try again later."
+                $ref: "#/components/schemas/ErrorResponse"
         500:
           description: "Internal Server Error"
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 500
-                      error:
-                        properties:
-                          name:
-                            example: "Internal Server Error"
-                          url:
-                            example: "/api/v2/camera/timelapse/images"
-                          details:
-                            items:
-                              example: "Could not clear all images"
-  /api/v2/camera/timelapse/archive:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v2/camera/{cameraId}/timelapse/archive:
     get:
       security:
         - bearerAuth: []
@@ -5962,16 +5978,19 @@ paths:
       tags:
         - "Camera"
       summary: Get the timelapse archive.
-      description: Returns a tar file containing all timelapse images.
+      description: Returns the timelapse tar archive for one camera.
+      parameters:
+        - in: path
+          name: cameraId
+          required: true
+          description: "Camera Id"
+          schema:
+            type: integer
+            minimum: 1
       responses:
         200:
           description: "Success"
           headers:
-            Content-Length:
-              description: "The size of the content in bytes."
-              schema:
-                type: string
-                example: "12345678"
             Content-Disposition:
               description: "Indicates that the content is a file attachment."
               schema:
@@ -5982,46 +6001,26 @@ paths:
               schema:
                 type: string
                 format: binary
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         404:
           description: "Archive not found"
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/camera/timelapse/archive"
-                          details:
-                            items:
-                              example: "No timelapse archive available."
+                $ref: "#/components/schemas/ErrorResponse"
         500:
           description: "Internal server error"
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 500
-                      error:
-                        properties:
-                          name:
-                            example: "Internal Server Error"
-                          url:
-                            example: "/api/v2/camera/timelapse/archive"
-                          details:
-                            items:
-                              example: "Error streaming timelapse archive."
+                $ref: "#/components/schemas/ErrorResponse"
 
-  /api/v2/camera/timelapse/archive/regenerate:
+  /api/v2/camera/{cameraId}/timelapse/archive/regenerate:
     post:
       security:
         - bearerAuth: []
@@ -6029,33 +6028,46 @@ paths:
       tags:
         - "Camera"
       summary: Regenerate the timelapse archive.
-      description: >
-        Regenerates the timelapse archive. Useful if you want to regenerate it to now, instead of waiting for the usual interval.
+      description: Queues a regeneration of the timelapse archive for one camera.
+      parameters:
+        - in: path
+          name: cameraId
+          required: true
+          description: "Camera Id"
+          schema:
+            type: integer
+            minimum: 1
       responses:
         202:
           description: "Success"
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 202
-                      content:
-                        properties:
-                          data:
-                            example: "Timelapse archive regeneration queued."
-  /api/v2/camera/timelapse/archive/status:
+                $ref: "#/components/schemas/SuccessResponse"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v2/camera/{cameraId}/timelapse/archive/status:
     get:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
         - "Camera"
-      summary: Get the status of the timelapse archive regeneration.
-      description: >
-        Returns the status of the timelapse archive regeneration. This is useful to check if the regeneration is still in progress.
+      summary: Get the timelapse archive regeneration status.
+      description: Returns archive generation progress for one camera.
+      parameters:
+        - in: path
+          name: cameraId
+          required: true
+          description: "Camera Id"
+          schema:
+            type: integer
+            minimum: 1
       responses:
         200:
           description: "Success"
@@ -6065,8 +6077,6 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/SuccessResponse"
                   - properties:
-                      statusCode:
-                        example: 200
                       content:
                         properties:
                           data:
@@ -6074,10 +6084,145 @@ paths:
                             properties:
                               isGenerating:
                                 type: boolean
-                                example: "true"
                               archiveProgress:
                                 type: number
-                                example: 75
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v2/camera/test/latest-image:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Test a capture URL.
+      description: Fetches a still image through the server using the supplied capture URL.
+      parameters:
+        - in: query
+          name: captureUrl
+          required: true
+          description: "Camera capture URL to test."
+          schema:
+            type: string
+            format: uri
+      responses:
+        200:
+          description: "Success"
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        502:
+          description: "Bad Gateway"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v2/camera/test/stream:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Test a stream URL.
+      description: Proxies a live stream through the server using the supplied stream URL.
+      parameters:
+        - in: query
+          name: streamUrl
+          required: true
+          description: "Camera stream URL to test."
+          schema:
+            type: string
+            format: uri
+      responses:
+        200:
+          description: "Success"
+          content:
+            multipart/x-mixed-replace:
+              schema:
+                type: string
+                format: binary
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        502:
+          description: "Bad Gateway"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v2/camera/test/health:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Test a health URL.
+      description: Fetches a health endpoint through the server using the supplied health URL.
+      parameters:
+        - in: query
+          name: healthUrl
+          required: true
+          description: "Camera health URL to test."
+          schema:
+            type: string
+            format: uri
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      content:
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              ok:
+                                type: boolean
+                              statusCode:
+                                type: integer
+                              statusText:
+                                type: string
+                              contentType:
+                                nullable: true
+                                type: string
+                              bodyPreview:
+                                type: string
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        502:
+          description: "Bad Gateway"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/v2/tags/journals:
     get:
       security:
