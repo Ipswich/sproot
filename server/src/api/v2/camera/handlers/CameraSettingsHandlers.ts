@@ -4,6 +4,10 @@ import { CameraManager } from "../../../../camera/CameraManager";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { isDynamicTimePoint } from "@sproot/common/automation/TimeConditionTimePoints";
+import {
+  CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MAX,
+  CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MIN,
+} from "@sproot/common/utility/Constants";
 import { SettingsService } from "../../../../settings/SettingsService";
 import { SETTINGS } from "../../../../database/settings/SettingsSchema";
 
@@ -102,6 +106,16 @@ async function validateCameraSettingsInput(
   }
   if (hasHealthUrl && !isValidUrl(newSettings.healthUrl)) {
     missingOrInvalidFields.push("healthUrl must be a valid http or https URL");
+  }
+  if (
+    typeof newSettings.latestImageRefreshIntervalSeconds !== "number" ||
+    newSettings.latestImageRefreshIntervalSeconds <
+      CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MIN ||
+    newSettings.latestImageRefreshIntervalSeconds > CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MAX
+  ) {
+    missingOrInvalidFields.push(
+      `latestImageRefreshIntervalSeconds must be a number between ${CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MIN} and ${CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MAX}`,
+    );
   }
   if (!hasCaptureUrl && !hasStreamUrl) {
     missingOrInvalidFields.push("At least one of captureUrl or streamUrl must be configured");

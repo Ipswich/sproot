@@ -5,6 +5,7 @@ import {
   Alert,
   Box,
   Button,
+  Collapse,
   Group,
   LoadingOverlay,
   NumberInput,
@@ -27,6 +28,11 @@ import {
   DYNAMIC_TIME_POINT_VALUES,
   isDynamicTimePoint,
 } from "@sproot/common/automation/TimeConditionTimePoints";
+import {
+  CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_DEFAULT,
+  CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MAX,
+  CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MIN,
+} from "@sproot/common/utility/Constants";
 import { formatMilitaryTime } from "@sproot/common/utility/TimeMethods";
 import ConfirmDeleteButton from "../../../components/ConfirmDeleteButton";
 import {
@@ -135,6 +141,8 @@ function createDefaultDraft(index: number): CameraDraft {
     captureUrl: "http://camera:3002/capture",
     streamUrl: "http://camera:3002/stream.mjpg",
     healthUrl: "",
+    latestImageRefreshIntervalSeconds:
+      CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_DEFAULT,
     timelapseEnabled: false,
     timelapseInterval: 5,
     timelapseStartTime: null,
@@ -160,6 +168,7 @@ function toRequestBody(draft: CameraDraft): NewCameraSettings {
     captureUrl: normalizeUrl(draft.captureUrl),
     streamUrl: normalizeUrl(draft.streamUrl),
     healthUrl: normalizeUrl(draft.healthUrl),
+    latestImageRefreshIntervalSeconds: draft.latestImageRefreshIntervalSeconds,
     timelapseEnabled: draft.timelapseEnabled,
     timelapseInterval: draft.timelapseInterval,
     timelapseStartTime: draft.timelapseStartTime,
@@ -181,6 +190,17 @@ function validateDraft(draft: CameraDraft): string[] {
 
   if (draft.name.trim().length < 1 || draft.name.trim().length > 64) {
     errors.push("Name must be between 1 and 64 characters.");
+  }
+
+  if (
+    draft.latestImageRefreshIntervalSeconds <
+      CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MIN ||
+    draft.latestImageRefreshIntervalSeconds >
+      CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MAX
+  ) {
+    errors.push(
+      `Latest image refresh interval must be between ${CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MIN} and ${CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MAX} seconds.`,
+    );
   }
 
   urlFields.forEach(([label, value]) => {
@@ -616,6 +636,7 @@ export default function CameraSettingsAccordionItem() {
                 const isPending = activeSaveKey === draft.key;
                 const isDeleting = activeDeleteKey === draft.key;
                 const isClearing = activeClearKey === draft.key;
+                const showTimelapseSettings = draft.timelapseEnabled;
                 const cameraTestState =
                   cameraTestStateByKey[draft.key] ??
                   createDefaultCameraTestState();
@@ -708,18 +729,23 @@ export default function CameraSettingsAccordionItem() {
                                 );
                               }}
                             />
-                            <Switch
-                              label="Enabled"
-                              withThumbIndicator={false}
-                              checked={draft.enabled}
-                              onChange={(event) => {
-                                updateDraft(
-                                  draft.key,
-                                  "enabled",
-                                  event.currentTarget.checked,
-                                );
-                              }}
-                            />
+                            <Stack gap={6} align="flex-start">
+                              <Text size="sm" fw={500}>
+                                Enabled
+                              </Text>
+                              <Switch
+                                aria-label="Enabled"
+                                withThumbIndicator={false}
+                                checked={draft.enabled}
+                                onChange={(event) => {
+                                  updateDraft(
+                                    draft.key,
+                                    "enabled",
+                                    event.currentTarget.checked,
+                                  );
+                                }}
+                              />
+                            </Stack>
                             <TextInput
                               label="Capture URL"
                               placeholder="Optional if stream URL is provided"
@@ -756,6 +782,28 @@ export default function CameraSettingsAccordionItem() {
                                 );
                               }}
                             />
+                            <NumberInput
+                              label="Image Capture Interval (seconds)"
+                              value={draft.latestImageRefreshIntervalSeconds}
+                              min={
+                                CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MIN
+                              }
+                              max={
+                                CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MAX
+                              }
+                              onChange={(value) => {
+                                updateDraft(
+                                  draft.key,
+                                  "latestImageRefreshIntervalSeconds",
+                                  typeof value === "number"
+                                    ? value
+                                    : CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_DEFAULT,
+                                );
+                              }}
+                            />
+                          </SimpleGrid>
+
+                          <Stack gap="xs">
                             <Switch
                               label="Timelapse Enabled"
                               withThumbIndicator={false}
@@ -768,47 +816,131 @@ export default function CameraSettingsAccordionItem() {
                                 );
                               }}
                             />
-                            <NumberInput
-                              label="Timelapse Interval (minutes)"
-                              value={draft.timelapseInterval ?? ""}
-                              min={1}
-                              max={1440}
-                              onChange={(value) => {
-                                updateDraft(
-                                  draft.key,
-                                  "timelapseInterval",
-                                  typeof value === "number" ? value : null,
-                                );
-                              }}
-                              disabled={!draft.timelapseEnabled}
-                            />
-                            <NumberInput
-                              label="Image Retention Days"
-                              value={draft.imageRetentionDays}
-                              min={0}
-                              onChange={(value) => {
-                                updateDraft(
-                                  draft.key,
-                                  "imageRetentionDays",
-                                  typeof value === "number" ? value : 0,
-                                );
-                              }}
-                              disabled={!draft.timelapseEnabled}
-                            />
-                            <NumberInput
-                              label="Image Retention Size (MB)"
-                              value={draft.imageRetentionSize}
-                              min={0}
-                              onChange={(value) => {
-                                updateDraft(
-                                  draft.key,
-                                  "imageRetentionSize",
-                                  typeof value === "number" ? value : 0,
-                                );
-                              }}
-                              disabled={!draft.timelapseEnabled}
-                            />
-                          </SimpleGrid>
+                            <Collapse
+                              expanded={showTimelapseSettings}
+                              transitionDuration={220}
+                              transitionTimingFunction="ease"
+                            >
+                              <Stack gap="md" pt={4}>
+                                <SimpleGrid
+                                  cols={{ base: 1, md: 2 }}
+                                  spacing="md"
+                                >
+                                  <NumberInput
+                                    label="Timelapse Interval (minutes)"
+                                    value={draft.timelapseInterval ?? ""}
+                                    min={1}
+                                    max={1440}
+                                    onChange={(value) => {
+                                      updateDraft(
+                                        draft.key,
+                                        "timelapseInterval",
+                                        typeof value === "number"
+                                          ? value
+                                          : null,
+                                      );
+                                    }}
+                                  />
+                                  <NumberInput
+                                    label="Image Retention Days"
+                                    value={draft.imageRetentionDays}
+                                    min={0}
+                                    onChange={(value) => {
+                                      updateDraft(
+                                        draft.key,
+                                        "imageRetentionDays",
+                                        typeof value === "number" ? value : 0,
+                                      );
+                                    }}
+                                  />
+                                  <NumberInput
+                                    label="Image Retention Size (MB)"
+                                    value={draft.imageRetentionSize}
+                                    min={0}
+                                    onChange={(value) => {
+                                      updateDraft(
+                                        draft.key,
+                                        "imageRetentionSize",
+                                        typeof value === "number" ? value : 0,
+                                      );
+                                    }}
+                                  />
+                                </SimpleGrid>
+
+                                <SimpleGrid
+                                  cols={{ base: 1, md: 2 }}
+                                  spacing="md"
+                                >
+                                  <CameraTimeExpressionField
+                                    label="Timelapse Start"
+                                    value={draft.timelapseStartTime}
+                                    offsetSeconds={
+                                      draft.timelapseStartOffsetSeconds ?? null
+                                    }
+                                    disabled={false}
+                                    dynamicEnabled={hasDynamicTimeSupport}
+                                    timeSuffixes={solarLunarTimes}
+                                    onChange={(value) => {
+                                      updateDraft(
+                                        draft.key,
+                                        "timelapseStartTime",
+                                        value,
+                                      );
+                                    }}
+                                    onOffsetChange={(value) => {
+                                      updateDraft(
+                                        draft.key,
+                                        "timelapseStartOffsetSeconds",
+                                        value,
+                                      );
+                                    }}
+                                  />
+                                  <CameraTimeExpressionField
+                                    label="Timelapse End"
+                                    value={draft.timelapseEndTime}
+                                    offsetSeconds={
+                                      draft.timelapseEndOffsetSeconds ?? null
+                                    }
+                                    disabled={false}
+                                    dynamicEnabled={hasDynamicTimeSupport}
+                                    timeSuffixes={solarLunarTimes}
+                                    onChange={(value) => {
+                                      updateDraft(
+                                        draft.key,
+                                        "timelapseEndTime",
+                                        value,
+                                      );
+                                    }}
+                                    onOffsetChange={(value) => {
+                                      updateDraft(
+                                        draft.key,
+                                        "timelapseEndOffsetSeconds",
+                                        value,
+                                      );
+                                    }}
+                                  />
+                                </SimpleGrid>
+
+                                <Group justify="space-between">
+                                  <Text size="sm" c="dimmed">
+                                    Timelapse captures are organized
+                                    independently per camera id.
+                                  </Text>
+                                  <Button
+                                    variant="light"
+                                    color="red"
+                                    disabled={!draft.id}
+                                    loading={isClearing}
+                                    onClick={() => {
+                                      clearImagesMutation.mutate(draft);
+                                    }}
+                                  >
+                                    Clear Timelapse Images
+                                  </Button>
+                                </Group>
+                              </Stack>
+                            </Collapse>
+                          </Stack>
 
                           <Stack gap="xs">
                             <Text size="sm" fw={500}>
@@ -922,75 +1054,6 @@ export default function CameraSettingsAccordionItem() {
                               </Stack>
                             ) : null}
                           </Stack>
-
-                          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-                            <CameraTimeExpressionField
-                              label="Timelapse Start"
-                              value={draft.timelapseStartTime}
-                              offsetSeconds={
-                                draft.timelapseStartOffsetSeconds ?? null
-                              }
-                              disabled={!draft.timelapseEnabled}
-                              dynamicEnabled={hasDynamicTimeSupport}
-                              timeSuffixes={solarLunarTimes}
-                              onChange={(value) => {
-                                updateDraft(
-                                  draft.key,
-                                  "timelapseStartTime",
-                                  value,
-                                );
-                              }}
-                              onOffsetChange={(value) => {
-                                updateDraft(
-                                  draft.key,
-                                  "timelapseStartOffsetSeconds",
-                                  value,
-                                );
-                              }}
-                            />
-                            <CameraTimeExpressionField
-                              label="Timelapse End"
-                              value={draft.timelapseEndTime}
-                              offsetSeconds={
-                                draft.timelapseEndOffsetSeconds ?? null
-                              }
-                              disabled={!draft.timelapseEnabled}
-                              dynamicEnabled={hasDynamicTimeSupport}
-                              timeSuffixes={solarLunarTimes}
-                              onChange={(value) => {
-                                updateDraft(
-                                  draft.key,
-                                  "timelapseEndTime",
-                                  value,
-                                );
-                              }}
-                              onOffsetChange={(value) => {
-                                updateDraft(
-                                  draft.key,
-                                  "timelapseEndOffsetSeconds",
-                                  value,
-                                );
-                              }}
-                            />
-                          </SimpleGrid>
-
-                          <Group justify="space-between">
-                            <Text size="sm" c="dimmed">
-                              Timelapse captures are organized independently per
-                              camera id.
-                            </Text>
-                            <Button
-                              variant="light"
-                              color="red"
-                              disabled={!draft.id || !draft.timelapseEnabled}
-                              loading={isClearing}
-                              onClick={() => {
-                                clearImagesMutation.mutate(draft);
-                              }}
-                            >
-                              Clear Timelapse Images
-                            </Button>
-                          </Group>
                         </Stack>
                       </Paper>
                     </Accordion.Panel>

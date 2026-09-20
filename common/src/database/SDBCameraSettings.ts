@@ -5,6 +5,7 @@ type SDBCameraSettings = {
   captureUrl: string;
   streamUrl: string;
   healthUrl: string;
+  latestImageRefreshIntervalSeconds: number;
   timelapseEnabled: boolean;
   imageRetentionDays: number;
   imageRetentionSize: number;

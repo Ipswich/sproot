@@ -30,7 +30,9 @@ export default function ImageOrVideoDisplay({
   const imageQuery = useQuery({
     queryKey: ["latest-image", camera.id],
     queryFn: () => getLatestImageAsync(camera.id),
-    refetchInterval: showStream ? false : 60000,
+    refetchInterval: showStream
+      ? false
+      : camera.latestImageRefreshIntervalSeconds * 1000,
     enabled: hasCaptureUrl,
   });
 
@@ -196,6 +198,7 @@ export default function ImageOrVideoDisplay({
         {hasCaptureUrl ? (
           <ActionIcon
             aria-label={`Capture a fresh image from ${camera.name}`}
+            variant="light"
             color="blue"
             loading={isRefreshingLatestImage}
             onClick={(event) => {
@@ -208,7 +211,6 @@ export default function ImageOrVideoDisplay({
               right: 10,
               zIndex: 2,
             }}
-            variant="filled"
           >
             {isRefreshingLatestImage ? (
               <Loader color="white" size={14} />

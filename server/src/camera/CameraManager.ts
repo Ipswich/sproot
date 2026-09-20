@@ -1,5 +1,9 @@
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
-import { CRON } from "@sproot/common/utility/Constants";
+import {
+  CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_DEFAULT,
+  CAMERA_MAINTENANCE_INTERVAL_SECONDS,
+  CRON,
+} from "@sproot/common/utility/Constants";
 import { ICameraRepository } from "../database/repositories/camera/ICameraRepository";
 import { CronJob } from "cron";
 import winston from "winston";
@@ -13,6 +17,7 @@ import { TimeExpressionResolver } from "../automation/conditions/TimeExpressionR
 type ManagedCamera = {
   settings: SDBCameraSettings;
   imageCapture: ImageCapture;
+  lastLatestImageRefreshAt: number | null;
 };
 
 class CameraManager {
@@ -23,7 +28,10 @@ class CameraManager {
   #managedCameras = new Map<number, ManagedCamera>();
   #archiveQueue = new PromiseQueue();
   #isUpdating: boolean = false;
-  #imageCaptureCronJob: CronJob;
+  #latestImageCronJob: CronJob;
+  #cameraMaintenanceCronJob: CronJob;
+  #isRefreshingLatestImages: boolean = false;
+  #isRunningCameraMaintenance: boolean = false;
   #disposed: boolean = false;
   #listenerCleanupFunction: () => void;
 
@@ -52,10 +60,10 @@ class CameraManager {
     this.#cameraRepository = cameraRepository;
     this.#logger = logger;
     this.#timeExpressionResolver = timeExpressionResolver;
-    this.#imageCaptureCronJob = new CronJob(
-      CRON.EVERY_MINUTE,
+    this.#latestImageCronJob = new CronJob(
+      CRON.EVERY_SECOND,
       async () => {
-        await this.refreshEnabledCamerasAsync();
+        await this.refreshLatestImagesAsync();
       },
       undefined,
       true,
@@ -65,7 +73,22 @@ class CameraManager {
       undefined,
       undefined,
       undefined,
-      (err: unknown) => this.#logger.error(`Image capture cron error: ${err}`),
+      (err: unknown) => this.#logger.error(`Latest image cron error: ${err}`),
+    );
+    this.#cameraMaintenanceCronJob = new CronJob(
+      `*/${CAMERA_MAINTENANCE_INTERVAL_SECONDS} * * * * *`,
+      async () => {
+        await this.runCameraMaintenanceAsync();
+      },
+      undefined,
+      true,
+      undefined,
+      null,
+      true,
+      undefined,
+      undefined,
+      undefined,
+      (err: unknown) => this.#logger.error(`Camera maintenance cron error: ${err}`),
     );
 
     const cameraSettingsModifiedListener = async (_event: CameraSettingsModifiedEvent) => {
@@ -276,6 +299,7 @@ class CameraManager {
         nextCameras.set(cameraSettings.id, {
           settings: cameraSettings,
           imageCapture,
+          lastLatestImageRefreshAt: existingCamera?.lastLatestImageRefreshAt ?? null,
         });
       }
 
@@ -286,7 +310,8 @@ class CameraManager {
       }
 
       this.#managedCameras = nextCameras;
-      await this.refreshEnabledCamerasAsync();
+      await this.refreshLatestImagesAsync(true);
+      await this.runCameraMaintenanceAsync();
     } finally {
       this.#isUpdating = false;
     }
@@ -296,7 +321,8 @@ class CameraManager {
   async [Symbol.asyncDispose](): Promise<void> {
     this.#disposed = true;
     this.#listenerCleanupFunction();
-    await this.#imageCaptureCronJob.stop();
+    await this.#latestImageCronJob.stop();
+    await this.#cameraMaintenanceCronJob.stop();
 
     for (const managedCamera of this.#managedCameras.values()) {
       managedCamera.imageCapture[Symbol.dispose]();
@@ -304,20 +330,72 @@ class CameraManager {
     this.#managedCameras.clear();
   }
 
-  private async refreshEnabledCamerasAsync(): Promise<void> {
-    for (const { settings, imageCapture } of this.#managedCameras.values()) {
-      if (!settings.enabled) {
-        continue;
-      }
+  private async refreshLatestImagesAsync(force: boolean = false): Promise<void> {
+    if (this.#isRefreshingLatestImages) {
+      this.#logger.warn("Latest image refresh skipped: previous job still running.");
+      return;
+    }
 
-      if (settings.captureUrl.trim() !== "") {
-        await imageCapture.captureLatestImageAsync(settings.captureUrl, {});
-      }
-      await imageCapture.runImageRetentionAsync(
-        settings.imageRetentionSize,
-        settings.imageRetentionDays,
+    this.#isRefreshingLatestImages = true;
+    try {
+      const now = Date.now();
+      const eligibleCameras = Array.from(this.#managedCameras.values()).filter(({ settings }) => {
+        if (!settings.enabled || settings.captureUrl.trim() === "") {
+          return false;
+        }
+
+        return force || this.shouldRefreshLatestImage(settings, now);
+      });
+
+      await Promise.all(
+        eligibleCameras.map(async (managedCamera) => {
+          await managedCamera.imageCapture.captureLatestImageAsync(
+            managedCamera.settings.captureUrl,
+            {},
+          );
+          managedCamera.lastLatestImageRefreshAt = now;
+        }),
       );
-      await imageCapture.regenerateTimelapseArchiveAsync(true);
+    } finally {
+      this.#isRefreshingLatestImages = false;
+    }
+  }
+
+  private shouldRefreshLatestImage(settings: SDBCameraSettings, now: number): boolean {
+    const lastRefresh = this.#managedCameras.get(settings.id)?.lastLatestImageRefreshAt;
+    if (lastRefresh == null) {
+      return true;
+    }
+
+    const intervalSeconds =
+      settings.latestImageRefreshIntervalSeconds ??
+      CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_DEFAULT;
+    return now - lastRefresh >= intervalSeconds * 1000;
+  }
+
+  private async runCameraMaintenanceAsync(): Promise<void> {
+    if (this.#isRunningCameraMaintenance) {
+      this.#logger.warn("Camera maintenance skipped: previous job still running.");
+      return;
+    }
+
+    this.#isRunningCameraMaintenance = true;
+    try {
+      const enabledCameras = Array.from(this.#managedCameras.values()).filter(
+        ({ settings }) => settings.enabled,
+      );
+
+      await Promise.all(
+        enabledCameras.map(async ({ settings, imageCapture }) => {
+          await imageCapture.runImageRetentionAsync(
+            settings.imageRetentionSize,
+            settings.imageRetentionDays,
+          );
+          await imageCapture.regenerateTimelapseArchiveAsync(true);
+        }),
+      );
+    } finally {
+      this.#isRunningCameraMaintenance = false;
     }
   }
 }

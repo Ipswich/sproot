@@ -197,6 +197,7 @@ export async function seed(knex: Knex): Promise<void> {
     captureUrl: "http://camera:3002/capture",
     streamUrl: "http://camera:3002/stream.mjpg",
     healthUrl: "http://camera:3002/health",
+    latestImageRefreshIntervalSeconds: 60,
     imageRetentionDays: 90,
     imageRetentionSize: 5000,
     timelapseEnabled: false,
