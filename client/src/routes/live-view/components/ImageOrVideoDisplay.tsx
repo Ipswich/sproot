@@ -1,12 +1,16 @@
-import { Box, Center, Text } from "@mantine/core";
+import { ActionIcon, Box, Center, Loader, Text } from "@mantine/core";
 import {
   getLatestImageAsync,
   getLivestreamAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Fragment } from "react/jsx-runtime";
-import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
+import {
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconRefresh,
+} from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 
 export default function ImageOrVideoDisplay({
@@ -14,16 +18,21 @@ export default function ImageOrVideoDisplay({
 }: {
   camera: SDBCameraSettings;
 }) {
+  const queryClient = useQueryClient();
   const hasCaptureUrl = camera.captureUrl.trim() !== "";
   const hasStreamUrl = camera.streamUrl.trim() !== "";
   const [showStream, setShowStream] = useState(false);
+  const [isRefreshingLatestImage, setIsRefreshingLatestImage] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const latestImageObjectUrlRef = useRef<string | null>(null);
 
   const imageQuery = useQuery({
     queryKey: ["latest-image", camera.id],
     queryFn: () => getLatestImageAsync(camera.id),
-    refetchInterval: showStream ? false : 60000,
+    refetchInterval: showStream
+      ? false
+      : camera.latestImageRefreshIntervalSeconds * 1000,
     enabled: hasCaptureUrl,
   });
 
@@ -58,6 +67,38 @@ export default function ImageOrVideoDisplay({
       }
     };
   }, []);
+
+  const refreshLatestImageAsync = async () => {
+    if (!hasCaptureUrl || isRefreshingLatestImage) {
+      return;
+    }
+
+    setRefreshError(null);
+    setIsRefreshingLatestImage(true);
+    setShowStream(false);
+    imgRef.current?.removeAttribute("src");
+
+    try {
+      const nextImage = await getLatestImageAsync(camera.id, true);
+      if (typeof nextImage === "string") {
+        queryClient.setQueryData(["latest-image", camera.id], nextImage);
+        return;
+      }
+
+      const details = nextImage?.error?.details?.filter(Boolean).join(", ");
+      setRefreshError(
+        details || nextImage?.error?.name || `Could not refresh ${camera.name}`,
+      );
+    } catch (error) {
+      setRefreshError(
+        error instanceof Error
+          ? error.message
+          : `Could not refresh ${camera.name}`,
+      );
+    } finally {
+      setIsRefreshingLatestImage(false);
+    }
+  };
 
   const stopStream = async () => {
     imgRef.current?.removeAttribute("src");
@@ -154,6 +195,48 @@ export default function ImageOrVideoDisplay({
             />
           ) : null}
         </div>
+        {hasCaptureUrl ? (
+          <ActionIcon
+            aria-label={`Capture a fresh image from ${camera.name}`}
+            variant="light"
+            color="blue"
+            loading={isRefreshingLatestImage}
+            onClick={(event) => {
+              event.stopPropagation();
+              void refreshLatestImageAsync();
+            }}
+            style={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+              zIndex: 2,
+            }}
+          >
+            {isRefreshingLatestImage ? (
+              <Loader color="white" size={14} />
+            ) : (
+              <IconRefresh size={16} />
+            )}
+          </ActionIcon>
+        ) : null}
+        {refreshError ? (
+          <Text
+            c="red.2"
+            size="xs"
+            style={{
+              position: "absolute",
+              top: 14,
+              left: 14,
+              zIndex: 2,
+              maxWidth: "calc(100% - 64px)",
+              padding: "4px 8px",
+              borderRadius: "var(--mantine-radius-sm)",
+              background: "rgba(0, 0, 0, 0.72)",
+            }}
+          >
+            {refreshError}
+          </Text>
+        ) : null}
       </Box>
     </Fragment>
   );

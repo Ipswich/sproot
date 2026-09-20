@@ -26,6 +26,7 @@ describe("CameraSettingsHandlers.ts", () => {
     captureUrl: "http://camera:3002/capture",
     streamUrl: "http://camera:3002/stream.mjpg",
     healthUrl: "http://camera:3002/health",
+    latestImageRefreshIntervalSeconds: 60,
     timelapseEnabled: true,
     imageRetentionDays: 7,
     imageRetentionSize: 1000,
@@ -150,6 +151,27 @@ describe("CameraSettingsHandlers.ts", () => {
       assert.fail("Expected error response details");
     }
     assert.include(result.error?.details ?? [], "captureUrl must be a valid http or https URL");
+  });
+
+  it("validates latest image refresh interval", async () => {
+    const request = createRequest({
+      body: {
+        ...cameraSettings,
+        latestImageRefreshIntervalSeconds: 61,
+      },
+    });
+
+    const result = await updateCameraSettingsAsync(request, mockResponse);
+
+    assert.equal(result.statusCode, 400);
+    assert.property(result, "error");
+    if (!("error" in result)) {
+      assert.fail("Expected error response details");
+    }
+    assert.include(
+      result.error?.details ?? [],
+      "latestImageRefreshIntervalSeconds must be a number between 1 and 60",
+    );
   });
 
   it("allows a stream-only camera", async () => {

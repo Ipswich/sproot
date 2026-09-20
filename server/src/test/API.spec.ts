@@ -1676,6 +1676,7 @@ describe("API Tests", async function () {
       "captureUrl",
       "streamUrl",
       "healthUrl",
+      "latestImageRefreshIntervalSeconds",
       "timelapseEnabled",
       "imageRetentionDays",
       "imageRetentionSize",
@@ -1685,6 +1686,47 @@ describe("API Tests", async function () {
       "timelapseEndTime",
       "timelapseEndOffsetSeconds",
     ];
+    describe("Collection", () => {
+      describe("GET", () => {
+        it("should return 200 and the configured cameras", async () => {
+          const response = await request(server).get("/api/v2/camera").expect(200);
+
+          validateMiddlewareValues(response);
+          assert.isArray(response.body["content"].data);
+          assert.isAtLeast(response.body["content"].data.length, 1);
+          assert.containsAllKeys(response.body["content"].data[0], cameraSettingsKeys);
+        });
+      });
+
+      describe("POST", () => {
+        it("should return 201 and create a camera", async () => {
+          const response = await request(server)
+            .post("/api/v2/camera")
+            .send({
+              enabled: true,
+              name: "API Test Camera",
+              captureUrl: "http://camera:3002/capture",
+              streamUrl: "http://camera:3002/stream.mjpg",
+              healthUrl: "http://camera:3002/health",
+              latestImageRefreshIntervalSeconds: 60,
+              timelapseEnabled: false,
+              imageRetentionDays: 7,
+              imageRetentionSize: 1024,
+              timelapseInterval: null,
+              timelapseStartTime: null,
+              timelapseStartOffsetSeconds: null,
+              timelapseEndTime: null,
+              timelapseEndOffsetSeconds: null,
+            })
+            .expect(201);
+
+          validateMiddlewareValues(response);
+          assert.containsAllKeys(response.body["content"].data, cameraSettingsKeys);
+          assert.equal(response.body["content"].data.name, "API Test Camera");
+        });
+      });
+    });
+
     describe("Settings", () => {
       describe("GET", () => {
         it("should return 200 and camera settings data", async () => {
@@ -1698,6 +1740,7 @@ describe("API Tests", async function () {
             captureUrl: "http://camera:3002/capture",
             streamUrl: "http://camera:3002/stream.mjpg",
             healthUrl: "http://camera:3002/health",
+            latestImageRefreshIntervalSeconds: 60,
             imageRetentionDays: 90,
             imageRetentionSize: 5000,
             timelapseEnabled: false,
@@ -1721,14 +1764,15 @@ describe("API Tests", async function () {
             captureUrl: "http://camera:3002/capture",
             streamUrl: "http://camera:3002/stream.mjpg",
             healthUrl: "http://camera:3002/health",
+            latestImageRefreshIntervalSeconds: 15,
             timelapseEnabled: true,
             imageRetentionDays: 7,
             imageRetentionSize: 1024,
             timelapseInterval: 60,
-            timelapseStartTime: "sunrise",
-            timelapseStartOffsetSeconds: -300,
-            timelapseEndTime: "sunset",
-            timelapseEndOffsetSeconds: 1800,
+            timelapseStartTime: "06:00",
+            timelapseStartOffsetSeconds: null,
+            timelapseEndTime: "18:00",
+            timelapseEndOffsetSeconds: null,
           };
 
           const response = await request(server)
@@ -1741,8 +1785,38 @@ describe("API Tests", async function () {
 
           assert.containsAllKeys(content.data, cameraSettingsKeys);
           assert.equal(app.get("cameraManager").cameraSettings[0].name, "Updated Camera Name");
-          assert.equal(content.data.timelapseStartOffsetSeconds, -300);
-          assert.equal(content.data.timelapseEndOffsetSeconds, 1800);
+          assert.isNull(content.data.timelapseStartOffsetSeconds);
+          assert.isNull(content.data.timelapseEndOffsetSeconds);
+        });
+      });
+
+      describe("DELETE", () => {
+        it("should return 200 and delete a camera", async () => {
+          const createResponse = await request(server)
+            .post("/api/v2/camera")
+            .send({
+              enabled: false,
+              name: "Delete Me Camera",
+              captureUrl: "http://camera:3002/capture",
+              streamUrl: "",
+              healthUrl: "",
+              latestImageRefreshIntervalSeconds: 60,
+              timelapseEnabled: false,
+              imageRetentionDays: 7,
+              imageRetentionSize: 1024,
+              timelapseInterval: null,
+              timelapseStartTime: null,
+              timelapseStartOffsetSeconds: null,
+              timelapseEndTime: null,
+              timelapseEndOffsetSeconds: null,
+            })
+            .expect(201);
+
+          const response = await request(server)
+            .delete(`/api/v2/camera/${createResponse.body["content"].data.id}`)
+            .expect(200);
+
+          validateMiddlewareValues(response);
         });
       });
     });
@@ -1848,6 +1922,85 @@ describe("API Tests", async function () {
         validateMiddlewareValues(response);
         assert.equal(response.headers["content-type"], "image/jpeg");
         assert.isNotNull(response.body);
+      });
+
+      it("should return 200 when a fresh image capture is requested", async () => {
+        const cameraManager = app.get("cameraManager") as CameraManager;
+        const captureLatestImageAsyncStub = sinon
+          .stub(cameraManager, "captureLatestImageAsync")
+          .resolves(Buffer.from("fresh-image"));
+
+        const response = await request(server)
+          .get("/api/v2/camera/1/latest-image")
+          .query({ captureNew: "true" })
+          .expect(200);
+
+        try {
+          validateMiddlewareValues(response);
+          assert.equal(response.headers["content-type"], "image/jpeg");
+          assert.isTrue(captureLatestImageAsyncStub.calledOnceWithExactly(1));
+        } finally {
+          captureLatestImageAsyncStub.restore();
+        }
+      });
+    });
+  });
+
+  describe("Camera URL Tests", () => {
+    describe("Latest Image", () => {
+      it("should return 200 for a valid capture URL", async () => {
+        const fetchStub = sinon.stub(globalThis, "fetch").resolves(
+          new Response(Buffer.from("test-image"), {
+            status: 200,
+            headers: {
+              "content-type": "image/jpeg",
+            },
+          }),
+        );
+
+        const response = await request(server)
+          .get("/api/v2/camera/test/latest-image")
+          .query({ captureUrl: "http://camera:3002/capture" })
+          .expect(200);
+
+        try {
+          validateMiddlewareValues(response);
+          assert.equal(response.headers["content-type"], "image/jpeg");
+          assert.isTrue(
+            fetchStub.calledOnceWithExactly("http://camera:3002/capture", { method: "GET" }),
+          );
+        } finally {
+          fetchStub.restore();
+        }
+      });
+    });
+
+    describe("Health", () => {
+      it("should return 200 for a valid health URL", async () => {
+        const fetchStub = sinon.stub(globalThis, "fetch").resolves(
+          new Response(JSON.stringify({ status: "ok" }), {
+            status: 200,
+            headers: {
+              "content-type": "application/json",
+            },
+          }),
+        );
+
+        const response = await request(server)
+          .get("/api/v2/camera/test/health")
+          .query({ healthUrl: "http://camera:3002/health" })
+          .expect(200);
+
+        try {
+          validateMiddlewareValues(response);
+          assert.isTrue(response.body["content"].data.ok);
+          assert.equal(response.body["content"].data.statusCode, 200);
+          assert.isTrue(
+            fetchStub.calledOnceWithExactly("http://camera:3002/health", { method: "GET" }),
+          );
+        } finally {
+          fetchStub.restore();
+        }
       });
     });
   });

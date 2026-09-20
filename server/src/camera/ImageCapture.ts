@@ -72,7 +72,7 @@ class ImageCapture {
     url: string,
     headers: Record<string, string>,
     directory = getCameraImageDirectory(this.#cameraId),
-  ) {
+  ): Promise<boolean> {
     let response: Response;
     try {
       response = await fetch(url, {
@@ -83,7 +83,7 @@ class ImageCapture {
         this.#logger.error(
           `Image capture was unsuccessful (status: ${response.status}). Filename: ${directory}/${fileName}`,
         );
-        return;
+        return false;
       }
 
       await fs.promises.mkdir(directory, { recursive: true });
@@ -91,14 +91,16 @@ class ImageCapture {
       await pipeline(Readable.fromWeb(response.body), createWriteStream(outputPath));
 
       this.#logger.info(`Image captured. Filename: ${outputPath}`);
+      return true;
     } catch (e) {
       this.#logger.error(
         `Image capture failed for ${directory}/${fileName}: ${e instanceof Error ? e.message : String(e)}`,
       );
+      return false;
     }
   }
 
-  async captureLatestImageAsync(url: string, headers: Record<string, string>) {
+  async captureLatestImageAsync(url: string, headers: Record<string, string>): Promise<boolean> {
     return this.captureImageAsync(
       "latest.jpg",
       url,

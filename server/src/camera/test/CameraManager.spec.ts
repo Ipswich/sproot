@@ -1,6 +1,7 @@
 import { assert } from "chai";
 import { describe, it, beforeEach, afterEach } from "mocha";
 import sinon, { type SinonSandbox } from "sinon";
+import type { SinonFakeTimers } from "sinon";
 import winston from "winston";
 import { CameraManager } from "../CameraManager";
 import ImageCapture from "../ImageCapture";
@@ -11,6 +12,7 @@ import { TimeExpressionResolver } from "../../automation/conditions/TimeExpressi
 
 describe("CameraManager", () => {
   let sandbox: SinonSandbox;
+  let clock: SinonFakeTimers | null;
   let logger: winston.Logger;
   let createdManagers: CameraManager[];
 
@@ -21,6 +23,7 @@ describe("CameraManager", () => {
     captureUrl: "http://camera:3002/capture",
     streamUrl: "http://camera:3002/stream.mjpg",
     healthUrl: "http://camera:3002/health",
+    latestImageRefreshIntervalSeconds: 60,
     timelapseEnabled: false,
     imageRetentionDays: 7,
     imageRetentionSize: 1024,
@@ -55,8 +58,18 @@ describe("CameraManager", () => {
     return { manager, cameraRepository };
   };
 
+  const createDeferred = () => {
+    let resolve!: () => void;
+    const promise = new Promise<void>((innerResolve) => {
+      resolve = innerResolve;
+    });
+
+    return { promise, resolve };
+  };
+
   beforeEach(() => {
     sandbox = sinon.createSandbox();
+    clock = null;
     logger = winston.createLogger({ silent: true });
     createdManagers = [];
     sandbox.stub(ImageCapture.prototype, "captureLatestImageAsync").resolves();
@@ -69,6 +82,7 @@ describe("CameraManager", () => {
     for (const manager of createdManagers.reverse()) {
       await manager[Symbol.asyncDispose]();
     }
+    clock?.restore();
     sandbox.restore();
   });
 
@@ -96,6 +110,22 @@ describe("CameraManager", () => {
     assert.isTrue(getLatestImageAsyncStub.calledOnce);
   });
 
+  it("captures a fresh image on demand and returns it", async () => {
+    const latestImage = Buffer.from("latest-image");
+    const captureLatestImageAsyncStub = ImageCapture.prototype
+      .captureLatestImageAsync as sinon.SinonStub;
+    captureLatestImageAsyncStub.resolves(true);
+    const getLatestImageAsyncStub = sandbox
+      .stub(ImageCapture.prototype, "getLatestImageAsync")
+      .resolves(latestImage);
+
+    const manager = (await createManager([cameraSettings])).manager;
+
+    assert.equal(await manager.captureLatestImageAsync(1), latestImage);
+    assert.isTrue(captureLatestImageAsyncStub.calledWithExactly(cameraSettings.captureUrl, {}));
+    assert.isTrue(getLatestImageAsyncStub.called);
+  });
+
   it("returns per-camera timelapse progress", async () => {
     const progress = { isGenerating: true, archiveProgress: 42 };
     sandbox.stub(ImageCapture.prototype, "getTimelapseGenerationStatus").returns(progress);
@@ -114,6 +144,7 @@ describe("CameraManager", () => {
       captureUrl: "http://camera-2:3002/capture",
       streamUrl: "http://camera-2:3002/stream.mjpg",
       healthUrl: "http://camera-2:3002/health",
+      latestImageRefreshIntervalSeconds: 60,
       timelapseEnabled: false,
       imageRetentionDays: 7,
       imageRetentionSize: 512,
@@ -153,5 +184,120 @@ describe("CameraManager", () => {
 
     assert.isTrue(deleted);
     assert.isTrue((cameraRepository.deleteAsync as sinon.SinonStub).calledOnceWithExactly(1));
+  });
+
+  it("refreshes latest images using each camera's configured interval", async () => {
+    clock = sinon.useFakeTimers({
+      now: new Date("2026-01-01T00:00:00.000Z"),
+      shouldAdvanceTime: false,
+      toFake: ["Date", "setTimeout", "clearTimeout", "setInterval", "clearInterval"],
+    });
+    const captureLatestImageAsyncStub = ImageCapture.prototype
+      .captureLatestImageAsync as sinon.SinonStub;
+    const cameraOne = {
+      ...cameraSettings,
+      latestImageRefreshIntervalSeconds: 5,
+    };
+    const cameraTwo = {
+      ...cameraSettings,
+      id: 2,
+      name: "Slow Camera",
+      captureUrl: "http://camera-2:3002/capture",
+      latestImageRefreshIntervalSeconds: 60,
+    };
+
+    await createManager([cameraOne, cameraTwo]);
+    captureLatestImageAsyncStub.resetHistory();
+
+    await clock.tickAsync(4_000);
+    assert.equal(captureLatestImageAsyncStub.callCount, 0);
+
+    await clock.tickAsync(1_000);
+    assert.equal(captureLatestImageAsyncStub.callCount, 1);
+    assert.isTrue(
+      captureLatestImageAsyncStub.firstCall.calledWithExactly(cameraOne.captureUrl, {}),
+    );
+
+    await clock.tickAsync(55_000);
+    assert.equal(captureLatestImageAsyncStub.callCount, 13);
+    assert.deepEqual(
+      captureLatestImageAsyncStub.getCalls().map((call) => call.args[0]),
+      [
+        "http://camera:3002/capture",
+        "http://camera:3002/capture",
+        "http://camera:3002/capture",
+        "http://camera:3002/capture",
+        "http://camera:3002/capture",
+        "http://camera:3002/capture",
+        "http://camera:3002/capture",
+        "http://camera:3002/capture",
+        "http://camera:3002/capture",
+        "http://camera:3002/capture",
+        "http://camera:3002/capture",
+        "http://camera:3002/capture",
+        "http://camera-2:3002/capture",
+      ],
+    );
+  });
+
+  it("runs latest image capture in parallel across cameras", async () => {
+    clock = sinon.useFakeTimers({
+      now: new Date("2026-01-01T00:00:00.000Z"),
+      shouldAdvanceTime: false,
+      toFake: ["Date", "setTimeout", "clearTimeout", "setInterval", "clearInterval"],
+    });
+    const captureLatestImageAsyncStub = ImageCapture.prototype
+      .captureLatestImageAsync as sinon.SinonStub;
+    await createManager([
+      {
+        ...cameraSettings,
+        latestImageRefreshIntervalSeconds: 1,
+      },
+      {
+        ...cameraSettings,
+        id: 2,
+        name: "Second Camera",
+        captureUrl: "http://camera-2:3002/capture",
+        latestImageRefreshIntervalSeconds: 1,
+      },
+    ]);
+
+    const firstDeferred = createDeferred();
+    const secondDeferred = createDeferred();
+    captureLatestImageAsyncStub.onFirstCall().returns(firstDeferred.promise);
+    captureLatestImageAsyncStub.onSecondCall().returns(secondDeferred.promise);
+    captureLatestImageAsyncStub.resetHistory();
+
+    clock.tick(1_000);
+
+    assert.equal(captureLatestImageAsyncStub.callCount, 2);
+
+    firstDeferred.resolve();
+    secondDeferred.resolve();
+    await Promise.resolve();
+  });
+
+  it("runs camera maintenance on its own minute cadence", async () => {
+    clock = sinon.useFakeTimers({
+      now: new Date("2026-01-01T00:00:00.000Z"),
+      shouldAdvanceTime: false,
+      toFake: ["Date", "setTimeout", "clearTimeout", "setInterval", "clearInterval"],
+    });
+    const runImageRetentionAsyncStub = ImageCapture.prototype
+      .runImageRetentionAsync as sinon.SinonStub;
+    const regenerateTimelapseArchiveAsyncStub = ImageCapture.prototype
+      .regenerateTimelapseArchiveAsync as sinon.SinonStub;
+
+    await createManager([{ ...cameraSettings, latestImageRefreshIntervalSeconds: 5 }]);
+    runImageRetentionAsyncStub.resetHistory();
+    regenerateTimelapseArchiveAsyncStub.resetHistory();
+
+    await clock.tickAsync(59_000);
+    assert.equal(runImageRetentionAsyncStub.callCount, 0);
+    assert.equal(regenerateTimelapseArchiveAsyncStub.callCount, 0);
+
+    await clock.tickAsync(1_000);
+    assert.equal(runImageRetentionAsyncStub.callCount, 1);
+    assert.equal(regenerateTimelapseArchiveAsyncStub.callCount, 1);
   });
 });

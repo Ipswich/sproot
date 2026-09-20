@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Accordion,
   Alert,
   Box,
   Button,
+  Collapse,
   Group,
   LoadingOverlay,
   NumberInput,
@@ -27,15 +28,24 @@ import {
   DYNAMIC_TIME_POINT_VALUES,
   isDynamicTimePoint,
 } from "@sproot/common/automation/TimeConditionTimePoints";
+import {
+  CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_DEFAULT,
+  CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MAX,
+  CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MIN,
+} from "@sproot/common/utility/Constants";
 import { formatMilitaryTime } from "@sproot/common/utility/TimeMethods";
 import ConfirmDeleteButton from "../../../components/ConfirmDeleteButton";
 import {
   getApplicationSettingsAsync,
+  getCameraStreamTestUrl,
   NewCameraSettings,
+  CameraHealthTestResult,
   clearAllImagesAsync,
   createCameraSettingsAsync,
   deleteCameraSettingsAsync,
   getCameraSettingsListAsync,
+  testCameraHealthAsync,
+  testCameraLatestImageAsync,
   updateCameraSettingsAsync,
 } from "../../../requests/requests_v2";
 import { useSolarLunarTimes } from "../../automations/Conditions/ConditionTypes/useSolarLunarTimes";
@@ -47,6 +57,26 @@ type CameraDraft = NewCameraSettings & {
   id?: number;
   key: string;
 };
+
+type CameraPreviewMode = "image" | "stream";
+
+type CameraTestState = {
+  activeTest: "capture" | "stream" | "health" | null;
+  error: string | null;
+  healthResult: CameraHealthTestResult | null;
+  previewMode: CameraPreviewMode | null;
+  previewSrc: string | null;
+};
+
+function createDefaultCameraTestState(): CameraTestState {
+  return {
+    activeTest: null,
+    error: null,
+    healthResult: null,
+    previewMode: null,
+    previewSrc: null,
+  };
+}
 
 function createDraftKey() {
   if (typeof globalThis.crypto?.randomUUID === "function") {
@@ -111,6 +141,8 @@ function createDefaultDraft(index: number): CameraDraft {
     captureUrl: "http://camera:3002/capture",
     streamUrl: "http://camera:3002/stream.mjpg",
     healthUrl: "",
+    latestImageRefreshIntervalSeconds:
+      CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_DEFAULT,
     timelapseEnabled: false,
     timelapseInterval: 5,
     timelapseStartTime: null,
@@ -136,6 +168,7 @@ function toRequestBody(draft: CameraDraft): NewCameraSettings {
     captureUrl: normalizeUrl(draft.captureUrl),
     streamUrl: normalizeUrl(draft.streamUrl),
     healthUrl: normalizeUrl(draft.healthUrl),
+    latestImageRefreshIntervalSeconds: draft.latestImageRefreshIntervalSeconds,
     timelapseEnabled: draft.timelapseEnabled,
     timelapseInterval: draft.timelapseInterval,
     timelapseStartTime: draft.timelapseStartTime,
@@ -157,6 +190,17 @@ function validateDraft(draft: CameraDraft): string[] {
 
   if (draft.name.trim().length < 1 || draft.name.trim().length > 64) {
     errors.push("Name must be between 1 and 64 characters.");
+  }
+
+  if (
+    draft.latestImageRefreshIntervalSeconds <
+      CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MIN ||
+    draft.latestImageRefreshIntervalSeconds >
+      CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MAX
+  ) {
+    errors.push(
+      `Latest image refresh interval must be between ${CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MIN} and ${CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MAX} seconds.`,
+    );
   }
 
   urlFields.forEach(([label, value]) => {
@@ -258,6 +302,10 @@ export default function CameraSettingsAccordionItem() {
   const [activeSaveKey, setActiveSaveKey] = useState<string | null>(null);
   const [activeDeleteKey, setActiveDeleteKey] = useState<string | null>(null);
   const [activeClearKey, setActiveClearKey] = useState<string | null>(null);
+  const [cameraTestStateByKey, setCameraTestStateByKey] = useState<
+    Record<string, CameraTestState>
+  >({});
+  const previewObjectUrlsRef = useRef<Record<string, string>>({});
 
   const cameraSettingsQuery = useQuery({
     queryKey: ["cameraSettingsList"],
@@ -291,6 +339,14 @@ export default function CameraSettingsAccordionItem() {
       return nextKeys;
     });
   }, [cameraSettingsQuery.data]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(previewObjectUrlsRef.current).forEach((previewUrl) => {
+        URL.revokeObjectURL(previewUrl);
+      });
+    };
+  }, []);
 
   const draftErrors = useMemo(() => {
     return Object.fromEntries(
@@ -405,6 +461,116 @@ export default function CameraSettingsAccordionItem() {
     });
   };
 
+  const updateCameraTestState = (
+    key: string,
+    updater: (state: CameraTestState) => CameraTestState,
+  ) => {
+    setCameraTestStateByKey((currentState) => {
+      const nextState = updater(
+        currentState[key] ?? createDefaultCameraTestState(),
+      );
+      return {
+        ...currentState,
+        [key]: nextState,
+      };
+    });
+  };
+
+  const replacePreviewForDraft = (
+    draftKey: string,
+    previewMode: CameraPreviewMode,
+    previewSrc: string,
+  ) => {
+    const existingObjectUrl = previewObjectUrlsRef.current[draftKey];
+    if (existingObjectUrl && existingObjectUrl !== previewSrc) {
+      URL.revokeObjectURL(existingObjectUrl);
+      delete previewObjectUrlsRef.current[draftKey];
+    }
+
+    if (previewSrc.startsWith("blob:")) {
+      previewObjectUrlsRef.current[draftKey] = previewSrc;
+    }
+
+    updateCameraTestState(draftKey, (currentState) => ({
+      ...currentState,
+      activeTest: null,
+      error: null,
+      previewMode,
+      previewSrc,
+    }));
+  };
+
+  const handleLatestImageTestAsync = async (draft: CameraDraft) => {
+    updateCameraTestState(draft.key, (currentState) => ({
+      ...currentState,
+      activeTest: "capture",
+      error: null,
+    }));
+
+    try {
+      const previewSrc = await testCameraLatestImageAsync(draft.captureUrl);
+      replacePreviewForDraft(draft.key, "image", previewSrc);
+    } catch (error) {
+      updateCameraTestState(draft.key, (currentState) => ({
+        ...currentState,
+        activeTest: null,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch a test camera image.",
+      }));
+    }
+  };
+
+  const handleStreamTest = (draft: CameraDraft) => {
+    replacePreviewForDraft(
+      draft.key,
+      "stream",
+      getCameraStreamTestUrl(draft.streamUrl),
+    );
+  };
+
+  const handleHealthTestAsync = async (draft: CameraDraft) => {
+    updateCameraTestState(draft.key, (currentState) => ({
+      ...currentState,
+      activeTest: "health",
+      error: null,
+    }));
+
+    try {
+      const healthResult = await testCameraHealthAsync(draft.healthUrl);
+      updateCameraTestState(draft.key, (currentState) => ({
+        ...currentState,
+        activeTest: null,
+        error: null,
+        healthResult,
+      }));
+    } catch (error) {
+      updateCameraTestState(draft.key, (currentState) => ({
+        ...currentState,
+        activeTest: null,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to check camera health.",
+      }));
+    }
+  };
+
+  const clearPreviewForDraft = (draftKey: string) => {
+    const existingObjectUrl = previewObjectUrlsRef.current[draftKey];
+    if (existingObjectUrl) {
+      URL.revokeObjectURL(existingObjectUrl);
+      delete previewObjectUrlsRef.current[draftKey];
+    }
+
+    updateCameraTestState(draftKey, (currentState) => ({
+      ...currentState,
+      previewMode: null,
+      previewSrc: null,
+    }));
+  };
+
   return (
     <Accordion.Item value="camera-settings">
       <Accordion.Control>
@@ -470,6 +636,16 @@ export default function CameraSettingsAccordionItem() {
                 const isPending = activeSaveKey === draft.key;
                 const isDeleting = activeDeleteKey === draft.key;
                 const isClearing = activeClearKey === draft.key;
+                const showTimelapseSettings = draft.timelapseEnabled;
+                const cameraTestState =
+                  cameraTestStateByKey[draft.key] ??
+                  createDefaultCameraTestState();
+                const isTestingCapture =
+                  cameraTestState.activeTest === "capture";
+                const isTestingHealth = cameraTestState.activeTest === "health";
+                const isStreamPreviewVisible =
+                  cameraTestState.previewMode === "stream" &&
+                  cameraTestState.previewSrc !== null;
 
                 return (
                   <Accordion.Item key={draft.key} value={draft.key}>
@@ -553,18 +729,23 @@ export default function CameraSettingsAccordionItem() {
                                 );
                               }}
                             />
-                            <Switch
-                              label="Enabled"
-                              withThumbIndicator={false}
-                              checked={draft.enabled}
-                              onChange={(event) => {
-                                updateDraft(
-                                  draft.key,
-                                  "enabled",
-                                  event.currentTarget.checked,
-                                );
-                              }}
-                            />
+                            <Stack gap={6} align="flex-start">
+                              <Text size="sm" fw={500}>
+                                Enabled
+                              </Text>
+                              <Switch
+                                aria-label="Enabled"
+                                withThumbIndicator={false}
+                                checked={draft.enabled}
+                                onChange={(event) => {
+                                  updateDraft(
+                                    draft.key,
+                                    "enabled",
+                                    event.currentTarget.checked,
+                                  );
+                                }}
+                              />
+                            </Stack>
                             <TextInput
                               label="Capture URL"
                               placeholder="Optional if stream URL is provided"
@@ -601,6 +782,28 @@ export default function CameraSettingsAccordionItem() {
                                 );
                               }}
                             />
+                            <NumberInput
+                              label="Image Capture Interval (seconds)"
+                              value={draft.latestImageRefreshIntervalSeconds}
+                              min={
+                                CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MIN
+                              }
+                              max={
+                                CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_MAX
+                              }
+                              onChange={(value) => {
+                                updateDraft(
+                                  draft.key,
+                                  "latestImageRefreshIntervalSeconds",
+                                  typeof value === "number"
+                                    ? value
+                                    : CAMERA_LATEST_IMAGE_REFRESH_INTERVAL_SECONDS_DEFAULT,
+                                );
+                              }}
+                            />
+                          </SimpleGrid>
+
+                          <Stack gap="xs">
                             <Switch
                               label="Timelapse Enabled"
                               withThumbIndicator={false}
@@ -613,116 +816,244 @@ export default function CameraSettingsAccordionItem() {
                                 );
                               }}
                             />
-                            <NumberInput
-                              label="Timelapse Interval (minutes)"
-                              value={draft.timelapseInterval ?? ""}
-                              min={1}
-                              max={1440}
-                              onChange={(value) => {
-                                updateDraft(
-                                  draft.key,
-                                  "timelapseInterval",
-                                  typeof value === "number" ? value : null,
-                                );
-                              }}
-                              disabled={!draft.timelapseEnabled}
-                            />
-                            <NumberInput
-                              label="Image Retention Days"
-                              value={draft.imageRetentionDays}
-                              min={0}
-                              onChange={(value) => {
-                                updateDraft(
-                                  draft.key,
-                                  "imageRetentionDays",
-                                  typeof value === "number" ? value : 0,
-                                );
-                              }}
-                              disabled={!draft.timelapseEnabled}
-                            />
-                            <NumberInput
-                              label="Image Retention Size (MB)"
-                              value={draft.imageRetentionSize}
-                              min={0}
-                              onChange={(value) => {
-                                updateDraft(
-                                  draft.key,
-                                  "imageRetentionSize",
-                                  typeof value === "number" ? value : 0,
-                                );
-                              }}
-                              disabled={!draft.timelapseEnabled}
-                            />
-                          </SimpleGrid>
-
-                          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-                            <CameraTimeExpressionField
-                              label="Timelapse Start"
-                              value={draft.timelapseStartTime}
-                              offsetSeconds={
-                                draft.timelapseStartOffsetSeconds ?? null
-                              }
-                              disabled={!draft.timelapseEnabled}
-                              dynamicEnabled={hasDynamicTimeSupport}
-                              timeSuffixes={solarLunarTimes}
-                              onChange={(value) => {
-                                updateDraft(
-                                  draft.key,
-                                  "timelapseStartTime",
-                                  value,
-                                );
-                              }}
-                              onOffsetChange={(value) => {
-                                updateDraft(
-                                  draft.key,
-                                  "timelapseStartOffsetSeconds",
-                                  value,
-                                );
-                              }}
-                            />
-                            <CameraTimeExpressionField
-                              label="Timelapse End"
-                              value={draft.timelapseEndTime}
-                              offsetSeconds={
-                                draft.timelapseEndOffsetSeconds ?? null
-                              }
-                              disabled={!draft.timelapseEnabled}
-                              dynamicEnabled={hasDynamicTimeSupport}
-                              timeSuffixes={solarLunarTimes}
-                              onChange={(value) => {
-                                updateDraft(
-                                  draft.key,
-                                  "timelapseEndTime",
-                                  value,
-                                );
-                              }}
-                              onOffsetChange={(value) => {
-                                updateDraft(
-                                  draft.key,
-                                  "timelapseEndOffsetSeconds",
-                                  value,
-                                );
-                              }}
-                            />
-                          </SimpleGrid>
-
-                          <Group justify="space-between">
-                            <Text size="sm" c="dimmed">
-                              Timelapse captures are organized independently per
-                              camera id.
-                            </Text>
-                            <Button
-                              variant="light"
-                              color="red"
-                              disabled={!draft.id || !draft.timelapseEnabled}
-                              loading={isClearing}
-                              onClick={() => {
-                                clearImagesMutation.mutate(draft);
-                              }}
+                            <Collapse
+                              expanded={showTimelapseSettings}
+                              transitionDuration={220}
+                              transitionTimingFunction="ease"
                             >
-                              Clear Timelapse Images
-                            </Button>
-                          </Group>
+                              <Stack gap="md" pt={4}>
+                                <SimpleGrid
+                                  cols={{ base: 1, md: 2 }}
+                                  spacing="md"
+                                >
+                                  <NumberInput
+                                    label="Timelapse Interval (minutes)"
+                                    value={draft.timelapseInterval ?? ""}
+                                    min={1}
+                                    max={1440}
+                                    onChange={(value) => {
+                                      updateDraft(
+                                        draft.key,
+                                        "timelapseInterval",
+                                        typeof value === "number"
+                                          ? value
+                                          : null,
+                                      );
+                                    }}
+                                  />
+                                  <NumberInput
+                                    label="Image Retention Days"
+                                    value={draft.imageRetentionDays}
+                                    min={0}
+                                    onChange={(value) => {
+                                      updateDraft(
+                                        draft.key,
+                                        "imageRetentionDays",
+                                        typeof value === "number" ? value : 0,
+                                      );
+                                    }}
+                                  />
+                                  <NumberInput
+                                    label="Image Retention Size (MB)"
+                                    value={draft.imageRetentionSize}
+                                    min={0}
+                                    onChange={(value) => {
+                                      updateDraft(
+                                        draft.key,
+                                        "imageRetentionSize",
+                                        typeof value === "number" ? value : 0,
+                                      );
+                                    }}
+                                  />
+                                </SimpleGrid>
+
+                                <SimpleGrid
+                                  cols={{ base: 1, md: 2 }}
+                                  spacing="md"
+                                >
+                                  <CameraTimeExpressionField
+                                    label="Timelapse Start"
+                                    value={draft.timelapseStartTime}
+                                    offsetSeconds={
+                                      draft.timelapseStartOffsetSeconds ?? null
+                                    }
+                                    disabled={false}
+                                    dynamicEnabled={hasDynamicTimeSupport}
+                                    timeSuffixes={solarLunarTimes}
+                                    onChange={(value) => {
+                                      updateDraft(
+                                        draft.key,
+                                        "timelapseStartTime",
+                                        value,
+                                      );
+                                    }}
+                                    onOffsetChange={(value) => {
+                                      updateDraft(
+                                        draft.key,
+                                        "timelapseStartOffsetSeconds",
+                                        value,
+                                      );
+                                    }}
+                                  />
+                                  <CameraTimeExpressionField
+                                    label="Timelapse End"
+                                    value={draft.timelapseEndTime}
+                                    offsetSeconds={
+                                      draft.timelapseEndOffsetSeconds ?? null
+                                    }
+                                    disabled={false}
+                                    dynamicEnabled={hasDynamicTimeSupport}
+                                    timeSuffixes={solarLunarTimes}
+                                    onChange={(value) => {
+                                      updateDraft(
+                                        draft.key,
+                                        "timelapseEndTime",
+                                        value,
+                                      );
+                                    }}
+                                    onOffsetChange={(value) => {
+                                      updateDraft(
+                                        draft.key,
+                                        "timelapseEndOffsetSeconds",
+                                        value,
+                                      );
+                                    }}
+                                  />
+                                </SimpleGrid>
+
+                                <Group justify="space-between">
+                                  <Text size="sm" c="dimmed">
+                                    Timelapse captures are organized
+                                    independently per camera id.
+                                  </Text>
+                                  <Button
+                                    variant="light"
+                                    color="red"
+                                    disabled={!draft.id}
+                                    loading={isClearing}
+                                    onClick={() => {
+                                      clearImagesMutation.mutate(draft);
+                                    }}
+                                  >
+                                    Clear Timelapse Images
+                                  </Button>
+                                </Group>
+                              </Stack>
+                            </Collapse>
+                          </Stack>
+
+                          <Stack gap="xs">
+                            <Text size="sm" fw={500}>
+                              Connection Tests
+                            </Text>
+                            <Group>
+                              <Button
+                                size="xs"
+                                variant="light"
+                                disabled={!hasConfiguredUrl(draft.captureUrl)}
+                                loading={isTestingCapture}
+                                onClick={() => {
+                                  void handleLatestImageTestAsync(draft);
+                                }}
+                              >
+                                Test Latest Image
+                              </Button>
+                              <Button
+                                size="xs"
+                                variant="light"
+                                disabled={!hasConfiguredUrl(draft.streamUrl)}
+                                onClick={() => {
+                                  handleStreamTest(draft);
+                                }}
+                              >
+                                Preview Stream
+                              </Button>
+                              <Button
+                                size="xs"
+                                variant="light"
+                                disabled={!hasConfiguredUrl(draft.healthUrl)}
+                                loading={isTestingHealth}
+                                onClick={() => {
+                                  void handleHealthTestAsync(draft);
+                                }}
+                              >
+                                Check Health
+                              </Button>
+                              {cameraTestState.previewSrc ? (
+                                <Button
+                                  size="xs"
+                                  variant="subtle"
+                                  onClick={() => {
+                                    clearPreviewForDraft(draft.key);
+                                  }}
+                                >
+                                  Close Preview
+                                </Button>
+                              ) : null}
+                            </Group>
+                            <Text size="xs" c="dimmed">
+                              These tests run through the server so you can
+                              verify external camera URLs from the same network
+                              path used in production.
+                            </Text>
+                            {cameraTestState.error ? (
+                              <Alert color="red" title="Camera test failed">
+                                {cameraTestState.error}
+                              </Alert>
+                            ) : null}
+                            {cameraTestState.healthResult ? (
+                              <Alert
+                                color="green"
+                                title="Health endpoint responded"
+                              >
+                                {`${cameraTestState.healthResult.statusCode} ${cameraTestState.healthResult.statusText}`}
+                                {cameraTestState.healthResult.contentType
+                                  ? ` • ${cameraTestState.healthResult.contentType}`
+                                  : ""}
+                                {cameraTestState.healthResult.bodyPreview
+                                  ? ` • ${cameraTestState.healthResult.bodyPreview}`
+                                  : ""}
+                              </Alert>
+                            ) : null}
+                            {cameraTestState.previewSrc ? (
+                              <Stack gap="xs">
+                                <Text size="sm" fw={500}>
+                                  {isStreamPreviewVisible
+                                    ? "Stream Preview"
+                                    : "Latest Image Preview"}
+                                </Text>
+                                <Box
+                                  style={{
+                                    overflow: "hidden",
+                                    borderRadius: "var(--mantine-radius-sm)",
+                                    background: "#111",
+                                  }}
+                                >
+                                  <img
+                                    alt={`${draft.name} test preview`}
+                                    onError={() => {
+                                      updateCameraTestState(
+                                        draft.key,
+                                        (currentState) => ({
+                                          ...currentState,
+                                          error: isStreamPreviewVisible
+                                            ? "The stream preview could not be loaded through the server."
+                                            : "The latest image preview could not be loaded through the server.",
+                                        }),
+                                      );
+                                    }}
+                                    src={cameraTestState.previewSrc}
+                                    style={{
+                                      display: "block",
+                                      width: "100%",
+                                      maxHeight: 320,
+                                      objectFit: "cover",
+                                    }}
+                                  />
+                                </Box>
+                              </Stack>
+                            ) : null}
+                          </Stack>
                         </Stack>
                       </Paper>
                     </Accordion.Panel>
