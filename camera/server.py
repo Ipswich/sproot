@@ -2,7 +2,9 @@
 
 import argparse
 import asyncio
+from concurrent.futures import TimeoutError as FuturesTimeoutError
 from contextlib import asynccontextmanager
+from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import hashlib
@@ -11,7 +13,7 @@ import io
 import logging
 import os
 import signal
-from threading import Condition, RLock
+from threading import Condition, Lock, RLock
 from typing import Optional
 
 import uvicorn
@@ -32,6 +34,10 @@ DEFAULT_WATCHDOG_INTERVAL_SECONDS = 1
 DEFAULT_MAX_RECOVERY_FAILURES = 3
 FRAME_WAIT_TIMEOUT_SECONDS = 5
 HEADER_NAME = "X-Interservice-Authentication-Token"
+
+
+class CameraOperationTimeoutError(RuntimeError):
+    pass
 
 
 def parse_resolution(value: Optional[str]) -> Optional[tuple[int, int]]:
@@ -310,6 +316,7 @@ class CameraService:
         self.settings = settings
         self.output = LatestFrameBuffer()
         self._lock = RLock()
+        self._camera_operation_lock = Lock()
         self._picam2: Optional[Picamera2] = None
         self._camera_started = False
         self._recording_started = False
@@ -321,6 +328,17 @@ class CameraService:
         self._last_recovery_started_at: Optional[datetime] = None
         self._last_recovery_succeeded_at: Optional[datetime] = None
         self._last_recovery_error: Optional[str] = None
+        self._last_camera_activity_at: Optional[datetime] = None
+        self._active_operation_name: Optional[str] = None
+        self._active_operation_started_at: Optional[datetime] = None
+        self._last_capture_started_at: Optional[datetime] = None
+        self._last_capture_completed_at: Optional[datetime] = None
+        self._last_capture_error: Optional[str] = None
+
+    def _record_camera_activity(self, request) -> None:
+        del request
+        with self._lock:
+            self._last_camera_activity_at = datetime.now(timezone.utc)
 
     @property
     def is_running(self) -> bool:
@@ -332,16 +350,46 @@ class CameraService:
         with self._lock:
             return self._main_resolution
 
-    def start(self) -> None:
+    def _mark_operation_started(self, name: str) -> datetime:
+        started_at = datetime.now(timezone.utc)
         with self._lock:
-            self.output.open_stream()
-            self.output.reset_activity(clear_frame=True)
-            self._state = "starting"
+            self._active_operation_name = name
+            self._active_operation_started_at = started_at
+            if name == "capture":
+                self._last_capture_started_at = started_at
+                self._last_capture_error = None
+        return started_at
+
+    def _mark_operation_finished(
+        self,
+        name: str,
+        *,
+        completed_at: Optional[datetime] = None,
+        error: Optional[Exception] = None,
+    ) -> None:
+        with self._lock:
+            if self._active_operation_name == name:
+                self._active_operation_name = None
+                self._active_operation_started_at = None
+
+            if name == "capture":
+                if completed_at is not None:
+                    self._last_capture_completed_at = completed_at
+                if error is not None:
+                    self._last_capture_error = str(error)
+
+    def start(self) -> None:
+        with self._camera_operation_lock:
+            with self._lock:
+                self.output.open_stream()
+                self.output.reset_activity(clear_frame=True)
+                self._state = "starting"
             self._start_pipeline_locked()
 
     def _start_pipeline_locked(self) -> None:
         logging.info("Initializing Picamera2")
         picam2 = Picamera2()
+        picam2.post_callback = self._record_camera_activity
         try:
             main_resolution = self.settings.image_resolution or tuple(picam2.sensor_resolution)
             frame_duration = int(1_000_000 / self.settings.fps)
@@ -381,6 +429,7 @@ class CameraService:
         self._recording_started = not self.settings.disable_stream
         self._main_resolution = main_resolution
         self._pipeline_started_at = datetime.now(timezone.utc)
+        self._last_camera_activity_at = self._pipeline_started_at
         self._state = "healthy"
         self._last_recovery_error = None
         logging.info(
@@ -394,10 +443,11 @@ class CameraService:
         )
 
     def stop(self) -> None:
-        with self._lock:
+        with self._camera_operation_lock:
             self.output.close_stream()
             self._stop_pipeline_locked()
-            self._state = "stopped"
+            with self._lock:
+                self._state = "stopped"
 
     def _stop_pipeline_locked(self) -> None:
         if self._picam2 is None:
@@ -422,6 +472,7 @@ class CameraService:
                 self._recording_started = False
                 self._main_resolution = None
                 self._pipeline_started_at = None
+                self._last_camera_activity_at = None
 
     def _format_timestamp(self, value: Optional[datetime]) -> Optional[str]:
         if value is None:
@@ -434,17 +485,20 @@ class CameraService:
         return (datetime.now(timezone.utc) - value).total_seconds()
 
     def _get_last_activity_at_locked(self) -> Optional[datetime]:
-        if self.settings.disable_stream:
-            return None
-
-        return self.output.last_frame_at or self._pipeline_started_at
+        return self._last_camera_activity_at
 
     def is_stalled(self) -> bool:
         with self._lock:
-            if self.settings.disable_stream:
+            if self._picam2 is None or not self._camera_started:
                 return False
 
-            if self._picam2 is None or not self._recording_started:
+            active_operation_started_at = self._active_operation_started_at
+            if active_operation_started_at is not None and (
+                datetime.now(timezone.utc) - active_operation_started_at
+            ).total_seconds() >= self.settings.stall_timeout_seconds:
+                return True
+
+            if self.settings.disable_stream:
                 return False
 
             last_activity_at = self._get_last_activity_at_locked()
@@ -456,15 +510,16 @@ class CameraService:
             ).total_seconds() >= self.settings.stall_timeout_seconds
 
     def recover(self, reason: str) -> bool:
-        with self._lock:
-            self._state = "recovering"
-            self._recovery_attempts += 1
-            self._last_recovery_started_at = datetime.now(timezone.utc)
-            logging.warning(
-                "Camera recovery attempt %s started: %s",
-                self._recovery_attempts,
-                reason,
-            )
+        with self._camera_operation_lock:
+            with self._lock:
+                self._state = "recovering"
+                self._recovery_attempts += 1
+                self._last_recovery_started_at = datetime.now(timezone.utc)
+                logging.warning(
+                    "Camera recovery attempt %s started: %s",
+                    self._recovery_attempts,
+                    reason,
+                )
 
             self._stop_pipeline_locked()
             self.output.reset_activity(clear_frame=True)
@@ -472,20 +527,24 @@ class CameraService:
             try:
                 self._start_pipeline_locked()
             except Exception as exc:
-                self._consecutive_recovery_failures += 1
-                self._state = "failed"
-                self._last_recovery_error = str(exc)
-                logging.exception(
-                    "Camera recovery attempt %s failed (%s/%s consecutive failures)",
-                    self._recovery_attempts,
-                    self._consecutive_recovery_failures,
-                    self.settings.max_recovery_failures,
-                )
+                with self._lock:
+                    self._consecutive_recovery_failures += 1
+                    self._state = "failed"
+                    self._last_recovery_error = str(exc)
+                    logging.exception(
+                        "Camera recovery attempt %s failed (%s/%s consecutive failures)",
+                        self._recovery_attempts,
+                        self._consecutive_recovery_failures,
+                        self.settings.max_recovery_failures,
+                    )
                 return False
 
-            self._consecutive_recovery_failures = 0
-            self._last_recovery_succeeded_at = datetime.now(timezone.utc)
-            logging.info("Camera recovery attempt %s succeeded", self._recovery_attempts)
+            with self._lock:
+                self._consecutive_recovery_failures = 0
+                self._last_recovery_succeeded_at = datetime.now(timezone.utc)
+                logging.info(
+                    "Camera recovery attempt %s succeeded", self._recovery_attempts
+                )
             return True
 
     def should_terminate_process(self) -> bool:
@@ -503,18 +562,40 @@ class CameraService:
         os.kill(os.getpid(), signal.SIGTERM)
 
     def capture_jpeg(self) -> bytes:
-        with self._lock:
-            if self._picam2 is None:
-                raise RuntimeError("Camera is not initialized")
+        self._mark_operation_started("capture")
+        try:
+            with self._camera_operation_lock:
+                with self._lock:
+                    if self._picam2 is None:
+                        raise RuntimeError("Camera is not initialized")
+                    picam2 = self._picam2
 
-            buffer = io.BytesIO()
-            request = self._picam2.capture_request()
-            try:
-                request.save("main", buffer, format="jpeg")
-            finally:
-                request.release()
+                buffer = io.BytesIO()
+                try:
+                    picam2.capture_file(
+                        buffer,
+                        name="main",
+                        format="jpeg",
+                        wait=self.settings.stall_timeout_seconds,
+                    )
+                except FuturesTimeoutError as exc:
+                    logging.error(
+                        "Capture timed out after %s seconds; cancelling outstanding jobs",
+                        self.settings.stall_timeout_seconds,
+                    )
+                    picam2.cancel_all_and_flush()
+                    raise CameraOperationTimeoutError(
+                        f"capture timed out after {self.settings.stall_timeout_seconds} seconds"
+                    ) from exc
 
+            completed_at = datetime.now(timezone.utc)
+            with self._lock:
+                self._last_camera_activity_at = completed_at
+            self._mark_operation_finished("capture", completed_at=completed_at)
             return buffer.getvalue()
+        except Exception as exc:
+            self._mark_operation_finished("capture", error=exc)
+            raise
 
     def get_health(self) -> dict:
         with self._lock:
@@ -543,7 +624,7 @@ class CameraService:
                     ),
                     "secondsSinceLastActivity": self._seconds_since(last_activity_at),
                     "stalled": self._picam2 is not None
-                    and self._recording_started
+                    and self._camera_started
                     and self.is_stalled(),
                 },
                 "recovery": {
@@ -558,8 +639,20 @@ class CameraService:
                     ),
                     "lastError": self._last_recovery_error,
                 },
+                "capture": {
+                    "activeOperation": self._active_operation_name,
+                    "activeOperationStartedAt": self._format_timestamp(
+                        self._active_operation_started_at
+                    ),
+                    "lastStartedAt": self._format_timestamp(
+                        self._last_capture_started_at
+                    ),
+                    "lastCompletedAt": self._format_timestamp(
+                        self._last_capture_completed_at
+                    ),
+                    "lastError": self._last_capture_error,
+                },
                 "watchdog": {
-                    "enabled": not self.settings.disable_stream,
                     "intervalSeconds": self.settings.watchdog_interval_seconds,
                     "stallTimeoutSeconds": self.settings.stall_timeout_seconds,
                 },
@@ -569,6 +662,13 @@ class CameraService:
 settings = load_settings()
 auth = InterserviceAuthentication(os.environ.get("INTERSERVICE_AUTHENTICATION_KEY", ""))
 camera_service = CameraService(settings)
+
+
+async def recover_camera(reason: str) -> bool:
+    recovered = await asyncio.to_thread(camera_service.recover, reason)
+    if not recovered and camera_service.should_terminate_process():
+        camera_service.terminate_process()
+    return recovered
 
 
 async def verify_auth(
@@ -588,11 +688,9 @@ async def camera_watchdog_loop() -> None:
             if not camera_service.is_stalled():
                 continue
 
-            recovered = camera_service.recover(
+            recovered = await recover_camera(
                 f"no frame received for at least {settings.stall_timeout_seconds} seconds"
             )
-            if not recovered and camera_service.should_terminate_process():
-                camera_service.terminate_process()
         except asyncio.CancelledError:
             return
         except Exception:
@@ -605,8 +703,7 @@ async def lifespan(app: FastAPI):
     watchdog_task: Optional[asyncio.Task[None]] = None
     try:
         camera_service.start()
-        if not settings.disable_stream:
-            watchdog_task = asyncio.create_task(camera_watchdog_loop())
+        watchdog_task = asyncio.create_task(camera_watchdog_loop())
         yield
     finally:
         if watchdog_task is not None:
@@ -628,7 +725,8 @@ async def generate_mjpeg_stream():
     frame_count = 0
     while True:
         try:
-            frame_count, frame, stream_closed = camera_service.output.wait_for_next_frame(
+            frame_count, frame, stream_closed = await asyncio.to_thread(
+                camera_service.output.wait_for_next_frame,
                 frame_count,
                 FRAME_WAIT_TIMEOUT_SECONDS,
             )
@@ -654,7 +752,12 @@ async def generate_mjpeg_stream():
 @app.get("/capture")
 async def capture(_authenticated: bool = Depends(verify_auth)):
     try:
-        return Response(content=camera_service.capture_jpeg(), media_type="image/jpeg")
+        image = await asyncio.to_thread(camera_service.capture_jpeg)
+        return Response(content=image, media_type="image/jpeg")
+    except CameraOperationTimeoutError as exc:
+        logging.warning("Capture pipeline timed out, attempting recovery")
+        await recover_camera(str(exc))
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         logging.exception("Capture failed")
         raise HTTPException(status_code=500, detail=f"Capture failed: {exc}") from exc
@@ -680,11 +783,21 @@ def main() -> None:
         level=os.environ.get("CAMERA_LOG_LEVEL", "INFO").upper(),
         format="%(asctime)s %(levelname)s %(message)s",
     )
+    log_config = deepcopy(uvicorn.config.LOGGING_CONFIG)
+    log_config["formatters"]["default"]["fmt"] = (
+        "%(asctime)s %(levelprefix)s %(message)s"
+    )
+    log_config["formatters"]["access"]["fmt"] = (
+        '%(asctime)s %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s'
+    )
+    log_config["formatters"]["default"]["datefmt"] = "%Y-%m-%d %H:%M:%S"
+    log_config["formatters"]["access"]["datefmt"] = "%Y-%m-%d %H:%M:%S"
     config = uvicorn.Config(
         app,
         host="0.0.0.0",
         port=settings.port,
         timeout_graceful_shutdown=settings.shutdown_timeout_seconds,
+        log_config=log_config,
     )
     try:
         uvicorn.Server(config).run()
