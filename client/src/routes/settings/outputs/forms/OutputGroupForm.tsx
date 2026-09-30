@@ -62,7 +62,7 @@ export default function OutputGroupForm({
     <Fragment>
       <Stack pt="xs">
         <Paper withBorder radius="sm" p="sm">
-          <ScrollArea style={{ maxHeight: 260 }} type="always">
+          <ScrollArea.Autosize mah={260} scrollbarSize={8} type="always">
             {availableOutputs.length === 0 ? null : (
               <SimpleGrid cols={1} spacing="sm">
                 {availableOutputs.map((o) => {
@@ -86,7 +86,7 @@ export default function OutputGroupForm({
                 })}
               </SimpleGrid>
             )}
-          </ScrollArea>
+          </ScrollArea.Autosize>
         </Paper>
       </Stack>
     </Fragment>
