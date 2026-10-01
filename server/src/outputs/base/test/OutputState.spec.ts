@@ -11,7 +11,7 @@ const createMockOutputsRepo = (): IOutputsRepository => ({
   getAllAsync: async () => [],
   getByIdAsync: async () => [],
   addAsync: async () => 0,
-  updateAsync: async () => {},
+  updateAsync: async () => true,
   deleteAsync: async () => {},
   updateLastOutputStateAsync: async () => {},
   getLastOutputStateAsync: sinon.stub().resolves([]),

@@ -8,7 +8,7 @@ export interface ISensorsRepository {
   getByIdAsync(id: number): Promise<SDBSensor[]>;
   getDS18B20AddressesAsync(): Promise<SDBSensor[]>;
   addAsync(sensor: SDBSensor): Promise<void>;
-  updateAsync(sensor: SDBSensor): Promise<void>;
+  updateAsync(sensor: SDBSensor): Promise<boolean>;
   updateSensorCalibrationAsync(
     sensorId: number,
     lowCalibrationPoint: number,

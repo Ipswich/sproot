@@ -14,6 +14,7 @@ export const DI_KEYS = {
   SettingsService: "settingsService",
   RetentionService: "retentionService",
   DebugLoggingService: "debugLoggingService",
+  DeferredDeletionService: "deferredDeletionService",
 
   // Infrastructure
   KnexConnection: "knexConnection",

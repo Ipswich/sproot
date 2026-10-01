@@ -300,7 +300,6 @@ describe("API Tests", async function () {
 
         it("should include triggered automations for outputs with active automation actions", async () => {
           const eventBus = app.get(DI_KEYS.EventBus);
-          const outputList = app.get(DI_KEYS.OutputList) as OutputList;
           try {
             const timeoutUpdateResponse = await request(server)
               .patch("/api/v2/outputs/1")
@@ -326,16 +325,11 @@ describe("API Tests", async function () {
             );
             await flushAsync();
 
-            await waitForOutputDataAsync(
-              outputList,
+            const output = await waitForOutputAsync(
               1,
               (candidate) =>
                 Array.isArray(candidate.triggeredBy) && candidate.triggeredBy.length === 1,
             );
-
-            const response = await request(server).get("/api/v2/outputs/1").expect(200);
-            validateMiddlewareValues(response);
-            const output = response.body["content"].data[0];
 
             assert.deepEqual(output.triggeredBy, [
               {

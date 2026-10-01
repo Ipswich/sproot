@@ -3,6 +3,7 @@ import { OutputList } from "../../../../outputs/list/OutputList";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SDBOutput } from "@sproot/database/SDBOutput";
 import { Request, Response } from "express";
+import { DeferredDeletionService } from "../../../../system/DeferredDeletionService";
 
 /**
  * Possible statusCodes: 200, 404
@@ -194,7 +195,18 @@ export async function updateAsync(
       : (request.body["parentOutputId"] ?? outputData.parentOutputId);
 
   try {
-    await outputList.updateOutputAsync(outputData);
+    const updated = await outputList.updateOutputAsync(outputData);
+    if (!updated) {
+      return {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: request.originalUrl,
+          details: [`Output with ID ${outputId} not found.`],
+        },
+        ...response.locals["defaultProperties"],
+      };
+    }
   } catch (error: any) {
     updateOutputResponse = {
       statusCode: 503,
@@ -223,6 +235,9 @@ export async function deleteAsync(
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
+  const deferredDeletionService = request.app.get(
+    DI_KEYS.DeferredDeletionService,
+  ) as DeferredDeletionService;
   let deleteOutputResponse: SuccessResponse | ErrorResponse;
 
   const outputId = parseInt((request.params["outputId"] as string) ?? "");
@@ -257,7 +272,21 @@ export async function deleteAsync(
   }
 
   try {
-    await outputList.deleteOutputAsync(outputId);
+    const result = await deferredDeletionService.deleteOutputAsync(outputId);
+    if (result === "not-found") {
+      await outputList.evictOutputAsync(outputId);
+      return {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: request.originalUrl,
+          details: [`Output with ID ${outputId} not found.`],
+        },
+        ...response.locals["defaultProperties"],
+      };
+    }
+
+    await outputList.evictOutputAsync(outputId);
 
     deleteOutputResponse = {
       statusCode: 200,

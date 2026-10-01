@@ -17,12 +17,14 @@ import { DeviceZonesRepository } from "./repositories/device-zones/DeviceZonesRe
 import { InvalidCursorError } from "./repositories/utils/BaseKnexRepository";
 import { JournalsRepository } from "./repositories/journals/JournalsRepository";
 import { OutputsRepository } from "./repositories/outputs/OutputsRepository";
+import { DeletionQueueRepository } from "./repositories/deletion-queue/DeletionQueueRepository";
 import { RetentionRepository } from "./repositories/retention/RetentionRepository";
 import { SensorsRepository } from "./repositories/sensors/SensorsRepository";
 import { SubcontrollersRepository } from "./repositories/subcontrollers/SubcontrollersRepository";
 import { SystemRepository } from "./repositories/system/SystemRepository";
 import { SettingsRepository } from "./settings/SettingsRepository";
 import { UsersRepository } from "./repositories/users/UsersRepository";
+import type { IDeletionQueueRepository } from "./repositories/deletion-queue/IDeletionQueueRepository";
 
 export class SprootDB {
   readonly sensors: ISensorsRepository;
@@ -36,6 +38,7 @@ export class SprootDB {
   readonly journals: IJournalRepository;
   readonly system: ISystemRepository;
   readonly settings: ISettingsRepository;
+  readonly deletionQueue: IDeletionQueueRepository;
 
   #connection: Knex;
 
@@ -44,6 +47,7 @@ export class SprootDB {
     this.sensors = new SensorsRepository(connection);
     this.outputs = new OutputsRepository(connection);
     this.retention = new RetentionRepository(connection);
+    this.deletionQueue = new DeletionQueueRepository(connection);
     this.subcontrollers = new SubcontrollersRepository(connection);
     this.automations = new AutomationsRepository(connection);
     this.camera = new CameraRepository(connection);

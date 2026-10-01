@@ -7,6 +7,8 @@ import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SensorBase } from "../../../../sensors/base/SensorBase";
 import { Models } from "@sproot/common/sensors/Models";
+import { DeferredDeletionService } from "../../../../system/DeferredDeletionService";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 describe("SensorHandlers.ts tests", () => {
   describe("get", () => {
@@ -255,7 +257,7 @@ describe("SensorHandlers.ts tests", () => {
     let sensorList: sinon.SinonStubbedInstance<SensorList>;
     beforeEach(() => {
       sensorList = sinon.createStubInstance(SensorList);
-      sensorList.updateSensorAsync.resolves();
+      sensorList.updateSensorAsync.resolves(true);
     });
 
     afterEach(() => {
@@ -431,13 +433,43 @@ describe("SensorHandlers.ts tests", () => {
         "DB Error",
       ]);
     });
+
+    it("should return a 404 when the sensor becomes unavailable during update", async () => {
+      const updatedSensor = {
+        1: {
+          id: 1,
+          name: "test sensor 4",
+          model: "DS18B20",
+          address: "28-00002",
+          color: "#000000",
+        } as SDBSensor,
+      };
+      sinon.stub(sensorList, "sensorData").value(updatedSensor);
+      sensorList.updateSensorAsync.resolves(false);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
+        },
+        originalUrl: "/api/v2/sensors/1",
+        params: { sensorId: 1 },
+        body: updatedSensor,
+      } as unknown as Request;
+
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 404);
+      assert.deepEqual(error.error["details"], ["Sensor with ID 1 not found."]);
+    });
   });
 
   describe("deleteAsync", () => {
     let sensorList: sinon.SinonStubbedInstance<SensorList>;
+    let deferredDeletionService: sinon.SinonStubbedInstance<DeferredDeletionService>;
     beforeEach(() => {
       sensorList = sinon.createStubInstance(SensorList);
-      sensorList.deleteSensorAsync.resolves();
+      deferredDeletionService = sinon.createStubInstance(DeferredDeletionService);
+      deferredDeletionService.deleteSensorAsync.resolves("queued");
+      sensorList.evictSensorAsync.resolves();
     });
 
     afterEach(() => {
@@ -467,7 +499,12 @@ describe("SensorHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
+          get: (_dependency: string) =>
+            _dependency === DI_KEYS.SensorList
+              ? sensorList
+              : _dependency === DI_KEYS.DeferredDeletionService
+                ? deferredDeletionService
+                : undefined,
         },
         params: { sensorId: 1 },
       } as unknown as Request;
@@ -477,7 +514,8 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(success.content?.data, "Sensor deleted successfully.");
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.isTrue(sensorList.deleteSensorAsync.calledOnceWithExactly(1));
+      assert.isTrue(deferredDeletionService.deleteSensorAsync.calledOnceWithExactly(1));
+      assert.isTrue(sensorList.evictSensorAsync.calledOnceWithExactly(1));
     });
 
     it("should return a 400 and details for the invalid request", async () => {
@@ -494,7 +532,12 @@ describe("SensorHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
+          get: (_dependency: string) =>
+            _dependency === DI_KEYS.SensorList
+              ? sensorList
+              : _dependency === DI_KEYS.DeferredDeletionService
+                ? deferredDeletionService
+                : undefined,
         },
         originalUrl: "/api/v2/sensors",
         params: {},
@@ -507,7 +550,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/sensors");
       assert.deepEqual(error.error["details"], ["Invalid or missing sensor ID."]);
-      assert.isTrue(sensorList.deleteSensorAsync.notCalled);
+      assert.isTrue(deferredDeletionService.deleteSensorAsync.notCalled);
     });
 
     it("should return a 404 and a 'Not Found' error", async () => {
@@ -524,7 +567,12 @@ describe("SensorHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
+          get: (_dependency: string) =>
+            _dependency === DI_KEYS.SensorList
+              ? sensorList
+              : _dependency === DI_KEYS.DeferredDeletionService
+                ? deferredDeletionService
+                : undefined,
         },
         originalUrl: "/api/v2/sensors/-1",
         params: { sensorId: -1 },
@@ -537,7 +585,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/sensors/-1");
       assert.deepEqual(error.error["details"], ["Sensor with ID -1 not found."]);
-      assert.isTrue(sensorList.deleteSensorAsync.notCalled);
+      assert.isTrue(deferredDeletionService.deleteSensorAsync.notCalled);
     });
 
     it("should return a 503 if the database is unreachable", async () => {
@@ -554,13 +602,18 @@ describe("SensorHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
+          get: (_dependency: string) =>
+            _dependency === DI_KEYS.SensorList
+              ? sensorList
+              : _dependency === DI_KEYS.DeferredDeletionService
+                ? deferredDeletionService
+                : undefined,
         },
         originalUrl: "/api/v2/sensors",
         params: { sensorId: 1 },
       } as unknown as Request;
 
-      sensorList.deleteSensorAsync.rejects(new Error("DB Error"));
+      deferredDeletionService.deleteSensorAsync.rejects(new Error("DB Error"));
 
       const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
@@ -572,7 +625,38 @@ describe("SensorHandlers.ts tests", () => {
         "Failed to delete sensor from database.",
         "DB Error",
       ]);
-      assert.isTrue(sensorList.deleteSensorAsync.calledOnceWithExactly(1));
+      assert.isTrue(deferredDeletionService.deleteSensorAsync.calledOnceWithExactly(1));
+    });
+
+    it("should return a 404 when the sensor has already been deleted in storage", async () => {
+      const deletedSensor = {
+        1: {
+          id: 1,
+          name: "test sensor 4",
+          model: "DS18B20",
+          address: "28-00002",
+          color: "#000000",
+        } as SDBSensor,
+      };
+      sinon.stub(sensorList, "sensorData").value(deletedSensor);
+      deferredDeletionService.deleteSensorAsync.resolves("not-found");
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) =>
+            _dependency === DI_KEYS.SensorList
+              ? sensorList
+              : _dependency === DI_KEYS.DeferredDeletionService
+                ? deferredDeletionService
+                : undefined,
+        },
+        originalUrl: "/api/v2/sensors/1",
+        params: { sensorId: 1 },
+      } as unknown as Request;
+
+      const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 404);
+      assert.isTrue(sensorList.evictSensorAsync.calledOnceWithExactly(1));
     });
   });
 });

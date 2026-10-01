@@ -316,9 +316,24 @@ class SensorList {
     await this.#eventBus.publishAsync(new SensorModifiedEvent({}));
   }
 
-  async updateSensorAsync(sensor: SDBSensor): Promise<void> {
-    await this.#sensorsRepository.updateAsync(sensor);
+  async updateSensorAsync(sensor: SDBSensor): Promise<boolean> {
+    const updated = await this.#sensorsRepository.updateAsync(sensor);
+    if (!updated) {
+      await this.evictSensorAsync(sensor.id);
+      return false;
+    }
+
     await this.#eventBus.publishAsync(new SensorModifiedEvent({}));
+    return true;
+  }
+
+  async evictSensorAsync(sensorId: number): Promise<void> {
+    const sensor = this.#sensors[sensorId];
+    if (!sensor) {
+      return;
+    }
+
+    await this.#disposeSensorAsync(sensor);
   }
 
   async deleteSensorAsync(sensorId: number): Promise<void> {

@@ -4,6 +4,7 @@ import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { Models } from "@sproot/common/sensors/Models";
 import { SensorList } from "../../../../sensors/list/SensorList";
+import { DeferredDeletionService } from "../../../../system/DeferredDeletionService";
 
 /**
  * Possible statusCodes: 200, 404
@@ -195,7 +196,18 @@ export async function updateAsync(
     request.body["deviceZoneId"] ?? request.body["deviceZoneId"] ?? sensorData.deviceZoneId;
 
   try {
-    await sensorList.updateSensorAsync(sensorData);
+    const updated = await sensorList.updateSensorAsync(sensorData);
+    if (!updated) {
+      return {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: request.originalUrl,
+          details: [`Sensor with ID ${sensorId} not found.`],
+        },
+        ...response.locals["defaultProperties"],
+      };
+    }
   } catch (error: any) {
     updateSensorResponse = {
       statusCode: 503,
@@ -230,6 +242,9 @@ export async function deleteAsync(
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
+  const deferredDeletionService = request.app.get(
+    DI_KEYS.DeferredDeletionService,
+  ) as DeferredDeletionService;
   let deleteSensorResponse: SuccessResponse | ErrorResponse;
 
   const sensorId = parseInt((request.params["sensorId"] as string) ?? "");
@@ -261,7 +276,21 @@ export async function deleteAsync(
   }
 
   try {
-    await sensorList.deleteSensorAsync(sensorId);
+    const result = await deferredDeletionService.deleteSensorAsync(sensorId);
+    if (result === "not-found") {
+      await sensorList.evictSensorAsync(sensorId);
+      return {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: request.originalUrl,
+          details: [`Sensor with ID ${sensorId} not found.`],
+        },
+        ...response.locals["defaultProperties"],
+      };
+    }
+
+    await sensorList.evictSensorAsync(sensorId);
 
     deleteSensorResponse = {
       statusCode: 200,

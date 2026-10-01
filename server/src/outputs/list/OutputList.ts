@@ -378,9 +378,24 @@ class OutputList implements AsyncDisposable {
     return newOutputId;
   }
 
-  async updateOutputAsync(output: SDBOutput): Promise<void> {
-    await this.#outputsRepository.updateAsync(output);
+  async updateOutputAsync(output: SDBOutput): Promise<boolean> {
+    const updated = await this.#outputsRepository.updateAsync(output);
+    if (!updated) {
+      await this.evictOutputAsync(output.id);
+      return false;
+    }
+
     await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
+    return true;
+  }
+
+  async evictOutputAsync(outputId: number): Promise<void> {
+    const output = this.#outputs[outputId];
+    if (!output) {
+      return;
+    }
+
+    await this.#deleteOutputAsync(output);
   }
 
   async deleteOutputAsync(outputId: number): Promise<void> {

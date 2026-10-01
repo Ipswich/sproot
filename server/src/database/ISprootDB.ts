@@ -8,6 +8,7 @@ import type { ISensorsRepository } from "./repositories/sensors/ISensorsReposito
 import type { ISubcontrollersRepository } from "./repositories/subcontrollers/ISubcontrollersRepository";
 import type { ISystemRepository } from "./repositories/system/ISystemRepository";
 import type { IUsersRepository } from "./repositories/users/IUsersRepository";
+import type { IDeletionQueueRepository } from "./repositories/deletion-queue/IDeletionQueueRepository";
 import type { ISettingsRepository } from "./settings/ISettingsRepository";
 
 export interface ISprootDB {
@@ -21,6 +22,7 @@ export interface ISprootDB {
   deviceZones: IDeviceZonesRepository;
   system: ISystemRepository;
   settings: ISettingsRepository;
+  deletionQueue: IDeletionQueueRepository;
   journals: IJournalRepository;
   [Symbol.asyncDispose](): Promise<void>;
 }

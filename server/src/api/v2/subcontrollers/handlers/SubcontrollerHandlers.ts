@@ -7,6 +7,7 @@ import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
 import { SensorList } from "../../../../sensors/list/SensorList";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
+import { DeferredDeletionService } from "../../../../system/DeferredDeletionService";
 
 export async function getSubcontrollerHandlerAsync(
   request: Request,
@@ -245,7 +246,9 @@ export async function deleteSubcontrollerAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const deferredDeletionService = request.app.get(
+    DI_KEYS.DeferredDeletionService,
+  ) as DeferredDeletionService;
   const { deviceId } = request.params as { deviceId: string | undefined };
 
   const id = parseInt(deviceId as string, 10);
@@ -262,8 +265,8 @@ export async function deleteSubcontrollerAsync(
   }
 
   try {
-    const rowsDeleted = await sprootDB.subcontrollers.deleteAsync(id);
-    if (rowsDeleted === 0) {
+    const result = await deferredDeletionService.deleteSubcontrollerAsync(id);
+    if (result === "not-found") {
       return {
         statusCode: 404,
         error: {
@@ -274,6 +277,7 @@ export async function deleteSubcontrollerAsync(
         ...response.locals["defaultProperties"],
       };
     }
+
     const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
     const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
     void Promise.all([sensorList.regenerateAsync(), outputList.regenerateAsync()]);

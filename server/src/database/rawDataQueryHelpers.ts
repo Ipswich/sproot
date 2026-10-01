@@ -82,6 +82,7 @@ export function buildSensorRawQuery(
       knex.raw('last(data, "logTime" ORDER BY "logTime" DESC) AS last_data'),
     )
     .where(whereRaw)
+    .where("sensors.pendingDeletion", false)
     .groupByRaw('"sensor_id", "sensors"."name", "metric", "units", "bucket"')
     .orderBy("bucket", "DESC")
     .limit(limit + 1);
@@ -116,6 +117,7 @@ export function buildOutputRawQuery(
       knex.raw('last(value, "logTime" ORDER BY "logTime" DESC) AS last_value'),
     )
     .where(whereRaw)
+    .where("outputs.pendingDeletion", false)
     .groupByRaw('"output_id", "outputs"."name", "bucket"')
     .orderBy("bucket", "DESC")
     .limit(limit + 1);

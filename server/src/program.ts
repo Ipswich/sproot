@@ -36,6 +36,12 @@ import { RetentionService } from "./retention/RetentionService";
 import { addLogStreamingTransport } from "./logger";
 import { TimeExpressionResolver } from "./automation/conditions/TimeExpressionResolver";
 import { DebugLoggingService } from "./system/DebugLoggingService";
+import {
+  DeferredDeletionService,
+  DeferredOutputsRepository,
+  DeferredSubcontrollersRepository,
+  DeferredSensorsRepository,
+} from "./system/DeferredDeletionService";
 
 export default async function setupAsync(): Promise<Express> {
   const app = express();
@@ -88,6 +94,16 @@ export default async function setupAsync(): Promise<Express> {
     logger,
   );
   app.set(DI_KEYS.RetentionService, retentionService);
+
+  const deferredDeletionService = await DeferredDeletionService.createInstanceAsync(
+    sprootDB.outputs as DeferredOutputsRepository,
+    sprootDB.sensors as DeferredSensorsRepository,
+    sprootDB.subcontrollers as DeferredSubcontrollersRepository,
+    sprootDB.deletionQueue,
+    eventBus,
+    logger,
+  );
+  app.set(DI_KEYS.DeferredDeletionService, deferredDeletionService);
 
   logger.info("Creating sensor and output lists. . .");
   const sensorList = await SensorList.createInstanceAsync(
@@ -211,6 +227,9 @@ export async function gracefulHaltAsync(
       // Cleanup retention service (unsubscribes from event bus)
       app.get(DI_KEYS.RetentionService)[Symbol.dispose]();
 
+      // Cleanup deferred deletion worker timer
+      app.get(DI_KEYS.DeferredDeletionService)[Symbol.dispose]();
+
       // Close database connection
       await app.get(DI_KEYS.SprootDB)[Symbol.asyncDispose]();
     } catch (err) {
@@ -233,7 +252,6 @@ async function defaultUserCheck(sprootDB: ISprootDB, logger: winston.Logger) {
   const defaultUser = {
     username: process.env["DEFAULT_USER"]!,
     hash: process.env["DEFAULT_USER_PASSWORD"]!,
-    email: process.env["DEFAULT_USER_EMAIL"]!,
   } as SDBUser;
 
   const user = await sprootDB.users.getByIdAsync(defaultUser.username);

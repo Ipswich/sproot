@@ -9,6 +9,8 @@ import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { OutputBase } from "../../../../outputs/base/OutputBase";
 import { Models } from "@sproot/common/outputs/Models";
+import { DeferredDeletionService } from "../../../../system/DeferredDeletionService";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 describe("OutputHandlers.ts tests", () => {
   describe("get", () => {
@@ -241,7 +243,7 @@ describe("OutputHandlers.ts tests", () => {
     let outputList: sinon.SinonStubbedInstance<OutputList>;
     beforeEach(() => {
       outputList = sinon.createStubInstance(OutputList);
-      outputList.updateOutputAsync.resolves();
+      outputList.updateOutputAsync.resolves(true);
     });
 
     afterEach(() => {
@@ -434,13 +436,46 @@ describe("OutputHandlers.ts tests", () => {
       ]);
       assert.isTrue(outputList.updateOutputAsync.calledOnceWithExactly(updatedOutput[1]));
     });
+
+    it("should return a 404 when the output becomes unavailable during update", async () => {
+      const updatedOutput = {
+        1: {
+          id: 1,
+          model: Models.PCA9685,
+          address: "0x40",
+          name: "test output",
+          pin: "0",
+          isPwm: true,
+          isInvertedPwm: true,
+          color: "#FF0000",
+        } as SDBOutput,
+      };
+      sinon.stub(outputList, "outputData").value(updatedOutput);
+      outputList.updateOutputAsync.resolves(false);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
+        },
+        originalUrl: "/api/v2/outputs/1",
+        params: { outputId: 1 },
+        body: updatedOutput,
+      } as unknown as Request;
+
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 404);
+      assert.deepEqual(error.error["details"], ["Output with ID 1 not found."]);
+    });
   });
 
   describe("deleteAsync", () => {
     let outputList: sinon.SinonStubbedInstance<OutputList>;
+    let deferredDeletionService: sinon.SinonStubbedInstance<DeferredDeletionService>;
     beforeEach(() => {
       outputList = sinon.createStubInstance(OutputList);
-      outputList.deleteOutputAsync.resolves();
+      deferredDeletionService = sinon.createStubInstance(DeferredDeletionService);
+      deferredDeletionService.deleteOutputAsync.resolves("queued");
+      outputList.evictOutputAsync.resolves();
     });
 
     afterEach(() => {
@@ -473,7 +508,12 @@ describe("OutputHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
+          get: (_dependency: string) =>
+            _dependency === DI_KEYS.OutputList
+              ? outputList
+              : _dependency === DI_KEYS.DeferredDeletionService
+                ? deferredDeletionService
+                : undefined,
         },
         params: { outputId: 1 },
       } as unknown as Request;
@@ -483,7 +523,8 @@ describe("OutputHandlers.ts tests", () => {
       assert.deepEqual(success.content?.data, "Output deleted successfully.");
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.isTrue(outputList.deleteOutputAsync.calledOnceWithExactly(1));
+      assert.isTrue(deferredDeletionService.deleteOutputAsync.calledOnceWithExactly(1));
+      assert.isTrue(outputList.evictOutputAsync.calledOnceWithExactly(1));
     });
 
     it("should return a 400 and details for the invalid request", async () => {
@@ -503,7 +544,12 @@ describe("OutputHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
+          get: (_dependency: string) =>
+            _dependency === DI_KEYS.OutputList
+              ? outputList
+              : _dependency === DI_KEYS.DeferredDeletionService
+                ? deferredDeletionService
+                : undefined,
         },
         originalUrl: "/api/v2/outputs",
         params: {},
@@ -516,7 +562,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/outputs");
       assert.deepEqual(error.error["details"], ["Invalid or missing output ID."]);
-      assert.isTrue(outputList.deleteOutputAsync.notCalled);
+      assert.isTrue(deferredDeletionService.deleteOutputAsync.notCalled);
     });
 
     it("should return a 404 and a 'Not Found' error", async () => {
@@ -536,7 +582,12 @@ describe("OutputHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
+          get: (_dependency: string) =>
+            _dependency === DI_KEYS.OutputList
+              ? outputList
+              : _dependency === DI_KEYS.DeferredDeletionService
+                ? deferredDeletionService
+                : undefined,
         },
         originalUrl: "/api/v2/outputs/-1",
         params: { outputId: -1 },
@@ -549,7 +600,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/outputs/-1");
       assert.deepEqual(error.error["details"], ["Output with ID -1 not found."]);
-      assert.isTrue(outputList.deleteOutputAsync.notCalled);
+      assert.isTrue(deferredDeletionService.deleteOutputAsync.notCalled);
     });
 
     it("should return a 503 if the database is unreachable", async () => {
@@ -569,13 +620,18 @@ describe("OutputHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
+          get: (_dependency: string) =>
+            _dependency === DI_KEYS.OutputList
+              ? outputList
+              : _dependency === DI_KEYS.DeferredDeletionService
+                ? deferredDeletionService
+                : undefined,
         },
         originalUrl: "/api/v2/outputs/1",
         params: { outputId: 1 },
       } as unknown as Request;
 
-      outputList.deleteOutputAsync.rejects(new Error("DB Error"));
+      deferredDeletionService.deleteOutputAsync.rejects(new Error("DB Error"));
 
       const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
@@ -587,7 +643,41 @@ describe("OutputHandlers.ts tests", () => {
         "Failed to delete output from database.",
         "DB Error",
       ]);
-      assert.isTrue(outputList.deleteOutputAsync.calledOnceWithExactly(1));
+      assert.isTrue(deferredDeletionService.deleteOutputAsync.calledOnceWithExactly(1));
+    });
+
+    it("should return a 404 when the output has already been deleted in storage", async () => {
+      const deletedOutput = {
+        1: {
+          id: 1,
+          model: Models.PCA9685,
+          address: "0x40",
+          name: "test output",
+          pin: "0",
+          isPwm: true,
+          isInvertedPwm: true,
+          color: "#FF0000",
+        } as SDBOutput,
+      };
+      sinon.stub(outputList, "outputData").value(deletedOutput);
+      deferredDeletionService.deleteOutputAsync.resolves("not-found");
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) =>
+            _dependency === DI_KEYS.OutputList
+              ? outputList
+              : _dependency === DI_KEYS.DeferredDeletionService
+                ? deferredDeletionService
+                : undefined,
+        },
+        originalUrl: "/api/v2/outputs/1",
+        params: { outputId: 1 },
+      } as unknown as Request;
+
+      const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 404);
+      assert.isTrue(outputList.evictOutputAsync.calledOnceWithExactly(1));
     });
   });
 });

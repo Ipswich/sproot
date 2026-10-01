@@ -15,7 +15,6 @@ export async function seed(knex: Knex): Promise<void> {
     {
       username: "testuser",
       hash: "$2b$10$6Ld7cz9MRYEuYVJB1J/gcOWm2MXnSqxGZ/XIZJSAEWWQlqF1xci0.",
-      email: "test@example.com",
     },
   ]);
 

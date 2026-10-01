@@ -13,6 +13,9 @@ export class UsersRepository extends BaseKnexRepository implements IUsersReposit
   }
 
   async addAsync(user: SDBUser): Promise<void> {
-    return this.connection("users").insert(user);
+    return this.connection("users").insert({
+      username: user.username,
+      hash: user.hash,
+    });
   }
 }

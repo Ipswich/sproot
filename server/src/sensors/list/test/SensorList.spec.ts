@@ -18,7 +18,7 @@ const createMockSensorsRepo = (): ISensorsRepository => ({
   getByIdAsync: async () => [],
   getDS18B20AddressesAsync: async () => [],
   addAsync: async () => {},
-  updateAsync: async () => {},
+  updateAsync: async () => true,
   updateSensorCalibrationAsync: async () => {},
   deleteAsync: async () => {},
   addSensorReadingAsync: async () => {},

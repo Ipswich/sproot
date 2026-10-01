@@ -7,7 +7,7 @@ export interface IOutputsRepository {
   getAllAsync(): Promise<SDBOutput[]>;
   getByIdAsync(id: number): Promise<SDBOutput[]>;
   addAsync(output: SDBOutput): Promise<number>;
-  updateAsync(output: SDBOutput): Promise<void>;
+  updateAsync(output: SDBOutput): Promise<boolean>;
   deleteAsync(id: number): Promise<void>;
   updateLastOutputStateAsync(output: {
     id: number;

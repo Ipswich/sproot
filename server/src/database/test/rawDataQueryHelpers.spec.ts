@@ -1,5 +1,6 @@
-import { parseIntervalToMinutes } from "../rawDataQueryHelpers";
+import { buildOutputRawQuery, buildSensorRawQuery, parseIntervalToMinutes } from "../rawDataQueryHelpers";
 import { assert } from "chai";
+import { knex } from "knex";
 
 describe("parseIntervalToMinutes", () => {
   it("parses '1m' to 1", () => {
@@ -54,5 +55,25 @@ describe("parseIntervalToMinutes", () => {
     assert.equal(parseIntervalToMinutes("15 MINUTES"), 15);
     assert.equal(parseIntervalToMinutes("1 HOUR"), 60);
     assert.equal(parseIntervalToMinutes("1 DAY"), 1440);
+  });
+});
+
+describe("raw data query builders", () => {
+  const db = knex({ client: "pg" });
+
+  it("filters pending-deletion sensors from raw data queries", () => {
+    const query = buildSensorRawQuery(db, "5 minutes", db.raw('"sensor_id" = ?', [1]), 100);
+    const compiled = query.toSQL();
+
+    assert.include(compiled.sql, '"sensors"."pendingDeletion" = ?');
+    assert.deepEqual(compiled.bindings.slice(-2), [false, 101]);
+  });
+
+  it("filters pending-deletion outputs from raw data queries", () => {
+    const query = buildOutputRawQuery(db, "5 minutes", db.raw('"output_id" = ?', [1]), 100);
+    const compiled = query.toSQL();
+
+    assert.include(compiled.sql, '"outputs"."pendingDeletion" = ?');
+    assert.deepEqual(compiled.bindings.slice(-2), [false, 101]);
   });
 });

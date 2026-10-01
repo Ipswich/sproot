@@ -221,6 +221,7 @@ export abstract class BaseKnexRepository {
     const whereRaw = this.buildAggregateFilters(request, "sensor_id", readingTypes);
 
     const query = this.connection(aggregateTableName)
+      .join("sensors", `${aggregateTableName}.sensor_id`, "sensors.id")
       .select(
         "bucket",
         "sensor_id",
@@ -238,6 +239,7 @@ export abstract class BaseKnexRepository {
         ]),
       )
       .where(whereRaw)
+      .where("sensors.pendingDeletion", false)
       .orderBy("bucket", "DESC")
       .limit(limit + 1);
 
@@ -285,6 +287,7 @@ export abstract class BaseKnexRepository {
         ]),
       )
       .where(whereRaw)
+      .where("outputs.pendingDeletion", false)
       .orderBy("bucket", "DESC")
       .limit(limit + 1);
 
