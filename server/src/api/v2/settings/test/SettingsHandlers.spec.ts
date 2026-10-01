@@ -13,6 +13,7 @@ describe("SettingsHandlers", () => {
   let mockRequest: Request;
   let mockResponse: Response;
   let mockService: Partial<SettingsService>;
+  let userCount = 1;
 
   beforeEach(() => {
     sandbox = createSandbox();
@@ -22,6 +23,8 @@ describe("SettingsHandlers", () => {
         [SETTINGS.sensors.data_retention]: "30 days",
         [SETTINGS.outputs.data_retention]: "60 days",
         [SETTINGS.system.backup_retention]: "30 days",
+        [SETTINGS.system.authentication_enabled]: false,
+        [SETTINGS.system.force_https]: false,
         [SETTINGS.system.log_debug]: false,
         [SETTINGS.system.latitude]: "40.7128",
         [SETTINGS.system.longitude]: "-74.0060",
@@ -33,11 +36,19 @@ describe("SettingsHandlers", () => {
       app: {
         get: ((key: string) => {
           if (key === DI_KEYS.SettingsService) return mockService;
+          if (key === DI_KEYS.SprootDB) {
+            return {
+              users: {
+                countAsync: async () => userCount,
+              },
+            };
+          }
           return undefined;
         }) as any,
+        set: sandbox.stub(),
       },
       originalUrl: "/api/v2/settings",
-    } as Request;
+    } as unknown as Request;
 
     mockResponse = {
       locals: {
@@ -289,6 +300,56 @@ describe("SettingsHandlers", () => {
 
         assert.equal(result.statusCode, 400);
         assert.include(result.error!.details[0], "expected boolean");
+        assert.isTrue((mockService.setAsync as any).notCalled);
+      });
+
+      it("should accept boolean values for system.authentication_enabled", async () => {
+        mockRequest.body = { [SETTINGS.system.authentication_enabled]: false };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+        assert.equal(result.statusCode, 200);
+        assert.isTrue(
+          (mockService.setAsync as any).calledOnceWith(
+            SETTINGS.system.authentication_enabled,
+            false,
+          ),
+        );
+      });
+
+      it("should accept boolean values for system.force_https", async () => {
+        mockRequest.body = { [SETTINGS.system.force_https]: true };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+        assert.equal(result.statusCode, 200);
+        assert.isTrue(
+          (mockService.setAsync as any).calledOnceWith(SETTINGS.system.force_https, true),
+        );
+        assert.isTrue((mockRequest.app.set as any).calledOnceWith("forceHttpsEnabled", true));
+      });
+
+      it("should reject non-boolean values for system.force_https", async () => {
+        mockRequest.body = { [SETTINGS.system.force_https]: "true" };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
+
+        assert.equal(result.statusCode, 400);
+        assert.include(result.error!.details[0], "expected boolean");
+        assert.isTrue((mockService.setAsync as any).notCalled);
+      });
+
+      it("should reject enabling authentication when no users exist", async () => {
+        userCount = 0;
+        mockRequest.body = { [SETTINGS.system.authentication_enabled]: true };
+
+        const result = (await updateSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
+
+        assert.equal(result.statusCode, 400);
+        assert.include(
+          result.error!.details[0],
+          "system.authentication_enabled cannot be set to true until the first user is created.",
+        );
         assert.isTrue((mockService.setAsync as any).notCalled);
       });
 

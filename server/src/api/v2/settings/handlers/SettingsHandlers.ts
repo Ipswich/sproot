@@ -22,7 +22,11 @@ const RETENTION_DURATION_KEYS = new Set<SettingsKey>([
   "system.backup_retention",
 ]);
 
-const BOOLEAN_KEYS = new Set<SettingsKey>([SETTINGS.system.log_debug]);
+const BOOLEAN_KEYS = new Set<SettingsKey>([
+  SETTINGS.system.authentication_enabled,
+  SETTINGS.system.force_https,
+  SETTINGS.system.log_debug,
+]);
 
 function validateCoordinate(
   value: string,
@@ -154,6 +158,36 @@ export async function updateSettingsAsync(
   }
 
   const service = request.app.get(DI_KEYS.SettingsService) as SettingsService;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB);
+
+  if (body[SETTINGS.system.authentication_enabled] === true) {
+    try {
+      const userCount = await sprootDB.users.countAsync();
+      if (userCount < 1) {
+        return {
+          statusCode: 400,
+          error: {
+            name: "Bad Request",
+            url: request.originalUrl,
+            details: [
+              "system.authentication_enabled cannot be set to true until the first user is created.",
+            ],
+          },
+          ...response.locals["defaultProperties"],
+        };
+      }
+    } catch (error) {
+      return {
+        statusCode: 503,
+        error: {
+          name: "Service Unavailable",
+          url: request.originalUrl,
+          details: [`Failed to validate authentication settings: ${(error as Error).message}`],
+        },
+        ...response.locals["defaultProperties"],
+      };
+    }
+  }
 
   try {
     const updatedData: Record<string, unknown> = {};
@@ -161,6 +195,11 @@ export async function updateSettingsAsync(
       await service.setAsync(key, value as SettingsSchema[SettingsKey]);
       updatedData[key] = value;
     }
+
+    if (SETTINGS.system.force_https in body) {
+      request.app.set("forceHttpsEnabled", body[SETTINGS.system.force_https] === true);
+    }
+
     return {
       statusCode: 200,
       content: {

@@ -1,12 +1,9 @@
 import { Suspense } from "react";
 import { Outlet, useLoaderData } from "react-router-dom";
 import {
-  MantineProvider,
   AppShell,
   Center,
   Loader,
-  createTheme,
-  localStorageColorSchemeManager,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 // All packages except `@mantine/hooks` require styles imports
@@ -20,10 +17,7 @@ import NavbarContents from "../shell/navbar/NavbarContents";
 import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
-
-const colorSchemeManager = localStorageColorSchemeManager({
-  key: "sproot-color-scheme",
-});
+import AppProviders from "./AppProviders";
 
 export default function Root() {
   const loaderData = useLoaderData() as {
@@ -45,56 +39,8 @@ export default function Root() {
     setIsNavbarOpened.close();
   }
 
-  // This prevents zoom on IOS when interacting with form elements.
-  const theme = createTheme({
-    defaultRadius: "md",
-    components: {
-      Input: {
-        defaultProps: {
-          autoComplete: "off",
-        },
-        styles: {
-          input: {
-            fontSize: "16px",
-          },
-        },
-      },
-      TextInput: {
-        defaultProps: {
-          autoComplete: "off",
-        },
-      },
-      Textarea: {
-        defaultProps: {
-          autoComplete: "off",
-        },
-      },
-      NumberInput: {
-        defaultProps: {
-          autoComplete: "off",
-        },
-      },
-      Select: {
-        defaultProps: {
-          autoComplete: "off",
-          comboboxProps: { withinPortal: false },
-        },
-      },
-      ColorInput: {
-        defaultProps: {
-          autoComplete: "off",
-          popoverProps: { withinPortal: false },
-        },
-      },
-    },
-  });
-
   return (
-    <MantineProvider
-      theme={theme}
-      colorSchemeManager={colorSchemeManager}
-      defaultColorScheme="light"
-    >
+    <AppProviders>
       <AppShell
         navbar={{
           width: 250,
@@ -153,6 +99,6 @@ export default function Root() {
           </>
         </AppShell.Main>
       </AppShell>
-    </MantineProvider>
+    </AppProviders>
   );
 }

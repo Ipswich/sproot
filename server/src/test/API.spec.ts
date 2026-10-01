@@ -11,6 +11,7 @@ import { DI_KEYS } from "../utils/DependencyInjectionConstants";
 import { AutomationsTriggeredEvent } from "../eventbus/events/automations/AutomationsTriggeredEvent";
 import { OutputList } from "../outputs/list/OutputList";
 import { AutomationService } from "../automation/AutomationService";
+import { SETTINGS } from "../database/settings/SettingsSchema";
 
 describe("API Tests", async function () {
   this.timeout(5000);
@@ -59,41 +60,295 @@ describe("API Tests", async function () {
 
     assert.fail(`Timed out waiting for output data ${outputId}: ${JSON.stringify(lastOutput)}`);
   };
-  // describe("Authentication Routes", async () => {
-  //   before(() => {
-  //     process.env["AUTHENTICATION_ENABLED"] = "true";
-  //   });
-  //   after(() => {
-  //     process.env["AUTHENTICATION_ENABLED"] = "false";
-  //   });
-  //   describe("POST", async () => {
-  //     it("should return 200 and a JWT for Bearer Authorization", async () => {
-  //       const response = await request(server)
-  //         .post("/api/v2/authenticate/token")
-  //         .send({
-  //           username: "testuser",
-  //           password: "password",
-  //         })
-  //         .expect(200);
-  //       const content = response.body["content"];
-  //       validateMiddlewareValues(response);
-  //       assert.containsAllKeys(content.data, ["token"]);
-  //     });
+  describe("Authentication Routes", async () => {
+    const originalUser = {
+      username: "testuser",
+      hash: "$2b$10$6Ld7cz9MRYEuYVJB1J/gcOWm2MXnSqxGZ/XIZJSAEWWQlqF1xci0.",
+    };
 
-  //     it("should return 200 and a csrf-token for cookie authorization", async () => {
-  //       const response = await request(server)
-  //         .post("/api/v2/authenticate/login")
-  //         .send({
-  //           username: "testuser",
-  //           password: "password",
-  //         })
-  //         .expect(200);
-  //       const content = response.body["content"];
-  //       validateMiddlewareValues(response);
-  //       assert.containsAllKeys(content.data, ["csrf-token"]);
-  //     });
-  //   });
-  // });
+    const resetAuthenticationStateAsync = async () => {
+      const sprootDB = app.get("sprootDB");
+      await sprootDB.settings.setAsync(SETTINGS.system.authentication_enabled, false);
+      await sprootDB.users.deleteAllAsync();
+      await sprootDB.users.addAsync(originalUser);
+    };
+
+    beforeEach(async () => {
+      await resetAuthenticationStateAsync();
+    });
+
+    afterEach(async () => {
+      await resetAuthenticationStateAsync();
+    });
+
+    describe("GET /state", async () => {
+      it("should return the current authentication state", async () => {
+        const response = await request(server).get("/api/v2/authenticate/state").expect(200);
+
+        validateMiddlewareValues(response);
+        assert.strictEqual(response.body.content.data.authenticationEnabled, false);
+        assert.strictEqual(response.body.content.data.userCount, 1);
+        assert.strictEqual(response.body.content.data.requiresSetup, false);
+      });
+    });
+
+    describe("POST /token", async () => {
+      it("should return 501 when authentication is disabled", async () => {
+        const response = await request(server)
+          .post("/api/v2/authenticate/token")
+          .send({ username: "testuser", password: "password" })
+          .expect(501);
+
+        validateMiddlewareValues(response);
+        assert.deepEqual(response.body.error.details, ["Authentication is not enabled."]);
+      });
+
+      it("should return 200 and a JWT when authentication is enabled", async () => {
+        await app.get("sprootDB").settings.setAsync(SETTINGS.system.authentication_enabled, true);
+
+        const response = await request(server)
+          .post("/api/v2/authenticate/token")
+          .send({ username: "testuser", password: "password" })
+          .expect(200);
+
+        validateMiddlewareValues(response);
+        assert.containsAllKeys(response.body.content.data, ["token"]);
+      });
+
+      it("should authorize a camera stream with the login cookie", async () => {
+        await app.get("sprootDB").settings.setAsync(SETTINGS.system.authentication_enabled, true);
+
+        const loginResponse = await request(server)
+          .post("/api/v2/authenticate/login")
+          .send({ username: "testuser", password: "password" })
+          .expect(200);
+
+        const cookieHeader = loginResponse.headers["set-cookie"];
+        const cameraManager = app.get(DI_KEYS.CameraManager) as CameraManager;
+        const fetchStreamStub = sinon.stub(cameraManager, "fetchStreamAsync").resolves(
+          new Response(
+            Readable.toWeb(Readable.from([Buffer.from("test-stream-chunk")])) as ReadableStream,
+            {
+            status: 200,
+            headers: {
+              "content-type": "multipart/x-mixed-replace; boundary=frame",
+            },
+            },
+          ),
+        );
+
+        try {
+          await new Promise<void>((resolve, reject) => {
+            const req = httpGet(
+              `${baseUrl}/api/v2/camera/1/stream`,
+              {
+                headers: {
+                  Cookie: Array.isArray(cookieHeader) ? cookieHeader.join("; ") : cookieHeader,
+                },
+              },
+              (res) => {
+                assert.equal(res.statusCode, 200);
+                assert.equal(
+                  res.headers["content-type"],
+                  "multipart/x-mixed-replace; boundary=frame",
+                );
+
+                let resolved = false;
+                const finish = () => {
+                  if (resolved) {
+                    return;
+                  }
+                  resolved = true;
+                  res.destroy();
+                  resolve();
+                };
+
+                const timeout = setTimeout(() => {
+                  reject(new Error("Stream did not send data within timeout period"));
+                }, 1000);
+
+                res.once("data", () => {
+                  clearTimeout(timeout);
+                  finish();
+                });
+                res.once("error", reject);
+              },
+            );
+
+            req.once("error", reject);
+          });
+        } finally {
+          fetchStreamStub.restore();
+        }
+      });
+    });
+
+    describe("Setup and password management", async () => {
+      it("should require first-time setup when authentication is enabled with no users", async () => {
+        const sprootDB = app.get("sprootDB");
+        await sprootDB.users.deleteAllAsync();
+        await sprootDB.settings.setAsync(SETTINGS.system.authentication_enabled, true);
+
+        const stateResponse = await request(server).get("/api/v2/authenticate/state").expect(200);
+        validateMiddlewareValues(stateResponse);
+        assert.strictEqual(stateResponse.body.content.data.authenticationEnabled, true);
+        assert.strictEqual(stateResponse.body.content.data.userCount, 0);
+        assert.strictEqual(stateResponse.body.content.data.requiresSetup, true);
+
+        const protectedResponse = await request(server).get("/api/v2/outputs").expect(409);
+        validateMiddlewareValues(protectedResponse);
+        assert.include(
+          protectedResponse.body.error.details[0],
+          "Authentication setup is incomplete",
+        );
+
+        const setupResponse = await request(server)
+          .post("/api/v2/authenticate/setup")
+          .send({
+            username: "admin",
+            password: "new-password",
+            enableAuthentication: true,
+          })
+          .expect(201);
+
+        validateMiddlewareValues(setupResponse);
+        assert.containsAllKeys(setupResponse.body.content.data, ["csrf-token"]);
+        assert.strictEqual(setupResponse.body.content.data.authenticationEnabled, true);
+      });
+
+      it("should reject enabling authentication through settings when no users exist", async () => {
+        const sprootDB = app.get("sprootDB");
+        await sprootDB.users.deleteAllAsync();
+
+        const response = await request(server)
+          .patch("/api/v2/settings")
+          .send({ [SETTINGS.system.authentication_enabled]: true })
+          .expect(400);
+
+        validateMiddlewareValues(response);
+        assert.include(
+          response.body.error.details[0],
+          "system.authentication_enabled cannot be set to true until the first user is created.",
+        );
+      });
+
+      it("should change the single user's password", async () => {
+        const changeResponse = await request(server)
+          .post("/api/v2/authenticate/password")
+          .send({ newPassword: "fresh-password" })
+          .expect(200);
+
+        validateMiddlewareValues(changeResponse);
+        assert.strictEqual(changeResponse.body.content.data.username, "testuser");
+
+        await app.get("sprootDB").settings.setAsync(SETTINGS.system.authentication_enabled, true);
+
+        await request(server)
+          .post("/api/v2/authenticate/token")
+          .send({ username: "testuser", password: "password" })
+          .expect(401);
+
+        const loginResponse = await request(server)
+          .post("/api/v2/authenticate/token")
+          .send({ username: "testuser", password: "fresh-password" })
+          .expect(200);
+
+        validateMiddlewareValues(loginResponse);
+        assert.containsAllKeys(loginResponse.body.content.data, ["token"]);
+      });
+
+      it("should change the password for the authenticated user when auth is enabled", async () => {
+        await app.get("sprootDB").settings.setAsync(SETTINGS.system.authentication_enabled, true);
+
+        const loginResponse = await request(server)
+          .post("/api/v2/authenticate/token")
+          .send({ username: "testuser", password: "password" })
+          .expect(200);
+
+        const token = loginResponse.body.content.data.token;
+
+        const changeResponse = await request(server)
+          .post("/api/v2/authenticate/password")
+          .set("Authorization", `Bearer ${token}`)
+          .send({ currentPassword: "password", newPassword: "fresh-password" })
+          .expect(200);
+
+        validateMiddlewareValues(changeResponse);
+        assert.strictEqual(changeResponse.body.content.data.username, "testuser");
+
+        await request(server)
+          .post("/api/v2/authenticate/token")
+          .send({ username: "testuser", password: "password" })
+          .expect(401);
+
+        await request(server)
+          .post("/api/v2/authenticate/token")
+          .send({ username: "testuser", password: "fresh-password" })
+          .expect(200);
+
+        await request(server)
+          .get("/api/v2/outputs")
+          .set("Authorization", `Bearer ${token}`)
+          .expect(401);
+      });
+
+      it("should clear the authentication cookie and revoke the old login session on logout", async () => {
+        await app.get("sprootDB").settings.setAsync(SETTINGS.system.authentication_enabled, true);
+
+        const loginResponse = await request(server)
+          .post("/api/v2/authenticate/login")
+          .send({ username: "testuser", password: "password" })
+          .expect(200);
+
+        const cookieHeader = loginResponse.headers["set-cookie"];
+        const csrfToken = loginResponse.body.content.data["csrf-token"];
+        const cookie = Array.isArray(cookieHeader)
+          ? cookieHeader.join("; ")
+          : (cookieHeader ?? "");
+
+        const logoutResponse = await request(server)
+          .post("/api/v2/authenticate/logout")
+          .set("Cookie", cookie)
+          .set("x-csrf-token", csrfToken)
+          .expect(200);
+
+        validateMiddlewareValues(logoutResponse);
+        assert.include((logoutResponse.headers["set-cookie"] ?? [""])[0], "jwt_token=");
+        assert.include((logoutResponse.headers["set-cookie"] ?? [""])[0], "Path=/");
+
+        await request(server)
+          .get("/api/v2/outputs")
+          .set("Cookie", cookie)
+          .expect(401);
+      });
+
+      it("should reject insecure auth requests when force_https is enabled", async () => {
+        await app.get("sprootDB").settings.setAsync(SETTINGS.system.force_https, true);
+        await app.get("sprootDB").settings.setAsync(SETTINGS.system.authentication_enabled, true);
+        app.set("forceHttpsEnabled", true);
+
+        const response = await request(server)
+          .post("/api/v2/authenticate/token")
+          .send({ username: "testuser", password: "password" })
+          .expect(426);
+
+        validateMiddlewareValues(response);
+        assert.include(response.body.error.details[0], "HTTPS is required");
+      });
+
+      it("should allow proxied HTTPS auth requests when force_https is enabled", async () => {
+        await app.get("sprootDB").settings.setAsync(SETTINGS.system.force_https, true);
+        await app.get("sprootDB").settings.setAsync(SETTINGS.system.authentication_enabled, true);
+        app.set("forceHttpsEnabled", true);
+
+        await request(server)
+          .post("/api/v2/authenticate/token")
+          .set("X-Forwarded-Proto", "https")
+          .send({ username: "testuser", password: "password" })
+          .expect(200);
+      });
+    });
+  });
 
   describe("Ping Routes", () => {
     describe("GET", () => {
@@ -2180,15 +2435,16 @@ describe("API Tests", async function () {
 
   describe("Settings Routes", async () => {
     describe("GET", async () => {
-      it("should return 200 with all 6 settings", async () => {
+      it("should return 200 with all 7 settings", async () => {
         const response = await request(server).get("/api/v2/settings").expect(200);
         const content = response.body["content"];
         validateMiddlewareValues(response);
         assert.isObject(content.data);
-        assert.equal(Object.keys(content.data).length, 6);
+        assert.equal(Object.keys(content.data).length, 7);
         assert.exists(content.data["sensors.data_retention"]);
         assert.exists(content.data["outputs.data_retention"]);
         assert.exists(content.data["system.backup_retention"]);
+        assert.strictEqual(content.data["system.authentication_enabled"], false);
         assert.strictEqual(content.data["system.log_debug"], false);
         assert.containsAllKeys(content.data, ["system.latitude", "system.longitude"]);
       });

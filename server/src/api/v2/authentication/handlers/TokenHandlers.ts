@@ -7,23 +7,66 @@ import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { SDBUser } from "@sproot/database/SDBUser";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { randomUUID } from "crypto";
+import { getAuthenticationStateAsync } from "../../../../auth/AuthenticationState";
+
+export function createSignedToken(
+  username: string,
+  jwtSecret: string,
+  jwtExpirationMs: number,
+  withCsrfToken: boolean,
+  tokenVersion: number,
+): { token: string; csrfToken?: string } {
+  const jwtExpirationSeconds = Math.max(1, Math.floor(jwtExpirationMs / 1000));
+
+  if (withCsrfToken) {
+    const csrfToken = randomUUID();
+    return {
+      token: jwt.sign({ username, "csrf-token": csrfToken, "token-version": tokenVersion }, jwtSecret, {
+        expiresIn: jwtExpirationSeconds,
+      }),
+      csrfToken,
+    };
+  }
+
+  return {
+    token: jwt.sign({ username, "token-version": tokenVersion }, jwtSecret, {
+      expiresIn: jwtExpirationSeconds,
+    }),
+  };
+}
 
 export async function getTokenAsync(
   request: Request,
   response: Response,
-  isAuthEnabled: string,
   jwtExpiration: number,
   jwtSecret: string,
   withCsrfToken: boolean,
 ): Promise<SuccessResponse | ErrorResponse> {
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+
   let authenticationResponse: SuccessResponse | ErrorResponse;
-  if (isAuthEnabled.toLowerCase() != "true") {
+  const authenticationState = await getAuthenticationStateAsync(sprootDB.settings, sprootDB.users);
+
+  if (!authenticationState.authenticationEnabled) {
     authenticationResponse = {
       statusCode: 501,
       error: {
         name: "Not Implemented",
         url: request.originalUrl,
         details: ["Authentication is not enabled."],
+      },
+      ...response.locals["defaultProperties"],
+    };
+    return authenticationResponse;
+  }
+
+  if (authenticationState.requiresSetup) {
+    authenticationResponse = {
+      statusCode: 409,
+      error: {
+        name: "Conflict",
+        url: request.originalUrl,
+        details: ["Authentication setup is incomplete. Create the first user before logging in."],
       },
       ...response.locals["defaultProperties"],
     };
@@ -49,7 +92,7 @@ export async function getTokenAsync(
     };
     return authenticationResponse;
   }
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+
   let user: SDBUser[];
   try {
     user = await sprootDB.users.getByIdAsync(request.body.username);
@@ -65,28 +108,24 @@ export async function getTokenAsync(
     };
     return authenticationResponse;
   }
+
   if (user?.length > 0 && (await bcrypt.compare(request.body.password, user[0]!["hash"]))) {
-    let token: string;
-    let data = {};
-    if (withCsrfToken) {
-      const csrf = randomUUID();
-      token = jwt.sign({ username: request.body.username, csrf }, jwtSecret, {
-        expiresIn: jwtExpiration,
-      });
+    const token = createSignedToken(
+      request.body.username,
+      jwtSecret,
+      jwtExpiration,
+      withCsrfToken,
+      user[0]!["tokenVersion"] ?? 0,
+    );
+    const data = withCsrfToken
+      ? {
+          token: token.token,
+          "csrf-token": token.csrfToken,
+        }
+      : {
+          token: token.token,
+        };
 
-      data = {
-        token,
-        "csrf-token": csrf,
-      };
-    } else {
-      token = jwt.sign({ username: request.body.username }, jwtSecret, {
-        expiresIn: jwtExpiration,
-      });
-
-      data = {
-        token,
-      };
-    }
     authenticationResponse = {
       statusCode: 200,
       content: {

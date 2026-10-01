@@ -22,6 +22,14 @@ export const DEFAULTS: SettingDefault[] = [
     value: "30 days",
   },
   {
+    key: "system.authentication_enabled",
+    value: false,
+  },
+  {
+    key: "system.force_https",
+    value: false,
+  },
+  {
     key: "system.log_debug",
     value: false,
   },

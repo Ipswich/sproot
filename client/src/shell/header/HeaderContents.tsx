@@ -1,9 +1,18 @@
-import { Box, Burger, Container, Title } from "@mantine/core";
+import { ActionIcon, Box, Burger, Container, Group, Title, Tooltip } from "@mantine/core";
 import classes from "@sproot/sproot-client/src/shell/header/HeaderContents.module.css";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState, useTransition } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Page } from "../Pages";
 import NotificationCenter from "./NotificationCenter";
+import { IconLogout } from "@tabler/icons-react";
+import {
+  clearAuthenticationToken,
+  getAuthenticationStateAsync,
+  getAuthenticationToken,
+  logoutAsync,
+} from "../../requests/requests_v2";
+import { clearRootLoaderCache } from "../../routes/utility/Loaders";
 
 interface HeaderContentsProps {
   navbarToggle: () => void;
@@ -19,10 +28,26 @@ export default function HeaderContents({
   const [headerText, setHeaderText] = useState("");
   const [, startTransition] = useTransition();
   const location = useLocation();
+  const navigate = useNavigate();
+  const hasAuthenticationToken = Boolean(getAuthenticationToken());
+  const authStateQuery = useQuery({
+    queryKey: ["authenticationState", "header"],
+    queryFn: () => getAuthenticationStateAsync(),
+  });
+  const showLogout =
+    hasAuthenticationToken && authStateQuery.data?.authenticationEnabled === true;
+
   function toggleNavbar() {
     startTransition(() => {
       navbarToggle();
     });
+  }
+
+  async function handleLogout() {
+    await logoutAsync();
+    clearAuthenticationToken();
+    clearRootLoaderCache();
+    navigate("/login", { replace: true });
   }
   useEffect(() => {
     setHeaderText(
@@ -54,7 +79,21 @@ export default function HeaderContents({
           </Title>
         </div>
         <div className={classes["actionSlot"]!}>
-          <NotificationCenter />
+          <Group gap="xs" wrap="nowrap">
+            {showLogout && (
+              <Tooltip label="Log out">
+                <ActionIcon
+                  aria-label="Log out"
+                  variant="subtle"
+                  size="lg"
+                  onClick={() => void handleLogout()}
+                >
+                  <IconLogout size={18} />
+                </ActionIcon>
+              </Tooltip>
+            )}
+            <NotificationCenter />
+          </Group>
         </div>
       </Container>
       <Container visibleFrom="sm" size="md" className={classes["gridInner"]!}>
@@ -65,7 +104,21 @@ export default function HeaderContents({
           </Title>
         </div>
         <div className={classes["actionSlot"]!}>
-          <NotificationCenter />
+          <Group gap="xs" wrap="nowrap">
+            {showLogout && (
+              <Tooltip label="Log out">
+                <ActionIcon
+                  aria-label="Log out"
+                  variant="subtle"
+                  size="lg"
+                  onClick={() => void handleLogout()}
+                >
+                  <IconLogout size={18} />
+                </ActionIcon>
+              </Tooltip>
+            )}
+            <NotificationCenter />
+          </Group>
         </div>
       </Container>
     </header>

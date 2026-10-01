@@ -93,6 +93,25 @@ paths:
                           details:
                             items:
                               example: "Invalid username or password."
+        409:
+          description: "Conflict"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 409
+                      error:
+                        properties:
+                          name:
+                            example: "Conflict"
+                          url:
+                            example: "/api/v2/authenticate/token"
+                          details:
+                            example:
+                              - "Authentication setup is incomplete. Create the first user before logging in."
         501:
           description: "Not Implemented"
           content:
@@ -222,6 +241,25 @@ paths:
                           details:
                             items:
                               example: "Invalid username or password."
+        409:
+          description: "Conflict"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 409
+                      error:
+                        properties:
+                          name:
+                            example: "Conflict"
+                          url:
+                            example: "/api/v2/authenticate/login"
+                          details:
+                            example:
+                              - "Authentication setup is incomplete. Create the first user before logging in."
         501:
           description: "Not Implemented"
           content:
@@ -262,6 +300,333 @@ paths:
                               example:
                                 - "Failed to get user from database."
                                 - "Database connection failed."
+  /api/v2/authenticate/state:
+    get:
+      tags:
+        - "Authentication"
+      summary: Get the current authentication state.
+      description: >
+        Returns whether authentication is enabled, how many users exist, and whether
+        first-time setup is still required before logins can succeed.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/AuthenticationState"
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/authenticate/state"
+                          details:
+                            items:
+                              example: "Failed to retrieve authentication state."
+
+  /api/v2/authenticate/setup:
+    post:
+      tags:
+        - "Authentication"
+      summary: Create the first user account.
+      description: >
+        Creates the first user for a new installation. This route is only available
+        while no users exist. When `enableAuthentication` is true, authentication is
+        enabled as part of setup, an httpOnly session cookie is set, and a CSRF token is returned.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FirstUserSetupRequest"
+      responses:
+        201:
+          description: "Created"
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: jwt_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; SameSite=Strict
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            allOf:
+                              - $ref: "#/components/schemas/AuthenticationState"
+                              - type: object
+                                properties:
+                                  csrf-token:
+                                    type: string
+                                    nullable: true
+                                    example: "9a2eada2-4e6a-4a41-ae9e-fefaa2475175"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/authenticate/setup"
+                          details:
+                            example:
+                              - "Missing username"
+                              - "Missing password"
+        409:
+          description: "Conflict"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 409
+                      error:
+                        properties:
+                          name:
+                            example: "Conflict"
+                          url:
+                            example: "/api/v2/authenticate/setup"
+                          details:
+                            example:
+                              - "Users already exist. First-time setup is no longer available."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/authenticate/setup"
+                          details:
+                            items:
+                              example: "Failed to create the first user."
+
+  /api/v2/authenticate/password:
+    post:
+      tags:
+        - "Authentication"
+      summary: Change the configured user's password.
+      description: >
+        Changes the password for the configured user. When authentication is enabled,
+        the request must be authenticated as that user and `currentPassword` must be provided.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              username:
+                                type: string
+                                example: "admin"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/authenticate/password"
+                          details:
+                            example:
+                              - "Missing newPassword"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/authenticate/password"
+                          details:
+                            example:
+                              - "Current password is invalid."
+        403:
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 403
+                      error:
+                        properties:
+                          name:
+                            example: "Forbidden"
+                          url:
+                            example: "/api/v2/authenticate/password"
+                          details:
+                            example:
+                              - "You can only change the password for the authenticated user."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/authenticate/password"
+                          details:
+                            example:
+                              - "No users exist."
+        409:
+          description: "Conflict"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 409
+                      error:
+                        properties:
+                          name:
+                            example: "Conflict"
+                          url:
+                            example: "/api/v2/authenticate/password"
+                          details:
+                            example:
+                              - "Changing passwords through this endpoint is only supported for single-user setups."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/authenticate/password"
+                          details:
+                            items:
+                              example: "Failed to update password."
+
+  /api/v2/authenticate/logout:
+    post:
+      tags:
+        - "Authentication"
+      summary: Clear the browser authentication session.
+      description: >
+        Clears the authentication cookie used by the browser client. This is intended for
+        web logout flows and returns success even if no cookie is currently present.
+      responses:
+        200:
+          description: "Success"
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: jwt_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              success:
+                                type: boolean
+                                example: true
   /api/v2/system/power-off:
     post:
       tags:
@@ -5845,7 +6210,10 @@ paths:
       tags:
         - "Camera"
       summary: Get a live MJPEG camera stream.
-      description: Proxies the configured stream URL for one camera.
+      description: >
+        Proxies the configured stream URL for one camera.
+        Browser clients should authenticate this endpoint with the session cookie issued by
+        `/api/v2/authenticate/login`.
       parameters:
         - in: path
           name: cameraId
@@ -5862,6 +6230,12 @@ paths:
               schema:
                 type: string
                 format: binary
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         400:
           description: "Bad request"
           content:
@@ -10046,7 +10420,67 @@ components:
           type: string
           x-nullable: true
           example: "30 days"
+        system.authentication_enabled:
+          type: boolean
+          example: false
+        system.log_debug:
+          type: boolean
+          example: false
+        system.latitude:
+          type: string
+          nullable: true
+          example: "40.7128"
+        system.longitude:
+          type: string
+          nullable: true
+          example: "-74.0060"
       additionalProperties: false
+
+    AuthenticationState:
+      type: object
+      required:
+        - authenticationEnabled
+        - userCount
+        - requiresSetup
+      properties:
+        authenticationEnabled:
+          type: boolean
+          example: true
+        userCount:
+          type: integer
+          example: 1
+        requiresSetup:
+          type: boolean
+          example: false
+
+    FirstUserSetupRequest:
+      type: object
+      required:
+        - username
+        - password
+        - enableAuthentication
+      properties:
+        username:
+          type: string
+          example: "admin"
+        password:
+          type: string
+          example: "password"
+        enableAuthentication:
+          type: boolean
+          example: true
+
+    ChangePasswordRequest:
+      type: object
+      required:
+        - newPassword
+      properties:
+        currentPassword:
+          type: string
+          example: "old-password"
+        newPassword:
+          type: string
+          example: "new-password"
 
   securitySchemes:
     bearerAuth:

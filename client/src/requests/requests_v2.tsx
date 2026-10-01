@@ -41,6 +41,15 @@ import type {
 
 const SERVER_URL =
   import.meta.env["VITE_API_SERVER_URL"] || window.location.origin;
+const AUTH_TOKEN_STORAGE_KEY = "sproot-auth-token";
+const PUBLIC_AUTH_PATHS = new Set([
+  "/api/v2/authenticate/state",
+  "/api/v2/authenticate/login",
+  "/api/v2/authenticate/token",
+  "/api/v2/authenticate/setup",
+]);
+
+let authenticatedFetchInstalled = false;
 
 export type SystemLogEvent = {
   timestamp: string;
@@ -53,10 +62,28 @@ export type ApplicationSettings = Partial<{
   "sensors.data_retention": string | null;
   "outputs.data_retention": string | null;
   "system.backup_retention": string | null;
+  "system.authentication_enabled": boolean;
+  "system.force_https": boolean;
   "system.log_debug": boolean;
   "system.latitude": string | null;
   "system.longitude": string | null;
 }>;
+
+export type AuthenticationState = {
+  authenticationEnabled: boolean;
+  userCount: number;
+  requiresSetup: boolean;
+};
+
+export type FirstUserSetupRequest = {
+  username: string;
+  password: string;
+  enableAuthentication: boolean;
+};
+
+export type FirstUserSetupResponse = AuthenticationState & {
+  "csrf-token"?: string;
+};
 
 export type CameraHealthTestResult = {
   ok: boolean;
@@ -77,6 +104,75 @@ function getErrorMessage(
   }
 
   return response.error?.name || fallbackMessage;
+}
+
+export function getAuthenticationToken(): string | null {
+  return window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+}
+
+export function setAuthenticationToken(token: string): void {
+  window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+}
+
+export function clearAuthenticationToken(): void {
+  window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+}
+
+export function installAuthenticatedFetch(): void {
+  if (authenticatedFetchInstalled || typeof window === "undefined") {
+    return;
+  }
+
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const rawUrl =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+
+    const url = new URL(rawUrl, window.location.origin);
+    const headers = new Headers(init?.headers ?? {});
+    const token = getAuthenticationToken();
+    const isApiRequest = url.origin === new URL(SERVER_URL, window.location.origin).origin;
+    const isPublicAuthPath = PUBLIC_AUTH_PATHS.has(url.pathname);
+
+    if (token && isApiRequest && url.pathname.startsWith("/api/v2/") && !isPublicAuthPath) {
+      headers.set("x-csrf-token", token);
+    }
+
+    const requestInit: RequestInit = {
+      ...init,
+      headers,
+    };
+
+    // Browser API calls always use cookie credentials so the app can rely on the
+    // server-managed httpOnly session for streams, SSE, downloads, and normal fetches
+    // without repeating `credentials: "include"` at each call site.
+    if (isApiRequest) {
+      requestInit.credentials = "include";
+    } else if (init?.credentials) {
+      requestInit.credentials = init.credentials;
+    }
+
+    const response = await originalFetch(input, requestInit);
+
+    if (response.status === 401 && isApiRequest && url.pathname.startsWith("/api/v2/")) {
+      clearAuthenticationToken();
+      if (
+        window.location.pathname !== "/login" &&
+        window.location.pathname !== "/first-time-setup" &&
+        !isPublicAuthPath
+      ) {
+        window.location.assign("/login");
+      }
+    }
+
+    return response;
+  };
+
+  authenticatedFetchInstalled = true;
 }
 
 export function getSystemLogStreamUrl(): string {
@@ -102,10 +198,10 @@ export async function getReadingTypesAsync(): Promise<
     method: "GET",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
-    console.error(`Error fetching reading types: ${response}`);
+    const json = (await response.json()) as SuccessResponse | ErrorResponse;
+    throw new Error(getErrorMessage(json as ErrorResponse, "Failed to load reading types."));
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
@@ -116,7 +212,6 @@ export async function getSensorsAsync(): Promise<Record<string, ISensorBase>> {
     method: "GET",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error fetching sensors: ${response}`);
@@ -134,7 +229,6 @@ export async function getSupportedSensorModelsAsync(): Promise<
       method: "GET",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -150,7 +244,6 @@ export async function addSensorAsync(sensor: ISensorBase): Promise<void> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(sensor),
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error adding sensor: ${response}`);
@@ -163,7 +256,6 @@ export async function updateSensorAsync(sensor: ISensorBase): Promise<void> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(sensor),
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error updating sensor: ${response}`);
@@ -175,7 +267,6 @@ export async function deleteSensorAsync(id: number): Promise<void> {
     method: "DELETE",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error deleting sensor: ${response}`);
@@ -187,10 +278,10 @@ export async function getOutputsAsync(): Promise<Record<string, IOutputBase>> {
     method: "GET",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
-    console.error(`Error fetching outputs: ${response}`);
+    const json = (await response.json()) as SuccessResponse | ErrorResponse;
+    throw new Error(getErrorMessage(json as ErrorResponse, "Failed to load outputs."));
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
@@ -201,7 +292,6 @@ export async function getDeviceZonesAsync(): Promise<SDBDeviceZone[]> {
     method: "GET",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
 
   if (!response.ok) {
@@ -218,7 +308,6 @@ export async function addDeviceZoneAsync(name: string): Promise<void> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name }),
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error adding device zone: ${response}`);
@@ -235,7 +324,6 @@ export async function updateDeviceZoneAsync(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: group.name }),
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -248,7 +336,6 @@ export async function deleteDeviceZoneAsync(id: number): Promise<void> {
     method: "DELETE",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error deleting device zone: ${response}`);
@@ -260,7 +347,6 @@ export async function getAutomationsAsync(): Promise<IAutomation[]> {
     method: "GET",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error fetching automations: ${response}`);
@@ -279,7 +365,6 @@ export async function addAutomationAsync(
     headers: { "Content-Type": "application/json" },
     mode: "cors",
     body: JSON.stringify({ name, operator }),
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error adding automation: ${response}`);
@@ -298,7 +383,6 @@ export async function updateAutomationAsync(
     headers: { "Content-Type": "application/json" },
     mode: "cors",
     body: JSON.stringify({ name, operator, enabled }),
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error updating automation: ${response}`);
@@ -310,7 +394,6 @@ export async function deleteAutomationAsync(id: number): Promise<void> {
     method: "DELETE",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error deleting automation: ${response}`);
@@ -355,7 +438,6 @@ export async function getConditionsAsync(automationId: number): Promise<{
       method: "GET",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -388,7 +470,6 @@ export async function addSensorConditionAsync(
         readingType,
       }),
       mode: "cors",
-      // credentials: "include",
     },
   );
   const deserializedResponse = (await response.json()) as SuccessResponse;
@@ -405,7 +486,6 @@ export async function deleteSensorConditionAsync(
       method: "DELETE",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -434,7 +514,6 @@ export async function addOutputConditionAsync(
         outputId,
       }),
       mode: "cors",
-      // credentials: "include",
     },
   );
   const deserializedResponse = (await response.json()) as SuccessResponse;
@@ -451,7 +530,6 @@ export async function deleteOutputConditionAsync(
       method: "DELETE",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -480,7 +558,6 @@ export async function addTimeConditionAsync(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ groupType, ...timeCondition }),
       mode: "cors",
-      // credentials: "include",
     },
   );
   const deserializedResponse = (await response.json()) as
@@ -508,7 +585,6 @@ export async function deleteTimeConditionAsync(
       method: "DELETE",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -528,7 +604,6 @@ export async function addWeekdayConditionAsync(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ groupType, weekdays }),
       mode: "cors",
-      // credentials: "include",
     },
   );
   const deserializedResponse = (await response.json()) as SuccessResponse;
@@ -545,7 +620,6 @@ export async function deleteWeekdayConditionAsync(
       method: "DELETE",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -565,7 +639,6 @@ export async function addMonthConditionAsync(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ groupType, months }),
       mode: "cors",
-      // credentials: "include",
     },
   );
   const deserializedResponse = (await response.json()) as SuccessResponse;
@@ -582,7 +655,6 @@ export async function deleteMonthConditionAsync(
       method: "DELETE",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -611,7 +683,6 @@ export async function addDateRangeConditionAsync(
         endDate,
       }),
       mode: "cors",
-      // credentials: "include",
     },
   );
   const deserializedResponse = (await response.json()) as SuccessResponse;
@@ -628,7 +699,6 @@ export async function deleteDateRangeConditionAsync(
       method: "DELETE",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -645,7 +715,6 @@ export async function getOutputActionsByAutomationIdAsync(
       method: "GET",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -666,7 +735,6 @@ export async function addOutputActionAsync(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ automationId, outputId, value, precedence }),
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error adding output action: ${response}`);
@@ -678,7 +746,6 @@ export async function deleteOutputActionAsync(id: number): Promise<void> {
     method: "DELETE",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error deleting output action: ${response}`);
@@ -694,7 +761,6 @@ export async function getNotificationActionsByAutomationIdAsync(
       method: "GET",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -715,7 +781,6 @@ export async function addNotificationActionAsync(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ automationId, subject, content }),
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error adding notification action: ${response}`);
@@ -733,7 +798,6 @@ export async function deleteNotificationActionAsync(id: number): Promise<void> {
       method: "DELETE",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -748,7 +812,6 @@ export async function getActiveNotificationsAsync(): Promise<IActiveNotification
       method: "GET",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -767,7 +830,6 @@ export async function getSupportedOutputModelsAsync(): Promise<
       method: "GET",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -785,7 +847,6 @@ export async function addOutputAsync(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(output),
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error adding output: ${response}`);
@@ -803,7 +864,6 @@ export async function updateOutputAsync(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(output),
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error updating output: ${response}`);
@@ -818,7 +878,6 @@ export async function deleteOutputAsync(id: number): Promise<void> {
     method: "DELETE",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error deleting output: ${response}`);
@@ -836,7 +895,6 @@ export async function setOutputControlModeAsync(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ controlMode }),
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -855,7 +913,6 @@ export async function setOutputManualStateAsync(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ value }),
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -873,7 +930,6 @@ export async function getJournalsAsync(): Promise<
     method: "GET",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error fetching journals: ${response}`);
@@ -888,7 +944,6 @@ export async function getJournalTagsAsync(): Promise<SDBJournalTag[]> {
     method: "GET",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error fetching journal tags: ${response}`);
@@ -907,7 +962,6 @@ export async function addJournalTagAsync(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, color }),
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error adding journal tag: ${response}`);
@@ -925,7 +979,6 @@ export async function updateJournalTagAsync(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name: tag.name, color: tag.color }),
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error updating journal tag: ${response}`);
@@ -942,7 +995,6 @@ export async function getJournalEntryTagsAsync(): Promise<
     method: "GET",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error fetching journal entry tags: ${response}`);
@@ -961,7 +1013,6 @@ export async function addJournalEntryTagAsync(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, color }),
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error adding journal entry tag: ${response}`);
@@ -979,7 +1030,6 @@ export async function updateJournalEntryTagAsync(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name: tag.name, color: tag.color }),
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error updating journal entry tag: ${response}`);
@@ -994,7 +1044,6 @@ export async function deleteJournalEntryTagAsync(id: number) {
     method: "DELETE",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error deleting journal entry tag: ${response}`);
@@ -1006,7 +1055,6 @@ export async function deleteJournalTagAsync(id: number): Promise<void> {
     method: "DELETE",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error deleting journal tag: ${response}`);
@@ -1021,7 +1069,6 @@ export async function addJournalAsync(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(journal || {}),
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error adding journal: ${response}`);
@@ -1039,7 +1086,6 @@ export async function updateJournalAsync(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...journal, id: undefined }),
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error updating journal: ${response}`);
@@ -1054,7 +1100,6 @@ export async function deleteJournalAsync(id: number): Promise<void> {
     method: "DELETE",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error deleting journal: ${response}`);
@@ -1226,7 +1271,6 @@ export async function powerOffAsync(): Promise<void> {
     method: "POST",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error powering off: ${response}`);
@@ -1239,7 +1283,6 @@ export async function pingAsync(): Promise<boolean> {
       method: "GET",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     });
     return response.ok;
   } catch {
@@ -1261,7 +1304,6 @@ export async function getAvailableDevicesAsync(
         method: "GET",
         headers: {},
         mode: "cors",
-        // credentials: "include",
       },
     );
     const deserializedResponse = (await response.json()) as SuccessResponse;
@@ -1315,7 +1357,6 @@ export async function getLatestImageAsync(
         method: "GET",
         headers: {},
         mode: "cors",
-        // credentials: "include",
       },
     );
     if (response.ok) {
@@ -1407,7 +1448,6 @@ export async function getTimelapseArchiveStatusAsync(
       method: "GET",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -1426,7 +1466,6 @@ export async function regenerateTimelapseArchiveAsync(
       method: "POST",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -1447,10 +1486,12 @@ export async function getCameraSettingsListAsync(): Promise<
     method: "GET",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
-    console.error(`Error fetching camera settings: ${response}`);
+    const json = (await response.json()) as SuccessResponse | ErrorResponse;
+    throw new Error(
+      getErrorMessage(json as ErrorResponse, "Failed to load camera settings."),
+    );
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
@@ -1501,7 +1542,6 @@ export async function updateCameraSettingsAsync(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(settings),
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -1529,7 +1569,6 @@ export async function clearAllImagesAsync(cameraId: number): Promise<void> {
       method: "DELETE",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -1542,7 +1581,6 @@ export async function getSystemStatusAsync(): Promise<SystemStatus> {
     method: "GET",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error fetching camera settings: ${response}`);
@@ -1556,7 +1594,6 @@ export async function getApplicationSettingsAsync(): Promise<ApplicationSettings
     method: "GET",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
 
   const json = (await response.json()) as SuccessResponse | ErrorResponse;
@@ -1574,6 +1611,93 @@ export async function getApplicationSettingsAsync(): Promise<ApplicationSettings
   return (json as SuccessResponse).content?.data ?? {};
 }
 
+export async function getAuthenticationStateAsync(): Promise<AuthenticationState> {
+  const response = await fetch(`${SERVER_URL}/api/v2/authenticate/state`, {
+    method: "GET",
+    headers: {},
+    mode: "cors",
+  });
+
+  const json = (await response.json()) as SuccessResponse | ErrorResponse;
+
+  if (!response.ok) {
+    throw new Error(
+      getErrorMessage(json as ErrorResponse, "Failed to load authentication state."),
+    );
+  }
+
+  return (json as SuccessResponse).content?.data;
+}
+
+export async function loginAsync(username: string, password: string): Promise<string> {
+  const response = await fetch(`${SERVER_URL}/api/v2/authenticate/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+    mode: "cors",
+    credentials: "include",
+  });
+
+  const json = (await response.json()) as SuccessResponse | ErrorResponse;
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(json as ErrorResponse, "Failed to log in."));
+  }
+
+  return (json as SuccessResponse).content?.data?.["csrf-token"];
+}
+
+export async function createFirstUserAsync(
+  payload: FirstUserSetupRequest,
+): Promise<FirstUserSetupResponse> {
+  const response = await fetch(`${SERVER_URL}/api/v2/authenticate/setup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    mode: "cors",
+    credentials: "include",
+  });
+
+  const json = (await response.json()) as SuccessResponse | ErrorResponse;
+
+  if (!response.ok) {
+    throw new Error(
+      getErrorMessage(json as ErrorResponse, "Failed to create the first user."),
+    );
+  }
+
+  return (json as SuccessResponse).content?.data;
+}
+
+export async function logoutAsync(): Promise<void> {
+  await fetch(`${SERVER_URL}/api/v2/authenticate/logout`, {
+    method: "POST",
+    headers: {},
+    mode: "cors",
+    credentials: "include",
+  });
+}
+
+export async function changePasswordAsync(
+  newPassword: string,
+  currentPassword?: string,
+): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/authenticate/password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ currentPassword, newPassword }),
+    mode: "cors",
+  });
+
+  const json = (await response.json()) as SuccessResponse | ErrorResponse;
+
+  if (!response.ok) {
+    throw new Error(
+      getErrorMessage(json as ErrorResponse, "Failed to change the password."),
+    );
+  }
+}
+
 export async function patchApplicationSettingsAsync(
   settings: ApplicationSettings,
 ): Promise<ApplicationSettings> {
@@ -1582,7 +1706,6 @@ export async function patchApplicationSettingsAsync(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(settings),
     mode: "cors",
-    // credentials: "include",
   });
 
   const json = (await response.json()) as SuccessResponse | ErrorResponse;
@@ -1612,7 +1735,6 @@ export async function getSubcontrollerAsync(): Promise<{
     method: "GET",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error fetching subcontrollers: ${response}`);
@@ -1626,7 +1748,6 @@ export async function getBackupsListAsync(): Promise<string[]> {
     method: "GET",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error fetching backups list: ${response}`);
@@ -1670,7 +1791,6 @@ export async function uploadAndRestoreBackupAsync(
       "Content-Type": "application/octet-stream",
     },
     mode: "cors",
-    // credentials: "include",
   });
   const json = await response.json();
   if (!response.ok) {
@@ -1685,7 +1805,6 @@ export async function createBackupAsync(): Promise<void> {
     method: "POST",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error creating backup: ${response}`);
@@ -1703,7 +1822,6 @@ export async function getBackupCreationStatusAsync(): Promise<{
       method: "GET",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -1722,7 +1840,6 @@ export async function getSubcontrollerConnectionStatusAsync(
       method: "GET",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -1741,7 +1858,6 @@ export async function addSubcontrollerAsync(device: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(device),
     mode: "cors",
-    // credentials: "include",
   });
 
   if (!response.ok) {
@@ -1760,7 +1876,6 @@ export async function updateSubcontrollerAsync(device: {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(device),
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -1779,7 +1894,6 @@ export async function getFirmwareManifestAsync(): Promise<{
       method: "GET",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -1800,7 +1914,6 @@ export async function triggerSubcontrollerFirmwareUpdateAsync(
       method: "POST",
       headers: {},
       mode: "cors",
-      // credentials: "include",
     },
   );
   if (!response.ok) {
@@ -1825,7 +1938,6 @@ export async function deleteSubcontrollerAsync(id: number): Promise<void> {
     method: "DELETE",
     headers: {},
     mode: "cors",
-    // credentials: "include",
   });
   if (!response.ok) {
     console.error(`Error deleting subcontroller: ${response}`);
@@ -1843,7 +1955,6 @@ export async function getSubcontrollerManifestAsync(model: string) {
             method: "GET",
             headers: {},
             mode: "cors",
-            // credentials: "include",
           },
         );
         break;
@@ -1878,7 +1989,6 @@ export async function getSubcontrollerBinaryAsync(model: string) {
             method: "GET",
             headers: {},
             mode: "cors",
-            // credentials: "include",
           },
         );
         break;
@@ -1910,7 +2020,6 @@ export async function getSubControllerBootloaderAsync(model: string) {
             method: "GET",
             headers: {},
             mode: "cors",
-            // credentials: "include",
           },
         );
         break;
@@ -1942,7 +2051,6 @@ export async function getSubControllerPartitionsAsync(model: string) {
             method: "GET",
             headers: {},
             mode: "cors",
-            // credentials: "include",
           },
         );
         break;
@@ -1974,7 +2082,6 @@ export async function getSubControllerApplicationAsync(model: string) {
             method: "GET",
             headers: {},
             mode: "cors",
-            // credentials: "include",
           },
         );
         break;

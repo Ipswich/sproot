@@ -3,8 +3,11 @@ configDotenv();
 import mainAsync, { gracefulHaltAsync } from "./program";
 import { DI_KEYS } from "./utils/DependencyInjectionConstants";
 import { ISprootDB } from "./database/ISprootDB";
+import { parseStartupOptions } from "./utils/StartupOptions";
 
-mainAsync().then((app) => {
+const startupOptions = parseStartupOptions(process.argv.slice(2));
+
+mainAsync(startupOptions).then((app) => {
   const server = app.listen(3000, async () => {
     app.set("gracefulHaltAsync", async (after: () => Promise<void>) => {
       await gracefulHaltAsync(server, app, after);

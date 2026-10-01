@@ -8,21 +8,38 @@ import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { getTokenAsync } from "../handlers/TokenHandlers";
 import { SDBUser } from "@sproot/database/SDBUser";
 import { IUsersRepository } from "../../../../database/repositories/users/IUsersRepository";
+import { SETTINGS } from "../../../../database/settings/SettingsSchema";
 
 describe("TokenHandlers.ts tests", () => {
   describe("getTokenAsync", async () => {
+    let authenticationEnabled = true;
     const userGetByIdStub = sinon.stub().resolves([
       {
         username: "dev-test",
         hash: "$2b$10$LyJ6YjLoT/FKyG8n1Puu7Oo8kEnh9mMSR0beiETYd5qLw7qIZYqIW",
-        email: "dev-test@example.com",
       } as SDBUser,
     ]);
     const userRepo: IUsersRepository = {
+      getAllAsync: async () => [],
       getByIdAsync: userGetByIdStub,
+      countAsync: async () => 1,
       addAsync: async () => {},
+      updatePasswordAsync: async () => 1,
+      incrementTokenVersionAsync: async () => 1,
+      deleteAllAsync: async () => 0,
     };
-    const sprootDB = { users: userRepo } as any;
+    const sprootDB = {
+      users: userRepo,
+      settings: {
+        getAsync: async (key: string) => {
+          if (key === SETTINGS.system.authentication_enabled) {
+            return authenticationEnabled;
+          }
+
+          return undefined;
+        },
+      },
+    } as any;
     const jwtExpiration = 259200000;
     const jwtSecret = "secret";
 
@@ -45,7 +62,6 @@ describe("TokenHandlers.ts tests", () => {
       const result = (await getTokenAsync(
         request,
         response,
-        "true",
         jwtExpiration,
         jwtSecret,
         false,
@@ -54,6 +70,8 @@ describe("TokenHandlers.ts tests", () => {
       const jwtPayload = jwt.verify(result.content?.data?.token, jwtSecret) as JwtPayload;
       assert.equal("dev-test", jwtPayload["username"]);
       assert.isUndefined(jwtPayload["csrf"]);
+      assert.equal(jwtPayload["token-version"], 0);
+      assert.equal((jwtPayload.exp ?? 0) - (jwtPayload.iat ?? 0), 259200);
       assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
     });
@@ -77,7 +95,6 @@ describe("TokenHandlers.ts tests", () => {
       const result = (await getTokenAsync(
         request,
         response,
-        "true",
         jwtExpiration,
         jwtSecret,
         true,
@@ -85,7 +102,8 @@ describe("TokenHandlers.ts tests", () => {
       assert.equal(result.statusCode, 200);
       const jwtPayload = jwt.verify(result.content?.data?.token, jwtSecret) as JwtPayload;
       assert.equal("dev-test", jwtPayload["username"]);
-      assert.isString(jwtPayload["csrf"]);
+      assert.isString(jwtPayload["csrf-token"]);
+      assert.equal(jwtPayload["token-version"], 0);
       assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
     });
@@ -109,7 +127,6 @@ describe("TokenHandlers.ts tests", () => {
       const result = (await getTokenAsync(
         request,
         response,
-        "true",
         jwtExpiration,
         jwtSecret,
         false,
@@ -140,7 +157,6 @@ describe("TokenHandlers.ts tests", () => {
       const result = (await getTokenAsync(
         request,
         response,
-        "true",
         jwtExpiration,
         jwtSecret,
         false,
@@ -153,6 +169,7 @@ describe("TokenHandlers.ts tests", () => {
     });
 
     it("should return a 501 if authentication is not enabled", async () => {
+      authenticationEnabled = false;
       const request = {
         body: {},
         app: {
@@ -171,7 +188,6 @@ describe("TokenHandlers.ts tests", () => {
       const result = (await getTokenAsync(
         request,
         response,
-        "false",
         jwtExpiration,
         jwtSecret,
         false,
@@ -181,6 +197,7 @@ describe("TokenHandlers.ts tests", () => {
       assert.deepEqual(result.error.details, ["Authentication is not enabled."]);
       assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
+      authenticationEnabled = true;
     });
 
     it("should return a 503 if the database is unreachable", async () => {
@@ -203,7 +220,6 @@ describe("TokenHandlers.ts tests", () => {
       const result = (await getTokenAsync(
         request,
         response,
-        "true",
         jwtExpiration,
         jwtSecret,
         false,

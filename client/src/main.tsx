@@ -12,9 +12,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Root from "./routes/Root";
 import ErrorPage from "./error_pages/ErrorPage";
 
-import { rootLoader } from "./routes/utility/Loaders";
-
 import HomeRouter from "./routes/HomeRouter";
+import Login from "./routes/auth/Login";
+import FirstTimeSetup from "./routes/auth/FirstTimeSetup";
 import LiveView from "./routes/live-view/LiveView";
 import SensorData from "./routes/sensor-data/SensorData";
 import OutputStates from "./routes/output-states/OutputStates";
@@ -27,8 +27,16 @@ import SensorSettings from "./routes/settings/sensors/SensorSettings";
 import SubcontrollerSettings from "./routes/settings/subcontrollers/SubcontrollerSettings";
 import SystemSettings from "./routes/settings/system/SystemSettings";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
+import {
+  requireAppAccessLoader,
+  requireFirstTimeSetupPageAccessLoader,
+  requireLoginPageAccessLoader,
+  rootLoader,
+} from "./routes/utility/Loaders";
+import { installAuthenticatedFetch } from "./requests/requests_v2";
 
 const queryClient = new QueryClient();
+installAuthenticatedFetch();
 
 // function RouteHydrateFallback() {
 //   return (
@@ -122,10 +130,22 @@ const outputStatesLoader = async () => {
 
 const router = createBrowserRouter([
   {
+    path: "/login",
+    element: <Login />,
+    errorElement: <ErrorPage />,
+    loader: requireLoginPageAccessLoader,
+  },
+  {
+    path: "/first-time-setup",
+    element: <FirstTimeSetup />,
+    errorElement: <ErrorPage />,
+    loader: requireFirstTimeSetupPageAccessLoader,
+  },
+  {
     path: "/",
     element: <Root />,
     errorElement: <ErrorPage />,
-    loader: rootLoader,
+    loader: requireAppAccessLoader,
     children: [
       {
         path: "/",

@@ -149,11 +149,13 @@ describe("SettingsRepository", () => {
       assert.equal(result[SETTINGS.sensors.data_retention], "30 days");
       // Verify the result has exactly the expected known keys, not unknown ones.
       const keys = Object.keys(result) as SettingsKey[];
-      assert.equal(keys.length, 6);
+      assert.equal(keys.length, 8);
       assert.deepEqual(keys.sort(), [
         SETTINGS.outputs.data_retention,
         SETTINGS.sensors.data_retention,
+        SETTINGS.system.authentication_enabled,
         SETTINGS.system.backup_retention,
+        SETTINGS.system.force_https,
         SETTINGS.system.latitude,
         SETTINGS.system.log_debug,
         SETTINGS.system.longitude,
@@ -181,7 +183,7 @@ describe("SettingsRepository", () => {
       // this assertion fails, surfacing the mismatch early.
       assert.equal(
         Object.keys(result).length,
-        6,
+        8,
         "getAll must return exactly all known setting keys",
       );
     });
@@ -254,6 +256,19 @@ describe("SettingsRepository", () => {
       assert.isTrue(builder.insert.calledOnce);
       const insertArgs = builder.insert.firstCall.args[0];
       assert.equal(insertArgs.key, SETTINGS.system.log_debug);
+      assert.strictEqual(insertArgs.value, true);
+    });
+
+    it("should store system.force_https as a boolean", async () => {
+      const knex = createKnexStub([]);
+      const repo = new SettingsRepository(knex as any);
+
+      await repo.setAsync(SETTINGS.system.force_https, true);
+
+      const builder = (knex as any)("settings");
+      assert.isTrue(builder.insert.calledOnce);
+      const insertArgs = builder.insert.firstCall.args[0];
+      assert.equal(insertArgs.key, SETTINGS.system.force_https);
       assert.strictEqual(insertArgs.value, true);
     });
   });

@@ -38,7 +38,10 @@ export class SettingsService {
     }
   }
 
-  #createUpdatedEvent(key: SettingsKey, value: SettingsSchema[SettingsKey]): AnySprootEvent {
+  #createUpdatedEvent(
+    key: SettingsKey,
+    value: SettingsSchema[SettingsKey],
+  ): AnySprootEvent | undefined {
     switch (key) {
       case SETTINGS.sensors.data_retention:
         return createEvent(Events.SENSOR_RETENTION_UPDATED, {
@@ -55,6 +58,8 @@ export class SettingsService {
           key,
           value: value as SettingsSchema[typeof SETTINGS.system.backup_retention],
         });
+      case SETTINGS.system.authentication_enabled:
+        return undefined;
       case SETTINGS.system.log_debug:
         return createEvent(Events.SYSTEM_LOG_DEBUG_UPDATED, {
           key,
@@ -70,6 +75,8 @@ export class SettingsService {
           key,
           value: value as SettingsSchema[typeof SETTINGS.system.longitude],
         });
+      default:
+        return undefined;
     }
   }
 

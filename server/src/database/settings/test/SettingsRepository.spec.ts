@@ -55,6 +55,11 @@ describe("SettingsRepository", () => {
         insertedRows.find((row) => row.key === "system.backup_retention")?.value,
         JSON.stringify("30 days"),
       );
+      assert.strictEqual(
+        insertedRows.find((row) => row.key === "system.authentication_enabled")?.value,
+        false,
+      );
+      assert.strictEqual(insertedRows.find((row) => row.key === "system.force_https")?.value, false);
       assert.strictEqual(insertedRows.find((row) => row.key === "system.log_debug")?.value, false);
       assert.exists(insertedRows.find((row) => row.key === "system.latitude")?.value);
       assert.exists(insertedRows.find((row) => row.key === "system.longitude")?.value);
@@ -85,6 +90,11 @@ describe("SettingsRepository", () => {
         insertedRows.find((row) => row.key === "sensors.data_retention")?.value,
         JSON.stringify("2 years"),
       );
+      assert.strictEqual(
+        insertedRows.find((row) => row.key === "system.authentication_enabled")?.value,
+        false,
+      );
+      assert.strictEqual(insertedRows.find((row) => row.key === "system.force_https")?.value, false);
       assert.strictEqual(insertedRows.find((row) => row.key === "system.log_debug")?.value, false);
       assert.exists(insertedRows.find((row) => row.key === "system.latitude")?.value);
       assert.exists(insertedRows.find((row) => row.key === "system.longitude")?.value);

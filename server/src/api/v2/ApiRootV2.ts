@@ -30,10 +30,7 @@ const openapi_v2_doc = YAML.load(spec_path);
 const swaggerUiOptions = {
   swaggerOptions: { defaultModelsExpandDepth: -1 },
 };
-const authenticateMiddleware = authorize(
-  process.env["AUTHENTICATION_ENABLED"]!,
-  process.env["JWT_SECRET"]!,
-);
+const authenticateMiddleware = authorize(process.env["JWT_SECRET"]!);
 const enableOpenApiValidation = process.env["OPENAPI_VALIDATE_REQUESTS"]?.toLowerCase() === "true";
 
 function ApiRootV2(app: Express) {
@@ -51,7 +48,7 @@ function ApiRootV2(app: Express) {
         apiSpec: spec_path,
         validateRequests: true,
         validateResponses: false,
-        validateSecurity: process.env["AUTHENTICATION_ENABLED"]!.toLowerCase() === "true",
+        validateSecurity: false,
       }),
     );
   }
@@ -63,9 +60,9 @@ function ApiRootV2(app: Express) {
   app.use(
     "/api/v2/authenticate",
     authenticationRouter(
-      process.env["AUTHENTICATION_ENABLED"]!,
       parseInt(process.env["JWT_EXPIRATION"]!),
       process.env["JWT_SECRET"]!,
+      authenticateMiddleware,
     ),
   );
 

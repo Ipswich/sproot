@@ -12,6 +12,22 @@ Sproot is a Raspberry Pi-based greenhouse controller and monitoring system with 
 ## Running for Production 
 Grab the `docker-compose.yaml` file (or clone the repo), and run `sudo docker compose [--profile camera] up -d` . Images exist for `linux/amd64` and `linux/arm64`.
 
+### Authentication recovery
+If you need to force the app back into first-time setup because every password is lost, start the server with the `--reset-authentication-users` flag once. This deletes all existing users on startup and should only be used deliberately.
+
+Bare metal:
+`cd server && npm run start -- --reset-authentication-users`
+
+Docker Compose:
+Because the production server image uses `node ./dist/index.js` as its entrypoint, you can temporarily append the flag as the service command:
+
+```yaml
+server:
+	command: ["--reset-authentication-users"]
+```
+
+Remove that command override after the next successful boot, then create a new user from the first-time setup screen.
+
 ### Building locally
 If you'd rather build the project yourself, clone the repo and edit the relevant lines in the `docker-compose.yaml` file and run `docker compose build [server | client]` from the root of the project.
 
@@ -20,6 +36,10 @@ If you'd rather build the project yourself, clone the repo and edit the relevant
 Because some of the libraries required to build the project are Linux specific, it's generally recommended to work inside of a docker container.
 
 You can easily spin up a development instance by running `sudo docker compose -f docker-compose.yml.development up -d` from the project's root. This will build and run the whole project, except with some extra packages preinstalled, and some tweaked development environment variables. You can then remote into (or attach your IDE to) the server's container (probably looks something like `sproot-server-1`). Once inside the container, navigate to `/sproot/server` and run `npm run start:dev` (or `npm run start` for no nodemon) to get things started.
+
+If you need the one-time authentication reset while developing, use the normal server start command with the flag instead of configuring an environment variable:
+
+`cd /sproot/server && npm run start -- --reset-authentication-users`
 
 ### Client
 Navigate to the `sproot/client` directory. If your api server is running on a different host, open `.env.development` and update `VITE_API_SERVER_URL` to contain your servers URL (i.e, `http://192.168.1.1`). Finally, run `npm run start:dev` to start the vite development server.

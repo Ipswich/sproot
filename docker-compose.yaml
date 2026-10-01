@@ -4,14 +4,6 @@ x-pgadmin-password: &pgadmin_password "root"
 x-jwt-secret: &jwt_secret "CHANGE ME"
 x-interservice-authentication-key: &interservice_authentication_key "CHANGE ME"
 
-# Update these variables to your desired defaults. The username stuff isn't exactly "implemented"
-# (authentication exists, but there's no UI for it yet), but they're here for future use. There 
-# might be issues down the line if you don't change them before running this for the first time.
-# Think of them as intelligent placeholders.
-x-default-user-name: &default_user_name "dev-test"
-x-default-user-email: &default_user_email "dev-test@example.com"
-x-default-user-password: &default_user_password "password"
-
 # The rest of these strings are environment variables for the containers. Modify as needed,
 # but keep in mind that some are used relevant when *building* the images (like the VITE_* vars
 # for the client), while others are used at runtime.
@@ -29,10 +21,7 @@ x-client-args: &client_env
 x-server-environment: &server_env
   <<: 
     - *base_env
-  DEFAULT_USER: *default_user_name
-  DEFAULT_USER_EMAIL: *default_user_email
-  DEFAULT_USER_PASSWORD: *default_user_password
-  AUTHENTICATION_ENABLED: "false"
+  RESET_AUTHENTICATION_USERS_ON_STARTUP: "false"
   JWT_SECRET: *jwt_secret
   JWT_EXPIRATION: "259200000"
   DATABASE_HOST: "127.0.0.1"

@@ -1,7 +1,7 @@
 type SDBUser = {
   username: string;
   hash: string;
-  email: string;
+  tokenVersion?: number;
 };
 
 export type { SDBUser };

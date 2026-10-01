@@ -90,7 +90,9 @@ export function useSystemLogStream(enabled: boolean = true) {
     setLogConnectionState("connecting");
     setLogStreamError(null);
 
-    const eventSource = new EventSource(getSystemLogStreamUrl());
+    const eventSource = new EventSource(getSystemLogStreamUrl(), {
+      withCredentials: true,
+    });
 
     eventSource.onopen = () => {
       setLogConnectionState("connected");

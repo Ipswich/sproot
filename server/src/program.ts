@@ -1,6 +1,5 @@
 import { configDotenv } from "dotenv";
 configDotenv();
-import bcrypt from "bcrypt";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Express } from "express";
@@ -10,7 +9,6 @@ import * as Constants from "@sproot/common/utility/Constants";
 import { ISprootDB } from "./database/ISprootDB";
 import type { IJournalRepository } from "./database/repositories/journals/IJournalRepository";
 import { SprootDB } from "./database/SprootDB";
-import { SDBUser } from "@sproot/common/database/SDBUser";
 import { SensorList } from "./sensors/list/SensorList";
 import { OutputList } from "./outputs/list/OutputList";
 import { DI_KEYS } from "./utils/DependencyInjectionConstants";
@@ -36,9 +34,15 @@ import { RetentionService } from "./retention/RetentionService";
 import { addLogStreamingTransport } from "./logger";
 import { TimeExpressionResolver } from "./automation/conditions/TimeExpressionResolver";
 import { DebugLoggingService } from "./system/DebugLoggingService";
+import { getAuthenticationStateAsync } from "./auth/AuthenticationState";
+import { StartupOptions } from "./utils/StartupOptions";
+import { SETTINGS } from "./database/settings/SettingsSchema";
 
-export default async function setupAsync(): Promise<Express> {
+export default async function setupAsync(
+  startupOptions: StartupOptions = { resetAuthenticationUsersOnStartup: false },
+): Promise<Express> {
   const app = express();
+  app.set("trust proxy", true);
   const { logger, debugLoggingController } = setupLogger(app);
   const profiler = logger.startTimer();
   logger.info("Initializing sproot app. . .");
@@ -48,8 +52,6 @@ export default async function setupAsync(): Promise<Express> {
   const sprootDB = new SprootDB(knexConnection);
   app.set(DI_KEYS.SprootDB, sprootDB);
   app.set(DI_KEYS.Logger, logger);
-
-  await defaultUserCheck(sprootDB, logger);
 
   const eventBus = new MemoryEventBus(logger);
   app.set(DI_KEYS.EventBus, eventBus);
@@ -68,6 +70,11 @@ export default async function setupAsync(): Promise<Express> {
   app.set(DI_KEYS.SettingsService, settingsService);
 
   await settingsService.syncDefaultsAsync();
+  app.set(
+    "forceHttpsEnabled",
+    (await settingsService.getAsync(SETTINGS.system.force_https)) === true,
+  );
+  await applyAuthenticationStartupStateAsync(sprootDB, logger, startupOptions);
   const debugLoggingService = await DebugLoggingService.createInstanceAsync(
     sprootDB.settings,
     eventBus,
@@ -157,7 +164,7 @@ export default async function setupAsync(): Promise<Express> {
   const backupCronJob = createBackupCronJob(sprootDB.system, sprootDB.settings, logger);
   app.set(DI_KEYS.BackupCronJob, backupCronJob);
 
-  app.use(cors());
+  app.use(cors({ origin: true, credentials: true }));
   app.use(cookieParser());
   app.use(express.json());
 
@@ -172,6 +179,26 @@ export default async function setupAsync(): Promise<Express> {
   });
 
   return app;
+}
+
+async function applyAuthenticationStartupStateAsync(
+  sprootDB: ISprootDB,
+  logger: winston.Logger,
+  startupOptions: StartupOptions,
+) {
+  if (startupOptions.resetAuthenticationUsersOnStartup) {
+    const deletedUsers = await sprootDB.users.deleteAllAsync();
+    logger.warn(
+      `Authentication reset flag was enabled. Deleted ${deletedUsers} user(s) so first-time setup is required again.`,
+    );
+  }
+
+  const authenticationState = await getAuthenticationStateAsync(sprootDB.settings, sprootDB.users);
+  if (authenticationState.requiresSetup) {
+    logger.warn(
+      "Authentication is enabled but no users exist. First-time setup will be required before the app can be used.",
+    );
+  }
 }
 
 export async function gracefulHaltAsync(
@@ -229,19 +256,3 @@ export async function gracefulHaltAsync(
   });
 }
 
-async function defaultUserCheck(sprootDB: ISprootDB, logger: winston.Logger) {
-  const defaultUser = {
-    username: process.env["DEFAULT_USER"]!,
-    hash: process.env["DEFAULT_USER_PASSWORD"]!,
-    email: process.env["DEFAULT_USER_EMAIL"]!,
-  } as SDBUser;
-
-  const user = await sprootDB.users.getByIdAsync(defaultUser.username);
-  if (user?.length == 0) {
-    logger.info("Default user not found, creating from environment variables.");
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(defaultUser.hash, salt);
-    defaultUser.hash = hash;
-    await sprootDB.users.addAsync(defaultUser);
-  }
-}

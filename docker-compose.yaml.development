@@ -35,10 +35,6 @@ services:
     environment:
       TZ: America/Los_Angeles
       NODE_ENV: development
-      DEFAULT_USER: dev-test
-      DEFAULT_USER_EMAIL: dev-test@example.com
-      DEFAULT_USER_PASSWORD: password
-      AUTHENTICATION_ENABLED: false
       JWT_SECRET: CHANGE ME #Change this to something long and unique
       JWT_EXPIRATION: 259200000 #3 days in MS
       DATABASE_HOST: 127.0.0.1

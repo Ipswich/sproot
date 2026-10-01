@@ -115,10 +115,7 @@ The server loads env via `dotenv/config`, which reads `server/.env` by default. 
 NODE_ENV=development
 JWT_SECRET=<random string>
 JWT_EXPIRATION=259200000
-DEFAULT_USER=<dev username>
-DEFAULT_USER_EMAIL=<dev email>
-DEFAULT_USER_PASSWORD=<dev password>
-AUTHENTICATION_ENABLED=false
+RESET_AUTHENTICATION_USERS_ON_STARTUP=false
 DATABASE_HOST=<db host>
 DATABASE_PORT=<db port>
 DATABASE_USER=<db username>

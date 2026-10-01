@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Accordion,
   Alert,
@@ -10,6 +10,7 @@ import {
   LoadingOverlay,
   NumberInput,
   Paper,
+  PasswordInput,
   SegmentedControl,
   Select,
   SimpleGrid,
@@ -25,9 +26,15 @@ import {
 } from "@tabler/icons-react";
 import {
   ApplicationSettings,
+  clearAuthenticationToken,
+  changePasswordAsync,
+  createFirstUserAsync,
+  getAuthenticationStateAsync,
   getApplicationSettingsAsync,
   patchApplicationSettingsAsync,
+  setAuthenticationToken,
 } from "../../../requests/requests_v2";
+import { clearRootLoaderCache } from "../../utility/Loaders";
 
 type RetentionUnit = "days" | "weeks" | "months" | "years";
 type RetentionMode = "forever" | "finite";
@@ -43,6 +50,8 @@ type SettingsFormValues = {
   outputs: RetentionControlValue;
   system: {
     backup_retention: RetentionControlValue;
+    authentication_enabled: boolean;
+    force_https: boolean;
     log_debug: boolean;
     latitude: string;
     longitude: string;
@@ -145,6 +154,8 @@ function toFormValues(settings: ApplicationSettings): SettingsFormValues {
       backup_retention: parseRetentionValue(
         settings["system.backup_retention"],
       ),
+      authentication_enabled: settings["system.authentication_enabled"] === true,
+      force_https: settings["system.force_https"] === true,
       log_debug: settings["system.log_debug"] === true,
       latitude: settings["system.latitude"] ?? "",
       longitude: settings["system.longitude"] ?? "",
@@ -159,6 +170,8 @@ function toRequestBody(values: SettingsFormValues): ApplicationSettings {
     "system.backup_retention": serializeRetentionValue(
       values.system.backup_retention,
     ),
+    "system.authentication_enabled": values.system.authentication_enabled,
+    "system.force_https": values.system.force_https,
     "system.log_debug": values.system.log_debug,
     "system.latitude": serializeCoordinateValue(values.system.latitude),
     "system.longitude": serializeCoordinateValue(values.system.longitude),
@@ -193,15 +206,85 @@ function hasChanges(
 }
 
 export default function ApplicationSettingsAccordionItem() {
+  const queryClient = useQueryClient();
   const [baselineValues, setBaselineValues] =
     useState<SettingsFormValues | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [setupValues, setSetupValues] = useState({
+    username: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [setupErrors, setSetupErrors] = useState<Record<string, string>>({});
+  const [passwordValues, setPasswordValues] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmNewPassword: "",
+  });
+  const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const settingsQuery = useQuery({
     queryKey: ["applicationSettings"],
     queryFn: () => getApplicationSettingsAsync(),
   });
+
+  const authStateQuery = useQuery({
+    queryKey: ["authenticationState", "applicationSettings"],
+    queryFn: () => getAuthenticationStateAsync(),
+  });
+
+  const passwordMutation = useMutation({
+    mutationFn: () =>
+      changePasswordAsync(
+        passwordValues.newPassword,
+        authStateQuery.data?.authenticationEnabled
+          ? passwordValues.currentPassword
+          : undefined,
+      ),
+    onSuccess: () => {
+      if (authStateQuery.data?.authenticationEnabled) {
+        clearAuthenticationToken();
+        clearRootLoaderCache();
+        window.location.assign("/login");
+        return;
+      }
+
+      setPasswordError(null);
+      setPasswordMessage("Password updated.");
+      setPasswordValues({
+        currentPassword: "",
+        newPassword: "",
+        confirmNewPassword: "",
+      });
+    },
+    onError: (error) => {
+      setPasswordMessage(null);
+      setPasswordError(
+        error instanceof Error ? error.message : "Failed to change the password.",
+      );
+    },
+  });
+
+  function validateFirstUserSetup(): boolean {
+    const nextErrors: Record<string, string> = {};
+
+    if (!setupValues.username.trim()) {
+      nextErrors["username"] = "Username is required.";
+    }
+
+    if (!setupValues.password) {
+      nextErrors["password"] = "Password is required.";
+    }
+
+    if (setupValues.password !== setupValues.confirmPassword) {
+      nextErrors["confirmPassword"] = "Passwords do not match.";
+    }
+
+    setSetupErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  }
 
   const form = useForm<SettingsFormValues>({
     initialValues: {
@@ -209,6 +292,8 @@ export default function ApplicationSettingsAccordionItem() {
       outputs: createDefaultRetentionValue(),
       system: {
         backup_retention: createDefaultRetentionValue(),
+        authentication_enabled: false,
+        force_https: false,
         log_debug: false,
         latitude: "",
         longitude: "",
@@ -258,22 +343,84 @@ export default function ApplicationSettingsAccordionItem() {
   const settingsMutation = useMutation({
     mutationFn: async (values: SettingsFormValues) => {
       if (!baselineValues) {
-        return null;
+        return { redirectToLogin: false, logoutAfterSave: false };
       }
 
       const changedSettings = getChangedSettings(values, baselineValues);
       if (Object.keys(changedSettings).length === 0) {
-        return null;
+        return { redirectToLogin: false, logoutAfterSave: false };
       }
 
-      return patchApplicationSettingsAsync(changedSettings);
+      const needsFirstUserSetup =
+        changedSettings["system.authentication_enabled"] === true &&
+        (authStateQuery.data?.userCount ?? 0) < 1;
+
+      const settingsPayload = { ...changedSettings };
+
+      if (needsFirstUserSetup) {
+        if (!validateFirstUserSetup()) {
+          throw new Error("Create the first user before enabling authentication.");
+        }
+
+        delete settingsPayload["system.authentication_enabled"];
+      }
+
+      if (Object.keys(settingsPayload).length > 0) {
+        await patchApplicationSettingsAsync(settingsPayload);
+      }
+
+      if (needsFirstUserSetup) {
+        const setupResult = await createFirstUserAsync({
+          username: setupValues.username.trim(),
+          password: setupValues.password,
+          enableAuthentication: true,
+        });
+
+        if (setupResult["csrf-token"]) {
+          setAuthenticationToken(setupResult["csrf-token"]);
+        }
+
+        return { redirectToLogin: false, logoutAfterSave: false };
+      }
+
+      const logoutAfterSave =
+        changedSettings["system.authentication_enabled"] === false &&
+        (authStateQuery.data?.authenticationEnabled ?? false);
+
+      return {
+        redirectToLogin:
+          changedSettings["system.authentication_enabled"] === true &&
+          (authStateQuery.data?.userCount ?? 0) > 0,
+        logoutAfterSave,
+      };
     },
-    onSuccess: async () => {
-      const refreshedSettings = await settingsQuery.refetch();
+    onSuccess: async (result) => {
+      if (result.redirectToLogin) {
+        clearRootLoaderCache();
+        window.location.assign("/login");
+        return;
+      }
+
+      if (result.logoutAfterSave) {
+        clearAuthenticationToken();
+        clearRootLoaderCache();
+        setPasswordValues({
+          currentPassword: "",
+          newPassword: "",
+          confirmNewPassword: "",
+        });
+      }
+
+      const [refreshedSettings] = await Promise.all([
+        settingsQuery.refetch(),
+        authStateQuery.refetch(),
+        queryClient.invalidateQueries({ queryKey: ["authenticationState"] }),
+      ]);
       const nextValues = toFormValues(refreshedSettings.data ?? {});
 
       setBaselineValues(nextValues);
       form.setValues(nextValues);
+      setSetupErrors({});
       setSaveError(null);
       setSaveMessage("Application settings updated.");
     },
@@ -524,6 +671,36 @@ export default function ApplicationSettingsAccordionItem() {
               <Paper withBorder radius="md" p="lg" shadow="xs">
                 <Stack gap="md">
                   <div>
+                    <Text fw={600}>HTTPS Enforcement</Text>
+                    <Text size="sm" c="dimmed">
+                      When enabled, login and authenticated API requests are blocked over HTTP and must use https://.
+                    </Text>
+                  </div>
+
+                  <SegmentedControl
+                    fullWidth
+                    radius="md"
+                    data={[
+                      { label: "Allow HTTP", value: "false" },
+                      { label: "Require HTTPS", value: "true" },
+                    ]}
+                    value={form.values.system.force_https ? "true" : "false"}
+                    onChange={(value) => {
+                      form.setFieldValue("system.force_https", value === "true");
+                    }}
+                  />
+
+                  {form.values.system.force_https && (
+                    <Alert color="yellow" title="Self-signed certificate warning">
+                      Browsers will continue to warn until the generated certificate is trusted by the device or browser.
+                    </Alert>
+                  )}
+                </Stack>
+              </Paper>
+
+              <Paper withBorder radius="md" p="lg" shadow="xs">
+                <Stack gap="md">
+                  <div>
                     <Text fw={600}>Debug Logging</Text>
                     <Text size="sm" c="dimmed">
                       Toggle verbose server logging.
@@ -542,6 +719,192 @@ export default function ApplicationSettingsAccordionItem() {
                       form.setFieldValue("system.log_debug", value === "true");
                     }}
                   />
+                </Stack>
+              </Paper>
+
+              <Paper withBorder radius="md" p="lg" shadow="xs">
+                <Stack gap="md">
+                  <div>
+                    <Text fw={600}>Authentication</Text>
+                    <Text size="sm" c="dimmed">
+                      Require a user account and password to access the app.
+                    </Text>
+                  </div>
+
+                  <SegmentedControl
+                    fullWidth
+                    radius="md"
+                    data={[
+                      { label: "Off", value: "false" },
+                      { label: "On", value: "true" },
+                    ]}
+                    value={
+                      form.values.system.authentication_enabled ? "true" : "false"
+                    }
+                    onChange={(value) => {
+                      form.setFieldValue(
+                        "system.authentication_enabled",
+                        value === "true",
+                      );
+                    }}
+                  />
+
+                  {form.values.system.authentication_enabled &&
+                    (authStateQuery.data?.userCount ?? 0) < 1 && (
+                      <Stack gap="sm">
+                        <Alert color="yellow" title="Create the first user">
+                          Authentication cannot be enabled until the first user is created.
+                        </Alert>
+                        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="sm">
+                          <TextInput
+                            label="Username"
+                            value={setupValues.username}
+                            error={setupErrors["username"]}
+                            onChange={(event) => {
+                              const nextValue = event.currentTarget.value;
+                              setSetupValues((current) => ({
+                                ...current,
+                                username: nextValue,
+                              }));
+                              setSetupErrors((current) => ({
+                                ...current,
+                                username: "",
+                              }));
+                            }}
+                          />
+                          <PasswordInput
+                            label="Password"
+                            value={setupValues.password}
+                            error={setupErrors["password"]}
+                            onChange={(event) => {
+                              const nextValue = event.currentTarget.value;
+                              setSetupValues((current) => ({
+                                ...current,
+                                password: nextValue,
+                              }));
+                              setSetupErrors((current) => ({
+                                ...current,
+                                password: "",
+                              }));
+                            }}
+                          />
+                          <PasswordInput
+                            label="Confirm password"
+                            value={setupValues.confirmPassword}
+                            error={setupErrors["confirmPassword"]}
+                            onChange={(event) => {
+                              const nextValue = event.currentTarget.value;
+                              setSetupValues((current) => ({
+                                ...current,
+                                confirmPassword: nextValue,
+                              }));
+                              setSetupErrors((current) => ({
+                                ...current,
+                                confirmPassword: "",
+                              }));
+                            }}
+                          />
+                        </SimpleGrid>
+                      </Stack>
+                    )}
+
+                  {form.values.system.authentication_enabled &&
+                    authStateQuery.data?.authenticationEnabled &&
+                    (authStateQuery.data?.userCount ?? 0) > 0 && (
+                    <Stack gap="md" pt="xs">
+                      <div>
+                        <Text fw={600}>Password</Text>
+                        <Text size="sm" c="dimmed">
+                          Change the login password.
+                        </Text>
+                      </div>
+
+                      {authStateQuery.data?.authenticationEnabled && (
+                        <PasswordInput
+                          label="Current password"
+                          value={passwordValues.currentPassword}
+                          onChange={(event) => {
+                            const nextValue = event.currentTarget.value;
+                            setPasswordValues((current) => ({
+                              ...current,
+                              currentPassword: nextValue,
+                            }));
+                          }}
+                        />
+                      )}
+
+                      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="sm">
+                        <PasswordInput
+                          label="New password"
+                          value={passwordValues.newPassword}
+                          onChange={(event) => {
+                            const nextValue = event.currentTarget.value;
+                            setPasswordValues((current) => ({
+                              ...current,
+                              newPassword: nextValue,
+                            }));
+                          }}
+                        />
+                        <PasswordInput
+                          label="Confirm new password"
+                          value={passwordValues.confirmNewPassword}
+                          onChange={(event) => {
+                            const nextValue = event.currentTarget.value;
+                            setPasswordValues((current) => ({
+                              ...current,
+                              confirmNewPassword: nextValue,
+                            }));
+                          }}
+                        />
+                      </SimpleGrid>
+
+                      {passwordError && (
+                        <Alert color="red" title="Password update failed">
+                          {passwordError}
+                        </Alert>
+                      )}
+
+                      {passwordMessage && !passwordError && (
+                        <Alert color="teal" title="Password updated">
+                          {passwordMessage}
+                        </Alert>
+                      )}
+
+                      <Button
+                        variant="light"
+                        loading={passwordMutation.isPending}
+                        onClick={() => {
+                          setPasswordError(null);
+                          setPasswordMessage(null);
+
+                          if (!passwordValues.newPassword) {
+                            setPasswordError("Enter a new password.");
+                            return;
+                          }
+
+                          if (
+                            passwordValues.newPassword !==
+                            passwordValues.confirmNewPassword
+                          ) {
+                            setPasswordError("New passwords do not match.");
+                            return;
+                          }
+
+                          if (
+                            authStateQuery.data?.authenticationEnabled &&
+                            !passwordValues.currentPassword
+                          ) {
+                            setPasswordError("Enter the current password.");
+                            return;
+                          }
+
+                          passwordMutation.mutate();
+                        }}
+                      >
+                        Change password
+                      </Button>
+                    </Stack>
+                  )}
                 </Stack>
               </Paper>
 
