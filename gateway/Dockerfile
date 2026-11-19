@@ -20,7 +20,7 @@ RUN npm ci --workspace=common --workspace=client --workspace=docs \
   && npm run build:client \
   && npm run build:docs
 
-FROM nginx:1.29.5-alpine-slim
+FROM nginx:1.31.9-alpine-slim
 RUN apk add --no-cache openssl iproute2
 COPY --from=build ./sproot/client/dist /usr/share/nginx/html
 COPY --from=build ./sproot/docs/build /usr/share/nginx/html/docs
